@@ -8,7 +8,7 @@
     "gatsby"
   ],
   "scripts": {
-    "develop": "gatsby develop",
+    "dev": "gatsby develop",
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
@@ -16,11 +16,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "gatsby": "^5.11.0",
-    "gatsby-plugin-sass": "^6.11.0",
+    "@emotion/react": "^11.11.1",
+    "@mdx-js/react": "^2.3.0",
+    "@theme-ui/mdx": "^0.16.0",
+    "gatsby": "^2.32.13",
+    "gatsby-plugin-sass": "^3.2.0",
+    "gatsby-plugin-theme-ui": "^0.14.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "sass": "^1.63.6"
+    "sass": "^1.63.6",
+    "theme-ui": "^0.16.0"
   },
   "devDependencies": {
     "@types/node": "^20.2.6",
