@@ -1,77 +1,64 @@
 package middleware
 
-// import (
-// 	"net/http"
-// 	"strings"
+import (
+	"context"
+	"errors"
+	"net/http"
+	"strings"
 
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/gofrs/uuid"
-// 	"go.uber.org/zap"
-// )
+	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/config"
+	"github.com/zeirash/recapo/arion/handler"
+	"github.com/zeirash/recapo/arion/store"
+)
 
-// const bearerPrefix = "Bearer "
+type Middleware func(http.Handler) http.Handler
 
-// type UserTokenData struct {
-// 	Id       uuid.UUID `json:"id" bson:"id"`
-// 	Email    string    `json:"email" bson:"email"`
-// 	UserType string    `json:"user_type" bson:"user_type"`
-// 	Scope    string    `json:"scope"`
-// }
+// MiddlewareWrapper takes Handler funcs and chains them to the main handler.
+func MiddlewareWrapper(handler http.Handler, middlewares ...Middleware) http.Handler {
+	// The loop is reversed so the middleware gets executed in the same
+	// order as provided in the array.
+	for i := len(middlewares); i > 0; i-- {
+			handler = middlewares[i-1](handler)
+	}
+	return handler
+}
 
-// type AdminTokenData struct {
-// 	Id   uuid.UUID `json:"id" bson:"id"`
-// 	Type string    `json:"type" bson:"type"`
-// }
+func JwtMiddleware() Middleware {
+	return func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					secret := config.GetConfig().SecretKey
+					tokenStore := store.NewTokenStore()
 
-// type AuthMiddlewareConfig struct {
-// 	RequestAuth
-// }
+					authHeader := r.Header.Get("Authorization")
+					t := strings.Split(authHeader, " ")
+					if len(t) != 2 {
+						handler.WriteErrorJson(w, http.StatusUnauthorized, errors.New("unauthorized"), "invalid token format")
+						return
+					}
 
-// type RequestAuth struct {
-// 	logger *zap.SugaredLogger
-// }
+					authToken := t[1]
+					authorized, err := tokenStore.IsAuthorized(authToken, secret)
+					if err != nil {
+						handler.WriteErrorJson(w, http.StatusUnauthorized, err, "is not authorized")
+						return
+					}
 
-// func abortAuthenticationFailed(c *gin.Context) {
-// 	// Send back the Unauthorized message
-// 	c.JSON(http.StatusUnauthorized, gin.H{"code": http.StatusUnauthorized, "cause": "Unauthorized"})
-// 	// Don't go any further down the request chain
-// 	c.Abort()
-// }
+					if !authorized {
+						handler.WriteErrorJson(w, http.StatusUnauthorized, errors.New("not authorzed"), "is not authorized")
+						return
+					}
 
-// // The request logger takes the preconfigured logger used by the app logging
-// func NewRequestAuth(logger *zap.SugaredLogger) *RequestAuth {
-// 	return &RequestAuth{
-// 		logger,
-// 	}
-// }
+					userID, err := tokenStore.ExtractIDFromToken(authToken, secret)
+					if err != nil {
+						handler.WriteErrorJson(w, http.StatusUnauthorized, err, "extract id from token")
+						return
+					}
 
-// func (ra *RequestAuth) Middleware(c *gin.Context) {
+					ctx := context.WithValue(context.Background(), common.UserIDKey, userID)
+					r = r.WithContext(ctx)
 
-// 	// check if the user is authenticated
-// 	authPassed := ra.BearerAuth(c)
-
-// 	// not authenticated, no access
-// 	if !authPassed {
-// 		abortAuthenticationFailed(c)
-// 		return
-// 	}
-// 	c.Next()
-// }
-
-// func (ra *RequestAuth) BearerAuth(c *gin.Context) bool {
-
-// 	authHeaderValue := c.Request.Header.Get("Authorization")
-
-// 	if !strings.HasPrefix(authHeaderValue, bearerPrefix) {
-// 		ra.logger.Errorf("No bearer token found in Authorization header")
-// 		return false
-// 	}
-
-// 	token := strings.TrimPrefix(authHeaderValue, bearerPrefix)
-// 	if len(token) == 0 {
-// 		ra.logger.Error("No bearer token found in Authorization header")
-// 		return false
-// 	}
-
-// 	return true
-// }
+					next.ServeHTTP(w, r)
+			})
+	}
+}

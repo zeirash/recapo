@@ -1,12 +1,16 @@
-package database
+package common
 
 import (
 	"context"
 	"time"
 )
 
+type contextKey string
+
 const (
 	DefaultContextSeconds = 60
+
+	UserIDKey contextKey = "user-id"
 )
 
 func DefaultTimeoutContext() (context.Context, context.CancelFunc) {

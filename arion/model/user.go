@@ -1,12 +1,33 @@
 package model
 
 import (
-	"github.com/gofrs/uuid"
+	"database/sql"
+	"time"
+
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
-type User struct {
-	ID       uuid.UUID `db:"id"`
-	Name     string    `db:"name"`
-	Email    string `db:"email"`
-	Password string `db:"password"`
-}
+/********************* Token ************************/
+type (
+	JwtCustomClaims struct {
+		Name string `json:"name"`
+		ID   int    `json:"id"`
+		jwt.RegisteredClaims
+	}
+
+	JwtCustomRefreshClaims struct {
+		ID int `json:"id"`
+		jwt.RegisteredClaims
+	}
+
+	/********************* User ************************/
+	User struct {
+		ID        int          `db:"id"`
+		Name      string       `db:"name"`
+		Email     string       `db:"email"`
+		Password  string       `db:"password"`
+		CreatedAt time.Time	   `db:"created_at"`
+		UpdatedAt sql.NullTime `db:"updated_at"`
+	}
+	
+)
