@@ -6,8 +6,10 @@ export interface PrimaryButtonProps {
 }
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = ({ title }) => (
-  <Button>
-    {title}
+  <Button sx={{
+    backgroundColor: "#959FD7"
+  }}>
+    {title.toUpperCase()}
   </Button>
 )
 
