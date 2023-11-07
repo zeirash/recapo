@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/zeirash/recapo/arion/common/database"
@@ -40,6 +41,10 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 
 func (u *user) GetUserByEmail(email string) (*model.User, error) {
 	db := database.GetDB()
+	if db == nil {
+		fmt.Println("DB NIL")
+		return nil, sql.ErrNoRows
+	}
 	defer db.Close()
 
 	resp := model.User{}

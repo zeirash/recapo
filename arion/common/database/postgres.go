@@ -63,7 +63,7 @@ func GetDB() *sql.DB {
 	db, err := connect(conn)
 	if err != nil {
 		// TODO: handle error
-		fmt.Println("error get DB")
+		fmt.Println("error get DB: ", err.Error())
 		return nil
 	}
 

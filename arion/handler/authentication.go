@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 )
 
@@ -21,6 +22,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	inp := LoginRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		return
+	}
+
+	if inp.Password == "" {
+		WriteErrorJson(w, http.StatusBadRequest, errors.New("password must not empty"), "parse_json")
 		return
 	}
 

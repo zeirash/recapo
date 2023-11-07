@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/middleware"
@@ -33,7 +34,12 @@ func main() {
 
 	// init router
 	r := NewRouter()
+	c := cors.New(cors.Options{
+			AllowedOrigins: []string{"*"},
+			AllowCredentials: true,
+	})
+	handler := c.Handler(r)
 
 	fmt.Println("Server run on port :3000")
-	log.Fatal(http.ListenAndServe(":3000", r))
+	log.Fatal(http.ListenAndServe(":3000", handler))
 }
