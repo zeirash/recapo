@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"net/mail"
 )
 
 type (
@@ -25,8 +26,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inp.Password == "" {
-		WriteErrorJson(w, http.StatusBadRequest, errors.New("password must not empty"), "parse_json")
+	if valid, err := validateLogin(inp); !valid {
+		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -51,6 +52,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if valid, err := validateRegister(inp); !valid {
+		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		return
+	}
+
 	res, err := userService.UserRegister(inp.Name, inp.Email, inp.Password)
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "user_register")
@@ -58,4 +64,38 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJson(w, http.StatusOK, res)
+}
+
+func validateLogin(input LoginRequest) (bool, error) {
+	if input.Email == "" {
+		return false, errors.New("email must not empty")
+	}
+
+	if input.Password == "" {
+		return false, errors.New("password must not empty")
+	}
+
+	return true, nil
+}
+
+func validateRegister(input RegisterRequest) (bool, error) {
+	if input.Name == "" {
+		return false, errors.New("name must not empty")
+	}
+
+	if input.Email == "" {
+		return false, errors.New("email must not empty")
+	}
+
+	_, err := mail.ParseAddress(input.Email)
+	if err != nil {
+		return false, errors.New("email not valid")
+	}
+
+	//TODO: validate password value
+	if input.Password == "" {
+		return false, errors.New("password must not empty")
+	}
+
+	return true, nil
 }
