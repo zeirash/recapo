@@ -1,12 +1,13 @@
 import React, { useState } from "react"
 import { PageProps } from "gatsby"
-import { Box, Button, Input, Text } from 'theme-ui'
-import usePostLogin from "../hooks/api/usePostLogin"
+import usePostRegister from "../hooks/api/usePostRegister"
+import { Box, Button, Input, Text } from "theme-ui"
 
-const LoginPage: React.FC<PageProps> = () => {
+const RegisterPage: React.FC<PageProps> = () => {
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const { mutateAsync, error } = usePostLogin()
+  const { mutateAsync, error } = usePostRegister()
 
   return (
     <div>
@@ -27,14 +28,22 @@ const LoginPage: React.FC<PageProps> = () => {
         onSubmit={async (event) => {
           try {
             event.preventDefault()
-            await mutateAsync({ email, password })
+            await mutateAsync({ name, email, password })
           } catch (e) {
             // TODO: handle error correctly
             console.log("ERROR", e)
           }
         }}
       >
-        LOGIN
+        REGISTER
+        <Input
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          sx={{
+            margin: "10px 0"
+          }}
+        />
         <Input
           placeholder="Email"
           value={email}
@@ -57,7 +66,7 @@ const LoginPage: React.FC<PageProps> = () => {
             color: "red"
           }}
         >
-          {error ? "wrong email or password" : ""}
+          {error ? (error as Error).message : ""}
         </Text>
         <Button
           sx={{
@@ -66,11 +75,11 @@ const LoginPage: React.FC<PageProps> = () => {
             marginTop: "15px"
           }}
         >
-          LOGIN
+          REGISTER
         </Button>
       </Box>
     </div>
   )
 }
 
-export default LoginPage
+export default RegisterPage

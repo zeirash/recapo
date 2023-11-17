@@ -1,14 +1,15 @@
 import { useMutation } from "react-query"
 import { navigate } from "gatsby"
 
-interface PostLoginRequestBody {
+interface PostRegisterRequestBody {
+  name:     string
   email:    string
   password: string
 }
 
-const usePostLogin = () => {
-  const postLogin = async (payload: PostLoginRequestBody) => {
-    const response = await fetch(`http://localhost:3000/login`, {
+const usePostRegister = () => {
+  const postRegister = async (payload: PostRegisterRequestBody) => {
+    const response = await fetch(`http://localhost:3000/register`, {
       headers: { "Content-Type": "application/json" },
       method: "POST",
       body: JSON.stringify(payload),
@@ -24,7 +25,7 @@ const usePostLogin = () => {
     return response
   }
 
-  return useMutation(postLogin)
+  return useMutation(postRegister)
 }
 
-export default usePostLogin
+export default usePostRegister
