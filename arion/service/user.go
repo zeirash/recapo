@@ -14,27 +14,35 @@ type (
 	UserService interface {
 		UserLogin(email, password string) (response.TokenResponse, error)
 		UserRegister(name, email, password string) (response.TokenResponse, error)
+		UpdateUser(input UpdateUserInput) (response.UserData, error)
 	}
 
 	uservice struct {}
+
+	UpdateUserInput struct {
+		ID       int
+		Name     *string
+		Email    *string
+		Password *string
+	}
 )
 
 func NewUserService() UserService {
 	cfg = config.GetConfig()
 
-	if user == nil {
-		user = store.NewUserStore()
+	if userStore == nil {
+		userStore = store.NewUserStore()
 	}
 
-	if token == nil {
-		token = store.NewTokenStore()
+	if tokenStore == nil {
+		tokenStore = store.NewTokenStore()
 	}
 
 	return &uservice{}
 }
 
 func (u *uservice) UserLogin(email, password string) (response.TokenResponse, error) {
-	user, err := user.GetUserByEmail(email)
+	user, err := userStore.GetUserByEmail(email)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -47,12 +55,12 @@ func (u *uservice) UserLogin(email, password string) (response.TokenResponse, er
 		return response.TokenResponse{}, errors.New("password incorrect")
 	}
 
-	accessToken, err := token.CreateAccessToken(user, cfg.SecretKey, 2)
+	accessToken, err := tokenStore.CreateAccessToken(user, cfg.SecretKey, 2)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
 
-	refreshToken, err := token.CreateRefreshToken(user, cfg.SecretKey, 168)
+	refreshToken, err := tokenStore.CreateRefreshToken(user, cfg.SecretKey, 168)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -64,7 +72,7 @@ func (u *uservice) UserLogin(email, password string) (response.TokenResponse, er
 }
 
 func (u *uservice) UserRegister(name, email, password string) (response.TokenResponse, error) {
-	existUser, err := user.GetUserByEmail(email)
+	existUser, err := userStore.GetUserByEmail(email)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -81,17 +89,17 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 		return response.TokenResponse{}, err
 	}
 
-	newUser, err := user.CreateUser(name, email, string(encryptedPassword))
+	newUser, err := userStore.CreateUser(name, email, string(encryptedPassword))
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
 
-	accessToken, err := token.CreateAccessToken(newUser, cfg.SecretKey, 2)
+	accessToken, err := tokenStore.CreateAccessToken(newUser, cfg.SecretKey, 2)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
 
-	refreshToken, err := token.CreateRefreshToken(newUser, cfg.SecretKey, 168)
+	refreshToken, err := tokenStore.CreateRefreshToken(newUser, cfg.SecretKey, 168)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -99,6 +107,51 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 	return response.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) {
+	user, err := userStore.GetUserByID(input.ID)
+	if err != nil {
+		return response.UserData{}, err
+	}
+
+	if user == nil {
+		return response.UserData{}, errors.New("user doesn't exist")
+	}
+
+	var password string
+	if input.Password != nil {
+		encryptedPassword, err := bcrypt.GenerateFromPassword(
+			[]byte(*input.Password),
+			bcrypt.DefaultCost,
+		)
+		if err != nil {
+			return response.UserData{}, err
+		}
+
+		password = string(encryptedPassword)
+	}
+
+	updateData := store.UpdateUserInput{
+		Name:  input.Name,
+		Email: input.Email,
+	}
+	if password != "" {
+		updateData.Password = &password
+	}
+
+	userData, err := userStore.UpdateUser(input.ID, updateData)
+	if err != nil {
+		return response.UserData{}, err
+	}
+
+	return response.UserData{
+		ID:        userData.ID,
+		Name:      userData.Name,
+		Email:     userData.Email,
+		CreatedAt: userData.CreatedAt,
+		UpdatedAt: &userData.UpdatedAt.Time,
 	}, nil
 }
 

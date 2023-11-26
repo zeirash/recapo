@@ -8,6 +8,6 @@ import (
 var (
 	cfg config.Config
 
-	user store.UserStore
-	token store.TokenStore
+	userStore store.UserStore
+	tokenStore store.TokenStore
 )

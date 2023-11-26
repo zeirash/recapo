@@ -25,6 +25,11 @@ func NewRouter() *mux.Router {
 
 	r.Handle("/test", middleware.MiddlewareWrapper(http.HandlerFunc(handler.HealthHandler), middleware.JwtMiddleware()))
 
+	// For User
+	r.Handle("/user", middleware.MiddlewareWrapper(http.HandlerFunc(handler.UpdateUserHandler), middleware.JwtMiddleware())).Methods("PATCH")
+
+	// TODO: For System
+
 	return r
 }
 
