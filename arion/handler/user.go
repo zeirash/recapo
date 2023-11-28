@@ -2,7 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -14,6 +16,30 @@ type (
 		Password *string `json:"password"`
 	}
 )
+
+func GetUserHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userID := ctx.Value(common.UserIDKey).(int)
+
+	params := mux.Vars(r)
+	if params["user_id"] != "" {
+		userIDInt, _ := strconv.Atoi(params["user_id"])
+		userID = userIDInt
+	}
+
+	res, err := userService.GetUserByID(int(userID))
+	if err != nil {
+		WriteErrorJson(w, http.StatusInternalServerError, err, "get_user")
+		return
+	}
+
+	if res == nil {
+		WriteErrorJson(w, http.StatusNotFound, err, "get_user")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
 
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

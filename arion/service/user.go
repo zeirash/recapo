@@ -15,6 +15,7 @@ type (
 		UserLogin(email, password string) (response.TokenResponse, error)
 		UserRegister(name, email, password string) (response.TokenResponse, error)
 		UpdateUser(input UpdateUserInput) (response.UserData, error)
+		GetUserByID(userID int) (*response.UserData, error)
 	}
 
 	uservice struct {}
@@ -155,29 +156,21 @@ func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) 
 	}, nil
 }
 
-func GetUser() {
-	// userId, err := uuid.FromString(c.Param("userId"))
-	// if err != nil {
-	// 	helpers.RespondWithError(c, http.StatusBadRequest, "invalid user id")
-	// 	return
-	// }
+func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
+	user, err := userStore.GetUserByID(userID)
+	if err != nil {
+		return &response.UserData{}, err
+	}
 
-	// user, err := repository.GetUserById(context.Background(), &userId)
-	// if err != nil {
-	// 	config.Logger.Errorf("Error while searching: %s", err)
-	// 	helpers.RespondWithError(c, http.StatusInternalServerError, "internal server error")
-	// 	return
-	// }
-	// if user.ID.IsNil() {
-	// 	helpers.RespondWithError(c, http.StatusNotFound, "user not found")
-	// 	return
-	// }
+	if user == nil {
+		return nil, errors.New("user doesn't exist")
+	}
 
-	// err = utils.WriteJSON(c.Writer, c)
-	// if err != nil {
-	// 	helpers.RespondWithError(c, http.StatusInternalServerError, "internal server error")
-	// 	return
-	// }
-
-	// c.JSON(http.StatusOK, user)
+	return &response.UserData{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: &user.UpdatedAt.Time,
+	}, nil
 }

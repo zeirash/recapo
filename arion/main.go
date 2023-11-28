@@ -23,12 +23,15 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/login", handler.LoginHandler).Methods("POST")
 	r.HandleFunc("/register", handler.RegisterHandler).Methods("POST")
 
-	r.Handle("/test", middleware.MiddlewareWrapper(http.HandlerFunc(handler.HealthHandler), middleware.JwtMiddleware()))
+	r.Handle("/test/{id}", middleware.ChainMiddleware()(http.HandlerFunc(handler.HealthHandler)))
+	// r.Handle("/test/{id}", middleware.MiddlewareWrapper(http.HandlerFunc(handler.HealthHandler), middleware.Authentication()))
 
 	// For User
-	r.Handle("/user", middleware.MiddlewareWrapper(http.HandlerFunc(handler.UpdateUserHandler), middleware.JwtMiddleware())).Methods("PATCH")
+	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateUserHandler))).Methods("PATCH")
+	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
 
-	// TODO: For System
+	// For System
+	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
 
 	return r
 }
@@ -40,8 +43,8 @@ func main() {
 	// init router
 	r := NewRouter()
 	c := cors.New(cors.Options{
-			AllowedOrigins: []string{"*"},
-			AllowCredentials: true,
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
 	})
 	handler := c.Handler(r)
 

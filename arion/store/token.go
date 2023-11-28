@@ -13,7 +13,7 @@ type (
 		CreateAccessToken(user *model.User, secret string, expiry int) (string, error)
 		CreateRefreshToken(user *model.User, secret string, expiry int) (string, error)
 		IsAuthorized(requestToken, secret string) (bool, error)
-		ExtractIDFromToken(requestToken, secret string) (float64, error)
+		ExtractDataFromToken(requestToken, secret string) (model.TokenData, error)
 	}
 
 	token struct {}
@@ -29,8 +29,9 @@ func (t *token) CreateAccessToken(user *model.User, secret string, expiry int) (
 	}
 
 	claim := &model.JwtCustomClaims{
-		Name: user.Name,
-		ID:   user.ID,
+		Name:       user.Name,
+		ID:         user.ID,
+		SystemMode: user.SystemMode,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: exp,
 		},
@@ -79,7 +80,7 @@ func (t *token) IsAuthorized(requestToken, secret string) (bool, error) {
 	return true, nil
 }
 
-func (t *token) ExtractIDFromToken(requestToken, secret string) (float64, error) {
+func (t *token) ExtractDataFromToken(requestToken, secret string) (model.TokenData, error) {
 	token, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -88,14 +89,20 @@ func (t *token) ExtractIDFromToken(requestToken, secret string) (float64, error)
 	})
 
 	if err != nil {
-		return 0, err
+		return model.TokenData{}, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if !ok && !token.Valid {
-		return 0, fmt.Errorf("invalid token")
+		return model.TokenData{}, fmt.Errorf("invalid token")
 	}
 
-	return claims["id"].(float64), nil
+	tokenData := model.TokenData{
+		Name:       claims["name"].(string),
+		ID:         int(claims["id"].(float64)),
+		SystemMode: claims["system_mode"].(bool),
+	}
+
+	return tokenData, nil
 }

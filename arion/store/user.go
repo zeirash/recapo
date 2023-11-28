@@ -37,9 +37,13 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 
 	resp := model.User{}
 
-	q := `SELECT name FROM "user" WHERE id = $1`
+	q := `
+		SELECT id, name, email, password, system_mode, created_at, updated_at
+		FROM "user"
+		WHERE id = $1
+	`
 
-	err := db.QueryRow(q, userID).Scan(&resp.Name)
+	err := db.QueryRow(q, userID).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.SystemMode, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -59,12 +63,12 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 
 	resp := model.User{}
 	q := `
-		SELECT id, name, email, password, created_at, updated_at
+		SELECT id, name, email, password, system_mode, created_at, updated_at
 		FROM "user"
 		WHERE email = $1
 	`
 
-	err := db.QueryRow(q, email).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.CreatedAt, &resp.UpdatedAt)
+	err := db.QueryRow(q, email).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.SystemMode, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -97,7 +101,6 @@ func (u *user) CreateUser(name, email, hashPassword string) (*model.User, error)
 		ID:        id,
 		Name:      name,
 		Email:     email,
-		Password:  hashPassword,
 		CreatedAt: now,
 	}, nil
 }
@@ -129,12 +132,12 @@ func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 		UPDATE "user"
 		SET %s
 		WHERE id = $1
-		RETURNING *
+		RETURNING id, name, email, created_at, updated_at
 	`
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := db.QueryRow(q, id).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := db.QueryRow(q, id).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

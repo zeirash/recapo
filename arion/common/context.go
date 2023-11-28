@@ -10,7 +10,8 @@ type contextKey string
 const (
 	DefaultContextSeconds = 60
 
-	UserIDKey contextKey = "user-id"
+	UserIDKey     contextKey = "user-id"
+	SystemModeKey contextKey = "system-mode"
 )
 
 func DefaultTimeoutContext() (context.Context, context.CancelFunc) {
