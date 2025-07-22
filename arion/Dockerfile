@@ -5,5 +5,5 @@ COPY . ./
 RUN go mod download
 RUN go build -o /arion
 
-EXPOSE 3000
+EXPOSE 4000
 CMD ["/arion"]

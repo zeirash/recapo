@@ -48,6 +48,6 @@ func main() {
 	})
 	handler := c.Handler(r)
 
-	fmt.Println("Server run on port :3000")
-	log.Fatal(http.ListenAndServe(":3000", handler))
+	fmt.Println("Server run on port :4000")
+	log.Fatal(http.ListenAndServe(":4000", handler))
 }
