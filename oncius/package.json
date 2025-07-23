@@ -1,0 +1,33 @@
+{
+  "name": "recapo-nextjs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Recapo - Next.js Frontend",
+  "author": "Tiffany",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@mdx-js/react": "^2.3.0",
+    "@theme-ui/mdx": "^0.16.0",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-query": "^3.39.3",
+    "sass": "^1.63.6",
+    "theme-ui": "^0.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.6",
+    "@types/react": "^18.2.9",
+    "@types/react-dom": "^18.2.4",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0",
+    "typescript": "^5.1.3"
+  }
+}
