@@ -148,13 +148,18 @@ func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) 
 		return response.UserData{}, err
 	}
 
-	return response.UserData{
+	res := response.UserData{
 		ID:        userData.ID,
 		Name:      userData.Name,
 		Email:     userData.Email,
 		CreatedAt: userData.CreatedAt,
-		UpdatedAt: &userData.UpdatedAt.Time,
-	}, nil
+	}
+
+	if userData.UpdatedAt.Valid {
+		res.UpdatedAt = &userData.UpdatedAt.Time
+	}
+
+	return res, nil
 }
 
 func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
@@ -167,13 +172,18 @@ func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
 		return nil, errors.New("user doesn't exist")
 	}
 
-	return &response.UserData{
+	res := response.UserData{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
-		UpdatedAt: &user.UpdatedAt.Time,
-	}, nil
+	}
+
+	if user.UpdatedAt.Valid {
+		res.UpdatedAt = &user.UpdatedAt.Time
+	}
+
+	return &res, nil
 }
 
 func (u *uservice) GetUsers() ([]response.UserData, error) {
@@ -184,13 +194,18 @@ func (u *uservice) GetUsers() ([]response.UserData, error) {
 
 	usersData := make([]response.UserData, len(users))
 	for _, user := range users {
-		usersData = append(usersData, response.UserData{
+		res := response.UserData{
 			ID:        user.ID,
 			Name:      user.Name,
 			Email:     user.Email,
 			CreatedAt: user.CreatedAt,
-			UpdatedAt: &user.UpdatedAt.Time,
-		})
+		}
+
+		if user.UpdatedAt.Valid {
+			res.UpdatedAt = &user.UpdatedAt.Time
+		}
+
+		usersData = append(usersData, res)
 	}
 
 	return usersData, nil

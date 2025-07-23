@@ -10,9 +10,11 @@ import (
 	"github.com/zeirash/recapo/arion/service"
 )
 
-type ErrorBodyResponse struct {
-	Code  string `json:"code"`
-	Error string `json:"error"`
+type ApiResponse struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data"`
+	Code    string      `json:"code"`
+	Message string      `json:"message"`
 }
 
 var (
@@ -29,7 +31,12 @@ func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 	w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(status)
 
-	jsonResp, err := json.Marshal(body)
+	res := ApiResponse{
+		Success: true,
+		Data:    body,
+	}
+
+	jsonResp, err := json.Marshal(res)
 	if err != nil {
 		fmt.Println("error marshall body: ", err.Error())
 		return
@@ -41,12 +48,13 @@ func WriteErrorJson(w http.ResponseWriter, status int, err error, code string) {
 	w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(status)
 
-	body := ErrorBodyResponse{
+	res := ApiResponse{
+		Success: false,
 		Code: code,
-		Error: err.Error(),
+		Message: err.Error(),
 	}
 
-	jsonResp, err := json.Marshal(body)
+	jsonResp, err := json.Marshal(res)
 	if err != nil {
 		fmt.Println("error marshall body: ", err.Error())
 		return

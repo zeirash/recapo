@@ -2,9 +2,7 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -21,11 +19,11 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := ctx.Value(common.UserIDKey).(int)
 
-	params := mux.Vars(r)
-	if params["user_id"] != "" {
-		userIDInt, _ := strconv.Atoi(params["user_id"])
-		userID = userIDInt
-	}
+	// params := mux.Vars(r)
+	// if params["user_id"] != "" {
+	// 	userIDInt, _ := strconv.Atoi(params["user_id"])
+	// 	userID = userIDInt
+	// }
 
 	res, err := userService.GetUserByID(int(userID))
 	if err != nil {
