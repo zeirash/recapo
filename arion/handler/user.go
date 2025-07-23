@@ -41,6 +41,23 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
+	// ctx := r.Context()
+
+	res, err := userService.GetUsers()
+	if err != nil {
+		WriteErrorJson(w, http.StatusInternalServerError, err, "get_users")
+		return
+	}
+
+	if res == nil {
+		WriteErrorJson(w, http.StatusNotFound, err, "get_users")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := ctx.Value(common.UserIDKey).(float64)

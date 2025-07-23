@@ -29,12 +29,12 @@ type (
 
 	/********************* User ************************/
 	User struct {
-		ID         int         `db:"id"`
-		Name       string      `db:"name"`
-		Email      string      `db:"email"`
-		Password   string      `db:"password"`
-		SystemMode bool        `db:"system_mode"`
-		CreatedAt time.Time	   `db:"created_at"`
-		UpdatedAt sql.NullTime `db:"updated_at"`
+		ID         int          `db:"id"`
+		Name       string       `db:"name"`
+		Email      string       `db:"email"`
+		Password   string       `db:"password"`
+		SystemMode bool         `db:"system_mode"`
+		CreatedAt  time.Time    `db:"created_at"`
+		UpdatedAt  sql.NullTime `db:"updated_at"`
 	}
 )

@@ -14,6 +14,7 @@ type (
 	UserStore interface {
 		GetUserByID(userID int) (*model.User, error)
 		GetUserByEmail(email string) (*model.User, error)
+		GetUsers() ([]model.User, error)
 		CreateUser(name, email, hashPassword string) (*model.User, error)
 		UpdateUser(id int, input UpdateUserInput) (*model.User, error)
 	}
@@ -77,6 +78,40 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 	}
 
 	return &resp, nil
+}
+
+func (u *user) GetUsers() ([]model.User, error) {
+	db := database.GetDB()
+	if db == nil {
+		return nil, sql.ErrNoRows
+	}
+	defer db.Close()
+
+	q := `
+		SELECT id, name, email, password, system_mode, created_at, updated_at
+		FROM "user"
+	`
+
+	rows, err := db.Query(q)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []model.User{}
+	for rows.Next() {
+		var user model.User
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.SystemMode, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func (u *user) CreateUser(name, email, hashPassword string) (*model.User, error) {

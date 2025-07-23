@@ -16,6 +16,7 @@ type (
 		UserRegister(name, email, password string) (response.TokenResponse, error)
 		UpdateUser(input UpdateUserInput) (response.UserData, error)
 		GetUserByID(userID int) (*response.UserData, error)
+		GetUsers() ([]response.UserData, error)
 	}
 
 	uservice struct {}
@@ -51,7 +52,7 @@ func (u *uservice) UserLogin(email, password string) (response.TokenResponse, er
 	if user == nil {
 		return response.TokenResponse{}, errors.New("user doesn't exist")
 	}
-	
+
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
 		return response.TokenResponse{}, errors.New("password incorrect")
 	}
@@ -173,4 +174,24 @@ func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: &user.UpdatedAt.Time,
 	}, nil
+}
+
+func (u *uservice) GetUsers() ([]response.UserData, error) {
+	users, err := userStore.GetUsers()
+	if err != nil {
+		return []response.UserData{}, err
+	}
+
+	usersData := make([]response.UserData, len(users))
+	for _, user := range users {
+		usersData = append(usersData, response.UserData{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: &user.UpdatedAt.Time,
+		})
+	}
+
+	return usersData, nil
 }
