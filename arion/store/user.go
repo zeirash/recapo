@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
 )
@@ -15,8 +16,10 @@ type (
 		GetUserByID(userID int) (*model.User, error)
 		GetUserByEmail(email string) (*model.User, error)
 		GetUsers() ([]model.User, error)
-		CreateUser(name, email, hashPassword string) (*model.User, error)
+		CreateUser(name, email, hashPassword, role string, shop_id int) (*model.User, error)
 		UpdateUser(id int, input UpdateUserInput) (*model.User, error)
+		Roles() []string
+		IsValidRole(role string) bool
 	}
 
 	user struct{}
@@ -39,12 +42,12 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 	resp := model.User{}
 
 	q := `
-		SELECT id, name, email, password, system_mode, created_at, updated_at
+		SELECT id, name, email, password, role, created_at, updated_at
 		FROM "user"
 		WHERE id = $1
 	`
 
-	err := db.QueryRow(q, userID).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.SystemMode, &resp.CreatedAt, &resp.UpdatedAt)
+	err := db.QueryRow(q, userID).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -64,12 +67,12 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 
 	resp := model.User{}
 	q := `
-		SELECT id, name, email, password, system_mode, created_at, updated_at
+		SELECT id, name, email, password, role, created_at, updated_at
 		FROM "user"
 		WHERE email = $1
 	`
 
-	err := db.QueryRow(q, email).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.SystemMode, &resp.CreatedAt, &resp.UpdatedAt)
+	err := db.QueryRow(q, email).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -88,7 +91,7 @@ func (u *user) GetUsers() ([]model.User, error) {
 	defer db.Close()
 
 	q := `
-		SELECT id, name, email, password, system_mode, created_at, updated_at
+		SELECT id, name, email, password, role, created_at, updated_at
 		FROM "user"
 	`
 
@@ -104,7 +107,7 @@ func (u *user) GetUsers() ([]model.User, error) {
 	users := []model.User{}
 	for rows.Next() {
 		var user model.User
-		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.SystemMode, &user.CreatedAt, &user.UpdatedAt)
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +117,7 @@ func (u *user) GetUsers() ([]model.User, error) {
 	return users, nil
 }
 
-func (u *user) CreateUser(name, email, hashPassword string) (*model.User, error) {
+func (u *user) CreateUser(name, email, hashPassword, role string, shop_id int) (*model.User, error) {
 	db := database.GetDB()
 	defer db.Close()
 
@@ -122,12 +125,12 @@ func (u *user) CreateUser(name, email, hashPassword string) (*model.User, error)
 	var id int
 
 	q := `
-		INSERT INTO "user" (name, email, password, created_at)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO "user" (name, email, password, role, shop_id, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`
 
-	err := db.QueryRow(q, name, email, hashPassword, now).Scan(&id)
+	err := db.QueryRow(q, name, email, hashPassword, role, shop_id, now).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -136,6 +139,7 @@ func (u *user) CreateUser(name, email, hashPassword string) (*model.User, error)
 		ID:        id,
 		Name:      name,
 		Email:     email,
+		Role:      role,
 		CreatedAt: now,
 	}, nil
 }
@@ -178,4 +182,21 @@ func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (u *user) Roles() []string {
+	return []string{
+		constant.RoleSystem,
+		constant.RoleOwner,
+		constant.RoleAdmin,
+	}
+}
+
+func (u *user) IsValidRole(role string) bool {
+	for _, validRole := range u.Roles() {
+		if role == validRole {
+			return true
+		}
+	}
+	return false
 }

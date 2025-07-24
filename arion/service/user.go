@@ -2,8 +2,10 @@ package service
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/zeirash/recapo/arion/common/config"
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
 
@@ -38,6 +40,10 @@ func NewUserService() UserService {
 
 	if tokenStore == nil {
 		tokenStore = store.NewTokenStore()
+	}
+
+	if shopStore == nil {
+		shopStore = store.NewShopStore()
 	}
 
 	return &uservice{}
@@ -91,7 +97,14 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 		return response.TokenResponse{}, err
 	}
 
-	newUser, err := userStore.CreateUser(name, email, string(encryptedPassword))
+	shopName := fmt.Sprintf("%s's Shop", name)
+	shop, err := shopStore.CreateShop(shopName)
+	if err != nil {
+		return response.TokenResponse{}, err
+	}
+
+	// default role is owner for user who register
+	newUser, err := userStore.CreateUser(name, email, string(encryptedPassword), constant.RoleOwner, shop.ID)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}

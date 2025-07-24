@@ -92,7 +92,6 @@ func validateRegister(input RegisterRequest) (bool, error) {
 		return false, errors.New("email not valid")
 	}
 
-	//TODO: validate password value
 	if input.Password == "" {
 		return false, errors.New("password must not empty")
 	}

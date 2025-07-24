@@ -1,4 +1,5 @@
 import React from 'react'
+import { UserRole } from '@/constants/roles'
 
 // API Response Types
 export interface ApiResponse<T = any> {
@@ -30,7 +31,7 @@ export interface User {
   id: string
   name: string
   email: string
-  role: 'user' | 'admin'
+  role: UserRole
   createdAt: string
   updatedAt: string
 }

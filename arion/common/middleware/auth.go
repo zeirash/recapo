@@ -48,14 +48,14 @@ func Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		userData, err := tokenStore.ExtractDataFromToken(authToken, secret)
+		tokenData, err := tokenStore.ExtractDataFromToken(authToken, secret)
 		if err != nil {
 			handler.WriteErrorJson(w, http.StatusInternalServerError, err, "extract_data")
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), common.UserIDKey, userData.ID)
-		ctx = context.WithValue(ctx, common.SystemModeKey, userData.SystemMode)
+		ctx := context.WithValue(r.Context(), common.UserIDKey, tokenData.UserID)
+		ctx = context.WithValue(ctx, common.SystemModeKey, tokenData.SystemMode)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

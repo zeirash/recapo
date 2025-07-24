@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/model"
 	jwt "github.com/golang-jwt/jwt/v4"
 )
@@ -30,8 +31,8 @@ func (t *token) CreateAccessToken(user *model.User, secret string, expiry int) (
 
 	claim := &model.JwtCustomClaims{
 		Name:       user.Name,
-		ID:         user.ID,
-		SystemMode: user.SystemMode,
+		UserID:     user.ID,
+		SystemMode: user.Role == constant.RoleSystem,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: exp,
 		},
@@ -51,7 +52,7 @@ func (t *token) CreateRefreshToken(user *model.User, secret string, expiry int) 
 		time.Now().Add(time.Hour * time.Duration(expiry)),
 	}
 	claimsRefresh := &model.JwtCustomRefreshClaims{
-		ID: user.ID,
+		UserID: user.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: exp,
 		},
@@ -100,7 +101,7 @@ func (t *token) ExtractDataFromToken(requestToken, secret string) (model.TokenDa
 
 	tokenData := model.TokenData{
 		Name:       claims["name"].(string),
-		ID:         int(claims["id"].(float64)),
+		UserID:     int(claims["user_id"].(float64)),
 		SystemMode: claims["system_mode"].(bool),
 	}
 
