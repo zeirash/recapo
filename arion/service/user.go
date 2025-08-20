@@ -205,7 +205,7 @@ func (u *uservice) GetUsers() ([]response.UserData, error) {
 		return []response.UserData{}, err
 	}
 
-	usersData := make([]response.UserData, len(users))
+	var usersData []response.UserData
 	for _, user := range users {
 		res := response.UserData{
 			ID:        user.ID,
