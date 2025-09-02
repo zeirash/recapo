@@ -43,7 +43,7 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 
 	q := `
 		SELECT id, name, email, password, role, created_at, updated_at
-		FROM "user"
+		FROM users
 		WHERE id = $1
 	`
 
@@ -67,12 +67,12 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 
 	resp := model.User{}
 	q := `
-		SELECT id, name, email, password, role, created_at, updated_at
-		FROM "user"
+		SELECT id, shop_id,name, email, password, role, created_at, updated_at
+		FROM users
 		WHERE email = $1
 	`
 
-	err := db.QueryRow(q, email).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
+	err := db.QueryRow(q, email).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -92,7 +92,7 @@ func (u *user) GetUsers() ([]model.User, error) {
 
 	q := `
 		SELECT id, name, email, password, role, created_at, updated_at
-		FROM "user"
+		FROM users
 	`
 
 	rows, err := db.Query(q)
@@ -125,7 +125,7 @@ func (u *user) CreateUser(name, email, hashPassword, role string, shop_id int) (
 	var id int
 
 	q := `
-		INSERT INTO "user" (name, email, password, role, shop_id, created_at)
+		INSERT INTO users (name, email, password, role, shop_id, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`
@@ -168,7 +168,7 @@ func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 	set = append(set, "updated_at = now()")
 
 	q := `
-		UPDATE "user"
+		UPDATE users
 		SET %s
 		WHERE id = $1
 		RETURNING id, name, email, created_at, updated_at

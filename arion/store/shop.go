@@ -27,7 +27,7 @@ func (s *shop) CreateShop(name string) (*model.Shop, error) {
 	var id int
 
 	q := `
-		INSERT INTO shop (name, created_at)
+		INSERT INTO shops (name, created_at)
 		VALUES ($1, $2)
 		RETURNING id
 	`

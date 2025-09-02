@@ -32,6 +32,7 @@ func (t *token) CreateAccessToken(user *model.User, secret string, expiry int) (
 	claim := &model.JwtCustomClaims{
 		Name:       user.Name,
 		UserID:     user.ID,
+		ShopID:     user.ShopID,
 		SystemMode: user.Role == constant.RoleSystem,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: exp,
@@ -53,6 +54,7 @@ func (t *token) CreateRefreshToken(user *model.User, secret string, expiry int) 
 	}
 	claimsRefresh := &model.JwtCustomRefreshClaims{
 		UserID: user.ID,
+		ShopID: user.ShopID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: exp,
 		},
@@ -102,6 +104,7 @@ func (t *token) ExtractDataFromToken(requestToken, secret string) (model.TokenDa
 	tokenData := model.TokenData{
 		Name:       claims["name"].(string),
 		UserID:     int(claims["user_id"].(float64)),
+		ShopID:     int(claims["shop_id"].(float64)),
 		SystemMode: claims["system_mode"].(bool),
 	}
 
