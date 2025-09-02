@@ -19,11 +19,16 @@ type ApiResponse struct {
 
 var (
 	userService service.UserService
+	customerService service.CustomerService
 )
 
 func Init() {
 	if userService == nil {
 		userService = service.NewUserService()
+	}
+
+	if customerService == nil {
+		customerService = service.NewCustomerService()
 	}
 }
 
@@ -50,7 +55,7 @@ func WriteErrorJson(w http.ResponseWriter, status int, err error, code string) {
 
 	res := ApiResponse{
 		Success: false,
-		Code: code,
+		Code:    code,
 		Message: err.Error(),
 	}
 

@@ -132,7 +132,7 @@ func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) 
 	}
 
 	if user == nil {
-		return response.UserData{}, errors.New("user doesn't exist")
+		return response.UserData{}, errors.New("user not found")
 	}
 
 	var password string

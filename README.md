@@ -69,9 +69,15 @@ npm run build
 npm start
 ```
 
+### Database (Postgres)
+```bash
+cd recapo
+docker compose up -d postgres
+```
+
 ### Docker Compose (Full Stack)
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 🔒 Security Features

@@ -40,8 +40,6 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-
 	res, err := userService.GetUsers()
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "get_users")
@@ -58,7 +56,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := ctx.Value(common.UserIDKey).(float64)
+	userID := ctx.Value(common.UserIDKey).(int)
 
 	inp := UpdateUserRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
@@ -73,8 +71,7 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		Password: inp.Password,
 	})
 	if err != nil {
-		status := http.StatusInternalServerError
-		WriteErrorJson(w, status, err, "update_user")
+		WriteErrorJson(w, http.StatusInternalServerError, err, "update_user")
 		return
 	}
 

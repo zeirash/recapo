@@ -55,6 +55,7 @@ func Authentication(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), common.UserIDKey, tokenData.UserID)
+		ctx = context.WithValue(ctx, common.ShopIDKey, tokenData.ShopID)
 		ctx = context.WithValue(ctx, common.SystemModeKey, tokenData.SystemMode)
 		r = r.WithContext(ctx)
 

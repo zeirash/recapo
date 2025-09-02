@@ -11,6 +11,7 @@ const (
 	DefaultContextSeconds = 60
 
 	UserIDKey     contextKey = "user-id"
+	ShopIDKey     contextKey = "shop-id"
 	SystemModeKey contextKey = "system-mode"
 )
 
