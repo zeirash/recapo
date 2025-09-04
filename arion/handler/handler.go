@@ -20,6 +20,7 @@ type ApiResponse struct {
 var (
 	userService service.UserService
 	customerService service.CustomerService
+	productService service.ProductService
 )
 
 func Init() {
@@ -29,6 +30,10 @@ func Init() {
 
 	if customerService == nil {
 		customerService = service.NewCustomerService()
+	}
+
+	if productService == nil {
+		productService = service.NewProductService()
 	}
 }
 

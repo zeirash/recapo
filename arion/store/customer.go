@@ -56,9 +56,6 @@ func (c *customer) GetCustomerByID(id int) (*model.Customer, error) {
 
 func (c *customer) GetCustomersByShopID(shopID int) ([]model.Customer, error) {
 	db := database.GetDB()
-	if db == nil {
-		return nil, sql.ErrNoRows
-	}
 	defer db.Close()
 
 	q := `

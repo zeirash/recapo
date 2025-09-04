@@ -12,4 +12,5 @@ var (
 	tokenStore store.TokenStore
 	shopStore store.ShopStore
 	customerStore store.CustomerStore
+	productStore store.ProductStore
 )
