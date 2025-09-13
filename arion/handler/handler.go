@@ -18,9 +18,9 @@ type ApiResponse struct {
 }
 
 var (
-	userService service.UserService
+	userService     service.UserService
 	customerService service.CustomerService
-	productService service.ProductService
+	productService  service.ProductService
 )
 
 func Init() {
@@ -39,7 +39,7 @@ func Init() {
 
 func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-  w.WriteHeader(status)
+	w.WriteHeader(status)
 
 	res := ApiResponse{
 		Success: true,
@@ -56,7 +56,7 @@ func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 
 func WriteErrorJson(w http.ResponseWriter, status int, err error, code string) {
 	w.Header().Set("Content-Type", "application/json")
-  w.WriteHeader(status)
+	w.WriteHeader(status)
 
 	res := ApiResponse{
 		Success: false,

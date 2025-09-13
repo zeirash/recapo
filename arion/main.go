@@ -45,6 +45,10 @@ func NewRouter() *mux.Router {
 	// r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductHandler))).Methods("GET")
 	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")
 
+	r.Handle("/product/{product_id}/price", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreatePriceHandler))).Methods("POST")
+	r.Handle("/product/{product_id}/price/{price_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateProductPriceHandler))).Methods("PATCH")
+	r.Handle("/product/{product_id}/price/{price_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteProductPriceHandler))).Methods("DELETE")
+
 	// For System
 	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
 

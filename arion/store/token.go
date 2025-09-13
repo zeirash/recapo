@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/model"
-	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 type (
@@ -17,7 +17,7 @@ type (
 		ExtractDataFromToken(requestToken, secret string) (model.TokenData, error)
 	}
 
-	token struct {}
+	token struct{}
 )
 
 func NewTokenStore() TokenStore {

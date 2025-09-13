@@ -17,13 +17,13 @@ type (
 		DeleteCustomerByID(id int) error
 	}
 
-	cservice struct {}
+	cservice struct{}
 
 	UpdateCustomerInput struct {
-		ID       int
-		Name     *string
-		Phone    *string
-		Address  *string
+		ID      int
+		Name    *string
+		Phone   *string
+		Address *string
 	}
 )
 
@@ -98,8 +98,8 @@ func (c *cservice) UpdateCustomer(input UpdateCustomerInput) (response.CustomerD
 
 	//TODO: validate customer unique phone
 	updateData := store.UpdateCustomerInput{
-		Name:  input.Name,
-		Phone: input.Phone,
+		Name:    input.Name,
+		Phone:   input.Phone,
 		Address: input.Address,
 	}
 

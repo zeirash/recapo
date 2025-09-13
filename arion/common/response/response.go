@@ -30,8 +30,16 @@ type (
 	}
 
 	ProductData struct {
+		ID        int         `json:"id"`
+		Name      string      `json:"name"`
+		Prices    []PriceData `json:"prices"`
+		CreatedAt time.Time   `json:"created_at"`
+		UpdatedAt *time.Time  `json:"updated_at"`
+	}
+
+	PriceData struct {
 		ID        int        `json:"id"`
-		Name      string     `json:"name"`
+		Price     int        `json:"price"`
 		CreatedAt time.Time  `json:"created_at"`
 		UpdatedAt *time.Time `json:"updated_at"`
 	}

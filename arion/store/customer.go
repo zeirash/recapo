@@ -22,9 +22,9 @@ type (
 	customer struct{}
 
 	UpdateCustomerInput struct {
-		Name     *string
-		Phone    *string
-		Address  *string
+		Name    *string
+		Phone   *string
+		Address *string
 	}
 )
 

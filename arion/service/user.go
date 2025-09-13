@@ -21,7 +21,7 @@ type (
 		GetUsers() ([]response.UserData, error)
 	}
 
-	uservice struct {}
+	uservice struct{}
 
 	UpdateUserInput struct {
 		ID       int

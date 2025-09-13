@@ -20,7 +20,7 @@ type Config struct {
 	DbPassword string `env:"DB_PASSWORD"`
 	DbPort     int    `env:"DB_PORT"`
 
-	SecretKey string  `env:"SECRET_KEY"`
+	SecretKey string `env:"SECRET_KEY"`
 }
 
 var cfg Config

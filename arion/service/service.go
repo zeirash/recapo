@@ -8,9 +8,9 @@ import (
 var (
 	cfg config.Config
 
-	userStore store.UserStore
-	tokenStore store.TokenStore
-	shopStore store.ShopStore
+	userStore     store.UserStore
+	tokenStore    store.TokenStore
+	shopStore     store.ShopStore
 	customerStore store.CustomerStore
-	productStore store.ProductStore
+	productStore  store.ProductStore
 )

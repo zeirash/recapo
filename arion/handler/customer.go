@@ -18,9 +18,9 @@ type (
 	}
 
 	UpdateCustomerRequest struct {
-		Name     *string `json:"name"`
-		Phone    *string `json:"phone"`
-		Address  *string `json:"address"`
+		Name    *string `json:"name"`
+		Phone   *string `json:"phone"`
+		Address *string `json:"address"`
 	}
 )
 
@@ -86,7 +86,6 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
-
 func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateUpdateDeleteCustomer(params); !valid {
@@ -97,7 +96,6 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	customerIDInt, _ := strconv.Atoi(params["customer_id"])
 	customerID := customerIDInt
 
-
 	inp := UpdateCustomerRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
@@ -105,10 +103,10 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := customerService.UpdateCustomer(service.UpdateCustomerInput{
-		ID:       customerID,
-		Name:     inp.Name,
-		Phone:    inp.Phone,
-		Address:  inp.Address,
+		ID:      customerID,
+		Name:    inp.Name,
+		Phone:   inp.Phone,
+		Address: inp.Address,
 	})
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "update_customer")
