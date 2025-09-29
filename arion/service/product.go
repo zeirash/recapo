@@ -11,7 +11,7 @@ import (
 type (
 	ProductService interface {
 		CreateProduct(shopID int, name string, price int) (response.ProductData, error)
-		// GetProductByID(id int) (*response.ProductData, error)
+		GetProductByID(productID int, shopID ...int) (*response.ProductData, error)
 		GetProductsByShopID(shopID int) ([]response.ProductData, error)
 		UpdateProduct(productID int, name string) (response.ProductData, error)
 		DeleteProductByID(productID int) error
@@ -64,6 +64,50 @@ func (p *pservice) CreateProduct(shopID int, name string, price int) (response.P
 	}
 
 	return res, nil
+}
+
+func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.ProductData, error) {
+	product, err := productStore.GetProductByID(productID, shopID...)
+	if err != nil {
+		return nil, err
+	}
+
+	if product == nil {
+		return nil, errors.New("product not found")
+	}
+
+	prices, err := productStore.GetPricesByProductID(productID)
+	if err != nil {
+		return &response.ProductData{}, err
+	}
+
+	var pricesData []response.PriceData
+	for _, price := range prices {
+		priceRes := response.PriceData{
+			ID:        price.ID,
+			Price:     price.Price,
+			CreatedAt: price.CreatedAt,
+		}
+
+		if price.UpdatedAt.Valid {
+			priceRes.UpdatedAt = &price.UpdatedAt.Time
+		}
+
+		pricesData = append(pricesData, priceRes)
+	}
+
+	res := response.ProductData{
+		ID:        product.ID,
+		Name:      product.Name,
+		CreatedAt: product.CreatedAt,
+		Prices:    pricesData,
+	}
+
+	if product.UpdatedAt.Valid {
+		res.UpdatedAt = &product.UpdatedAt.Time
+	}
+
+	return &res, nil
 }
 
 func (p *pservice) GetProductsByShopID(shopID int) ([]response.ProductData, error) {

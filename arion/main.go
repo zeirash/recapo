@@ -35,14 +35,14 @@ func NewRouter() *mux.Router {
 	r.Handle("/customer", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateCustomerHandler))).Methods("POST")
 	r.Handle("/customer/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateCustomerHandler))).Methods("PATCH")
 	r.Handle("/customer/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteCustomerHandler))).Methods("DELETE")
-	r.Handle("/customer", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetCustomerHandler))).Methods("GET")
+	r.Handle("/customer/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetCustomerHandler))).Methods("GET")
 	r.Handle("/customers", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetCustomersHandler))).Methods("GET")
 
 	// For Product
 	r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateProductHandler))).Methods("POST")
 	r.Handle("/product/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateProductHandler))).Methods("PATCH")
 	r.Handle("/product/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteProductHandler))).Methods("DELETE")
-	// r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductHandler))).Methods("GET")
+	r.Handle("/product/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductHandler))).Methods("GET")
 	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")
 
 	r.Handle("/product/{product_id}/price", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreatePriceHandler))).Methods("POST")

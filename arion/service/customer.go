@@ -11,7 +11,7 @@ import (
 type (
 	CustomerService interface {
 		CreateCustomer(name, email, password string, shopID int) (response.CustomerData, error)
-		// GetCustomerByID(customerID int) (*response.CustomerData, error)
+		GetCustomerByID(customerID int, shopID ...int) (*response.CustomerData, error)
 		GetCustomersByShopID(shopID int) ([]response.CustomerData, error)
 		UpdateCustomer(input UpdateCustomerInput) (response.CustomerData, error)
 		DeleteCustomerByID(id int) error
@@ -58,6 +58,31 @@ func (c *cservice) CreateCustomer(name, phone, address string, shopID int) (resp
 	}
 
 	return res, nil
+}
+
+func (c *cservice) GetCustomerByID(customerID int, shopID ...int) (*response.CustomerData, error) {
+	customer, err := customerStore.GetCustomerByID(customerID, shopID...)
+	if err != nil {
+		return nil, err
+	}
+
+	if customer == nil {
+		return nil, errors.New("customer not found")
+	}
+
+	res := response.CustomerData{
+		ID:        customer.ID,
+		Name:      customer.Name,
+		Phone:     customer.Phone,
+		Address:   customer.Address,
+		CreatedAt: customer.CreatedAt,
+	}
+
+	if customer.UpdatedAt.Valid {
+		res.UpdatedAt = &customer.UpdatedAt.Time
+	}
+
+	return &res, nil
 }
 
 func (c *cservice) GetCustomersByShopID(shopID int) ([]response.CustomerData, error) {

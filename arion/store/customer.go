@@ -12,7 +12,7 @@ import (
 
 type (
 	CustomerStore interface {
-		GetCustomerByID(id int) (*model.Customer, error)
+		GetCustomerByID(id int, shopID ...int) (*model.Customer, error)
 		GetCustomersByShopID(shopID int) ([]model.Customer, error)
 		CreateCustomer(name, phone, address string, shopID int) (*model.Customer, error)
 		UpdateCustomer(id int, input UpdateCustomerInput) (*model.Customer, error)
@@ -32,9 +32,11 @@ func NewCustomerStore() CustomerStore {
 	return &customer{}
 }
 
-func (c *customer) GetCustomerByID(id int) (*model.Customer, error) {
+func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, error) {
 	db := database.GetDB()
 	defer db.Close()
+
+	criteria := []interface{}{id}
 
 	q := `
 		SELECT id, name, phone, address, created_at, updated_at
@@ -42,8 +44,13 @@ func (c *customer) GetCustomerByID(id int) (*model.Customer, error) {
 		WHERE id = $1
 	`
 
+	if len(shopID) > 0 {
+		q += " AND shop_id = $2"
+		criteria = append(criteria, shopID[0])
+	}
+
 	var customer model.Customer
-	err := db.QueryRow(q, id).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := db.QueryRow(q, criteria...).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

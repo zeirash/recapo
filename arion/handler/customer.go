@@ -49,28 +49,30 @@ func CreateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: authenticate whether the customer is belongs to the shop of current user
-	// ctx := r.Context()
-	// customerID := 1//ctx.Value(common.UserIDKey).(int)
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+	params := mux.Vars(r)
 
-	// params := mux.Vars(r)
-	// if params["user_id"] != "" {
-	// 	userIDInt, _ := strconv.Atoi(params["user_id"])
-	// 	userID = userIDInt
-	// }
+	if valid, err := validateCustomerID(params); !valid {
+		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		return
+	}
 
-	// res, err := customerService.GetCustomerByID(int(customerID))
-	// if err != nil {
-	// 	WriteErrorJson(w, http.StatusInternalServerError, err, "get_customer")
-	// 	return
-	// }
+	customerIDInt, _ := strconv.Atoi(params["customer_id"])
+	customerID := customerIDInt
 
-	// if res == nil {
-	// 	WriteErrorJson(w, http.StatusNotFound, err, "get_customer")
-	// 	return
-	// }
+	res, err := customerService.GetCustomerByID(customerID, shopID)
+	if err != nil {
+		WriteErrorJson(w, http.StatusInternalServerError, err, "get_customer")
+		return
+	}
 
-	WriteJson(w, http.StatusOK, "res")
+	if res == nil {
+		WriteErrorJson(w, http.StatusNotFound, err, "get_customer")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
 }
 
 func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +90,7 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 
 func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	if valid, err := validateUpdateDeleteCustomer(params); !valid {
+	if valid, err := validateCustomerID(params); !valid {
 		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
 		return
 	}
@@ -118,7 +120,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	if valid, err := validateUpdateDeleteCustomer(params); !valid {
+	if valid, err := validateCustomerID(params); !valid {
 		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
 		return
 	}
@@ -151,7 +153,7 @@ func validateCreateCustomer(inp CreateCustomerRequest) (bool, error) {
 	return true, nil
 }
 
-func validateUpdateDeleteCustomer(params map[string]string) (bool, error) {
+func validateCustomerID(params map[string]string) (bool, error) {
 	if params["customer_id"] == "" {
 		return false, errors.New("customer_id is required")
 	}

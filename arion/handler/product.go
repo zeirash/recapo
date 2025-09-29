@@ -44,6 +44,33 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+func GetProductHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+	params := mux.Vars(r)
+
+	if valid, err := validateProductID(params); !valid {
+		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	productIDInt, _ := strconv.Atoi(params["product_id"])
+	productID := productIDInt
+
+	res, err := productService.GetProductByID(productID, shopID)
+	if err != nil {
+		WriteErrorJson(w, http.StatusInternalServerError, err, "get_customer")
+		return
+	}
+
+	if res == nil {
+		WriteErrorJson(w, http.StatusNotFound, err, "get_customer")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
 func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -59,7 +86,7 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 
 func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	if valid, err := validateUpdateDeleteProduct(params); !valid {
+	if valid, err := validateProductID(params); !valid {
 		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
 		return
 	}
@@ -84,7 +111,7 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 
 func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	if valid, err := validateUpdateDeleteProduct(params); !valid {
+	if valid, err := validateProductID(params); !valid {
 		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
 		return
 	}
@@ -103,7 +130,7 @@ func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 
 func CreatePriceHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	if valid, err := validateUpdateDeleteProduct(params); !valid {
+	if valid, err := validateProductID(params); !valid {
 		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
 		return
 	}
@@ -188,7 +215,7 @@ func validateCreateProduct(inp ProductRequest) (bool, error) {
 	return true, nil
 }
 
-func validateUpdateDeleteProduct(params map[string]string) (bool, error) {
+func validateProductID(params map[string]string) (bool, error) {
 	if params["product_id"] == "" {
 		return false, errors.New("product_id is required")
 	}

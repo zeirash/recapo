@@ -11,7 +11,7 @@ import (
 
 type (
 	ProductStore interface {
-		GetProductByID(productID int) (*model.Product, error)
+		GetProductByID(productID int, shopID ...int) (*model.Product, error)
 		GetProductsByShopID(shopID int) ([]model.Product, error)
 		CreateProduct(name string, shopID int) (*model.Product, error)
 		UpdateProduct(productID int, name string) (*model.Product, error)
@@ -30,9 +30,11 @@ func NewProductStore() ProductStore {
 	return &product{}
 }
 
-func (p *product) GetProductByID(productID int) (*model.Product, error) {
+func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, error) {
 	db := database.GetDB()
 	defer db.Close()
+
+	criteria := []interface{}{productID}
 
 	q := `
 		SELECT id, name, created_at, updated_at
@@ -40,8 +42,13 @@ func (p *product) GetProductByID(productID int) (*model.Product, error) {
 		WHERE id = $1
 	`
 
+	if len(shopID) > 0 {
+		q += " AND shop_id = $2"
+		criteria = append(criteria, shopID[0])
+	}
+
 	var product model.Product
-	err := db.QueryRow(q, productID).Scan(&product.ID, &product.Name, &product.CreatedAt, &product.UpdatedAt)
+	err := db.QueryRow(q, criteria...).Scan(&product.ID, &product.Name, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
