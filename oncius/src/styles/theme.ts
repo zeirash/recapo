@@ -30,7 +30,7 @@ const theme: Theme = {
   },
   space: [0, 4, 8, 16, 24, 32, 48, 64, 96, 128],
   sizes: {
-    container: 1200,
+    container: 1600,
   },
   radii: {
     small: 4,

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from 'react'
-import { Box, Flex, Text } from 'theme-ui'
+import { Box, Flex, Text, IconButton } from 'theme-ui'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 
 interface SideMenuProps {
@@ -11,65 +12,70 @@ interface SideMenuProps {
 
 const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const { user } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
-    { id: 'products', label: 'Products', icon: '🛍️' },
-    { id: 'orders', label: 'Orders', icon: '📦' },
-    { id: 'customers', label: 'Customers', icon: '👥' },
+    { id: 'dashboard', label: 'Dashboard', icon: '🏠', path: '/dashboard' },
+    { id: 'products', label: 'Products', icon: '🛍️', path: '/products' },
+    { id: 'orders', label: 'Orders', icon: '📦', path: '/orders' },
+    { id: 'customers', label: 'Customers', icon: '👥', path: '/customers' },
   ]
+
+  const handleMenuClick = (item: typeof menuItems[0]) => {
+    onMenuSelect(item.id)
+    router.push(item.path)
+  }
 
   return (
     <Box
       sx={{
-        width: '280px',
+        width: '96px',
         bg: 'background',
         borderRight: '1px solid',
         borderColor: 'border',
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'stretch',
       }}
     >
       {/* Top Section */}
       <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'border' }}>
-        {/* Logo/Icon */}
-        <Box
-          sx={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            bg: 'primary',
-            mb: 3,
-          }}
-        />
+        <Flex sx={{ alignItems: 'center', justifyContent: 'center' }}>
+          {/* Logo/Icon */}
+          <Box
+            sx={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              bg: 'primary',
+            }}
+          />
+        </Flex>
       </Box>
 
       {/* Menu Items */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
-        <Text sx={{ fontSize: 0, color: 'text.secondary', mb: 2, px: 1 }}>
-          MENU
-        </Text>
-
+      <Box sx={{ flex: 1, overflowY: 'auto', p: 1 }}>
         {menuItems.map((item) => (
           <Box
             key={item.id}
             sx={{
-              p: 2,
+              py: 2,
+              px: 1,
               mb: 1,
               borderRadius: 'medium',
               cursor: 'pointer',
+              textAlign: 'center',
               bg: selectedMenu === item.id ? 'primary.light' : 'transparent',
               '&:hover': {
                 bg: selectedMenu === item.id ? 'primary.light' : 'background.light',
               },
             }}
-            onClick={() => onMenuSelect(item.id)}
+            onClick={() => handleMenuClick(item)}
           >
-            <Flex sx={{ alignItems: 'center', gap: 2 }}>
-              <Box sx={{ fontSize: 2 }}>{item.icon}</Box>
-              <Text sx={{ fontWeight: 'medium', fontSize: 1 }}>
-                {item.label}
-              </Text>
+            <Flex sx={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+              <Box sx={{ fontSize: 3, lineHeight: 1 }}>{item.icon}</Box>
+              <Text sx={{ fontSize: 0, lineHeight: 1, mt: 1 }}>{item.label}</Text>
             </Flex>
           </Box>
         ))}
@@ -78,7 +84,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
       {/* Bottom Section */}
       <Box sx={{ p: 3, borderTop: '1px solid', borderColor: 'border' }}>
         {/* Profile Account */}
-        <Flex sx={{ alignItems: 'center', gap: 2 }}>
+        <Flex sx={{ alignItems: 'center', justifyContent: 'center' }}>
           <Box
             sx={{
               width: '32px',
@@ -94,11 +100,6 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
             }}
           >
             {user?.name?.charAt(0) || 'U'}
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Text sx={{ fontWeight: 'medium', fontSize: 1 }}>
-              {user?.name || 'User'}
-            </Text>
           </Box>
         </Flex>
       </Box>

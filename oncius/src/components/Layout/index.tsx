@@ -1,6 +1,6 @@
 "use client"
 
-import React, { ReactNode, useState } from 'react'
+import React, { ReactNode, useState, useEffect } from 'react'
 import { Box, Flex } from 'theme-ui'
 import { usePathname } from 'next/navigation'
 import Header from './Header'
@@ -13,6 +13,22 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname()
   const [selectedMenu, setSelectedMenu] = useState('dashboard')
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+  // Sync selectedMenu with current pathname
+  useEffect(() => {
+    const pathToMenuMap: Record<string, string> = {
+      '/dashboard': 'dashboard',
+      '/products': 'products',
+      '/orders': 'orders',
+      '/customers': 'customers',
+    }
+
+    const menuId = pathToMenuMap[pathname]
+    if (menuId) {
+      setSelectedMenu(menuId)
+    }
+  }, [pathname])
 
   // Show header for login and register pages
   const isAuthPage = pathname === '/login' || pathname === '/register'

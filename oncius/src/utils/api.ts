@@ -164,39 +164,36 @@ export const api = {
   // },
 
   // Customers
-  // getCustomers: (params?: { page?: number; limit?: number; search?: string }) => {
-  //   const searchParams = new URLSearchParams()
-  //   if (params?.page) searchParams.append('page', params.page.toString())
-  //   if (params?.limit) searchParams.append('limit', params.limit.toString())
-  //   if (params?.search) searchParams.append('search', params.search)
+  getCustomers: () => {
+    return apiRequest<ApiResponse<any[]>>('/customers')
+  },
 
-  //   const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
-  //   return apiRequest<ApiResponse<any[]>>(`/customers${query}`)
-  // },
+  getCustomer: (id: number | string) => {
+    return apiRequest<ApiResponse<any>>(`/customer/${id}`)
+  },
 
-  // getCustomer: (id: string) => {
-  //   return apiRequest<ApiResponse<any>>(`/customers/${id}`)
-  // },
+  createCustomer: (data: { name: string; phone: string; address: string }) => {
+    return apiRequest<ApiResponse>('/customer', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
 
-  // createCustomer: (data: any) => {
-  //   return apiRequest<ApiResponse>('/customers', {
-  //     method: 'POST',
-  //     body: JSON.stringify(data),
-  //   })
-  // },
+  updateCustomer: (
+    id: number | string,
+    data: Partial<{ name: string; phone: string; address: string }>
+  ) => {
+    return apiRequest<ApiResponse>(`/customer/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
 
-  // updateCustomer: (id: string, data: any) => {
-  //   return apiRequest<ApiResponse>(`/customers/${id}`, {
-  //     method: 'PUT',
-  //     body: JSON.stringify(data),
-  //   })
-  // },
-
-  // deleteCustomer: (id: string) => {
-  //   return apiRequest<ApiResponse>(`/customers/${id}`, {
-  //     method: 'DELETE',
-  //   })
-  // },
+  deleteCustomer: (id: number | string) => {
+    return apiRequest<ApiResponse>(`/customer/${id}`, {
+      method: 'DELETE',
+    })
+  },
 
   // Orders
   // getOrders: (params?: { page?: number; limit?: number; status?: string; dateFrom?: string; dateTo?: string }) => {
