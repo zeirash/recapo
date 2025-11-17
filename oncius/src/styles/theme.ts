@@ -12,6 +12,7 @@ const theme: Theme = {
     'text.secondary': '#6b7280',
     background: '#ffffff',
     'background.secondary': '#f9fafb',
+    backgroundLight: '#f3f4f6',
     border: '#e5e7eb',
   },
   fonts: {

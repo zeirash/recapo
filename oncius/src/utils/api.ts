@@ -129,39 +129,35 @@ export const api = {
   },
 
   // Products
-  // getProducts: (params?: { page?: number; limit?: number; search?: string }) => {
-  //   const searchParams = new URLSearchParams()
-  //   if (params?.page) searchParams.append('page', params.page.toString())
-  //   if (params?.limit) searchParams.append('limit', params.limit.toString())
-  //   if (params?.search) searchParams.append('search', params.search)
+  getProducts: () => {
+    return apiRequest<ApiResponse<any[]>>('/products')
+  },
 
-  //   const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
-  //   return apiRequest<ApiResponse<any[]>>(`/products${query}`)
-  // },
+  getProduct: (id: number | string) => {
+    return apiRequest<ApiResponse<any>>(`/product/${id}`)
+  },
 
-  // getProduct: (id: string) => {
-  //   return apiRequest<ApiResponse<any>>(`/products/${id}`)
-  // },
+  createProduct: (data: { name: string; price: number }) => {
+    return apiRequest<ApiResponse>('/product', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
 
-  // createProduct: (data: any) => {
-  //   return apiRequest<ApiResponse>('/products', {
-  //     method: 'POST',
-  //     body: JSON.stringify(data),
-  //   })
-  // },
+  updateProduct: (id: number | string,
+    data: Partial<{ name: string; price: number }>
+  ) => {
+    return apiRequest<ApiResponse>(`/product/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
 
-  // updateProduct: (id: string, data: any) => {
-  //   return apiRequest<ApiResponse>(`/products/${id}`, {
-  //     method: 'PUT',
-  //     body: JSON.stringify(data),
-  //   })
-  // },
-
-  // deleteProduct: (id: string) => {
-  //   return apiRequest<ApiResponse>(`/products/${id}`, {
-  //     method: 'DELETE',
-  //   })
-  // },
+  deleteProduct: (id: number | string) => {
+    return apiRequest<ApiResponse>(`/product/${id}`, {
+      method: 'DELETE',
+    })
+  },
 
   // Customers
   getCustomers: () => {

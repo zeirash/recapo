@@ -6,48 +6,53 @@ import { Box, Button, Card, Container, Flex, Heading, Input, Label, Text, Textar
 import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
 
-type Customer = {
+type Price = {
+  id: number
+  price: number
+  created_at: string
+  updated_at: string | null
+}
+
+type Product = {
   id: number
   name: string
-  phone: string
-  address: string
+  prices: Price[]
   created_at?: string
   updated_at?: string | null
 }
 
 type FormState = {
   name: string
-  phone: string
-  address: string
+  price: number
 }
 
-const emptyForm: FormState = { name: '', phone: '', address: '' }
+const emptyForm: FormState = { name: '', price: 0 }
 
-export default function CustomersPage() {
+export default function ProductsPage() {
   const queryClient = useQueryClient()
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null)
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
 
-  const { data: customersRes, isLoading, isError, error } = useQuery(
-    ['customers'],
+  const { data: productsRes, isLoading, isError, error } = useQuery(
+    ['products'],
     async () => {
-      const res = await api.getCustomers()
-      if (!res.success) throw new Error(res.message || 'Failed to fetch customers')
-      return res.data as Customer[]
+      const res = await api.getProducts()
+      if (!res.success) throw new Error(res.message || 'Failed to fetch products')
+      return res.data as Product[]
     }
   )
 
   const createMutation = useMutation(
     async (payload: FormState) => {
-      const res = await api.createCustomer(payload)
-      if (!res.success) throw new Error(res.message || 'Failed to create customer')
+      const res = await api.createProduct(payload)
+      if (!res.success) throw new Error(res.message || 'Failed to create product')
       return res
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['customers'])
+        queryClient.invalidateQueries(['products'])
         closeForm()
       },
     }
@@ -55,13 +60,13 @@ export default function CustomersPage() {
 
   const updateMutation = useMutation(
     async ({ id, payload }: { id: number; payload: Partial<FormState> }) => {
-      const res = await api.updateCustomer(id, payload)
-      if (!res.success) throw new Error(res.message || 'Failed to update customer')
+      const res = await api.updateProduct(id, payload)
+      if (!res.success) throw new Error(res.message || 'Failed to update product')
       return res
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['customers'])
+        queryClient.invalidateQueries(['products'])
         closeForm()
       },
     }
@@ -69,51 +74,64 @@ export default function CustomersPage() {
 
   const deleteMutation = useMutation(
     async (id: number) => {
-      const res = await api.deleteCustomer(id)
-      if (!res.success) throw new Error(res.message || 'Failed to delete customer')
+      const res = await api.deleteProduct(id)
+      if (!res.success) throw new Error(res.message || 'Failed to delete product')
       return res
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['customers'])
+        queryClient.invalidateQueries(['products'])
       },
     }
   )
 
   // Set default selection when data loads
   useEffect(() => {
-    if (!selectedCustomerId && customersRes && customersRes.length > 0) {
-      setSelectedCustomerId(customersRes[0].id)
+    if (!selectedProductId && productsRes && productsRes.length > 0) {
+      setSelectedProductId(productsRes[0].id)
     }
-  }, [customersRes, selectedCustomerId])
+  }, [productsRes, selectedProductId])
 
-  const selectedCustomer: Customer | null = useMemo(() => {
-    if (!customersRes) return null
-    return customersRes.find((c) => c.id === selectedCustomerId) || null
-  }, [customersRes, selectedCustomerId])
+  const selectedProduct: Product | null = useMemo(() => {
+    if (!productsRes) return null
+    return productsRes.find((p) => p.id === selectedProductId) || null
+  }, [productsRes, selectedProductId])
+
+  // Helper to get the current price (first created from prices array)
+  const getCurrentPrice = (product: Product | null): number | null => {
+    if (!product || !product.prices || product.prices.length === 0) return null
+    // Get the first created price (oldest created_at)
+    const sortedPrices = [...product.prices].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime()
+      const dateB = new Date(b.created_at).getTime()
+      return dateA - dateB // Oldest first
+    })
+    return sortedPrices[0].price
+  }
 
   function openCreateForm() {
-    setEditingCustomer(null)
+    setEditingProduct(null)
     setForm(emptyForm)
     setIsFormOpen(true)
   }
 
-  function openEditForm(customer: Customer) {
-    setEditingCustomer(customer)
-    setForm({ name: customer.name, phone: customer.phone, address: customer.address })
+  function openEditForm(product: Product) {
+    setEditingProduct(product)
+    const currentPrice = getCurrentPrice(product)
+    setForm({ name: product.name, price: currentPrice || 0 })
     setIsFormOpen(true)
   }
 
   function closeForm() {
     setIsFormOpen(false)
     setForm(emptyForm)
-    setEditingCustomer(null)
+    setEditingProduct(null)
   }
 
   function submitForm(e: React.FormEvent) {
     e.preventDefault()
-    if (editingCustomer) {
-      updateMutation.mutate({ id: editingCustomer.id, payload: form })
+    if (editingProduct) {
+      updateMutation.mutate({ id: editingProduct.id, payload: form })
     } else {
       createMutation.mutate(form)
     }
@@ -125,7 +143,7 @@ export default function CustomersPage() {
         <Flex sx={{ minHeight: '100vh', flexDirection: 'column' }}>
           {isLoading && <Text>Loading...</Text>}
           {isError && (
-            <Text sx={{ color: 'error' }}>{(error as Error)?.message || 'Error loading customers'}</Text>
+            <Text sx={{ color: 'error' }}>{(error as Error)?.message || 'Error loading products'}</Text>
           )}
 
           {!isLoading && !isError && (
@@ -137,15 +155,15 @@ export default function CustomersPage() {
                     onClick={openCreateForm}
                     sx={{ width: '100%', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   >
-                    + Customer
+                    + Product
                   </Button>
                 </Box>
                 <Box sx={{ overflowY: 'auto' }}>
-                  {(customersRes || []).map((c) => {
-                    const isActive = c.id === selectedCustomerId
+                  {(productsRes || []).map((p) => {
+                    const isActive = p.id === selectedProductId
                     return (
                       <Box
-                        key={c.id}
+                        key={p.id}
                         sx={{
                           py: 3,
                           px: 4,
@@ -155,7 +173,7 @@ export default function CustomersPage() {
                           borderRadius: 'medium',
                           '&:hover': { bg: isActive ? 'backgroundLight' : 'background.secondary' },
                         }}
-                        onClick={() => setSelectedCustomerId(c.id)}
+                        onClick={() => setSelectedProductId(p.id)}
                       >
                         <Flex sx={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
                           <Box sx={{
@@ -170,31 +188,31 @@ export default function CustomersPage() {
                             fontWeight: 'bold',
                             fontSize: 1,
                           }}>
-                            {c.name.charAt(0).toUpperCase()}
+                            {p.name.charAt(0).toUpperCase()}
                           </Box>
-                          <Text sx={{ fontSize: 0, lineHeight: 1, wordBreak: 'break-word' }}>{c.name}</Text>
+                          <Text sx={{ fontSize: 0, lineHeight: 1, wordBreak: 'break-word' }}>{p.name}</Text>
                         </Flex>
                       </Box>
                     )
                   })}
-                  {(customersRes || []).length === 0 && (
-                    <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>No customers</Text>
+                  {(productsRes || []).length === 0 && (
+                    <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>No products</Text>
                   )}
                 </Box>
               </Box>
 
               {/* Right detail */}
               <Box sx={{ flex: 1, p: 4, bg: 'white' }}>
-                {selectedCustomer ? (
+                {selectedProduct ? (
                   <>
                     <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                      <Heading as="h2" sx={{ fontSize: 3 }}>{selectedCustomer.name}</Heading>
+                      <Heading as="h2" sx={{ fontSize: 3 }}>{selectedProduct.name}</Heading>
                       <Flex sx={{ gap: 2 }}>
-                        <Button variant="secondary" onClick={() => openEditForm(selectedCustomer)}>Edit</Button>
+                        <Button variant="secondary" onClick={() => openEditForm(selectedProduct)}>Edit</Button>
                         <Button
                           variant="secondary"
                           onClick={() => {
-                            if (confirm('Delete this customer?')) deleteMutation.mutate(selectedCustomer.id)
+                            if (confirm('Delete this product?')) deleteMutation.mutate(selectedProduct.id)
                           }}
                         >
                           Delete
@@ -203,18 +221,14 @@ export default function CustomersPage() {
                     </Flex>
                     <Card sx={{ p: 3 }}>
                       <Box sx={{ mb: 2 }}>
-                        <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Phone</Text>
-                        <Text>{selectedCustomer.phone || '-'}</Text>
-                      </Box>
-                      <Box>
-                        <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Address</Text>
-                        <Text>{selectedCustomer.address || '-'}</Text>
+                        <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Price</Text>
+                        <Text>{getCurrentPrice(selectedProduct)?.toLocaleString() || '-'}</Text>
                       </Box>
                     </Card>
                   </>
                 ) : (
                   <Flex sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' }}>
-                    <Text>Select a customer to view details</Text>
+                    <Text>Select a product to view details</Text>
                   </Flex>
                 )}
               </Box>
@@ -239,7 +253,7 @@ export default function CustomersPage() {
           >
             <Card sx={{ width: ['100%', '540px'] }}>
               <Heading as="h3" sx={{ mb: 3 }}>
-                {editingCustomer ? 'Edit Customer' : 'New Customer'}
+                {editingProduct ? 'Edit Product' : 'New Product'}
               </Heading>
               <Box as="form" onSubmit={submitForm}>
                 <Box sx={{ mb: 3 }}>
@@ -247,19 +261,15 @@ export default function CustomersPage() {
                   <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                 </Box>
                 <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
-                </Box>
-                <Box sx={{ mb: 4 }}>
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea id="address" rows={3} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required />
+                  <Label htmlFor="price">Price</Label>
+                  <Input id="price" type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} required />
                 </Box>
                 <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
                   <Button type="button" variant="secondary" onClick={closeForm}>
                     Cancel
                   </Button>
                   <Button type="submit" disabled={createMutation.isLoading || updateMutation.isLoading}>
-                    {editingCustomer ? 'Save Changes' : 'Create'}
+                    {editingProduct ? 'Save Changes' : 'Create'}
                   </Button>
                 </Flex>
               </Box>
