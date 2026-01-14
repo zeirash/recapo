@@ -2,7 +2,8 @@ package store
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/zeirash/recapo/arion/common/database"
@@ -13,17 +14,17 @@ type (
 	ProductStore interface {
 		GetProductByID(productID int, shopID ...int) (*model.Product, error)
 		GetProductsByShopID(shopID int) ([]model.Product, error)
-		CreateProduct(name string, shopID int) (*model.Product, error)
-		UpdateProduct(productID int, name string) (*model.Product, error)
+		CreateProduct(name string, price int, shopID int) (*model.Product, error)
+		UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error)
 		DeleteProductByID(productID int) error
-		CreatePrice(productID int, price int) (*model.Price, error)
-		UpdatePrice(productID, priceID, price int) (*model.Price, error)
-		GetPricesByProductID(productID int) ([]model.Price, error)
-		DeletePrice(productID, priceID int) error
-		DeletePricesByProductID(productID int) error
 	}
 
 	product struct{}
+
+	UpdateProductInput struct {
+		Name  *string
+		Price *int
+	}
 )
 
 func NewProductStore() ProductStore {
@@ -37,7 +38,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	criteria := []interface{}{productID}
 
 	q := `
-		SELECT id, name, created_at, updated_at
+		SELECT id, name, price, created_at, updated_at
 		FROM products
 		WHERE id = $1
 	`
@@ -48,7 +49,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	}
 
 	var product model.Product
-	err := db.QueryRow(q, criteria...).Scan(&product.ID, &product.Name, &product.CreatedAt, &product.UpdatedAt)
+	err := db.QueryRow(q, criteria...).Scan(&product.ID, &product.Name, &product.Price, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -64,7 +65,7 @@ func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
 	defer db.Close()
 
 	q := `
-		SELECT id, name, created_at, updated_at
+		SELECT id, name, price, created_at, updated_at
 		FROM products
 		WHERE shop_id = $1
 	`
@@ -81,7 +82,7 @@ func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
 	products := []model.Product{}
 	for rows.Next() {
 		var product model.Product
-		err := rows.Scan(&product.ID, &product.Name, &product.CreatedAt, &product.UpdatedAt)
+		err := rows.Scan(&product.ID, &product.Name, &product.Price, &product.CreatedAt, &product.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +92,7 @@ func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
 	return products, nil
 }
 
-func (p *product) CreateProduct(name string, shopID int) (*model.Product, error) {
+func (p *product) CreateProduct(name string, price int, shopID int) (*model.Product, error) {
 	db := database.GetDB()
 	defer db.Close()
 
@@ -99,12 +100,12 @@ func (p *product) CreateProduct(name string, shopID int) (*model.Product, error)
 	var id int
 
 	q := `
-		INSERT INTO products (name, shop_id, created_at)
-		VALUES ($1, $2, $3)
+		INSERT INTO products (name, price, shop_id, created_at)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id
 	`
 
-	err := db.QueryRow(q, name, shopID, now).Scan(&id)
+	err := db.QueryRow(q, name, price, shopID, now).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -113,28 +114,41 @@ func (p *product) CreateProduct(name string, shopID int) (*model.Product, error)
 		ID:        id,
 		Name:      name,
 		ShopID:    shopID,
+		Price:     price,
 		CreatedAt: now,
 	}, nil
 }
 
-func (p *product) UpdateProduct(productID int, name string) (*model.Product, error) {
+func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error) {
 	db := database.GetDB()
 	defer db.Close()
 
+	set := []string{}
 	var product model.Product
+
+	// build query
+	if input.Name != nil {
+		newSet := fmt.Sprintf("name = '%s'", *input.Name)
+		set = append(set, newSet)
+	}
+	if input.Price != nil {
+		newSet := fmt.Sprintf("price = %d", *input.Price)
+		set = append(set, newSet)
+	}
+
+	set = append(set, "updated_at = now()")
 
 	q := `
 		UPDATE products
-		SET name = $1, updated_at = now()
-		WHERE id = $2
-		RETURNING id, name, created_at, updated_at
+		SET %s
+		WHERE id = $1
+		RETURNING id, name, price, created_at, updated_at
 	`
 
-	err := db.QueryRow(q, name, productID).Scan(&product.ID, &product.Name, &product.CreatedAt, &product.UpdatedAt)
+	q = fmt.Sprintf(q, strings.Join(set, ","))
+
+	err := db.QueryRow(q, productID).Scan(&product.ID, &product.Name, &product.Price, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, err
 	}
 
@@ -148,122 +162,6 @@ func (p *product) DeleteProductByID(productID int) error {
 	q := `
 		DELETE FROM products
 		WHERE id = $1
-	`
-
-	_, err := db.Exec(q, productID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (p *product) CreatePrice(productID int, price int) (*model.Price, error) {
-	db := database.GetDB()
-	defer db.Close()
-
-	now := time.Now()
-	var id int
-
-	q := `
-		INSERT INTO prices (product_id, price, created_at)
-		VALUES ($1, $2, $3)
-		RETURNING id
-	`
-
-	err := db.QueryRow(q, productID, price, now).Scan(&id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.Price{
-		ID:        id,
-		ProductID: productID,
-		Price:     price,
-		CreatedAt: now,
-	}, nil
-}
-
-func (p *product) UpdatePrice(productID, priceID, price int) (*model.Price, error) {
-	db := database.GetDB()
-	defer db.Close()
-
-	var priceData model.Price
-
-	q := `
-		UPDATE prices
-		SET price = $1, updated_at = now()
-		WHERE id = $2 AND product_id = $3
-		RETURNING id, product_id, price, created_at, updated_at
-	`
-
-	err := db.QueryRow(q, price, priceID, productID).Scan(&priceData.ID, &priceData.ProductID, &priceData.Price, &priceData.CreatedAt, &priceData.UpdatedAt)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("price not found")
-		}
-		return nil, err
-	}
-
-	return &priceData, nil
-}
-
-func (p *product) GetPricesByProductID(productID int) ([]model.Price, error) {
-	db := database.GetDB()
-	defer db.Close()
-
-	q := `
-		SELECT id, product_id, price, created_at, updated_at
-		FROM prices
-		WHERE product_id = $1
-	`
-
-	rows, err := db.Query(q, productID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-	defer rows.Close()
-
-	prices := []model.Price{}
-	for rows.Next() {
-		var price model.Price
-		err := rows.Scan(&price.ID, &price.ProductID, &price.Price, &price.CreatedAt, &price.UpdatedAt)
-		if err != nil {
-			return nil, err
-		}
-		prices = append(prices, price)
-	}
-
-	return prices, nil
-}
-
-func (p *product) DeletePrice(productID, priceID int) error {
-	db := database.GetDB()
-	defer db.Close()
-
-	q := `
-		DELETE FROM prices
-		WHERE id = $1 AND product_id = $2
-	`
-
-	_, err := db.Exec(q, priceID, productID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (p *product) DeletePricesByProductID(productID int) error {
-	db := database.GetDB()
-	defer db.Close()
-
-	q := `
-		DELETE FROM prices
-		WHERE product_id = $1
 	`
 
 	_, err := db.Exec(q, productID)

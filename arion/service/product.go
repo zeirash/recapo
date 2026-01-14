@@ -13,14 +13,17 @@ type (
 		CreateProduct(shopID int, name string, price int) (response.ProductData, error)
 		GetProductByID(productID int, shopID ...int) (*response.ProductData, error)
 		GetProductsByShopID(shopID int) ([]response.ProductData, error)
-		UpdateProduct(productID int, name string) (response.ProductData, error)
-		DeleteProductByID(productID int) error
-		CreateProductPrice(productID int, price int) (response.PriceData, error)
-		UpdateProductPrice(productID, priceID, price int) (response.PriceData, error)
-		DeleteProductPrice(productID, priceID int) error
+		UpdateProduct(input UpdateProductInput) (response.ProductData, error)
+		DeleteProductByID(id int) error
 	}
 
 	pservice struct{}
+
+	UpdateProductInput struct {
+		ID    int
+		Name  *string
+		Price *int
+	}
 )
 
 func NewProductService() ProductService {
@@ -36,12 +39,7 @@ func NewProductService() ProductService {
 func (p *pservice) CreateProduct(shopID int, name string, price int) (response.ProductData, error) {
 	//TODO: validate product unique name
 
-	product, err := productStore.CreateProduct(name, shopID)
-	if err != nil {
-		return response.ProductData{}, err
-	}
-
-	priceData, err := productStore.CreatePrice(product.ID, price)
+	product, err := productStore.CreateProduct(name, price, shopID)
 	if err != nil {
 		return response.ProductData{}, err
 	}
@@ -49,13 +47,7 @@ func (p *pservice) CreateProduct(shopID int, name string, price int) (response.P
 	res := response.ProductData{
 		ID:   product.ID,
 		Name: product.Name,
-		Prices: []response.PriceData{
-			{
-				ID:        priceData.ID,
-				Price:     priceData.Price,
-				CreatedAt: priceData.CreatedAt,
-			},
-		},
+		Price: product.Price,
 		CreatedAt: product.CreatedAt,
 	}
 
@@ -76,31 +68,11 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 		return nil, errors.New("product not found")
 	}
 
-	prices, err := productStore.GetPricesByProductID(productID)
-	if err != nil {
-		return &response.ProductData{}, err
-	}
-
-	var pricesData []response.PriceData
-	for _, price := range prices {
-		priceRes := response.PriceData{
-			ID:        price.ID,
-			Price:     price.Price,
-			CreatedAt: price.CreatedAt,
-		}
-
-		if price.UpdatedAt.Valid {
-			priceRes.UpdatedAt = &price.UpdatedAt.Time
-		}
-
-		pricesData = append(pricesData, priceRes)
-	}
-
 	res := response.ProductData{
 		ID:        product.ID,
 		Name:      product.Name,
 		CreatedAt: product.CreatedAt,
-		Prices:    pricesData,
+		Price:     product.Price,
 	}
 
 	if product.UpdatedAt.Valid {
@@ -119,31 +91,11 @@ func (p *pservice) GetProductsByShopID(shopID int) ([]response.ProductData, erro
 	// TODO: improve query performance
 	var productsData []response.ProductData
 	for _, product := range products {
-		prices, err := productStore.GetPricesByProductID(product.ID)
-		if err != nil {
-			return []response.ProductData{}, err
-		}
-
-		var pricesData []response.PriceData
-		for _, price := range prices {
-			priceRes := response.PriceData{
-				ID:        price.ID,
-				Price:     price.Price,
-				CreatedAt: price.CreatedAt,
-			}
-
-			if price.UpdatedAt.Valid {
-				priceRes.UpdatedAt = &price.UpdatedAt.Time
-			}
-
-			pricesData = append(pricesData, priceRes)
-		}
-
 		res := response.ProductData{
 			ID:        product.ID,
 			Name:      product.Name,
 			CreatedAt: product.CreatedAt,
-			Prices:    pricesData,
+			Price:     product.Price,
 		}
 
 		if product.UpdatedAt.Valid {
@@ -156,10 +108,14 @@ func (p *pservice) GetProductsByShopID(shopID int) ([]response.ProductData, erro
 	return productsData, nil
 }
 
-func (p *pservice) UpdateProduct(productID int, name string) (response.ProductData, error) {
+func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData, error) {
 	//TODO: validate product unique name
 
-	productData, err := productStore.UpdateProduct(productID, name)
+	updateData := store.UpdateProductInput{
+		Name:  input.Name,
+		Price: input.Price,
+	}
+	productData, err := productStore.UpdateProduct(input.ID, updateData)
 	if err != nil {
 		return response.ProductData{}, err
 	}
@@ -171,6 +127,7 @@ func (p *pservice) UpdateProduct(productID int, name string) (response.ProductDa
 	res := response.ProductData{
 		ID:        productData.ID,
 		Name:      productData.Name,
+		Price:     productData.Price,
 		CreatedAt: productData.CreatedAt,
 	}
 
@@ -181,77 +138,8 @@ func (p *pservice) UpdateProduct(productID int, name string) (response.ProductDa
 	return res, nil
 }
 
-func (p *pservice) DeleteProductByID(productID int) error {
-	err := productStore.DeleteProductByID(productID)
-	if err != nil {
-		return err
-	}
-
-	err = productStore.DeletePricesByProductID(productID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (p *pservice) CreateProductPrice(productID int, price int) (response.PriceData, error) {
-	product, err := productStore.GetProductByID(productID)
-	if err != nil {
-		return response.PriceData{}, err
-	}
-
-	if product == nil {
-		return response.PriceData{}, errors.New("product not found")
-	}
-
-	priceData, err := productStore.CreatePrice(productID, price)
-	if err != nil {
-		return response.PriceData{}, err
-	}
-
-	if priceData == nil {
-		return response.PriceData{}, errors.New("price not found")
-	}
-
-	res := response.PriceData{
-		ID:        priceData.ID,
-		Price:     priceData.Price,
-		CreatedAt: priceData.CreatedAt,
-	}
-
-	if priceData.UpdatedAt.Valid {
-		res.UpdatedAt = &priceData.UpdatedAt.Time
-	}
-
-	return res, nil
-}
-
-func (p *pservice) UpdateProductPrice(productID, priceID, price int) (response.PriceData, error) {
-	priceData, err := productStore.UpdatePrice(productID, priceID, price)
-	if err != nil {
-		return response.PriceData{}, err
-	}
-
-	if priceData == nil {
-		return response.PriceData{}, errors.New("price not found")
-	}
-
-	res := response.PriceData{
-		ID:        priceData.ID,
-		Price:     priceData.Price,
-		CreatedAt: priceData.CreatedAt,
-	}
-
-	if priceData.UpdatedAt.Valid {
-		res.UpdatedAt = &priceData.UpdatedAt.Time
-	}
-
-	return res, nil
-}
-
-func (p *pservice) DeleteProductPrice(productID, priceID int) error {
-	err := productStore.DeletePrice(productID, priceID)
+func (p *pservice) DeleteProductByID(id int) error {
+	err := productStore.DeleteProductByID(id)
 	if err != nil {
 		return err
 	}

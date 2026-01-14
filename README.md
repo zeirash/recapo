@@ -107,7 +107,7 @@ npm run dev
 ### Database Setup
 ```bash
 # Using Docker Compose
-docker-compose up -d postgres
+docker compose up -d postgres
 ```
 
 ## 📊 Performance

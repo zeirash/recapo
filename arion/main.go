@@ -45,9 +45,17 @@ func NewRouter() *mux.Router {
 	r.Handle("/product/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductHandler))).Methods("GET")
 	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")
 
-	r.Handle("/product/{product_id}/price", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreatePriceHandler))).Methods("POST")
-	r.Handle("/product/{product_id}/price/{price_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateProductPriceHandler))).Methods("PATCH")
-	r.Handle("/product/{product_id}/price/{price_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteProductPriceHandler))).Methods("DELETE")
+	// For Order
+	r.Handle("/order", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateOrderHandler))).Methods("POST")
+	r.Handle("/order/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateOrderHandler))).Methods("PATCH")
+	r.Handle("/order/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteOrderHandler))).Methods("DELETE")
+	r.Handle("/order/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderHandler))).Methods("GET")
+	r.Handle("/orders", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrdersHandler))).Methods("GET")
+	r.Handle("/order/{order_id}/item", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateOrderItemHandler))).Methods("POST")
+	r.Handle("/order/{order_id}/item/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateOrderItemHandler))).Methods("PATCH")
+	r.Handle("/order/{order_id}/item/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteOrderItemHandler))).Methods("DELETE")
+	r.Handle("/order/{order_id}/item/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderItemHandler))).Methods("GET")
+	r.Handle("/order/{order_id}/items", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderItemsHandler))).Methods("GET")
 
 	// For System
 	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")

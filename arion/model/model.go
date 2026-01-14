@@ -66,16 +66,29 @@ type (
 		ID        int          `db:"id"`
 		ShopID    int          `db:"shop_id"`
 		Name      string       `db:"name"`
+		Price     int          `db:"price"`
 		CreatedAt time.Time    `db:"created_at"`
 		UpdatedAt sql.NullTime `db:"updated_at"`
 	}
 
-	/******************** Price **********************/
-	Price struct {
-		ID        int          `db:"id"`
-		ProductID int          `db:"product_id"`
-		Price     int          `db:"price"`
-		CreatedAt time.Time    `db:"created_at"`
-		UpdatedAt sql.NullTime `db:"updated_at"`
+	/******************** Order **********************/
+	Order struct {
+		ID           int          `db:"id"`
+		ShopID       int          `db:"shop_id"`
+		CustomerName string       `db:"customer_name"`
+		TotalPrice   int          `db:"total_price"`
+		Status       string       `db:"status"`
+		CreatedAt    time.Time    `db:"created_at"`
+		UpdatedAt    sql.NullTime `db:"updated_at"`
+	}
+
+	OrderItem struct {
+		ID          int          `db:"id"`
+		OrderID     int          `db:"order_id"`
+		ProductName string       `db:"product_name"`
+		Price       int          `db:"price"`
+		Qty         int          `db:"qty"`
+		CreatedAt   time.Time    `db:"created_at"`
+		UpdatedAt   sql.NullTime `db:"updated_at"`
 	}
 )

@@ -32,15 +32,28 @@ type (
 	ProductData struct {
 		ID        int         `json:"id"`
 		Name      string      `json:"name"`
-		Prices    []PriceData `json:"prices"`
+		Price     int         `json:"price"`
 		CreatedAt time.Time   `json:"created_at"`
 		UpdatedAt *time.Time  `json:"updated_at"`
 	}
 
-	PriceData struct {
-		ID        int        `json:"id"`
-		Price     int        `json:"price"`
-		CreatedAt time.Time  `json:"created_at"`
-		UpdatedAt *time.Time `json:"updated_at"`
+	OrderData struct {
+		ID           int             `json:"id"`
+		CustomerName string          `json:"customer_name"`
+		TotalPrice   int             `json:"total_price"`
+		Status       string          `json:"status"`
+		OrderItems   []OrderItemData `json:"order_items,omitempty"`
+		CreatedAt    time.Time       `json:"created_at"`
+		UpdatedAt    *time.Time      `json:"updated_at"`
+	}
+
+	OrderItemData struct {
+		ID          int        `json:"id"`
+		OrderID     int        `json:"order_id,omitempty"`
+		ProductName string     `json:"product_name"`
+		Price       int        `json:"price"`
+		Qty         int        `json:"qty"`
+		CreatedAt   time.Time  `json:"created_at"`
+		UpdatedAt   *time.Time `json:"updated_at"`
 	}
 )

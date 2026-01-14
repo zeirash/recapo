@@ -21,6 +21,7 @@ var (
 	userService     service.UserService
 	customerService service.CustomerService
 	productService  service.ProductService
+	orderService    service.OrderService
 )
 
 func Init() {
@@ -34,6 +35,10 @@ func Init() {
 
 	if productService == nil {
 		productService = service.NewProductService()
+	}
+
+	if orderService == nil {
+		orderService = service.NewOrderService()
 	}
 }
 
