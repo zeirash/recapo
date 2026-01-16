@@ -6,17 +6,10 @@ import { Box, Button, Card, Container, Flex, Heading, Input, Label, Text, Textar
 import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
 
-type Price = {
-  id: number
-  price: number
-  created_at: string
-  updated_at: string | null
-}
-
 type Product = {
   id: number
   name: string
-  prices: Price[]
+  price: number
   created_at?: string
   updated_at?: string | null
 }
@@ -97,18 +90,6 @@ export default function ProductsPage() {
     return productsRes.find((p) => p.id === selectedProductId) || null
   }, [productsRes, selectedProductId])
 
-  // Helper to get the current price (first created from prices array)
-  const getCurrentPrice = (product: Product | null): number | null => {
-    if (!product || !product.prices || product.prices.length === 0) return null
-    // Get the first created price (oldest created_at)
-    const sortedPrices = [...product.prices].sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime()
-      const dateB = new Date(b.created_at).getTime()
-      return dateA - dateB // Oldest first
-    })
-    return sortedPrices[0].price
-  }
-
   function openCreateForm() {
     setEditingProduct(null)
     setForm(emptyForm)
@@ -117,8 +98,7 @@ export default function ProductsPage() {
 
   function openEditForm(product: Product) {
     setEditingProduct(product)
-    const currentPrice = getCurrentPrice(product)
-    setForm({ name: product.name, price: currentPrice || 0 })
+    setForm({ name: product.name, price: product.price })
     setIsFormOpen(true)
   }
 
@@ -222,7 +202,7 @@ export default function ProductsPage() {
                     <Card sx={{ p: 3 }}>
                       <Box sx={{ mb: 2 }}>
                         <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Price</Text>
-                        <Text>{getCurrentPrice(selectedProduct)?.toLocaleString() || '-'}</Text>
+                        <Text>{selectedProduct.price.toLocaleString()}</Text>
                       </Box>
                     </Card>
                   </>
@@ -262,7 +242,7 @@ export default function ProductsPage() {
                 </Box>
                 <Box sx={{ mb: 3 }}>
                   <Label htmlFor="price">Price</Label>
-                  <Input id="price" type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} required />
+                  <Input id="price" type="number" step="0.01" value={form.price || ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required />
                 </Box>
                 <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
                   <Button type="button" variant="secondary" onClick={closeForm}>

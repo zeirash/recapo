@@ -192,41 +192,65 @@ export const api = {
   },
 
   // Orders
-  // getOrders: (params?: { page?: number; limit?: number; status?: string; dateFrom?: string; dateTo?: string }) => {
-  //   const searchParams = new URLSearchParams()
-  //   if (params?.page) searchParams.append('page', params.page.toString())
-  //   if (params?.limit) searchParams.append('limit', params.limit.toString())
-  //   if (params?.status) searchParams.append('status', params.status)
-  //   if (params?.dateFrom) searchParams.append('dateFrom', params.dateFrom)
-  //   if (params?.dateTo) searchParams.append('dateTo', params.dateTo)
+  getOrders: () => {
+    return apiRequest<ApiResponse<any[]>>('/orders')
+  },
 
-  //   const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
-  //   return apiRequest<ApiResponse<any[]>>(`/orders${query}`)
-  // },
+  getOrder: (id: number | string) => {
+    return apiRequest<ApiResponse<any>>(`/order/${id}`)
+  },
 
-  // getOrder: (id: string) => {
-  //   return apiRequest<ApiResponse<any>>(`/orders/${id}`)
-  // },
+  createOrder: (data: { customer_id: number }) => {
+    return apiRequest<ApiResponse>('/order', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
 
-  // createOrder: (data: any) => {
-  //   return apiRequest<ApiResponse>('/orders', {
-  //     method: 'POST',
-  //     body: JSON.stringify(data),
-  //   })
-  // },
+  updateOrder: (
+    id: number | string,
+    data: Partial<{ customer_id: number; total_price: number; status: string }>
+  ) => {
+    return apiRequest<ApiResponse>(`/order/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
 
-  // updateOrder: (id: string, data: any) => {
-  //   return apiRequest<ApiResponse>(`/orders/${id}`, {
-  //     method: 'PUT',
-  //     body: JSON.stringify(data),
-  //   })
-  // },
+  deleteOrder: (id: number | string) => {
+    return apiRequest<ApiResponse>(`/order/${id}`, {
+      method: 'DELETE',
+    })
+  },
 
-  // deleteOrder: (id: string) => {
-  //   return apiRequest<ApiResponse>(`/orders/${id}`, {
-  //     method: 'DELETE',
-  //   })
-  // },
+  // Order Items
+  getOrderItems: (orderId: number | string) => {
+    return apiRequest<ApiResponse<any[]>>(`/order/${orderId}/items`)
+  },
+
+  createOrderItem: (orderId: number | string, data: { product_id: number; qty: number }) => {
+    return apiRequest<ApiResponse>(`/order/${orderId}/item`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  updateOrderItem: (
+    orderId: number | string,
+    itemId: number | string,
+    data: Partial<{ product_id: number; qty: number }>
+  ) => {
+    return apiRequest<ApiResponse>(`/order/${orderId}/item/${itemId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
+
+  deleteOrderItem: (orderId: number | string, itemId: number | string) => {
+    return apiRequest<ApiResponse>(`/order/${orderId}/item/${itemId}`, {
+      method: 'DELETE',
+    })
+  },
 
   // Health check
   health: () => {
