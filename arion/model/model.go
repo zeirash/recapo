@@ -18,8 +18,9 @@ type (
 	}
 
 	JwtCustomRefreshClaims struct {
-		UserID int `json:"user_id"`
-		ShopID int `json:"shop_id"`
+		UserID     int  `json:"user_id"`
+		ShopID     int  `json:"shop_id"`
+		SystemMode bool `json:"system_mode"`
 		jwt.RegisteredClaims
 	}
 

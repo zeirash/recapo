@@ -16,6 +16,7 @@ type (
 	UserService interface {
 		UserLogin(email, password string) (response.TokenResponse, error)
 		UserRegister(name, email, password string) (response.TokenResponse, error)
+		RefreshToken(refreshToken string) (response.TokenResponse, error)
 		UpdateUser(input UpdateUserInput) (response.UserData, error)
 		GetUserByID(userID int) (*response.UserData, error)
 		GetUsers() ([]response.UserData, error)
@@ -76,6 +77,40 @@ func (u *uservice) UserLogin(email, password string) (response.TokenResponse, er
 	return response.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (u *uservice) RefreshToken(refreshToken string) (response.TokenResponse, error) {
+	// Validate and extract data from refresh token
+	tokenData, err := tokenStore.ExtractDataFromToken(refreshToken, cfg.SecretKey)
+	if err != nil {
+		return response.TokenResponse{}, errors.New("invalid refresh token")
+	}
+
+	// Get user from database
+	user, err := userStore.GetUserByID(tokenData.UserID)
+	if err != nil {
+		return response.TokenResponse{}, err
+	}
+
+	if user == nil {
+		return response.TokenResponse{}, errors.New("user not found")
+	}
+
+	// Generate new tokens
+	accessToken, err := tokenStore.CreateAccessToken(user, cfg.SecretKey, 2)
+	if err != nil {
+		return response.TokenResponse{}, err
+	}
+
+	newRefreshToken, err := tokenStore.CreateRefreshToken(user, cfg.SecretKey, 168)
+	if err != nil {
+		return response.TokenResponse{}, err
+	}
+
+	return response.TokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
 	}, nil
 }
 

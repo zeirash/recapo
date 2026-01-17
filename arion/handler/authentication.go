@@ -17,6 +17,10 @@ type (
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+
+	RefreshRequest struct {
+		RefreshToken string `json:"refresh_token"`
+	}
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +64,27 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := userService.UserRegister(inp.Name, inp.Email, inp.Password)
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "user_register")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
+func RefreshHandler(w http.ResponseWriter, r *http.Request) {
+	inp := RefreshRequest{}
+	if err := ParseJson(r.Body, &inp); err != nil {
+		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		return
+	}
+
+	if inp.RefreshToken == "" {
+		WriteErrorJson(w, http.StatusBadRequest, errors.New("refresh_token is required"), "validation")
+		return
+	}
+
+	res, err := userService.RefreshToken(inp.RefreshToken)
+	if err != nil {
+		WriteErrorJson(w, http.StatusUnauthorized, err, "refresh_token")
 		return
 	}
 

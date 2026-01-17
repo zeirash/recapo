@@ -42,12 +42,12 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 	resp := model.User{}
 
 	q := `
-		SELECT id, name, email, password, role, created_at, updated_at
+		SELECT id, shop_id, name, email, password, role, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
 
-	err := db.QueryRow(q, userID).Scan(&resp.ID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
+	err := db.QueryRow(q, userID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

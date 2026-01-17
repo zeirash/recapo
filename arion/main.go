@@ -22,6 +22,7 @@ func NewRouter() *mux.Router {
 
 	r.HandleFunc("/login", handler.LoginHandler).Methods("POST")
 	r.HandleFunc("/register", handler.RegisterHandler).Methods("POST")
+	r.HandleFunc("/refresh", handler.RefreshHandler).Methods("POST")
 
 	r.Handle("/test/{id}", middleware.ChainMiddleware()(http.HandlerFunc(handler.HealthHandler)))
 	// r.Handle("/test/{id}", middleware.MiddlewareWrapper(http.HandlerFunc(handler.HealthHandler), middleware.Authentication()))
