@@ -40,6 +40,72 @@ const removeAuthToken = (): void => {
   }
 }
 
+// Get refresh token from localStorage
+const getRefreshToken = (): string | null => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('refreshToken')
+  }
+  return null
+}
+
+// Set refresh token to localStorage
+const setRefreshToken = (token: string): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('refreshToken', token)
+  }
+}
+
+// Remove refresh token from localStorage
+const removeRefreshToken = (): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('refreshToken')
+  }
+}
+
+// Remove all tokens and redirect to login
+const clearTokensAndRedirect = (): void => {
+  removeAuthToken()
+  removeRefreshToken()
+  if (typeof window !== 'undefined') {
+    window.location.href = '/login'
+  }
+}
+
+// Flag to prevent multiple refresh attempts
+let isRefreshing = false
+let refreshPromise: Promise<boolean> | null = null
+
+// Attempt to refresh tokens
+const refreshTokens = async (): Promise<boolean> => {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) {
+    return false
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    })
+
+    if (!response.ok) {
+      return false
+    }
+
+    const data = await response.json() as ApiResponse<LoginResponse>
+    if (data.success && data.data?.access_token && data.data?.refresh_token) {
+      setAuthToken(data.data.access_token)
+      setRefreshToken(data.data.refresh_token)
+      return true
+    }
+
+    return false
+  } catch {
+    return false
+  }
+}
+
 // Base API request function
 const apiRequest = async <T>(
   endpoint: string,
@@ -61,10 +127,31 @@ const apiRequest = async <T>(
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config)
 
     if (!response.ok) {
-      // Handle 401 Unauthorized
-      if (response.status === 401) {
-        removeAuthToken()
-        window.location.href = '/login'
+      // Handle 401 Unauthorized - attempt token refresh
+      if (response.status === 401 && !skipAuth) {
+        // If already refreshing, wait for that to complete
+        if (isRefreshing && refreshPromise) {
+          const refreshed = await refreshPromise
+          if (refreshed) {
+            // Retry the original request with new token
+            return apiRequest<T>(endpoint, options, skipAuth)
+          }
+        } else {
+          // Start refreshing
+          isRefreshing = true
+          refreshPromise = refreshTokens()
+          const refreshed = await refreshPromise
+          isRefreshing = false
+          refreshPromise = null
+
+          if (refreshed) {
+            // Retry the original request with new token
+            return apiRequest<T>(endpoint, options, skipAuth)
+          }
+        }
+
+        // Refresh failed, clear tokens and redirect
+        clearTokensAndRedirect()
         throw new ApiError('Unauthorized', 401)
       }
 
@@ -100,6 +187,9 @@ export const api = {
 
     if (response.success && response.data?.access_token) {
       setAuthToken(response.data.access_token)
+      if (response.data.refresh_token) {
+        setRefreshToken(response.data.refresh_token)
+      }
     }
 
     return response
@@ -114,6 +204,7 @@ export const api = {
 
   logout: () => {
     removeAuthToken()
+    removeRefreshToken()
   },
 
   // User
@@ -258,4 +349,4 @@ export const api = {
   },
 }
 
-export { ApiError, getAuthToken, setAuthToken, removeAuthToken }
+export { ApiError, getAuthToken, setAuthToken, removeAuthToken, getRefreshToken, setRefreshToken, removeRefreshToken }
