@@ -16,7 +16,7 @@ type (
 		GetOrdersByShopID(shopID int) ([]model.Order, error)
 		CreateOrder(customerID int, shopID int, status string) (*model.Order, error)
 		UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error)
-		DeleteOrderByID(id int) error
+		DeleteOrderByID(tx *sql.Tx, id int) error
 	}
 
 	order struct{}
@@ -171,16 +171,13 @@ func (o *order) UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error
 	return &order, nil
 }
 
-func (o *order) DeleteOrderByID(id int) error {
-	db := database.GetDB()
-	defer db.Close()
-
+func (o *order) DeleteOrderByID(tx *sql.Tx, id int) error {
 	q := `
 		DELETE FROM orders
 		WHERE id = $1
 	`
 
-	_, err := db.Exec(q, id)
+	_, err := tx.Exec(q, id)
 	if err != nil {
 		return err
 	}

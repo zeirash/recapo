@@ -17,7 +17,7 @@ type (
 		CreateOrderItem(orderID, productID, qty int) (*model.OrderItem, error)
 		UpdateOrderItemByID(id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error)
 		DeleteOrderItemByID(id, orderID int) error
-		DeleteOrderItemsByOrderID(orderID int) error
+		DeleteOrderItemsByOrderID(tx *sql.Tx, orderID int) error
 	}
 
 	orderitem struct{}
@@ -176,16 +176,13 @@ func (o *orderitem) DeleteOrderItemByID(id, orderID int) error {
 	return nil
 }
 
-func (o *orderitem) DeleteOrderItemsByOrderID(orderID int) error {
-	db := database.GetDB()
-	defer db.Close()
-
+func (o *orderitem) DeleteOrderItemsByOrderID(tx *sql.Tx, orderID int) error {
 	q := `
 		DELETE FROM order_items
 		WHERE order_id = $1
 	`
 
-	_, err := db.Exec(q, orderID)
+	_, err := tx.Exec(q, orderID)
 	if err != nil {
 		return err
 	}

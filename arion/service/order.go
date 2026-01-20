@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/zeirash/recapo/arion/common/config"
+	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
 )
@@ -175,17 +176,30 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 }
 
 func (o *oservice) DeleteOrderByID(id int) error {
-	err := orderStore.DeleteOrderByID(id)
+	// Start transaction
+	db := database.GetDB()
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() // No-op if committed
+
+	// Delete order items first (due to foreign key constraints)
+	err = orderItemStore.DeleteOrderItemsByOrderID(tx, id)
 	if err != nil {
 		return err
 	}
 
-	err = orderItemStore.DeleteOrderItemsByOrderID(id)
+	// Delete the order
+	err = orderStore.DeleteOrderByID(tx, id)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	// Commit transaction
+	return tx.Commit()
 }
 
 func (o *oservice) CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error) {
