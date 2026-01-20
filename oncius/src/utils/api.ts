@@ -225,7 +225,7 @@ export const api = {
   },
 
   getProduct: (id: number | string) => {
-    return apiRequest<ApiResponse<any>>(`/product/${id}`)
+    return apiRequest<ApiResponse<any>>(`/products/${id}`)
   },
 
   createProduct: (data: { name: string; price: number }) => {
@@ -238,14 +238,14 @@ export const api = {
   updateProduct: (id: number | string,
     data: Partial<{ name: string; price: number }>
   ) => {
-    return apiRequest<ApiResponse>(`/product/${id}`, {
+    return apiRequest<ApiResponse>(`/products/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     })
   },
 
   deleteProduct: (id: number | string) => {
-    return apiRequest<ApiResponse>(`/product/${id}`, {
+    return apiRequest<ApiResponse>(`/products/${id}`, {
       method: 'DELETE',
     })
   },
@@ -256,7 +256,7 @@ export const api = {
   },
 
   getCustomer: (id: number | string) => {
-    return apiRequest<ApiResponse<any>>(`/customer/${id}`)
+    return apiRequest<ApiResponse<any>>(`/customers/${id}`)
   },
 
   createCustomer: (data: { name: string; phone: string; address: string }) => {
@@ -270,14 +270,14 @@ export const api = {
     id: number | string,
     data: Partial<{ name: string; phone: string; address: string }>
   ) => {
-    return apiRequest<ApiResponse>(`/customer/${id}`, {
+    return apiRequest<ApiResponse>(`/customers/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     })
   },
 
   deleteCustomer: (id: number | string) => {
-    return apiRequest<ApiResponse>(`/customer/${id}`, {
+    return apiRequest<ApiResponse>(`/customers/${id}`, {
       method: 'DELETE',
     })
   },
@@ -288,7 +288,7 @@ export const api = {
   },
 
   getOrder: (id: number | string) => {
-    return apiRequest<ApiResponse<any>>(`/order/${id}`)
+    return apiRequest<ApiResponse<any>>(`/orders/${id}`)
   },
 
   createOrder: (data: { customer_id: number }) => {
@@ -302,25 +302,25 @@ export const api = {
     id: number | string,
     data: Partial<{ customer_id: number; total_price: number; status: string }>
   ) => {
-    return apiRequest<ApiResponse>(`/order/${id}`, {
+    return apiRequest<ApiResponse>(`/orders/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     })
   },
 
   deleteOrder: (id: number | string) => {
-    return apiRequest<ApiResponse>(`/order/${id}`, {
+    return apiRequest<ApiResponse>(`/orders/${id}`, {
       method: 'DELETE',
     })
   },
 
   // Order Items
   getOrderItems: (orderId: number | string) => {
-    return apiRequest<ApiResponse<any[]>>(`/order/${orderId}/items`)
+    return apiRequest<ApiResponse<any[]>>(`/orders/${orderId}/items`)
   },
 
   createOrderItem: (orderId: number | string, data: { product_id: number; qty: number }) => {
-    return apiRequest<ApiResponse>(`/order/${orderId}/item`, {
+    return apiRequest<ApiResponse>(`/orders/${orderId}/item`, {
       method: 'POST',
       body: JSON.stringify(data),
     })
@@ -331,14 +331,14 @@ export const api = {
     itemId: number | string,
     data: Partial<{ product_id: number; qty: number }>
   ) => {
-    return apiRequest<ApiResponse>(`/order/${orderId}/item/${itemId}`, {
+    return apiRequest<ApiResponse>(`/orders/${orderId}/items/${itemId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     })
   },
 
   deleteOrderItem: (orderId: number | string, itemId: number | string) => {
-    return apiRequest<ApiResponse>(`/order/${orderId}/item/${itemId}`, {
+    return apiRequest<ApiResponse>(`/orders/${orderId}/items/${itemId}`, {
       method: 'DELETE',
     })
   },
