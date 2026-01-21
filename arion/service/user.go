@@ -6,6 +6,7 @@ import (
 
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
+	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
 
@@ -132,15 +133,27 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 		return response.TokenResponse{}, err
 	}
 
+	db := database.GetDB()
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return response.TokenResponse{}, err
+	}
+	defer tx.Rollback()
+
 	shopName := fmt.Sprintf("%s's Shop", name)
-	shop, err := shopStore.CreateShop(shopName)
+	shop, err := shopStore.CreateShop(tx, shopName)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
 
-	// default role is owner for user who register
-	newUser, err := userStore.CreateUser(name, email, string(encryptedPassword), constant.RoleOwner, shop.ID)
+	newUser, err := userStore.CreateUser(tx, name, email, string(encryptedPassword), constant.RoleOwner, shop.ID)
 	if err != nil {
+		return response.TokenResponse{}, err
+	}
+
+	if err := tx.Commit(); err != nil {
 		return response.TokenResponse{}, err
 	}
 

@@ -1,15 +1,15 @@
 package store
 
 import (
+	"database/sql"
 	"time"
 
-	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
 )
 
 type (
 	ShopStore interface {
-		CreateShop(name string) (*model.Shop, error)
+		CreateShop(tx *sql.Tx, name string) (*model.Shop, error)
 	}
 
 	shop struct{}
@@ -19,10 +19,7 @@ func NewShopStore() ShopStore {
 	return &shop{}
 }
 
-func (s *shop) CreateShop(name string) (*model.Shop, error) {
-	db := database.GetDB()
-	defer db.Close()
-
+func (s *shop) CreateShop(tx *sql.Tx, name string) (*model.Shop, error) {
 	now := time.Now()
 	var id int
 
@@ -32,7 +29,7 @@ func (s *shop) CreateShop(name string) (*model.Shop, error) {
 		RETURNING id
 	`
 
-	err := db.QueryRow(q, name, now).Scan(&id)
+	err := tx.QueryRow(q, name, now).Scan(&id)
 	if err != nil {
 		return nil, err
 	}

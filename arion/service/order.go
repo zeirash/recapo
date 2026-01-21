@@ -176,7 +176,6 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 }
 
 func (o *oservice) DeleteOrderByID(id int) error {
-	// Start transaction
 	db := database.GetDB()
 	defer db.Close()
 
@@ -184,21 +183,18 @@ func (o *oservice) DeleteOrderByID(id int) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback() // No-op if committed
+	defer tx.Rollback()
 
-	// Delete order items first (due to foreign key constraints)
 	err = orderItemStore.DeleteOrderItemsByOrderID(tx, id)
 	if err != nil {
 		return err
 	}
 
-	// Delete the order
 	err = orderStore.DeleteOrderByID(tx, id)
 	if err != nil {
 		return err
 	}
 
-	// Commit transaction
 	return tx.Commit()
 }
 

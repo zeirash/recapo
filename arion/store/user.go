@@ -16,7 +16,7 @@ type (
 		GetUserByID(userID int) (*model.User, error)
 		GetUserByEmail(email string) (*model.User, error)
 		GetUsers() ([]model.User, error)
-		CreateUser(name, email, hashPassword, role string, shop_id int) (*model.User, error)
+		CreateUser(tx *sql.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
 		UpdateUser(id int, input UpdateUserInput) (*model.User, error)
 		Roles() []string
 		IsValidRole(role string) bool
@@ -117,10 +117,7 @@ func (u *user) GetUsers() ([]model.User, error) {
 	return users, nil
 }
 
-func (u *user) CreateUser(name, email, hashPassword, role string, shop_id int) (*model.User, error) {
-	db := database.GetDB()
-	defer db.Close()
-
+func (u *user) CreateUser(tx *sql.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
 	now := time.Now()
 	var id int
 
@@ -130,13 +127,14 @@ func (u *user) CreateUser(name, email, hashPassword, role string, shop_id int) (
 		RETURNING id
 	`
 
-	err := db.QueryRow(q, name, email, hashPassword, role, shop_id, now).Scan(&id)
+	err := tx.QueryRow(q, name, email, hashPassword, role, shop_id, now).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
 
 	return &model.User{
 		ID:        id,
+		ShopID:    shop_id,
 		Name:      name,
 		Email:     email,
 		Role:      role,
