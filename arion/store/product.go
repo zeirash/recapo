@@ -14,7 +14,7 @@ type (
 	ProductStore interface {
 		GetProductByID(productID int, shopID ...int) (*model.Product, error)
 		GetProductsByShopID(shopID int) ([]model.Product, error)
-		CreateProduct(name string, price int, shopID int) (*model.Product, error)
+		CreateProduct(name string, description *string, price int, shopID int) (*model.Product, error)
 		UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error)
 		DeleteProductByID(productID int) error
 	}
@@ -22,8 +22,9 @@ type (
 	product struct{}
 
 	UpdateProductInput struct {
-		Name  *string
-		Price *int
+		Name        *string
+		Description *string
+		Price       *int
 	}
 )
 
@@ -38,7 +39,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	criteria := []interface{}{productID}
 
 	q := `
-		SELECT id, name, price, created_at, updated_at
+		SELECT id, name, description, price, created_at, updated_at
 		FROM products
 		WHERE id = $1
 	`
@@ -49,7 +50,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	}
 
 	var product model.Product
-	err := db.QueryRow(q, criteria...).Scan(&product.ID, &product.Name, &product.Price, &product.CreatedAt, &product.UpdatedAt)
+	err := db.QueryRow(q, criteria...).Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -65,7 +66,7 @@ func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
 	defer db.Close()
 
 	q := `
-		SELECT id, name, price, created_at, updated_at
+		SELECT id, name, description, price, created_at, updated_at
 		FROM products
 		WHERE shop_id = $1
 	`
@@ -82,7 +83,7 @@ func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
 	products := []model.Product{}
 	for rows.Next() {
 		var product model.Product
-		err := rows.Scan(&product.ID, &product.Name, &product.Price, &product.CreatedAt, &product.UpdatedAt)
+		err := rows.Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CreatedAt, &product.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +93,7 @@ func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
 	return products, nil
 }
 
-func (p *product) CreateProduct(name string, price int, shopID int) (*model.Product, error) {
+func (p *product) CreateProduct(name string, description *string, price int, shopID int) (*model.Product, error) {
 	db := database.GetDB()
 	defer db.Close()
 
@@ -100,22 +101,24 @@ func (p *product) CreateProduct(name string, price int, shopID int) (*model.Prod
 	var id int
 
 	q := `
-		INSERT INTO products (name, price, shop_id, created_at)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id
+		INSERT INTO products (name, description, price, shop_id, created_at)
+		VALUES ($1, COALESCE($2, ''), $3, $4, $5)
+		RETURNING id, description
 	`
 
-	err := db.QueryRow(q, name, price, shopID, now).Scan(&id)
+	var desc string
+	err := db.QueryRow(q, name, description, price, shopID, now).Scan(&id, &desc)
 	if err != nil {
 		return nil, err
 	}
 
 	return &model.Product{
-		ID:        id,
-		Name:      name,
-		ShopID:    shopID,
-		Price:     price,
-		CreatedAt: now,
+		ID:          id,
+		Name:        name,
+		Description: desc,
+		Price:       price,
+		ShopID:      shopID,
+		CreatedAt:   now,
 	}, nil
 }
 
@@ -131,6 +134,10 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 		newSet := fmt.Sprintf("name = '%s'", *input.Name)
 		set = append(set, newSet)
 	}
+	if input.Description != nil {
+		newSet := fmt.Sprintf("description = '%s'", *input.Description)
+		set = append(set, newSet)
+	}
 	if input.Price != nil {
 		newSet := fmt.Sprintf("price = %d", *input.Price)
 		set = append(set, newSet)
@@ -142,12 +149,12 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 		UPDATE products
 		SET %s
 		WHERE id = $1
-		RETURNING id, name, price, created_at, updated_at
+		RETURNING id, name, description, price, created_at, updated_at
 	`
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := db.QueryRow(q, productID).Scan(&product.ID, &product.Name, &product.Price, &product.CreatedAt, &product.UpdatedAt)
+	err := db.QueryRow(q, productID).Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,7 @@ import (
 
 type (
 	ProductService interface {
-		CreateProduct(shopID int, name string, price int) (response.ProductData, error)
+		CreateProduct(shopID int, name string, description *string, price int) (response.ProductData, error)
 		GetProductByID(productID int, shopID ...int) (*response.ProductData, error)
 		GetProductsByShopID(shopID int) ([]response.ProductData, error)
 		UpdateProduct(input UpdateProductInput) (response.ProductData, error)
@@ -20,9 +20,10 @@ type (
 	pservice struct{}
 
 	UpdateProductInput struct {
-		ID    int
-		Name  *string
-		Price *int
+		ID          int
+		Name        *string
+		Description *string
+		Price       *int
 	}
 )
 
@@ -36,19 +37,20 @@ func NewProductService() ProductService {
 	return &pservice{}
 }
 
-func (p *pservice) CreateProduct(shopID int, name string, price int) (response.ProductData, error) {
+func (p *pservice) CreateProduct(shopID int, name string, description *string, price int) (response.ProductData, error) {
 	//TODO: validate product unique name
 
-	product, err := productStore.CreateProduct(name, price, shopID)
+	product, err := productStore.CreateProduct(name, description, price, shopID)
 	if err != nil {
 		return response.ProductData{}, err
 	}
 
 	res := response.ProductData{
-		ID:   product.ID,
-		Name: product.Name,
-		Price: product.Price,
-		CreatedAt: product.CreatedAt,
+		ID:          product.ID,
+		Name:        product.Name,
+		Description: product.Description,
+		Price:       product.Price,
+		CreatedAt:   product.CreatedAt,
 	}
 
 	if product.UpdatedAt.Valid {
@@ -69,10 +71,11 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 	}
 
 	res := response.ProductData{
-		ID:        product.ID,
-		Name:      product.Name,
-		CreatedAt: product.CreatedAt,
-		Price:     product.Price,
+		ID:          product.ID,
+		Name:        product.Name,
+		Description: product.Description,
+		CreatedAt:   product.CreatedAt,
+		Price:       product.Price,
 	}
 
 	if product.UpdatedAt.Valid {
@@ -92,10 +95,11 @@ func (p *pservice) GetProductsByShopID(shopID int) ([]response.ProductData, erro
 	var productsData []response.ProductData
 	for _, product := range products {
 		res := response.ProductData{
-			ID:        product.ID,
-			Name:      product.Name,
-			CreatedAt: product.CreatedAt,
-			Price:     product.Price,
+			ID:          product.ID,
+			Name:        product.Name,
+			Description: product.Description,
+			CreatedAt:   product.CreatedAt,
+			Price:       product.Price,
 		}
 
 		if product.UpdatedAt.Valid {
@@ -112,8 +116,9 @@ func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData
 	//TODO: validate product unique name
 
 	updateData := store.UpdateProductInput{
-		Name:  input.Name,
-		Price: input.Price,
+		Name:        input.Name,
+		Description: input.Description,
+		Price:       input.Price,
 	}
 	productData, err := productStore.UpdateProduct(input.ID, updateData)
 	if err != nil {
@@ -125,10 +130,11 @@ func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData
 	}
 
 	res := response.ProductData{
-		ID:        productData.ID,
-		Name:      productData.Name,
-		Price:     productData.Price,
-		CreatedAt: productData.CreatedAt,
+		ID:          productData.ID,
+		Name:        productData.Name,
+		Description: productData.Description,
+		Price:       productData.Price,
+		CreatedAt:   productData.CreatedAt,
 	}
 
 	if productData.UpdatedAt.Valid {

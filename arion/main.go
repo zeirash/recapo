@@ -17,6 +17,9 @@ func NewRouter() *mux.Router {
 	handler.Init()
 	r := mux.NewRouter()
 
+	// Global middleware
+	r.Use(middleware.Recovery)
+
 	// Routes API
 	r.HandleFunc("/health", handler.HealthHandler)
 

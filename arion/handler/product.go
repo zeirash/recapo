@@ -12,13 +12,15 @@ import (
 
 type (
 	CreateProductRequest struct {
-		Name  string `json:"name"`
-		Price int    `json:"price"`
+		Name        string  `json:"name"`
+		Price       int     `json:"price"`
+		Description *string `json:"description"`
 	}
 
 	UpdateProductRequest struct {
-		Name  *string `json:"name"`
-		Price *int    `json:"price"`
+		Name        *string `json:"name"`
+		Price       *int    `json:"price"`
+		Description *string `json:"description"`
 	}
 )
 
@@ -37,7 +39,7 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := productService.CreateProduct(shopID, inp.Name, inp.Price)
+	res, err := productService.CreateProduct(shopID, inp.Name, inp.Description, inp.Price)
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "create_product")
 		return
@@ -103,9 +105,10 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := productService.UpdateProduct(service.UpdateProductInput{
-		ID:    productID,
-		Name:  inp.Name,
-		Price: inp.Price,
+		ID:          productID,
+		Name:        inp.Name,
+		Description: inp.Description,
+		Price:       inp.Price,
 	})
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "update_product")
