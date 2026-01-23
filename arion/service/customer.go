@@ -38,8 +38,6 @@ func NewCustomerService() CustomerService {
 }
 
 func (c *cservice) CreateCustomer(name, phone, address string, shopID int) (response.CustomerData, error) {
-	//TODO: validate customer unique phone
-
 	customer, err := customerStore.CreateCustomer(name, phone, address, shopID)
 	if err != nil {
 		return response.CustomerData{}, err
@@ -121,7 +119,6 @@ func (c *cservice) UpdateCustomer(input UpdateCustomerInput) (response.CustomerD
 		return response.CustomerData{}, errors.New("customer not found")
 	}
 
-	//TODO: validate customer unique phone
 	updateData := store.UpdateCustomerInput{
 		Name:    input.Name,
 		Phone:   input.Phone,

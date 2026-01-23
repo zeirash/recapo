@@ -2,13 +2,17 @@ package store
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
 )
+
+var ErrDuplicatePhone = errors.New("customer with this phone number already exists")
 
 type (
 	CustomerStore interface {
@@ -108,6 +112,9 @@ func (c *customer) CreateCustomer(name, phone, address string, shopID int) (*mod
 
 	err := db.QueryRow(q, name, phone, address, shopID, now).Scan(&id)
 	if err != nil {
+		if isUniqueViolation(err) {
+			return nil, ErrDuplicatePhone
+		}
 		return nil, err
 	}
 
@@ -154,6 +161,9 @@ func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Cus
 
 	err := db.QueryRow(q, id).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
+		if isUniqueViolation(err) {
+			return nil, ErrDuplicatePhone
+		}
 		return nil, err
 	}
 
@@ -175,4 +185,12 @@ func (c *customer) DeleteCustomerByID(id int) error {
 	}
 
 	return nil
+}
+
+// isUniqueViolation checks if the error is a PostgreSQL unique constraint violation
+func isUniqueViolation(err error) bool {
+	if pqErr, ok := err.(*pq.Error); ok {
+		return pqErr.Code == "23505"
+	}
+	return false
 }
