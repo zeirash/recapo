@@ -2,13 +2,17 @@ package store
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
 )
+
+var ErrDuplicateProductName = errors.New("product with this name already exists")
 
 type (
 	ProductStore interface {
@@ -109,6 +113,9 @@ func (p *product) CreateProduct(name string, description *string, price int, sho
 	var desc string
 	err := db.QueryRow(q, name, description, price, shopID, now).Scan(&id, &desc)
 	if err != nil {
+		if isProductUniqueViolation(err) {
+			return nil, ErrDuplicateProductName
+		}
 		return nil, err
 	}
 
@@ -156,6 +163,9 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 
 	err := db.QueryRow(q, productID).Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
+		if isProductUniqueViolation(err) {
+			return nil, ErrDuplicateProductName
+		}
 		return nil, err
 	}
 
@@ -177,4 +187,12 @@ func (p *product) DeleteProductByID(productID int) error {
 	}
 
 	return nil
+}
+
+// isProductUniqueViolation checks if the error is a PostgreSQL unique constraint violation
+func isProductUniqueViolation(err error) bool {
+	if pqErr, ok := err.(*pq.Error); ok {
+		return pqErr.Code == "23505"
+	}
+	return false
 }

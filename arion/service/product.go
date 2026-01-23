@@ -38,8 +38,6 @@ func NewProductService() ProductService {
 }
 
 func (p *pservice) CreateProduct(shopID int, name string, description *string, price int) (response.ProductData, error) {
-	//TODO: validate product unique name
-
 	product, err := productStore.CreateProduct(name, description, price, shopID)
 	if err != nil {
 		return response.ProductData{}, err
@@ -91,7 +89,6 @@ func (p *pservice) GetProductsByShopID(shopID int) ([]response.ProductData, erro
 		return []response.ProductData{}, err
 	}
 
-	// TODO: improve query performance
 	var productsData []response.ProductData
 	for _, product := range products {
 		res := response.ProductData{
@@ -113,8 +110,6 @@ func (p *pservice) GetProductsByShopID(shopID int) ([]response.ProductData, erro
 }
 
 func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData, error) {
-	//TODO: validate product unique name
-
 	updateData := store.UpdateProductInput{
 		Name:        input.Name,
 		Description: input.Description,
