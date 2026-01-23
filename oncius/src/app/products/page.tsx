@@ -9,6 +9,7 @@ import { api } from '@/utils/api'
 type Product = {
   id: number
   name: string
+  description: string
   price: number
   created_at?: string
   updated_at?: string | null
@@ -16,10 +17,11 @@ type Product = {
 
 type FormState = {
   name: string
+  description: string
   price: number
 }
 
-const emptyForm: FormState = { name: '', price: 0 }
+const emptyForm: FormState = { name: '', description: '', price: 0 }
 
 export default function ProductsPage() {
   const queryClient = useQueryClient()
@@ -98,7 +100,7 @@ export default function ProductsPage() {
 
   function openEditForm(product: Product) {
     setEditingProduct(product)
-    setForm({ name: product.name, price: product.price })
+    setForm({ name: product.name, description: product.description, price: product.price })
     setIsFormOpen(true)
   }
 
@@ -204,6 +206,10 @@ export default function ProductsPage() {
                         <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Price</Text>
                         <Text>{selectedProduct.price.toLocaleString()}</Text>
                       </Box>
+                      <Box>
+                        <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Description</Text>
+                        <Text>{selectedProduct.description || ''}</Text>
+                      </Box>
                     </Card>
                   </>
                 ) : (
@@ -239,6 +245,10 @@ export default function ProductsPage() {
                 <Box sx={{ mb: 3 }}>
                   <Label htmlFor="name">Name</Label>
                   <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                </Box>
+                <Box sx={{ mb: 3 }}>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 </Box>
                 <Box sx={{ mb: 3 }}>
                   <Label htmlFor="price">Price</Label>
