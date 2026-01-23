@@ -37,7 +37,6 @@ func NewUserStore() UserStore {
 
 func (u *user) GetUserByID(userID int) (*model.User, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	resp := model.User{}
 
@@ -60,10 +59,6 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 
 func (u *user) GetUserByEmail(email string) (*model.User, error) {
 	db := database.GetDB()
-	if db == nil {
-		return nil, sql.ErrNoRows
-	}
-	defer db.Close()
 
 	resp := model.User{}
 	q := `
@@ -85,10 +80,6 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 
 func (u *user) GetUsers() ([]model.User, error) {
 	db := database.GetDB()
-	if db == nil {
-		return nil, sql.ErrNoRows
-	}
-	defer db.Close()
 
 	q := `
 		SELECT id, name, email, password, role, created_at, updated_at
@@ -144,7 +135,6 @@ func (u *user) CreateUser(tx *sql.Tx, name, email, hashPassword, role string, sh
 
 func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	set := []string{}
 	var user model.User

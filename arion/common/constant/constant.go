@@ -6,3 +6,11 @@ const (
 	RoleOwner  = "owner"
 	RoleAdmin  = "admin"
 )
+
+// Order status constants
+const (
+	OrderStatusCreated   = "created"
+	OrderStatusPending   = "pending"
+	OrderStatusCompleted = "completed"
+	OrderStatusCancelled = "cancelled"
+)

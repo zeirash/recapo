@@ -38,7 +38,6 @@ func NewCustomerStore() CustomerStore {
 
 func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	criteria := []interface{}{id}
 
@@ -67,7 +66,6 @@ func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, erro
 
 func (c *customer) GetCustomersByShopID(shopID int) ([]model.Customer, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	q := `
 		SELECT id, name, phone, address, created_at, updated_at
@@ -99,7 +97,6 @@ func (c *customer) GetCustomersByShopID(shopID int) ([]model.Customer, error) {
 
 func (c *customer) CreateCustomer(name, phone, address string, shopID int) (*model.Customer, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	now := time.Now()
 	var id int
@@ -129,7 +126,6 @@ func (c *customer) CreateCustomer(name, phone, address string, shopID int) (*mod
 
 func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Customer, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	set := []string{}
 	var customer model.Customer
@@ -172,7 +168,6 @@ func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Cus
 
 func (c *customer) DeleteCustomerByID(id int) error {
 	db := database.GetDB()
-	defer db.Close()
 
 	q := `
 		DELETE FROM customers

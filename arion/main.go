@@ -9,6 +9,7 @@ import (
 	"github.com/rs/cors"
 
 	"github.com/zeirash/recapo/arion/common/config"
+	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/middleware"
 	"github.com/zeirash/recapo/arion/handler"
 )
@@ -70,6 +71,10 @@ func NewRouter() *mux.Router {
 func main() {
 	// init config
 	config.InitConfig()
+
+	// init database
+	database.InitDB()
+	defer database.CloseDB()
 
 	// init router
 	r := NewRouter()

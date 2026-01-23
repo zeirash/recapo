@@ -3,10 +3,13 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/lib/pq"
 	"github.com/zeirash/recapo/arion/common/config"
 )
+
+var db *sql.DB
 
 type DbConfig struct {
 	User     string `required:"true" split_words:"true"`
@@ -48,7 +51,8 @@ func connect(conn string) (*sql.DB, error) {
 	return db, nil
 }
 
-func GetDB() *sql.DB {
+// InitDB initializes the database connection pool. Should be called once at startup.
+func InitDB() {
 	cfg := config.GetConfig()
 	conn := url(DbConfig{
 		User:     cfg.DbUsername,
@@ -60,12 +64,26 @@ func GetDB() *sql.DB {
 		disableSSL: true,
 	})
 
-	db, err := connect(conn)
+	var err error
+	db, err = connect(conn)
 	if err != nil {
-		// TODO: handle error
-		fmt.Println("error get DB: ", err.Error())
-		return nil
+		log.Fatalf("failed to connect to database: %v", err)
 	}
 
+	fmt.Println("Database connection established")
+}
+
+// GetDB returns the database connection pool.
+func GetDB() *sql.DB {
+	if db == nil {
+		log.Fatal("database not initialized - call InitDB() first")
+	}
 	return db
+}
+
+// CloseDB closes the database connection. Should be called on shutdown.
+func CloseDB() {
+	if db != nil {
+		db.Close()
+	}
 }

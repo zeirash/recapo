@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/zeirash/recapo/arion/common/config"
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
@@ -55,8 +56,7 @@ func NewOrderService() OrderService {
 }
 
 func (o *oservice) CreateOrder(customerID int, shopID int) (response.OrderData, error) {
-	// TODO: better hardcoded status on service or store level?
-	order, err := orderStore.CreateOrder(customerID, shopID, "created")
+	order, err := orderStore.CreateOrder(customerID, shopID, constant.OrderStatusCreated)
 	if err != nil {
 		return response.OrderData{}, err
 	}

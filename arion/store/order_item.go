@@ -34,7 +34,6 @@ func NewOrderItemStore() OrderItemStore {
 
 func (o *orderitem) GetOrderItemByID(id int) (*model.OrderItem, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	q := `
 		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at
@@ -57,7 +56,6 @@ func (o *orderitem) GetOrderItemByID(id int) (*model.OrderItem, error) {
 
 func (o *orderitem) GetOrderItemsByOrderID(orderID int) ([]model.OrderItem, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	q := `
 		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at
@@ -87,7 +85,6 @@ func (o *orderitem) GetOrderItemsByOrderID(orderID int) ([]model.OrderItem, erro
 
 func (o *orderitem) CreateOrderItem(orderID, productID, qty int) (*model.OrderItem, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	now := time.Now()
 	var orderItem model.OrderItem
@@ -120,7 +117,6 @@ func (o *orderitem) CreateOrderItem(orderID, productID, qty int) (*model.OrderIt
 
 func (o *orderitem) UpdateOrderItemByID(id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	set := []string{}
 	var orderItem model.OrderItem
@@ -161,7 +157,6 @@ func (o *orderitem) UpdateOrderItemByID(id, orderID int, input UpdateOrderItemIn
 
 func (o *orderitem) DeleteOrderItemByID(id, orderID int) error {
 	db := database.GetDB()
-	defer db.Close()
 
 	q := `
 		DELETE FROM order_items

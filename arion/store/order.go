@@ -34,7 +34,6 @@ func NewOrderStore() OrderStore {
 
 func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	criteria := []interface{}{id}
 
@@ -64,7 +63,6 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 
 func (o *order) GetOrdersByShopID(shopID int) ([]model.Order, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	q := `
 		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.created_at, o.updated_at
@@ -94,7 +92,6 @@ func (o *order) GetOrdersByShopID(shopID int) ([]model.Order, error) {
 
 func (o *order) CreateOrder(customerID int, shopID int, status string) (*model.Order, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	now := time.Now()
 	var order model.Order
@@ -128,7 +125,6 @@ func (o *order) CreateOrder(customerID int, shopID int, status string) (*model.O
 
 func (o *order) UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	set := []string{}
 	var order model.Order

@@ -38,7 +38,6 @@ func NewProductStore() ProductStore {
 
 func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	criteria := []interface{}{productID}
 
@@ -67,7 +66,6 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 
 func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	q := `
 		SELECT id, name, description, price, created_at, updated_at
@@ -99,7 +97,6 @@ func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
 
 func (p *product) CreateProduct(name string, description *string, price int, shopID int) (*model.Product, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	now := time.Now()
 	var id int
@@ -131,7 +128,6 @@ func (p *product) CreateProduct(name string, description *string, price int, sho
 
 func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error) {
 	db := database.GetDB()
-	defer db.Close()
 
 	set := []string{}
 	var product model.Product
@@ -174,7 +170,6 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 
 func (p *product) DeleteProductByID(productID int) error {
 	db := database.GetDB()
-	defer db.Close()
 
 	q := `
 		DELETE FROM products
