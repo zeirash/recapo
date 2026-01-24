@@ -103,8 +103,8 @@ func (t *token) ExtractDataFromToken(requestToken, secret string) (model.TokenDa
 	}
 
 	tokenData := model.TokenData{
-		UserID: int(claims["user_id"].(float64)),
-		ShopID: int(claims["shop_id"].(float64)),
+		UserID:     int(claims["user_id"].(float64)),
+		ShopID:     int(claims["shop_id"].(float64)),
 		SystemMode: claims["system_mode"].(bool),
 	}
 
