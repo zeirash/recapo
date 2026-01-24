@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -10,6 +8,7 @@ import (
 
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/database"
+	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/common/middleware"
 	"github.com/zeirash/recapo/arion/handler"
 )
@@ -69,6 +68,9 @@ func NewRouter() *mux.Router {
 }
 
 func main() {
+	// init logger
+	logger.Init()
+
 	// init config
 	config.InitConfig()
 
@@ -87,6 +89,6 @@ func main() {
 	})
 	handler := c.Handler(r)
 
-	fmt.Println("Server run on port :4000")
-	log.Fatal(http.ListenAndServe(":4000", handler))
+	logger.Info("Server starting on port :4000")
+	logger.Fatal(http.ListenAndServe(":4000", handler))
 }

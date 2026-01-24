@@ -2,11 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -53,7 +53,7 @@ func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 
 	jsonResp, err := json.Marshal(res)
 	if err != nil {
-		fmt.Println("error marshall body: ", err.Error())
+		logger.WithError(err).Error("error marshall body")
 		return
 	}
 	w.Write(jsonResp)
@@ -71,7 +71,7 @@ func WriteErrorJson(w http.ResponseWriter, status int, err error, code string) {
 
 	jsonResp, err := json.Marshal(res)
 	if err != nil {
-		fmt.Println("error marshall body: ", err.Error())
+		logger.WithError(err).Error("error marshall body")
 		return
 	}
 	w.Write(jsonResp)

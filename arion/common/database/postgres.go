@@ -3,10 +3,10 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/lib/pq"
 	"github.com/zeirash/recapo/arion/common/config"
+	"github.com/zeirash/recapo/arion/common/logger"
 )
 
 var db *sql.DB
@@ -67,16 +67,16 @@ func InitDB() {
 	var err error
 	db, err = connect(conn)
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		logger.WithError(err).Fatal("failed to connect to database")
 	}
 
-	fmt.Println("Database connection established")
+	logger.Info("Database connection established")
 }
 
 // GetDB returns the database connection pool.
 func GetDB() *sql.DB {
 	if db == nil {
-		log.Fatal("database not initialized - call InitDB() first")
+		logger.Fatal("database not initialized - call InitDB() first")
 	}
 	return db
 }

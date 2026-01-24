@@ -1,10 +1,9 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	"github.com/zeirash/recapo/arion/common/logger"
 )
 
 type Config struct {
@@ -29,13 +28,13 @@ func InitConfig() {
 	// Loading the environment variables from '.env' file.
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Printf("unable to load .env file: %e", err)
+		logger.WithError(err).Warn("unable to load .env file")
 		return
 	}
 
 	err = env.Parse(&cfg) // Parse environment variables into `Config`
 	if err != nil {
-		fmt.Printf("unable to parse ennvironment variables: %e", err)
+		logger.WithError(err).Error("unable to parse environment variables")
 	}
 }
 
