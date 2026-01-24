@@ -12,11 +12,18 @@ type (
 		CreateShop(tx *sql.Tx, name string) (*model.Shop, error)
 	}
 
-	shop struct{}
+	shop struct {
+		db *sql.DB
+	}
 )
 
 func NewShopStore() ShopStore {
 	return &shop{}
+}
+
+// NewShopStoreWithDB creates a ShopStore with a custom db connection (for testing)
+func NewShopStoreWithDB(db *sql.DB) ShopStore {
+	return &shop{db: db}
 }
 
 func (s *shop) CreateShop(tx *sql.Tx, name string) (*model.Shop, error) {

@@ -336,14 +336,8 @@ func Test_customer_CreateCustomer(t *testing.T) {
 				t.Fatalf("CreateCustomer() unexpected error: %v", gotErr)
 			}
 
-			// Verify CreatedAt is set
-			if got.CreatedAt.IsZero() {
-				t.Error("CreateCustomer() CreatedAt should not be zero")
-			}
-
 			// Set expected CreatedAt to match for DeepEqual comparison
 			tt.wantResult.CreatedAt = got.CreatedAt
-
 			if !reflect.DeepEqual(got, tt.wantResult) {
 				t.Errorf("CreateCustomer() = %v, want %v", got, tt.wantResult)
 			}

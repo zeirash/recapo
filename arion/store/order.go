@@ -19,7 +19,9 @@ type (
 		DeleteOrderByID(tx *sql.Tx, id int) error
 	}
 
-	order struct{}
+	order struct {
+		db *sql.DB
+	}
 
 	UpdateOrderInput struct {
 		CustomerID *int
@@ -29,12 +31,15 @@ type (
 )
 
 func NewOrderStore() OrderStore {
-	return &order{}
+	return &order{db: database.GetDB()}
+}
+
+// NewOrderStoreWithDB creates an OrderStore with a custom db connection (for testing)
+func NewOrderStoreWithDB(db *sql.DB) OrderStore {
+	return &order{db: db}
 }
 
 func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
-	db := database.GetDB()
-
 	criteria := []interface{}{id}
 
 	q := `
@@ -50,7 +55,7 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 	}
 
 	var order model.Order
-	err := db.QueryRow(q, criteria...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.CreatedAt, &order.UpdatedAt)
+	err := o.db.QueryRow(q, criteria...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.CreatedAt, &order.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -62,7 +67,6 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 }
 
 func (o *order) GetOrdersByShopID(shopID int) ([]model.Order, error) {
-	db := database.GetDB()
 
 	q := `
 		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.created_at, o.updated_at
@@ -71,7 +75,7 @@ func (o *order) GetOrdersByShopID(shopID int) ([]model.Order, error) {
 		WHERE o.shop_id = $1
 	`
 
-	rows, err := db.Query(q, shopID)
+	rows, err := o.db.Query(q, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +95,6 @@ func (o *order) GetOrdersByShopID(shopID int) ([]model.Order, error) {
 }
 
 func (o *order) CreateOrder(customerID int, shopID int, status string) (*model.Order, error) {
-	db := database.GetDB()
-
 	now := time.Now()
 	var order model.Order
 
@@ -108,7 +110,7 @@ func (o *order) CreateOrder(customerID int, shopID int, status string) (*model.O
 	`
 
 	// total price is 0 as default, it will be calculated later
-	err := db.QueryRow(q, 0, status, customerID, shopID, now).Scan(
+	err := o.db.QueryRow(q, 0, status, customerID, shopID, now).Scan(
 		&order.ID,
 		&order.TotalPrice,
 		&order.Status,
@@ -124,8 +126,6 @@ func (o *order) CreateOrder(customerID int, shopID int, status string) (*model.O
 }
 
 func (o *order) UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error) {
-	db := database.GetDB()
-
 	set := []string{}
 	var order model.Order
 
@@ -159,7 +159,7 @@ func (o *order) UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := db.QueryRow(q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.CreatedAt, &order.UpdatedAt)
+	err := o.db.QueryRow(q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.CreatedAt, &order.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

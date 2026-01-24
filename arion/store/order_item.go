@@ -20,7 +20,9 @@ type (
 		DeleteOrderItemsByOrderID(tx *sql.Tx, orderID int) error
 	}
 
-	orderitem struct{}
+	orderitem struct {
+		db *sql.DB
+	}
 
 	UpdateOrderItemInput struct {
 		ProductID *int
@@ -29,12 +31,15 @@ type (
 )
 
 func NewOrderItemStore() OrderItemStore {
-	return &orderitem{}
+	return &orderitem{db: database.GetDB()}
+}
+
+// NewOrderItemStoreWithDB creates an OrderItemStore with a custom db connection (for testing)
+func NewOrderItemStoreWithDB(db *sql.DB) OrderItemStore {
+	return &orderitem{db: db}
 }
 
 func (o *orderitem) GetOrderItemByID(id int) (*model.OrderItem, error) {
-	db := database.GetDB()
-
 	q := `
 		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at
 		FROM order_items oi
@@ -43,7 +48,7 @@ func (o *orderitem) GetOrderItemByID(id int) (*model.OrderItem, error) {
 	`
 
 	var orderItem model.OrderItem
-	err := db.QueryRow(q, id).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+	err := o.db.QueryRow(q, id).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -55,8 +60,6 @@ func (o *orderitem) GetOrderItemByID(id int) (*model.OrderItem, error) {
 }
 
 func (o *orderitem) GetOrderItemsByOrderID(orderID int) ([]model.OrderItem, error) {
-	db := database.GetDB()
-
 	q := `
 		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at
 		FROM order_items oi
@@ -64,7 +67,7 @@ func (o *orderitem) GetOrderItemsByOrderID(orderID int) ([]model.OrderItem, erro
 		WHERE oi.order_id = $1
 	`
 
-	rows, err := db.Query(q, orderID)
+	rows, err := o.db.Query(q, orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +87,6 @@ func (o *orderitem) GetOrderItemsByOrderID(orderID int) ([]model.OrderItem, erro
 }
 
 func (o *orderitem) CreateOrderItem(orderID, productID, qty int) (*model.OrderItem, error) {
-	db := database.GetDB()
-
 	now := time.Now()
 	var orderItem model.OrderItem
 
@@ -100,7 +101,7 @@ func (o *orderitem) CreateOrderItem(orderID, productID, qty int) (*model.OrderIt
 		INNER JOIN products p ON i.product_id = p.id
 	`
 
-	err := db.QueryRow(q, orderID, productID, qty, now).Scan(
+	err := o.db.QueryRow(q, orderID, productID, qty, now).Scan(
 		&orderItem.ID,
 		&orderItem.OrderID,
 		&orderItem.ProductName,
@@ -116,8 +117,6 @@ func (o *orderitem) CreateOrderItem(orderID, productID, qty int) (*model.OrderIt
 }
 
 func (o *orderitem) UpdateOrderItemByID(id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error) {
-	db := database.GetDB()
-
 	set := []string{}
 	var orderItem model.OrderItem
 
@@ -147,7 +146,7 @@ func (o *orderitem) UpdateOrderItemByID(id, orderID int, input UpdateOrderItemIn
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := db.QueryRow(q, id, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+	err := o.db.QueryRow(q, id, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -156,14 +155,12 @@ func (o *orderitem) UpdateOrderItemByID(id, orderID int, input UpdateOrderItemIn
 }
 
 func (o *orderitem) DeleteOrderItemByID(id, orderID int) error {
-	db := database.GetDB()
-
 	q := `
 		DELETE FROM order_items
 		WHERE id = $1 AND order_id = $2
 	`
 
-	_, err := db.Exec(q, id, orderID)
+	_, err := o.db.Exec(q, id, orderID)
 	if err != nil {
 		return err
 	}

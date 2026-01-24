@@ -22,7 +22,9 @@ type (
 		IsValidRole(role string) bool
 	}
 
-	user struct{}
+	user struct {
+		db *sql.DB
+	}
 
 	UpdateUserInput struct {
 		Name     *string
@@ -32,12 +34,15 @@ type (
 )
 
 func NewUserStore() UserStore {
-	return &user{}
+	return &user{db: database.GetDB()}
+}
+
+// NewUserStoreWithDB creates a UserStore with a custom db connection (for testing)
+func NewUserStoreWithDB(db *sql.DB) UserStore {
+	return &user{db: db}
 }
 
 func (u *user) GetUserByID(userID int) (*model.User, error) {
-	db := database.GetDB()
-
 	resp := model.User{}
 
 	q := `
@@ -46,7 +51,7 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 		WHERE id = $1
 	`
 
-	err := db.QueryRow(q, userID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
+	err := u.db.QueryRow(q, userID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -58,8 +63,6 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 }
 
 func (u *user) GetUserByEmail(email string) (*model.User, error) {
-	db := database.GetDB()
-
 	resp := model.User{}
 	q := `
 		SELECT id, shop_id,name, email, password, role, created_at, updated_at
@@ -67,7 +70,7 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 		WHERE email = $1
 	`
 
-	err := db.QueryRow(q, email).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
+	err := u.db.QueryRow(q, email).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -79,14 +82,12 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 }
 
 func (u *user) GetUsers() ([]model.User, error) {
-	db := database.GetDB()
-
 	q := `
 		SELECT id, name, email, password, role, created_at, updated_at
 		FROM users
 	`
 
-	rows, err := db.Query(q)
+	rows, err := u.db.Query(q)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -134,8 +135,6 @@ func (u *user) CreateUser(tx *sql.Tx, name, email, hashPassword, role string, sh
 }
 
 func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
-	db := database.GetDB()
-
 	set := []string{}
 	var user model.User
 
@@ -164,7 +163,7 @@ func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := db.QueryRow(q, id).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	err := u.db.QueryRow(q, id).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
