@@ -23,7 +23,9 @@ type (
 		DeleteCustomerByID(id int) error
 	}
 
-	customer struct{}
+	customer struct {
+		db *sql.DB
+	}
 
 	UpdateCustomerInput struct {
 		Name    *string
@@ -33,12 +35,15 @@ type (
 )
 
 func NewCustomerStore() CustomerStore {
-	return &customer{}
+	return &customer{db: database.GetDB()}
+}
+
+// NewCustomerStoreWithDB creates a CustomerStore with a custom db connection (for testing)
+func NewCustomerStoreWithDB(db *sql.DB) CustomerStore {
+	return &customer{db: db}
 }
 
 func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, error) {
-	db := database.GetDB()
-
 	criteria := []interface{}{id}
 
 	q := `
@@ -53,7 +58,7 @@ func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, erro
 	}
 
 	var customer model.Customer
-	err := db.QueryRow(q, criteria...).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := c.db.QueryRow(q, criteria...).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -65,15 +70,13 @@ func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, erro
 }
 
 func (c *customer) GetCustomersByShopID(shopID int) ([]model.Customer, error) {
-	db := database.GetDB()
-
 	q := `
 		SELECT id, name, phone, address, created_at, updated_at
 		FROM customers
 		WHERE shop_id = $1
 	`
 
-	rows, err := db.Query(q, shopID)
+	rows, err := c.db.Query(q, shopID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -96,8 +99,6 @@ func (c *customer) GetCustomersByShopID(shopID int) ([]model.Customer, error) {
 }
 
 func (c *customer) CreateCustomer(name, phone, address string, shopID int) (*model.Customer, error) {
-	db := database.GetDB()
-
 	now := time.Now()
 	var id int
 
@@ -107,7 +108,7 @@ func (c *customer) CreateCustomer(name, phone, address string, shopID int) (*mod
 		RETURNING id
 	`
 
-	err := db.QueryRow(q, name, phone, address, shopID, now).Scan(&id)
+	err := c.db.QueryRow(q, name, phone, address, shopID, now).Scan(&id)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, ErrDuplicatePhone
@@ -125,8 +126,6 @@ func (c *customer) CreateCustomer(name, phone, address string, shopID int) (*mod
 }
 
 func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Customer, error) {
-	db := database.GetDB()
-
 	set := []string{}
 	var customer model.Customer
 
@@ -155,7 +154,7 @@ func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Cus
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := db.QueryRow(q, id).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := c.db.QueryRow(q, id).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, ErrDuplicatePhone
@@ -167,14 +166,12 @@ func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Cus
 }
 
 func (c *customer) DeleteCustomerByID(id int) error {
-	db := database.GetDB()
-
 	q := `
 		DELETE FROM customers
 		WHERE id = $1
 	`
 
-	_, err := db.Exec(q, id)
+	_, err := c.db.Exec(q, id)
 	if err != nil {
 		return err
 	}
