@@ -16,7 +16,7 @@ type (
 		GetUserByID(userID int) (*model.User, error)
 		GetUserByEmail(email string) (*model.User, error)
 		GetUsers() ([]model.User, error)
-		CreateUser(tx *sql.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
+		CreateUser(tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
 		UpdateUser(id int, input UpdateUserInput) (*model.User, error)
 		Roles() []string
 		IsValidRole(role string) bool
@@ -109,7 +109,7 @@ func (u *user) GetUsers() ([]model.User, error) {
 	return users, nil
 }
 
-func (u *user) CreateUser(tx *sql.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
+func (u *user) CreateUser(tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
 	now := time.Now()
 	var id int
 

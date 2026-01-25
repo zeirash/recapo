@@ -5,10 +5,10 @@
 package mock_store
 
 import (
-	sql "database/sql"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	database "github.com/zeirash/recapo/arion/common/database"
 	model "github.com/zeirash/recapo/arion/model"
 	store "github.com/zeirash/recapo/arion/store"
 )
@@ -37,7 +37,7 @@ func (m *MockUserStore) EXPECT() *MockUserStoreMockRecorder {
 }
 
 // CreateUser mocks base method.
-func (m *MockUserStore) CreateUser(tx *sql.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
+func (m *MockUserStore) CreateUser(tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", tx, name, email, hashPassword, role, shop_id)
 	ret0, _ := ret[0].(*model.User)

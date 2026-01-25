@@ -5,10 +5,10 @@
 package mock_store
 
 import (
-	sql "database/sql"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	database "github.com/zeirash/recapo/arion/common/database"
 	model "github.com/zeirash/recapo/arion/model"
 )
 
@@ -36,7 +36,7 @@ func (m *MockShopStore) EXPECT() *MockShopStoreMockRecorder {
 }
 
 // CreateShop mocks base method.
-func (m *MockShopStore) CreateShop(tx *sql.Tx, name string) (*model.Shop, error) {
+func (m *MockShopStore) CreateShop(tx database.Tx, name string) (*model.Shop, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateShop", tx, name)
 	ret0, _ := ret[0].(*model.Shop)

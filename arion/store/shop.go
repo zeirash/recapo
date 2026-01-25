@@ -4,12 +4,13 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
 )
 
 type (
 	ShopStore interface {
-		CreateShop(tx *sql.Tx, name string) (*model.Shop, error)
+		CreateShop(tx database.Tx, name string) (*model.Shop, error)
 	}
 
 	shop struct {
@@ -26,7 +27,7 @@ func NewShopStoreWithDB(db *sql.DB) ShopStore {
 	return &shop{db: db}
 }
 
-func (s *shop) CreateShop(tx *sql.Tx, name string) (*model.Shop, error) {
+func (s *shop) CreateShop(tx database.Tx, name string) (*model.Shop, error) {
 	now := time.Now()
 	var id int
 
