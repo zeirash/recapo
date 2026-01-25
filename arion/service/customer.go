@@ -51,10 +51,6 @@ func (c *cservice) CreateCustomer(name, phone, address string, shopID int) (resp
 		CreatedAt: customer.CreatedAt,
 	}
 
-	if customer.UpdatedAt.Valid {
-		res.UpdatedAt = &customer.UpdatedAt.Time
-	}
-
 	return res, nil
 }
 

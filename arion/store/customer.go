@@ -1,3 +1,5 @@
+//go:generate mockgen -source=customer.go -destination=mock/mock_customer.go -package=mock
+
 package store
 
 import (
