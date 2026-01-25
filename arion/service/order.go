@@ -5,7 +5,6 @@ import (
 
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
-	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
 )
@@ -67,10 +66,6 @@ func (o *oservice) CreateOrder(customerID int, shopID int) (response.OrderData, 
 		TotalPrice: order.TotalPrice,
 		Status: order.Status,
 		CreatedAt: order.CreatedAt,
-	}
-
-	if order.UpdatedAt.Valid {
-		res.UpdatedAt = &order.UpdatedAt.Time
 	}
 
 	return res, nil
@@ -176,8 +171,7 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 }
 
 func (o *oservice) DeleteOrderByID(id int) error {
-	db := database.GetDB()
-	defer db.Close()
+	db := dbGetter()
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -211,10 +205,6 @@ func (o *oservice) CreateOrderItem(orderID, productID, qty int) (response.OrderI
 		Price:			 orderItem.Price,
 		Qty:				 orderItem.Qty,
 		CreatedAt:   orderItem.CreatedAt,
-	}
-
-	if orderItem.UpdatedAt.Valid {
-		res.UpdatedAt = &orderItem.UpdatedAt.Time
 	}
 
 	return res, nil

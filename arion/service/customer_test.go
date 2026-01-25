@@ -280,13 +280,13 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 				mock.EXPECT().
 					GetCustomersByShopID(10).
 					Return([]model.Customer{
-						{ID: 1, Name: "John Doe", Phone: "1234567890", Address: "123 Main St", CreatedAt: fixedTime},
+						{ID: 1, Name: "John Doe", Phone: "1234567890", Address: "123 Main St", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
 						{ID: 2, Name: "Jane Doe", Phone: "0987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
 					}, nil)
 				return mock
 			},
 			wantResult: []response.CustomerData{
-				{ID: 1, Name: "John Doe", Phone: "1234567890", Address: "123 Main St", CreatedAt: fixedTime},
+				{ID: 1, Name: "John Doe", Phone: "1234567890", Address: "123 Main St", CreatedAt: fixedTime, UpdatedAt: &fixedTime},
 				{ID: 2, Name: "Jane Doe", Phone: "0987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
 			},
 			wantErr: false,

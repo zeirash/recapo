@@ -6,7 +6,6 @@ import (
 
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
-	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
 
@@ -133,8 +132,7 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 		return response.TokenResponse{}, err
 	}
 
-	db := database.GetDB()
-	defer db.Close()
+	db := dbGetter()
 
 	tx, err := db.Begin()
 	if err != nil {

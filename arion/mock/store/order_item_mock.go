@@ -5,10 +5,10 @@
 package mock_store
 
 import (
-	sql "database/sql"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	database "github.com/zeirash/recapo/arion/common/database"
 	model "github.com/zeirash/recapo/arion/model"
 	store "github.com/zeirash/recapo/arion/store"
 )
@@ -66,7 +66,7 @@ func (mr *MockOrderItemStoreMockRecorder) DeleteOrderItemByID(id, orderID interf
 }
 
 // DeleteOrderItemsByOrderID mocks base method.
-func (m *MockOrderItemStore) DeleteOrderItemsByOrderID(tx *sql.Tx, orderID int) error {
+func (m *MockOrderItemStore) DeleteOrderItemsByOrderID(tx database.Tx, orderID int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteOrderItemsByOrderID", tx, orderID)
 	ret0, _ := ret[0].(error)

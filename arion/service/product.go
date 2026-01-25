@@ -51,10 +51,6 @@ func (p *pservice) CreateProduct(shopID int, name string, description *string, p
 		CreatedAt:   product.CreatedAt,
 	}
 
-	if product.UpdatedAt.Valid {
-		res.UpdatedAt = &product.UpdatedAt.Time
-	}
-
 	return res, nil
 }
 

@@ -15,6 +15,7 @@ type Tx interface {
 	Commit() error
 	Rollback() error
 	QueryRow(query string, args ...any) *sql.Row
+	Exec(query string, args ...any) (sql.Result, error)
 }
 
 // DB is an interface that wraps the database methods used by services.
