@@ -9,6 +9,34 @@ import (
 	"github.com/zeirash/recapo/arion/common/logger"
 )
 
+// Tx is an interface that wraps sql.Tx methods used by services.
+// This allows for mocking in tests.
+type Tx interface {
+	Commit() error
+	Rollback() error
+	QueryRow(query string, args ...any) *sql.Row
+}
+
+// DB is an interface that wraps the database methods used by services.
+// This allows for mocking in tests.
+type DB interface {
+	Begin() (Tx, error)
+	Close() error
+}
+
+// dbWrapper wraps *sql.DB to implement the DB interface.
+type dbWrapper struct {
+	db *sql.DB
+}
+
+func (w *dbWrapper) Begin() (Tx, error) {
+	return w.db.Begin()
+}
+
+func (w *dbWrapper) Close() error {
+	return w.db.Close()
+}
+
 var db *sql.DB
 
 type DbConfig struct {
@@ -79,6 +107,15 @@ func GetDB() *sql.DB {
 		logger.Fatal("database not initialized - call InitDB() first")
 	}
 	return db
+}
+
+// GetDBWrapper returns a DB interface wrapper around the database connection.
+// This is used by services that need a mockable database interface.
+func GetDBWrapper() DB {
+	if db == nil {
+		logger.Fatal("database not initialized - call InitDB() first")
+	}
+	return &dbWrapper{db: db}
 }
 
 // CloseDB closes the database connection. Should be called on shutdown.
