@@ -26,7 +26,7 @@ func NewTokenStore() TokenStore {
 
 func (t *token) CreateAccessToken(user *model.User, secret string, expiry int) (string, error) {
 	exp := &jwt.NumericDate{
-		time.Now().Add(time.Hour * time.Duration(expiry)),
+		Time: time.Now().Add(time.Hour * time.Duration(expiry)),
 	}
 
 	claim := &model.JwtCustomClaims{
@@ -50,7 +50,7 @@ func (t *token) CreateAccessToken(user *model.User, secret string, expiry int) (
 
 func (t *token) CreateRefreshToken(user *model.User, secret string, expiry int) (string, error) {
 	exp := &jwt.NumericDate{
-		time.Now().Add(time.Hour * time.Duration(expiry)),
+		Time: time.Now().Add(time.Hour * time.Duration(expiry)),
 	}
 	claimsRefresh := &model.JwtCustomRefreshClaims{
 		UserID:     user.ID,
