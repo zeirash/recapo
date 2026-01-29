@@ -27,7 +27,6 @@ type (
 
 	UpdateOrderInput struct {
 		ID         int
-		CustomerID *int
 		TotalPrice *int
 		Status     *string
 	}
@@ -145,7 +144,6 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 	}
 
 	updateData := store.UpdateOrderInput{
-		CustomerID: input.CustomerID,
 		TotalPrice: input.TotalPrice,
 		Status:     input.Status,
 	}

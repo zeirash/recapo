@@ -114,7 +114,6 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.UpdateOrderByID(service.UpdateOrderInput{
 		ID:         orderID,
-		CustomerID: inp.CustomerID,
 		TotalPrice: inp.TotalPrice,
 		Status:     inp.Status,
 	})

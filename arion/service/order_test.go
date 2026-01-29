@@ -369,7 +369,6 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 			name: "update order with multiple fields",
 			input: UpdateOrderInput{
 				ID:         1,
-				CustomerID: intPtr(2),
 				TotalPrice: intPtr(500),
 				Status:     strPtr(constant.OrderStatusCompleted),
 			},
@@ -379,7 +378,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 					GetOrderByID(1).
 					Return(&model.Order{ID: 1, CustomerName: "John Doe", Status: constant.OrderStatusCreated}, nil)
 				mock.EXPECT().
-					UpdateOrder(1, store.UpdateOrderInput{CustomerID: intPtr(2), TotalPrice: intPtr(500), Status: strPtr(constant.OrderStatusCompleted)}).
+					UpdateOrder(1, store.UpdateOrderInput{TotalPrice: intPtr(500), Status: strPtr(constant.OrderStatusCompleted)}).
 					Return(&model.Order{
 						ID:           1,
 						CustomerName: "Jane Doe",

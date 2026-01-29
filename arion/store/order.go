@@ -24,7 +24,6 @@ type (
 	}
 
 	UpdateOrderInput struct {
-		CustomerID *int
 		TotalPrice *int
 		Status     *string
 	}
@@ -130,10 +129,6 @@ func (o *order) UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error
 	var order model.Order
 
 	// build query
-	if input.CustomerID != nil {
-		newSet := fmt.Sprintf("customer_id = %d", *input.CustomerID)
-		set = append(set, newSet)
-	}
 	if input.TotalPrice != nil {
 		newSet := fmt.Sprintf("total_price = %d", *input.TotalPrice)
 		set = append(set, newSet)
