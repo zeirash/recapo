@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Box, Container, Heading, Text, Input, Button, Alert, Flex } from 'theme-ui'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
 
 const LoginPage = () => {
+  const t = useTranslations()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
@@ -20,15 +22,15 @@ const LoginPage = () => {
     const newErrors: { [key: string]: string } = {}
 
     if (!email) {
-      newErrors.email = 'Email is required'
+      newErrors.email = t('validation.emailRequired')
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid'
+      newErrors.email = t('validation.emailInvalid')
     }
 
     if (!password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = t('validation.passwordRequired')
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
+      newErrors.password = t('validation.passwordMinLength')
     }
 
     setErrors(newErrors)
@@ -50,7 +52,7 @@ const LoginPage = () => {
       <Container sx={{ maxWidth: '500px' }}>
         <Box sx={{ bg: 'background', p: 4, borderRadius: 'large', boxShadow: 'medium' }}>
           <Heading as="h1" sx={{ textAlign: 'center', mb: 4 }}>
-            Login
+            {t('auth.login')}
           </Heading>
 
           {message && (
@@ -61,20 +63,20 @@ const LoginPage = () => {
 
           {loginError && (
             <Alert sx={{ mb: 3, bg: 'error', color: 'white' }}>
-              {loginError instanceof Error ? loginError.message : 'Login failed'}
+              {loginError instanceof Error ? loginError.message : t('auth.loginFailed')}
             </Alert>
           )}
 
           <Box as="form" onSubmit={handleSubmit}>
             <Box sx={{ mb: 3 }}>
               <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
-                Email
+                {t('common.email')}
               </Text>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={t('auth.enterEmail')}
                 sx={{ width: '100%' }}
                 className={errors.email ? 'error' : ''}
               />
@@ -87,13 +89,13 @@ const LoginPage = () => {
 
             <Box sx={{ mb: 4 }}>
               <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
-                Password
+                {t('common.password')}
               </Text>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder={t('auth.enterPassword')}
                 sx={{ width: '100%' }}
                 className={errors.password ? 'error' : ''}
               />
@@ -110,16 +112,16 @@ const LoginPage = () => {
               sx={{ width: '100%', mb: 3 }}
               disabled={loginLoading}
             >
-              {loginLoading ? 'Logging in...' : 'Login'}
+              {loginLoading ? t('auth.loggingIn') : t('auth.login')}
             </Button>
 
             <Flex sx={{ justifyContent: 'center', gap: 1 }}>
-              <Text sx={{ color: 'text.secondary' }}>Don't have an account?</Text>
+              <Text sx={{ color: 'text.secondary' }}>{t('auth.noAccount')}</Text>
               <Link href="/register">
                 <Text
                   sx={{ color: 'primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                 >
-                  Register here
+                  {t('auth.registerHere')}
                 </Text>
               </Link>
             </Flex>

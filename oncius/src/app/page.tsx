@@ -1,9 +1,35 @@
 "use client"
 
+import { useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Box, Heading, Text, Button, Flex, Container } from 'theme-ui'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function HomePage() {
+  const router = useRouter()
+  const { isAuthenticated, isLoadingUser } = useAuth()
+
+  useEffect(() => {
+    if (!isLoadingUser && isAuthenticated) {
+      router.replace('/dashboard')
+    }
+  }, [isAuthenticated, isLoadingUser, router])
+
+  if (isLoadingUser) {
+    return (
+      <Container>
+        <Box sx={{ py: 6, textAlign: 'center' }}>
+          <Text>Loading...</Text>
+        </Box>
+      </Container>
+    )
+  }
+
+  if (isAuthenticated) {
+    return null
+  }
+
   return (
     <Container>
       <Box sx={{ py: 6, textAlign: 'center' }}>

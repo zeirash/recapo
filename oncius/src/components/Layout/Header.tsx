@@ -4,18 +4,21 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Box, Flex, Text, Button, IconButton } from 'theme-ui'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 const Header = () => {
+  const t = useTranslations('nav')
   const { user, logout, isAuthenticated } = useAuth()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const navigationItems = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/products', label: 'Products' },
-    { href: '/orders', label: 'Orders' },
-    { href: '/customers', label: 'Customers' },
+    { href: '/dashboard', label: t('dashboard') },
+    { href: '/products', label: t('products') },
+    { href: '/orders', label: t('orders') },
+    { href: '/customers', label: t('customers') },
   ]
 
   const handleLogout = () => {
@@ -49,28 +52,29 @@ const Header = () => {
 
         {/* User Menu / Auth Buttons */}
         <Flex sx={{ alignItems: 'center', gap: 2 }}>
+          <LanguageSwitcher />
           {isAuthenticated ? (
             <Flex sx={{ alignItems: 'center', gap: 2 }}>
               <Box sx={{ display: ['none', 'block'] }}>
-                <Text sx={{ color: 'text.secondary' }}>Welcome, {user?.name}</Text>
+                <Text sx={{ color: 'text.secondary' }}>{t('welcome', { name: user?.name ?? '' })}</Text>
               </Box>
               <Button variant="secondary" onClick={() => router.push('/profile')}>
-                Profile
+                {t('profile')}
               </Button>
               <Button variant="secondary" onClick={handleLogout}>
-                Logout
+                {t('logout')}
               </Button>
             </Flex>
           ) : (
             <Flex sx={{ gap: 2 }}>
               <Link href="/login">
                 <Button variant="secondary">
-                  Login
+                  {t('login')}
                 </Button>
               </Link>
               <Link href="/register">
                 <Button variant="primary">
-                  Register
+                  {t('register')}
                 </Button>
               </Link>
             </Flex>
@@ -127,7 +131,7 @@ const Header = () => {
                       setIsMobileMenuOpen(false)
                     }}
                   >
-                    Logout
+                    {t('logout')}
                   </Text>
                 </Box>
               </>
