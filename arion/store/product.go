@@ -17,7 +17,7 @@ var ErrDuplicateProductName = errors.New("product with this name already exists"
 type (
 	ProductStore interface {
 		GetProductByID(productID int, shopID ...int) (*model.Product, error)
-		GetProductsByShopID(shopID int) ([]model.Product, error)
+		GetProductsByShopID(shopID int, searchQuery *string) ([]model.Product, error)
 		CreateProduct(name string, description *string, price int, shopID int) (*model.Product, error)
 		UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error)
 		DeleteProductByID(productID int) error
@@ -69,14 +69,20 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	return &product, nil
 }
 
-func (p *product) GetProductsByShopID(shopID int) ([]model.Product, error) {
+func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.Product, error) {
 	q := `
 		SELECT id, name, description, price, created_at, updated_at
 		FROM products
 		WHERE shop_id = $1
 	`
+	args := []interface{}{shopID}
 
-	rows, err := p.db.Query(q, shopID)
+	if searchQuery != nil && strings.TrimSpace(*searchQuery) != "" {
+		q += ` AND (name ILIKE $2 OR description ILIKE $2)`
+		args = append(args, "%"+strings.TrimSpace(*searchQuery)+"%")
+	}
+
+	rows, err := p.db.Query(q, args...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

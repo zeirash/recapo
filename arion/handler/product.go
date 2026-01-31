@@ -79,7 +79,12 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
-	res, err := productService.GetProductsByShopID(shopID)
+	var searchQuery *string
+	if q := r.URL.Query().Get("search"); q != "" {
+		searchQuery = &q
+	}
+
+	res, err := productService.GetProductsByShopID(shopID, searchQuery)
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "get_products")
 		return

@@ -128,7 +128,8 @@ func (o *oservice) GetOrdersByShopID(shopID int) ([]response.OrderData, error) {
 		}
 
 		if order.UpdatedAt.Valid {
-			res.UpdatedAt = &order.UpdatedAt.Time
+			t := order.UpdatedAt.Time
+			res.UpdatedAt = &t
 		}
 
 		ordersData = append(ordersData, res)

@@ -12,7 +12,7 @@ type (
 	ProductService interface {
 		CreateProduct(shopID int, name string, description *string, price int) (response.ProductData, error)
 		GetProductByID(productID int, shopID ...int) (*response.ProductData, error)
-		GetProductsByShopID(shopID int) ([]response.ProductData, error)
+		GetProductsByShopID(shopID int, searchQuery *string) ([]response.ProductData, error)
 		UpdateProduct(input UpdateProductInput) (response.ProductData, error)
 		DeleteProductByID(id int) error
 	}
@@ -79,8 +79,8 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 	return &res, nil
 }
 
-func (p *pservice) GetProductsByShopID(shopID int) ([]response.ProductData, error) {
-	products, err := productStore.GetProductsByShopID(shopID)
+func (p *pservice) GetProductsByShopID(shopID int, searchQuery *string) ([]response.ProductData, error) {
+	products, err := productStore.GetProductsByShopID(shopID, searchQuery)
 	if err != nil {
 		return []response.ProductData{}, err
 	}
@@ -96,7 +96,8 @@ func (p *pservice) GetProductsByShopID(shopID int) ([]response.ProductData, erro
 		}
 
 		if product.UpdatedAt.Valid {
-			res.UpdatedAt = &product.UpdatedAt.Time
+			t := product.UpdatedAt.Time
+			res.UpdatedAt = &t
 		}
 
 		productsData = append(productsData, res)

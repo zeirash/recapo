@@ -122,16 +122,20 @@ func Test_product_GetProductByID(t *testing.T) {
 func Test_product_GetProductsByShopID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
+	strPtr := func(s string) *string { return &s }
+
 	tests := []struct {
-		name       string
-		shopID     int
-		mockSetup  func(mock sqlmock.Sqlmock)
-		wantResult []model.Product
-		wantErr    bool
+		name        string
+		shopID      int
+		searchQuery *string
+		mockSetup   func(mock sqlmock.Sqlmock)
+		wantResult  []model.Product
+		wantErr     bool
 	}{
 		{
-			name:   "get products by shop ID returns multiple products",
-			shopID: 10,
+			name:        "get products by shop ID returns multiple products",
+			shopID:      10,
+			searchQuery: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "created_at", "updated_at"}).
 					AddRow(1, "Product A", "Description A", 1000, fixedTime, nil).
@@ -147,8 +151,9 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "get products by shop ID returns empty slice when no products exist",
-			shopID: 9999,
+			name:        "get products by shop ID returns empty slice when no products exist",
+			shopID:      9999,
+			searchQuery: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "created_at", "updated_at"})
 				mock.ExpectQuery(`SELECT id, name, description, price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
@@ -159,8 +164,9 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:   "get products by shop ID returns nil when db returns no rows",
-			shopID: 9999,
+			name:        "get products by shop ID returns nil when db returns no rows",
+			shopID:      9999,
+			searchQuery: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`SELECT id, name, description, price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
 					WithArgs(9999).
@@ -170,8 +176,9 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:   "get products returns error on database failure",
-			shopID: 10,
+			name:        "get products returns error on database failure",
+			shopID:      10,
+			searchQuery: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`SELECT id, name, description, price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
 					WithArgs(10).
@@ -179,6 +186,22 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			},
 			wantResult: nil,
 			wantErr:    true,
+		},
+		{
+			name:        "get products by shop ID with search query returns matching products",
+			shopID:      10,
+			searchQuery: strPtr("widget"),
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "created_at", "updated_at"}).
+					AddRow(1, "Widget A", "A useful widget", 1000, fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, name, description, price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1\s+AND \(name ILIKE \$2 OR description ILIKE \$2\)`).
+					WithArgs(10, "%widget%").
+					WillReturnRows(rows)
+			},
+			wantResult: []model.Product{
+				{ID: 1, Name: "Widget A", Description: "A useful widget", Price: 1000, CreatedAt: fixedTime},
+			},
+			wantErr: false,
 		},
 	}
 
@@ -193,7 +216,7 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewProductStoreWithDB(db)
 
-			got, gotErr := store.GetProductsByShopID(tt.shopID)
+			got, gotErr := store.GetProductsByShopID(tt.shopID, tt.searchQuery)
 
 			if gotErr != nil {
 				if !tt.wantErr {

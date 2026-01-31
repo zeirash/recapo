@@ -96,7 +96,8 @@ func (c *cservice) GetCustomersByShopID(shopID int) ([]response.CustomerData, er
 		}
 
 		if customer.UpdatedAt.Valid {
-			res.UpdatedAt = &customer.UpdatedAt.Time
+			t := customer.UpdatedAt.Time
+			res.UpdatedAt = &t
 		}
 
 		customersData = append(customersData, res)

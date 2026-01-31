@@ -275,20 +275,24 @@ func Test_pservice_GetProductByID(t *testing.T) {
 func Test_pservice_GetProductsByShopID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
+	strPtr := func(s string) *string { return &s }
+
 	tests := []struct {
-		name       string
-		shopID     int
-		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockProductStore
-		wantResult []response.ProductData
-		wantErr    bool
+		name        string
+		shopID      int
+		searchQuery *string
+		mockSetup   func(ctrl *gomock.Controller) *mock_store.MockProductStore
+		wantResult  []response.ProductData
+		wantErr     bool
 	}{
 		{
-			name:   "get products by shop ID returns multiple products",
-			shopID: 10,
+			name:        "get products by shop ID returns multiple products",
+			shopID:      10,
+			searchQuery: nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsByShopID(10).
+					GetProductsByShopID(10, nil).
 					Return([]model.Product{
 						{ID: 1, Name: "Product A", Description: "Desc A", Price: 1000, CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
 						{ID: 2, Name: "Product B", Price: 500, CreatedAt: fixedTime},
@@ -302,12 +306,13 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "get products by shop ID returns empty slice",
-			shopID: 10,
+			name:        "get products by shop ID returns empty slice",
+			shopID:      10,
+			searchQuery: nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsByShopID(10).
+					GetProductsByShopID(10, nil).
 					Return([]model.Product{}, nil)
 				return mock
 			},
@@ -315,17 +320,36 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:   "get products by shop ID returns error on database failure",
-			shopID: 10,
+			name:        "get products by shop ID returns error on database failure",
+			shopID:      10,
+			searchQuery: nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsByShopID(10).
+					GetProductsByShopID(10, nil).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
 			wantResult: []response.ProductData{},
 			wantErr:    true,
+		},
+		{
+			name:        "get products by shop ID with search query returns matching products",
+			shopID:      10,
+			searchQuery: strPtr("widget"),
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
+				mock := mock_store.NewMockProductStore(ctrl)
+				mock.EXPECT().
+					GetProductsByShopID(10, strPtr("widget")).
+					Return([]model.Product{
+						{ID: 1, Name: "Widget A", Description: "A useful widget", Price: 1000, CreatedAt: fixedTime},
+					}, nil)
+				return mock
+			},
+			wantResult: []response.ProductData{
+				{ID: 1, Name: "Widget A", Description: "A useful widget", Price: 1000, CreatedAt: fixedTime},
+			},
+			wantErr: false,
 		},
 	}
 
@@ -337,7 +361,7 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			got, gotErr := p.GetProductsByShopID(tt.shopID)
+			got, gotErr := p.GetProductsByShopID(tt.shopID, tt.searchQuery)
 
 			if gotErr != nil {
 				if !tt.wantErr {
