@@ -24,6 +24,7 @@ func Test_oservice_CreateOrder(t *testing.T) {
 		name       string
 		customerID int
 		shopID     int
+		notes      *string
 		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockOrderStore
 		wantResult response.OrderData
 		wantErr    bool
@@ -32,10 +33,11 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			name:       "successfully create order",
 			customerID: 1,
 			shopID:     1,
+			notes:      nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					CreateOrder(1, 1, constant.OrderStatusCreated).
+					CreateOrder(1, 1, constant.OrderStatusCreated, nil).
 					Return(&model.Order{
 						ID:           1,
 						CustomerName: "John Doe",
@@ -58,10 +60,11 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			name:       "create order returns error on store failure",
 			customerID: 1,
 			shopID:     1,
+			notes:      nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					CreateOrder(1, 1, constant.OrderStatusCreated).
+					CreateOrder(1, 1, constant.OrderStatusCreated, nil).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -78,7 +81,7 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			orderStore = tt.mockSetup(ctrl)
 
 			var o oservice
-			got, gotErr := o.CreateOrder(tt.customerID, tt.shopID)
+			got, gotErr := o.CreateOrder(tt.customerID, tt.shopID, tt.notes)
 
 			if gotErr != nil {
 				if !tt.wantErr {

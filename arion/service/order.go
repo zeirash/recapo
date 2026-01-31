@@ -11,7 +11,7 @@ import (
 
 type (
 	OrderService interface {
-		CreateOrder(customerID int, shopID int) (response.OrderData, error)
+		CreateOrder(customerID int, shopID int, notes *string) (response.OrderData, error)
 		GetOrderByID(id int, shopID ...int) (*response.OrderData, error)
 		GetOrdersByShopID(shopID int) ([]response.OrderData, error)
 		UpdateOrderByID(input UpdateOrderInput) (response.OrderData, error)
@@ -29,6 +29,7 @@ type (
 		ID         int
 		TotalPrice *int
 		Status     *string
+		Notes      *string
 	}
 
 	UpdateOrderItemInput struct {
@@ -53,18 +54,19 @@ func NewOrderService() OrderService {
 	return &oservice{}
 }
 
-func (o *oservice) CreateOrder(customerID int, shopID int) (response.OrderData, error) {
-	order, err := orderStore.CreateOrder(customerID, shopID, constant.OrderStatusCreated)
+func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (response.OrderData, error) {
+	order, err := orderStore.CreateOrder(customerID, shopID, constant.OrderStatusCreated, notes)
 	if err != nil {
 		return response.OrderData{}, err
 	}
 
 	res := response.OrderData{
-		ID: order.ID,
+		ID:           order.ID,
 		CustomerName: order.CustomerName,
-		TotalPrice: order.TotalPrice,
-		Status: order.Status,
-		CreatedAt: order.CreatedAt,
+		TotalPrice:   order.TotalPrice,
+		Status:       order.Status,
+		Notes:        order.Notes,
+		CreatedAt:    order.CreatedAt,
 	}
 
 	return res, nil
@@ -97,11 +99,12 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 	}
 
 	res := response.OrderData{
-		ID: order.ID,
+		ID:           order.ID,
 		CustomerName: order.CustomerName,
-		TotalPrice: order.TotalPrice,
-		Status: order.Status,
-		OrderItems: orderItemsData,
+		TotalPrice:   order.TotalPrice,
+		Status:       order.Status,
+		Notes:        order.Notes,
+		OrderItems:   orderItemsData,
 	}
 
 	return &res, nil
@@ -120,6 +123,7 @@ func (o *oservice) GetOrdersByShopID(shopID int) ([]response.OrderData, error) {
 			CustomerName: order.CustomerName,
 			TotalPrice:   order.TotalPrice,
 			Status:       order.Status,
+			Notes:        order.Notes,
 			CreatedAt:    order.CreatedAt,
 		}
 
@@ -146,6 +150,7 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 	updateData := store.UpdateOrderInput{
 		TotalPrice: input.TotalPrice,
 		Status:     input.Status,
+		Notes:      input.Notes,
 	}
 
 	orderData, err := orderStore.UpdateOrder(input.ID, updateData)
@@ -158,6 +163,7 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 		CustomerName: orderData.CustomerName,
 		TotalPrice:   orderData.TotalPrice,
 		Status:       orderData.Status,
+		Notes:        orderData.Notes,
 		CreatedAt:    orderData.CreatedAt,
 	}
 

@@ -80,6 +80,7 @@ type (
 		CustomerName string       `db:"customer_name"`
 		TotalPrice   int          `db:"total_price"`
 		Status       string       `db:"status"`
+		Notes        string       `db:"notes"`
 		CreatedAt    time.Time    `db:"created_at"`
 		UpdatedAt    sql.NullTime `db:"updated_at"`
 	}

@@ -12,13 +12,15 @@ import (
 
 type (
 	CreateOrderRequest struct {
-		CustomerID int `json:"customer_id"`
+		CustomerID int     `json:"customer_id"`
+		Notes      *string `json:"notes"`
 	}
 
 	UpdateOrderRequest struct {
-		CustomerID *int `json:"customer_id"`
-		TotalPrice *int `json:"total_price"`
+		CustomerID *int    `json:"customer_id"`
+		TotalPrice *int    `json:"total_price"`
 		Status     *string `json:"status"`
+		Notes      *string `json:"notes"`
 	}
 
 	CreateOrderItemRequest struct {
@@ -47,7 +49,7 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := orderService.CreateOrder(inp.CustomerID, shopID)
+	res, err := orderService.CreateOrder(inp.CustomerID, shopID, inp.Notes)
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "create_order")
 		return
@@ -116,6 +118,7 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 		ID:         orderID,
 		TotalPrice: inp.TotalPrice,
 		Status:     inp.Status,
+		Notes:      inp.Notes,
 	})
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "update_order")
