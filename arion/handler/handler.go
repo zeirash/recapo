@@ -42,6 +42,26 @@ func Init() {
 	}
 }
 
+// SetProductService sets the product service (for testing)
+func SetProductService(s service.ProductService) {
+	productService = s
+}
+
+// SetCustomerService sets the customer service (for testing)
+func SetCustomerService(s service.CustomerService) {
+	customerService = s
+}
+
+// SetUserService sets the user service (for testing)
+func SetUserService(s service.UserService) {
+	userService = s
+}
+
+// SetOrderService sets the order service (for testing)
+func SetOrderService(s service.OrderService) {
+	orderService = s
+}
+
 func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

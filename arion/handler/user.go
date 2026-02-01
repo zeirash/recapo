@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/zeirash/recapo/arion/common"
@@ -19,12 +20,6 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := ctx.Value(common.UserIDKey).(int)
 
-	// params := mux.Vars(r)
-	// if params["user_id"] != "" {
-	// 	userIDInt, _ := strconv.Atoi(params["user_id"])
-	// 	userID = userIDInt
-	// }
-
 	res, err := userService.GetUserByID(int(userID))
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "get_user")
@@ -32,7 +27,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if res == nil {
-		WriteErrorJson(w, http.StatusNotFound, err, "get_user")
+		WriteErrorJson(w, http.StatusNotFound, errors.New("user not found"), "get_user")
 		return
 	}
 
@@ -43,11 +38,6 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := userService.GetUsers()
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "get_users")
-		return
-	}
-
-	if res == nil {
-		WriteErrorJson(w, http.StatusNotFound, err, "get_users")
 		return
 	}
 

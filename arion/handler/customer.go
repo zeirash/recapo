@@ -68,7 +68,7 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if res == nil {
-		WriteErrorJson(w, http.StatusNotFound, err, "get_customer")
+		WriteErrorJson(w, http.StatusNotFound, errors.New("customer not found"), "get_customer")
 		return
 	}
 

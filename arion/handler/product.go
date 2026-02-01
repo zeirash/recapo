@@ -68,7 +68,7 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if res == nil {
-		WriteErrorJson(w, http.StatusNotFound, err, "get_product")
+		WriteErrorJson(w, http.StatusNotFound, errors.New("product not found"), "get_product")
 		return
 	}
 
@@ -157,18 +157,6 @@ func validateCreateProduct(inp CreateProductRequest) (bool, error) {
 func validateProductID(params map[string]string) (bool, error) {
 	if params["product_id"] == "" {
 		return false, errors.New("product_id is required")
-	}
-
-	return true, nil
-}
-
-func validateUpdateDeleteProductPrice(params map[string]string) (bool, error) {
-	if params["product_id"] == "" {
-		return false, errors.New("product_id is required")
-	}
-
-	if params["price_id"] == "" {
-		return false, errors.New("price_id is required")
 	}
 
 	return true, nil
