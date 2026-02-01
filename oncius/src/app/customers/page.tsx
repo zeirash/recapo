@@ -184,37 +184,157 @@ export default function CustomersPage() {
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, p: 4, bg: 'white' }}>
+              <Box sx={{ flex: 1, overflowY: 'auto', bg: 'background.secondary' }}>
                 {selectedCustomer ? (
-                  <>
-                    <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                      <Heading as="h2" sx={{ fontSize: 3 }}>{selectedCustomer.name}</Heading>
-                      <Flex sx={{ gap: 2 }}>
-                        <Button variant="secondary" onClick={() => openEditForm(selectedCustomer)}>Edit</Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            if (confirm('Delete this customer?')) deleteMutation.mutate(selectedCustomer.id)
-                          }}
-                        >
-                          Delete
-                        </Button>
+                  <Box sx={{ maxWidth: 640, mx: 'auto', p: [4, 5] }}>
+                    {/* Header card with avatar */}
+                    <Card
+                      sx={{
+                        p: 4,
+                        mb: 4,
+                        borderRadius: 'large',
+                        boxShadow: 'medium',
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                        color: 'white',
+                      }}
+                    >
+                      <Flex sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 3 }}>
+                        <Flex sx={{ alignItems: 'center', gap: 3 }}>
+                          <Box
+                            sx={{
+                              width: 72,
+                              height: 72,
+                              borderRadius: 'round',
+                              bg: 'rgba(255,255,255,0.25)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 'bold',
+                              fontSize: 5,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {selectedCustomer.name.charAt(0).toUpperCase()}
+                          </Box>
+                          <Box>
+                            <Heading as="h2" sx={{ fontSize: 4, fontWeight: 700, mb: 1, letterSpacing: '-0.02em' }}>
+                              {selectedCustomer.name}
+                            </Heading>
+                            {selectedCustomer.created_at && (
+                              <Text sx={{ fontSize: 0, opacity: 0.9 }}>
+                                Customer since {new Date(selectedCustomer.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                              </Text>
+                            )}
+                          </Box>
+                        </Flex>
+                        <Flex sx={{ gap: 2 }}>
+                          <Button
+                            variant="secondary"
+                            onClick={() => openEditForm(selectedCustomer)}
+                            sx={{
+                              bg: 'rgba(255,255,255,0.2)',
+                              border: '1px solid rgba(255,255,255,0.5)',
+                              color: 'white',
+                              '&:hover': { bg: 'rgba(255,255,255,0.3)', borderColor: 'white' },
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              if (confirm('Delete this customer?')) deleteMutation.mutate(selectedCustomer.id)
+                            }}
+                            sx={{
+                              bg: 'rgba(239,68,68,0.3)',
+                              border: '1px solid rgba(239,68,68,0.6)',
+                              color: 'white',
+                              '&:hover': { bg: 'rgba(239,68,68,0.5)', borderColor: '#ef4444' },
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </Flex>
                       </Flex>
-                    </Flex>
-                    <Card sx={{ p: 3 }}>
-                      <Box sx={{ mb: 2 }}>
-                        <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Phone</Text>
-                        <Text>{selectedCustomer.phone || '-'}</Text>
-                      </Box>
-                      <Box>
-                        <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Address</Text>
-                        <Text>{selectedCustomer.address || '-'}</Text>
+                    </Card>
+
+                    {/* Contact info card */}
+                    <Card
+                      sx={{
+                        p: 2,
+                        borderRadius: 'large',
+                        boxShadow: 'small',
+                        border: '1px solid',
+                        borderColor: 'border',
+                        bg: 'white',
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: 'medium' },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Flex sx={{ alignItems: 'center' }}>
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 'medium',
+                              bg: 'background.secondary',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 3,
+                              flexShrink: 0,
+                            }}
+                          >
+                            📞
+                          </Box>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Text sx={{ fontSize: 1, lineHeight: 1.5, wordBreak: 'break-word' }}>
+                              {selectedCustomer.phone || '—'}
+                            </Text>
+                          </Box>
+                        </Flex>
+                        <Flex sx={{ alignItems: 'center' }}>
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 'medium',
+                              bg: 'background.secondary',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 3,
+                              flexShrink: 0,
+                            }}
+                          >
+                            📍
+                          </Box>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Text sx={{ fontSize: 1, lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                              {selectedCustomer.address || '—'}
+                            </Text>
+                          </Box>
+                        </Flex>
                       </Box>
                     </Card>
-                  </>
+                  </Box>
                 ) : (
-                  <Flex sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' }}>
-                    <Text>Select a customer to view details</Text>
+                  <Flex
+                    sx={{
+                      height: '100%',
+                      minHeight: 320,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      gap: 2,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    <Box sx={{ fontSize: 6, opacity: 0.4 }}>👤</Box>
+                    <Text sx={{ fontSize: 2 }}>Select a customer to view details</Text>
+                    <Text sx={{ fontSize: 1 }}>Choose from the list on the left</Text>
                   </Flex>
                 )}
               </Box>

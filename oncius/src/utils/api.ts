@@ -220,8 +220,9 @@ export const api = {
   },
 
   // Products
-  getProducts: () => {
-    return apiRequest<ApiResponse<any[]>>('/products')
+  getProducts: (search?: string) => {
+    const params = search ? `?search=${encodeURIComponent(search)}` : ''
+    return apiRequest<ApiResponse<any[]>>(`/products${params}`)
   },
 
   getProduct: (id: number | string) => {
