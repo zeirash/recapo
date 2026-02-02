@@ -105,6 +105,12 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 		Status:       order.Status,
 		Notes:        order.Notes,
 		OrderItems:   orderItemsData,
+		CreatedAt:    order.CreatedAt,
+	}
+
+	if order.UpdatedAt.Valid {
+		t := order.UpdatedAt.Time
+		res.UpdatedAt = &t
 	}
 
 	return &res, nil

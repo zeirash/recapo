@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Card, Container, Flex, Heading, Input, Label, Text, Textarea } from 'theme-ui'
 import Layout from '@/components/Layout'
+import SearchInput from '@/components/SearchInput'
 import { api } from '@/utils/api'
 
 type Product = {
@@ -26,25 +27,36 @@ const emptyForm: FormState = { name: '', description: '', price: 0 }
 
 export default function ProductsPage() {
   const t = useTranslations('common')
+  const tp = useTranslations('products')
+  const tErrors = useTranslations('errors')
   const queryClient = useQueryClient()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
+  const [searchInput, setSearchInput] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  // Debounce search: only trigger API after user stops typing for 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   const { data: productsRes, isLoading, isError, error } = useQuery(
-    ['products'],
+    ['products', debouncedSearch],
     async () => {
-      const res = await api.getProducts()
-      if (!res.success) throw new Error(res.message || 'Failed to fetch products')
+      const res = await api.getProducts(debouncedSearch || undefined)
+      if (!res.success) throw new Error(res.message || tp('fetchFailed'))
       return res.data as Product[]
-    }
+    },
+    { keepPreviousData: true }
   )
 
   const createMutation = useMutation(
     async (payload: FormState) => {
       const res = await api.createProduct(payload)
-      if (!res.success) throw new Error(res.message || 'Failed to create product')
+      if (!res.success) throw new Error(res.message || tp('createFailed'))
       return res
     },
     {
@@ -58,7 +70,7 @@ export default function ProductsPage() {
   const updateMutation = useMutation(
     async ({ id, payload }: { id: number; payload: Partial<FormState> }) => {
       const res = await api.updateProduct(id, payload)
-      if (!res.success) throw new Error(res.message || 'Failed to update product')
+      if (!res.success) throw new Error(res.message || tp('updateFailed'))
       return res
     },
     {
@@ -72,7 +84,7 @@ export default function ProductsPage() {
   const deleteMutation = useMutation(
     async (id: number) => {
       const res = await api.deleteProduct(id)
-      if (!res.success) throw new Error(res.message || 'Failed to delete product')
+      if (!res.success) throw new Error(res.message || tp('deleteFailed'))
       return res
     },
     {
@@ -125,9 +137,9 @@ export default function ProductsPage() {
     <Layout>
       <Container sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Flex sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
-          {isLoading && <Text>Loading...</Text>}
+          {isLoading && <Text>{t('loading')}</Text>}
           {isError && (
-            <Text sx={{ color: 'error' }}>{(error as Error)?.message || 'Error loading products'}</Text>
+            <Text sx={{ color: 'error' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Text>
           )}
 
           {!isLoading && !isError && (
@@ -135,12 +147,31 @@ export default function ProductsPage() {
               {/* Left list (compact like side menu) */}
               <Box sx={{ width: ['100%', '300px'], minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: ['none', '1px solid'], borderColor: 'border' }}>
                 <Box sx={{ p: 4, flexShrink: 0 }}>
-                  <Button
-                    onClick={openCreateForm}
-                    sx={{ width: '100%', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    + Product
-                  </Button>
+                  <Flex sx={{ gap: 2, alignItems: 'center' }}>
+                    <SearchInput
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      placeholder={tp('searchPlaceholder')}
+                    />
+                    <Button
+                      onClick={openCreateForm}
+                      sx={{
+                        width: 44,
+                        minWidth: 44,
+                        height: 44,
+                        p: 0,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 'medium',
+                        fontSize: 3,
+                        fontWeight: 'bold',
+                      }}
+                      title={tp('addProduct')}
+                    >
+                      +
+                    </Button>
+                  </Flex>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                   {(productsRes || []).map((p) => {
@@ -180,7 +211,7 @@ export default function ProductsPage() {
                     )
                   })}
                   {(productsRes || []).length === 0 && (
-                    <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>No products</Text>
+                    <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>{tp('noProducts')}</Text>
                   )}
                 </Box>
               </Box>
@@ -232,12 +263,12 @@ export default function ProductsPage() {
                         </Flex>
                         <Flex sx={{ gap: 2 }}>
                           <Button variant="secondary" onClick={() => openEditForm(selectedProduct)}>
-                            Edit
+                            {t('edit')}
                           </Button>
                           <Button
                             variant="secondary"
                             onClick={() => {
-                              if (confirm('Delete this product?')) deleteMutation.mutate(selectedProduct.id)
+                              if (confirm(tp('deleteConfirm'))) deleteMutation.mutate(selectedProduct.id)
                             }}
                             sx={{
                               bg: 'transparent',
@@ -247,7 +278,7 @@ export default function ProductsPage() {
                               '&:hover': { bg: '#fef2f2' },
                             }}
                           >
-                            Delete
+                            {t('delete')}
                           </Button>
                         </Flex>
                       </Flex>
@@ -276,8 +307,8 @@ export default function ProductsPage() {
                     }}
                   >
                     <Box sx={{ fontSize: 6, opacity: 0.4 }}>📦</Box>
-                    <Text sx={{ fontSize: 2 }}>Select a product to view details</Text>
-                    <Text sx={{ fontSize: 1 }}>Choose from the list on the left</Text>
+                    <Text sx={{ fontSize: 2 }}>{tp('selectProduct')}</Text>
+                    <Text sx={{ fontSize: 1 }}>{tp('chooseFromList')}</Text>
                   </Flex>
                 )}
               </Box>
@@ -302,27 +333,27 @@ export default function ProductsPage() {
           >
             <Card sx={{ width: ['100%', '540px'] }}>
               <Heading as="h3" sx={{ mb: 3 }}>
-                {editingProduct ? 'Edit Product' : 'New Product'}
+                {editingProduct ? tp('editProduct') : tp('newProduct')}
               </Heading>
               <Box as="form" onSubmit={submitForm}>
                 <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">{t('name')}</Label>
                   <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                 </Box>
                 <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">{t('description')}</Label>
                   <Textarea id="description" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 </Box>
                 <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="price">Price</Label>
+                  <Label htmlFor="price">{t('price')}</Label>
                   <Input id="price" type="number" step="1" min={0} value={form.price ?? ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required />
                 </Box>
                 <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
                   <Button type="button" variant="secondary" onClick={closeForm}>
-                    Cancel
+                    {t('cancel')}
                   </Button>
                   <Button type="submit" disabled={createMutation.isLoading || updateMutation.isLoading}>
-                    {editingProduct ? 'Save Changes' : 'Create'}
+                    {editingProduct ? t('save') : t('create')}
                   </Button>
                 </Flex>
               </Box>

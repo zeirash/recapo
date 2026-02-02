@@ -65,6 +65,7 @@ func (o *orderitem) GetOrderItemsByOrderID(orderID int) ([]model.OrderItem, erro
 		FROM order_items oi
 		INNER JOIN products p ON oi.product_id = p.id
 		WHERE oi.order_id = $1
+		ORDER BY oi.created_at ASC
 	`
 
 	rows, err := o.db.Query(q, orderID)

@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
+import { useTranslations } from 'next-intl'
 import { Box, Button, Card, Container, Flex, Heading, Input, Label, Text, Textarea } from 'theme-ui'
 import Layout from '@/components/Layout'
+import SearchInput from '@/components/SearchInput'
 import { api } from '@/utils/api'
 
 type Customer = {
@@ -24,11 +26,13 @@ type FormState = {
 const emptyForm: FormState = { name: '', phone: '', address: '' }
 
 export default function CustomersPage() {
+  const tc = useTranslations('customers')
   const queryClient = useQueryClient()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null)
+  const [searchInput, setSearchInput] = useState('')
 
   const { data: customersRes, isLoading, isError, error } = useQuery(
     ['customers'],
@@ -87,6 +91,18 @@ export default function CustomersPage() {
     }
   }, [customersRes, selectedCustomerId])
 
+  const filteredCustomers: Customer[] = useMemo(() => {
+    if (!customersRes) return []
+    const q = searchInput.trim().toLowerCase()
+    if (!q) return customersRes
+    return customersRes.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.phone || '').toLowerCase().includes(q) ||
+        (c.address || '').toLowerCase().includes(q)
+    )
+  }, [customersRes, searchInput])
+
   const selectedCustomer: Customer | null = useMemo(() => {
     if (!customersRes) return null
     return customersRes.find((c) => c.id === selectedCustomerId) || null
@@ -133,15 +149,34 @@ export default function CustomersPage() {
               {/* Left list (compact like side menu) */}
               <Box sx={{ width: ['100%', '300px'], minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: ['none', '1px solid'], borderColor: 'border' }}>
                 <Box sx={{ p: 4, flexShrink: 0 }}>
-                  <Button
-                    onClick={openCreateForm}
-                    sx={{ width: '100%', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    + Customer
-                  </Button>
+                  <Flex sx={{ gap: 2, alignItems: 'center' }}>
+                    <SearchInput
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      placeholder={tc('searchPlaceholder')}
+                    />
+                    <Button
+                      onClick={openCreateForm}
+                      sx={{
+                        width: 44,
+                        minWidth: 44,
+                        height: 44,
+                        p: 0,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 'medium',
+                        fontSize: 3,
+                        fontWeight: 'bold',
+                      }}
+                      title={tc('addCustomer')}
+                    >
+                      +
+                    </Button>
+                  </Flex>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                  {(customersRes || []).map((c) => {
+                  {filteredCustomers.map((c) => {
                     const isActive = c.id === selectedCustomerId
                     return (
                       <Box
@@ -177,7 +212,7 @@ export default function CustomersPage() {
                       </Box>
                     )
                   })}
-                  {(customersRes || []).length === 0 && (
+                  {filteredCustomers.length === 0 && (
                     <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>No customers</Text>
                   )}
                 </Box>
