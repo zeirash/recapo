@@ -121,18 +121,18 @@ export default function CustomersPage() {
 
   return (
     <Layout>
-      <Container>
-        <Flex sx={{ minHeight: '100vh', flexDirection: 'column' }}>
+      <Container sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Flex sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
           {isLoading && <Text>Loading...</Text>}
           {isError && (
             <Text sx={{ color: 'error' }}>{(error as Error)?.message || 'Error loading customers'}</Text>
           )}
 
           {!isLoading && !isError && (
-            <Flex sx={{ overflow: 'hidden', bg: 'transparent', flex: 1 }}>
+            <Flex sx={{ overflow: 'hidden', bg: 'transparent', flex: 1, minHeight: 0 }}>
               {/* Left list (compact like side menu) */}
-              <Box sx={{ width: ['100%', '300px'], display: 'flex', flexDirection: 'column', borderRight: ['none', '1px solid'], borderColor: 'border' }}>
-                <Box sx={{ p: 4 }}>
+              <Box sx={{ width: ['100%', '300px'], minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: ['none', '1px solid'], borderColor: 'border' }}>
+                <Box sx={{ p: 4, flexShrink: 0 }}>
                   <Button
                     onClick={openCreateForm}
                     sx={{ width: '100%', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
@@ -140,7 +140,7 @@ export default function CustomersPage() {
                     + Customer
                   </Button>
                 </Box>
-                <Box sx={{ overflowY: 'auto' }}>
+                <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                   {(customersRes || []).map((c) => {
                     const isActive = c.id === selectedCustomerId
                     return (
@@ -184,7 +184,7 @@ export default function CustomersPage() {
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, overflowY: 'auto', bg: 'background.secondary' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bg: 'background.secondary' }}>
                 {selectedCustomer ? (
                   <Box sx={{ maxWidth: 640, mx: 'auto', p: [4, 5] }}>
                     {/* Header card with avatar */}
