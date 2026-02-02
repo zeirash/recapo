@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
+import { useTranslations } from 'next-intl'
 import { Box, Button, Card, Container, Flex, Heading, Input, Label, Text, Textarea } from 'theme-ui'
 import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
@@ -24,6 +25,7 @@ type FormState = {
 const emptyForm: FormState = { name: '', description: '', price: 0 }
 
 export default function ProductsPage() {
+  const t = useTranslations('common')
   const queryClient = useQueryClient()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -184,37 +186,98 @@ export default function ProductsPage() {
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, p: 4, bg: 'white' }}>
+              <Box sx={{ flex: 1, overflowY: 'auto', bg: 'background.secondary' }}>
                 {selectedProduct ? (
-                  <>
-                    <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                      <Heading as="h2" sx={{ fontSize: 3 }}>{selectedProduct.name}</Heading>
-                      <Flex sx={{ gap: 2 }}>
-                        <Button variant="secondary" onClick={() => openEditForm(selectedProduct)}>Edit</Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            if (confirm('Delete this product?')) deleteMutation.mutate(selectedProduct.id)
-                          }}
-                        >
-                          Delete
-                        </Button>
+                  <Box sx={{ maxWidth: 640, mx: 'auto', p: [4, 5] }}>
+                    <Card
+                      sx={{
+                        p: 4,
+                        borderRadius: 'large',
+                        boxShadow: 'medium',
+                        border: '1px solid',
+                        borderColor: 'border',
+                        bg: 'white',
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: 'large' },
+                      }}
+                    >
+                      {/* Header with avatar */}
+                      <Flex sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 3, mb: 4, pb: 4, borderBottom: '1px solid', borderColor: 'border' }}>
+                        <Flex sx={{ alignItems: 'center', gap: 3 }}>
+                          <Box
+                            sx={{
+                              width: 72,
+                              height: 72,
+                              borderRadius: 'round',
+                              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                              color: 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 'bold',
+                              fontSize: 5,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {selectedProduct.name.charAt(0).toUpperCase()}
+                          </Box>
+                          <Box>
+                            <Heading as="h2" sx={{ fontSize: 4, fontWeight: 700, mb: 1, letterSpacing: '-0.02em' }}>
+                              {selectedProduct.name}
+                            </Heading>
+                            <Text sx={{ fontSize: 2, fontWeight: 600, color: 'primary' }}>
+                              Rp. {selectedProduct.price.toLocaleString()}
+                            </Text>
+                          </Box>
+                        </Flex>
+                        <Flex sx={{ gap: 2 }}>
+                          <Button variant="secondary" onClick={() => openEditForm(selectedProduct)}>
+                            Edit
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              if (confirm('Delete this product?')) deleteMutation.mutate(selectedProduct.id)
+                            }}
+                            sx={{
+                              bg: 'transparent',
+                              color: 'error',
+                              border: '2px solid',
+                              borderColor: 'error',
+                              '&:hover': { bg: '#fef2f2' },
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </Flex>
                       </Flex>
-                    </Flex>
-                    <Card sx={{ p: 3 }}>
-                      <Box sx={{ mb: 2 }}>
-                        <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Price</Text>
-                        <Text>{selectedProduct.price.toLocaleString()}</Text>
-                      </Box>
+
+                      {/* Description */}
                       <Box>
-                        <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Description</Text>
-                        <Text>{selectedProduct.description || ''}</Text>
+                        <Text sx={{ fontWeight: 600, fontSize: 2, color: 'text.secondary', mb: 1, display: 'block' }}>
+                          {t('description')}
+                        </Text>
+                        <Text sx={{ fontSize: 1, lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                          {selectedProduct.description || '—'}
+                        </Text>
                       </Box>
                     </Card>
-                  </>
+                  </Box>
                 ) : (
-                  <Flex sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' }}>
-                    <Text>Select a product to view details</Text>
+                  <Flex
+                    sx={{
+                      height: '100%',
+                      minHeight: 320,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      gap: 2,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    <Box sx={{ fontSize: 6, opacity: 0.4 }}>📦</Box>
+                    <Text sx={{ fontSize: 2 }}>Select a product to view details</Text>
+                    <Text sx={{ fontSize: 1 }}>Choose from the list on the left</Text>
                   </Flex>
                 )}
               </Box>
@@ -252,7 +315,7 @@ export default function ProductsPage() {
                 </Box>
                 <Box sx={{ mb: 3 }}>
                   <Label htmlFor="price">Price</Label>
-                  <Input id="price" type="number" step="0.01" value={form.price || ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required />
+                  <Input id="price" type="number" step="1" min={0} value={form.price ?? ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required />
                 </Box>
                 <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
                   <Button type="button" variant="secondary" onClick={closeForm}>
