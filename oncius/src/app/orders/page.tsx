@@ -366,9 +366,9 @@ export default function OrdersPage() {
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, p: 4, bg: 'white', overflowY: 'auto' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bg: 'background.secondary' }}>
                 {selectedOrder ? (
-                  <>
+                  <Box sx={{ maxWidth: 880, mx: 'auto', p: [4, 5] }}>
                     <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
                       <Flex sx={{ alignItems: 'center', gap: 3 }}>
                         <Heading as="h2" sx={{ fontSize: 3 }}>Order #{selectedOrder.id}</Heading>
@@ -387,39 +387,54 @@ export default function OrdersPage() {
                           {selectedOrder.status}
                         </Box>
                       </Flex>
-                      <Flex sx={{ gap: 2 }}>
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            if (confirm('Delete this order?')) deleteMutation.mutate(selectedOrder.id)
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </Flex>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          if (confirm('Delete this order?')) deleteMutation.mutate(selectedOrder.id)
+                        }}
+                      >
+                        Delete
+                      </Button>
                     </Flex>
 
-                    {/* Order Info */}
-                    <Card sx={{ p: 3, mb: 3 }}>
-                      <Flex sx={{ gap: 4, flexWrap: 'wrap' }}>
-                        <Box>
-                          <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Customer</Text>
-                          <Text sx={{ fontWeight: 'medium' }}>{selectedOrder.customer_name}</Text>
+                    {/* Order info card */}
+                    <Card
+                      sx={{
+                        p: 4,
+                        mb: 4,
+                        borderRadius: 'large',
+                        boxShadow: 'small',
+                        border: '1px solid',
+                        borderColor: 'border',
+                        bg: 'white',
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: 'medium' },
+                      }}
+                    >
+                      <Flex sx={{ flexWrap: 'wrap', gap: [4, 5] }}>
+                        <Box sx={{ minWidth: 140 }}>
+                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>Customer</Text>
+                          <Text sx={{ fontSize: 1, fontWeight: 'medium' }}>{selectedOrder.customer_name}</Text>
                         </Box>
-                        <Box>
-                          <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Total</Text>
-                          <Text sx={{ fontWeight: 'medium' }}>{formatPrice(selectedOrder.total_price)}</Text>
+                        <Box sx={{ minWidth: 140 }}>
+                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>Created</Text>
+                          <Text sx={{ fontSize: 1 }}>{formatDate(selectedOrder.created_at)}</Text>
                         </Box>
-                        <Box>
-                          <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Created</Text>
-                          <Text>{formatDate(selectedOrder.created_at)}</Text>
-                        </Box>
-                        <Box>
-                          <Text sx={{ color: 'text.secondary', fontSize: 0 }}>Status</Text>
+                        <Box sx={{ minWidth: 140, ml: 'auto' }}>
+                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>Status</Text>
                           <Select
                             value={selectedOrder.status}
                             onChange={(e) => updateStatusMutation.mutate({ id: selectedOrder.id, status: e.target.value })}
-                            sx={{ py: 1, px: 2, fontSize: 0, mt: 1 }}
+                            sx={{
+                              py: 1,
+                              px: 2,
+                              fontSize: 1,
+                              borderRadius: 'medium',
+                              border: '1px solid',
+                              borderColor: 'border',
+                              fontWeight: 'medium',
+                              cursor: 'pointer',
+                            }}
                           >
                             <option value="created">Created</option>
                             <option value="pending">Pending</option>
@@ -431,36 +446,50 @@ export default function OrdersPage() {
                       </Flex>
                     </Card>
 
-                    {/* Order Items */}
-                    <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                      <Heading as="h3" sx={{ fontSize: 2 }}>Items</Heading>
-                      <Button variant="secondary" onClick={openAddItemForm} sx={{ fontSize: 0, py: 1, px: 2 }}>
-                        + Add Item
-                      </Button>
-                    </Flex>
-                    <Card sx={{ p: 0, overflow: 'hidden' }}>
+                    {/* Order items */}
+                    <Card
+                      sx={{
+                        py: 1,
+                        px: 3,
+                        borderRadius: 'large',
+                        boxShadow: 'small',
+                        border: '1px solid',
+                        borderColor: 'border',
+                        bg: 'white',
+                        overflow: 'hidden',
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: 'medium' },
+                      }}
+                    >
+                      <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', p: 2, borderBottom: '1px solid', borderColor: 'border', bg: 'background.secondary' }}>
+                        <Heading as="h3" sx={{ fontSize: 2, fontWeight: 600 }}>Items</Heading>
+                        <Button variant="secondary" onClick={openAddItemForm} sx={{ fontSize: 0, py: 1, px: 2 }}>
+                          + Add Item
+                        </Button>
+                      </Flex>
                       {selectedOrder.order_items && selectedOrder.order_items.length > 0 ? (
                         <Box as="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-                          <Box as="thead" sx={{ bg: 'background' }}>
-                            <Box as="tr">
-                              <Box as="th" sx={{ p: 2, textAlign: 'left', fontSize: 0, fontWeight: 'medium', color: 'text.secondary' }}>Product</Box>
-                              <Box as="th" sx={{ p: 2, textAlign: 'right', fontSize: 0, fontWeight: 'medium', color: 'text.secondary' }}>Price</Box>
-                              <Box as="th" sx={{ p: 2, textAlign: 'right', fontSize: 0, fontWeight: 'medium', color: 'text.secondary' }}>Qty</Box>
-                              <Box as="th" sx={{ p: 2, textAlign: 'right', fontSize: 0, fontWeight: 'medium', color: 'text.secondary' }}>Subtotal</Box>
-                              <Box as="th" sx={{ p: 2, width: '50px' }}></Box>
+                          <Box as="thead">
+                            <Box as="tr" sx={{ bg: 'background.secondary' }}>
+                              <Box as="th" sx={{ p: 3, textAlign: 'left', fontSize: 0, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Product</Box>
+                              <Box as="th" sx={{ p: 3, textAlign: 'right', fontSize: 0, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Price</Box>
+                              <Box as="th" sx={{ p: 3, textAlign: 'right', fontSize: 0, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qty</Box>
+                              <Box as="th" sx={{ p: 3, textAlign: 'right', fontSize: 0, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subtotal</Box>
+                              <Box as="th" sx={{ p: 3, width: '56px' }}></Box>
                             </Box>
                           </Box>
                           <Box as="tbody">
                             {selectedOrder.order_items.map((item) => (
-                              <Box as="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'border' }}>
-                                <Box as="td" sx={{ p: 2, fontSize: 1 }}>{item.product_name}</Box>
-                                <Box as="td" sx={{ p: 2, textAlign: 'right', fontSize: 1 }}>{formatPrice(item.price)}</Box>
-                                <Box as="td" sx={{ p: 2, textAlign: 'right', fontSize: 1 }}>
+                              <Box as="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'border', '&:hover': { bg: 'background.secondary' } }}>
+                                <Box as="td" sx={{ py: 2, px: 3, fontSize: 1 }}>{item.product_name}</Box>
+                                <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontSize: 1 }}>{formatPrice(item.price)}</Box>
+                                <Box as="td" sx={{ py: 2, pl: 3, pr: 2 }}>
+                                  <Flex sx={{ justifyContent: 'flex-end' }}>
                                   <Input
                                     type="number"
                                     min="1"
                                     defaultValue={item.qty}
-                                    sx={{ width: '60px', textAlign: 'right', py: 1, px: 2, fontSize: 1 }}
+                                    sx={{ width: '64px', textAlign: 'right', py: 2, px: 2, fontSize: 1, borderRadius: 'medium' }}
                                     onBlur={(e) => {
                                       const newQty = Number(e.target.value) || 1
                                       if (newQty !== item.qty && newQty > 0) {
@@ -479,12 +508,13 @@ export default function OrdersPage() {
                                       }
                                     }}
                                   />
+                                  </Flex>
                                 </Box>
-                                <Box as="td" sx={{ p: 2, textAlign: 'right', fontSize: 1, fontWeight: 'medium' }}>{formatPrice(item.price * item.qty)}</Box>
-                                <Box as="td" sx={{ p: 2, textAlign: 'center' }}>
+                                <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontSize: 1, fontWeight: 'medium' }}>{formatPrice(item.price * item.qty)}</Box>
+                                <Box as="td" sx={{ py: 2, px: 3, textAlign: 'center' }}>
                                   <Button
                                     variant="secondary"
-                                    sx={{ fontSize: 0, py: 1, px: 2, bg: 'transparent', color: 'error', '&:hover': { bg: 'errorLight' } }}
+                                    sx={{ fontSize: 1, py: 1, px: 2, bg: 'transparent', color: 'error', borderRadius: 'medium', '&:hover': { bg: '#fef2f2' } }}
                                     onClick={() => {
                                       if (confirm('Remove this item?')) {
                                         deleteItemMutation.mutate({ orderId: selectedOrder.id, itemId: item.id, itemPrice: item.price, itemQty: item.qty })
@@ -497,27 +527,39 @@ export default function OrdersPage() {
                               </Box>
                             ))}
                           </Box>
-                          <Box as="tfoot" sx={{ bg: 'background' }}>
-                            <Box as="tr" sx={{ borderTop: '1px solid', borderColor: 'border' }}>
-                              <td colSpan={3} style={{ padding: '8px', textAlign: 'right', fontWeight: 'bold', fontSize: '14px' }}>Total</td>
-                              <Box as="td" sx={{ p: 2, textAlign: 'right', fontWeight: 'bold', fontSize: 1 }}>{formatPrice(selectedOrder.total_price)}</Box>
-                              <Box as="td"></Box>
+                          <Box as="tfoot">
+                            <Box as="tr" sx={{ borderTop: '2px solid', borderColor: 'border', bg: 'background.secondary' }}>
+                              <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontWeight: 700, fontSize: 2 }} {...({ colSpan: 3 } as object)}>Total</Box>
+                              <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontWeight: 700, fontSize: 2, color: 'primary' }}>{formatPrice(selectedOrder.total_price)}</Box>
+                              <Box as="td" sx={{ py: 2, px: 3 }}></Box>
                             </Box>
                           </Box>
                         </Box>
                       ) : (
-                        <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-                          <Text>No items in this order</Text>
-                          <Button variant="secondary" onClick={openAddItemForm} sx={{ mt: 2 }}>
+                        <Box sx={{ p: 5, textAlign: 'center', color: 'text.secondary' }}>
+                          <Text sx={{ fontSize: 2, display: 'block', mb: 2 }}>No items in this order</Text>
+                          <Button variant="secondary" onClick={openAddItemForm}>
                             Add First Item
                           </Button>
                         </Box>
                       )}
                     </Card>
-                  </>
+                  </Box>
                 ) : (
-                  <Flex sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' }}>
-                    <Text>Select an order to view details</Text>
+                  <Flex
+                    sx={{
+                      height: '100%',
+                      minHeight: 320,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      gap: 2,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    <Box sx={{ fontSize: 6, opacity: 0.4 }}>📋</Box>
+                    <Text sx={{ fontSize: 2 }}>Select an order to view details</Text>
+                    <Text sx={{ fontSize: 1 }}>Choose from the list on the left</Text>
                   </Flex>
                 )}
               </Box>
