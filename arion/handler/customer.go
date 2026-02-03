@@ -30,18 +30,18 @@ func CreateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	inp := CreateCustomerRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
 	if valid, err := validateCreateCustomer(inp); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	res, err := customerService.CreateCustomer(inp.Name, inp.Phone, inp.Address, shopID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "create_customer")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_customer")
 		return
 	}
 
@@ -54,7 +54,7 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	if valid, err := validateCustomerID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -63,12 +63,12 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := customerService.GetCustomerByID(customerID, shopID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_customer")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_customer")
 		return
 	}
 
 	if res == nil {
-		WriteErrorJson(w, http.StatusNotFound, errors.New("customer not found"), "get_customer")
+		WriteErrorJson(w, r, http.StatusNotFound, errors.New("customer not found"), "customer_not_found")
 		return
 	}
 
@@ -86,7 +86,7 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := customerService.GetCustomersByShopID(int(shopID), searchQuery)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_customers")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_customers")
 		return
 	}
 
@@ -96,7 +96,7 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateCustomerID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -105,7 +105,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	inp := UpdateCustomerRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
@@ -116,7 +116,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		Address: inp.Address,
 	})
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "update_customer")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_customer")
 		return
 	}
 
@@ -126,7 +126,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateCustomerID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -135,7 +135,7 @@ func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := customerService.DeleteCustomerByID(customerID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "delete_customer")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_customer")
 		return
 	}
 

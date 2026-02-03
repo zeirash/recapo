@@ -18,6 +18,9 @@ func TestLoginHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	handler.SetUserService(mockUserService)
 
@@ -59,7 +62,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantSuccess:    false,
-			wantErrMessage: "password incorrect",
+			wantErrMessage: "Login failed",
 		},
 		{
 			name: "login returns 500 on service error",
@@ -74,7 +77,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Login failed",
 		},
 		{
 			name:       "login returns 400 on invalid json",
@@ -142,6 +145,9 @@ func TestRegisterHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	handler.SetUserService(mockUserService)
 
@@ -185,7 +191,7 @@ func TestRegisterHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Registration failed",
 		},
 		{
 			name:       "register returns 400 on invalid json",
@@ -277,6 +283,9 @@ func TestRefreshHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	handler.SetUserService(mockUserService)
 
@@ -316,7 +325,7 @@ func TestRefreshHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantSuccess:    false,
-			wantErrMessage: "token expired",
+			wantErrMessage: "Invalid or expired refresh token",
 		},
 		{
 			name:       "refresh returns 400 on invalid json",

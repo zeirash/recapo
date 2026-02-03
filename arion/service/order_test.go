@@ -78,6 +78,8 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := orderStore
+			defer func() { orderStore = oldStore }()
 			orderStore = tt.mockSetup(ctrl)
 
 			var o oservice
@@ -213,6 +215,9 @@ func Test_oservice_GetOrderByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldOrderStore, oldOrderItemStore := orderStore, orderItemStore
+			defer func() { orderStore, orderItemStore = oldOrderStore, oldOrderItemStore }()
+
 			mockOrder, mockOrderItem := tt.mockSetup(ctrl)
 			orderStore = mockOrder
 			orderItemStore = mockOrderItem
@@ -320,6 +325,8 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := orderStore
+			defer func() { orderStore = oldStore }()
 			orderStore = tt.mockSetup(ctrl)
 
 			var o oservice
@@ -481,6 +488,8 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := orderStore
+			defer func() { orderStore = oldStore }()
 			orderStore = tt.mockSetup(ctrl)
 
 			var o oservice
@@ -626,6 +635,13 @@ func Test_oservice_DeleteOrderByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldOrderStore, oldOrderItemStore := orderStore, orderItemStore
+			oldDBGetter := dbGetter
+			defer func() {
+				orderStore, orderItemStore = oldOrderStore, oldOrderItemStore
+				dbGetter = oldDBGetter
+			}()
+
 			mockOrder, mockOrderItem, mockDB, _ := tt.mockSetup(ctrl)
 			orderStore = mockOrder
 			orderItemStore = mockOrderItem
@@ -710,6 +726,8 @@ func Test_oservice_CreateOrderItem(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := orderItemStore
+			defer func() { orderItemStore = oldStore }()
 			orderItemStore = tt.mockSetup(ctrl)
 
 			var o oservice
@@ -879,6 +897,8 @@ func Test_oservice_UpdateOrderItemByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := orderItemStore
+			defer func() { orderItemStore = oldStore }()
 			orderItemStore = tt.mockSetup(ctrl)
 
 			var o oservice
@@ -942,6 +962,8 @@ func Test_oservice_DeleteOrderItemByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := orderItemStore
+			defer func() { orderItemStore = oldStore }()
 			orderItemStore = tt.mockSetup(ctrl)
 
 			var o oservice
@@ -1037,6 +1059,8 @@ func Test_oservice_GetOrderItemByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := orderItemStore
+			defer func() { orderItemStore = oldStore }()
 			orderItemStore = tt.mockSetup(ctrl)
 
 			var o oservice
@@ -1122,6 +1146,8 @@ func Test_oservice_GetOrderItemsByOrderID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := orderItemStore
+			defer func() { orderItemStore = oldStore }()
 			orderItemStore = tt.mockSetup(ctrl)
 
 			var o oservice

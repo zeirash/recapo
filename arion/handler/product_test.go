@@ -37,6 +37,9 @@ func TestCreateProductHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetProductService()
+	defer handler.SetProductService(oldService)
+
 	mockProductService := mock_service.NewMockProductService(ctrl)
 	handler.SetProductService(mockProductService)
 
@@ -86,7 +89,7 @@ func TestCreateProductHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to create product",
 		},
 		{
 			name:       "create product returns 400 on invalid json",
@@ -157,6 +160,9 @@ func TestGetProductHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetProductService()
+	defer handler.SetProductService(oldService)
+
 	mockProductService := mock_service.NewMockProductService(ctrl)
 	handler.SetProductService(mockProductService)
 
@@ -220,7 +226,7 @@ func TestGetProductHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to get product",
 		},
 	}
 
@@ -255,6 +261,9 @@ func TestGetProductHandler(t *testing.T) {
 func TestGetProductsHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	oldService := handler.GetProductService()
+	defer handler.SetProductService(oldService)
 
 	mockProductService := mock_service.NewMockProductService(ctrl)
 	handler.SetProductService(mockProductService)
@@ -348,6 +357,9 @@ func TestUpdateProductHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetProductService()
+	defer handler.SetProductService(oldService)
+
 	mockProductService := mock_service.NewMockProductService(ctrl)
 	handler.SetProductService(mockProductService)
 
@@ -417,7 +429,7 @@ func TestUpdateProductHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to update product",
 		},
 	}
 
@@ -453,6 +465,9 @@ func TestUpdateProductHandler(t *testing.T) {
 func TestDeleteProductHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	oldService := handler.GetProductService()
+	defer handler.SetProductService(oldService)
 
 	mockProductService := mock_service.NewMockProductService(ctrl)
 	handler.SetProductService(mockProductService)
@@ -493,7 +508,7 @@ func TestDeleteProductHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to delete product",
 		},
 	}
 

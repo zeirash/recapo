@@ -40,18 +40,18 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	inp := CreateOrderRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
 	if valid, err := validateCreateOrder(inp); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	res, err := orderService.CreateOrder(inp.CustomerID, shopID, inp.Notes)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "create_order")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order")
 		return
 	}
 
@@ -64,7 +64,7 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	if valid, err := validateOrderID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -73,12 +73,12 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrderByID(orderID, shopID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_order")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order")
 		return
 	}
 
 	if res == nil {
-		WriteErrorJson(w, http.StatusNotFound, errors.New("order not found"), "get_order")
+		WriteErrorJson(w, r, http.StatusNotFound, errors.New("order not found"), "order_not_found")
 		return
 	}
 
@@ -96,7 +96,7 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrdersByShopID(shopID, searchQuery)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_orders")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_orders")
 		return
 	}
 
@@ -106,7 +106,7 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -115,7 +115,7 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	inp := UpdateOrderRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
@@ -126,7 +126,7 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 		Notes:      inp.Notes,
 	})
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "update_order")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_order")
 		return
 	}
 
@@ -136,7 +136,7 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -145,7 +145,7 @@ func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := orderService.DeleteOrderByID(orderID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "delete_order")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order")
 		return
 	}
 
@@ -156,18 +156,18 @@ func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	if valid, err := validateOrderID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	inp := CreateOrderItemRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
 	if valid, err := validateCreateOrderItem(inp); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -176,7 +176,7 @@ func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.CreateOrderItem(orderID, inp.ProductID, inp.Qty)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "create_order_item")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order_item")
 		return
 	}
 
@@ -187,18 +187,18 @@ func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	if valid, err := validateOrderID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	if valid, err := validateOrderItemID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	inp := UpdateOrderItemRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
@@ -215,7 +215,7 @@ func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 		Qty:         inp.Qty,
 	})
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "update_order_item")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_order_item")
 		return
 	}
 
@@ -226,12 +226,12 @@ func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	if valid, err := validateOrderID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	if valid, err := validateOrderItemID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -243,7 +243,7 @@ func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := orderService.DeleteOrderItemByID(orderItemID, orderID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "delete_order_item")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order_item")
 		return
 	}
 
@@ -254,12 +254,12 @@ func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	if valid, err := validateOrderID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	if valid, err := validateOrderItemID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -271,7 +271,7 @@ func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrderItemByID(orderItemID, orderID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_order_item")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_item")
 		return
 	}
 
@@ -282,7 +282,7 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	if valid, err := validateOrderID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -291,7 +291,7 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrderItemsByOrderID(orderID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_order_items")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_items")
 		return
 	}
 

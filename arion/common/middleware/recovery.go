@@ -18,7 +18,7 @@ func Recovery(next http.Handler) http.Handler {
 					"stack_trace": string(debug.Stack()),
 				}).Error("panic recovered")
 
-				handler.WriteErrorJson(w, http.StatusInternalServerError, nil, "internal_server_error")
+				handler.WriteErrorJson(w, r, http.StatusInternalServerError, nil, "internal_server_error")
 			}
 		}()
 

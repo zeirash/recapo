@@ -26,12 +26,12 @@ type (
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	inp := LoginRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
 	if valid, err := validateLogin(inp); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -42,7 +42,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			status = http.StatusUnauthorized
 		}
 
-		WriteErrorJson(w, status, err, "user_login")
+		WriteErrorJson(w, r, status, err, "user_login")
 		return
 	}
 
@@ -52,18 +52,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	inp := RegisterRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
 	if valid, err := validateRegister(inp); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	res, err := userService.UserRegister(inp.Name, inp.Email, inp.Password)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "user_register")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "user_register")
 		return
 	}
 
@@ -73,18 +73,18 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	inp := RefreshRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
 	if inp.RefreshToken == "" {
-		WriteErrorJson(w, http.StatusBadRequest, errors.New("refresh_token is required"), "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("refresh_token is required"), "validation")
 		return
 	}
 
 	res, err := userService.RefreshToken(inp.RefreshToken)
 	if err != nil {
-		WriteErrorJson(w, http.StatusUnauthorized, err, "refresh_token")
+		WriteErrorJson(w, r, http.StatusUnauthorized, err, "refresh_token")
 		return
 	}
 

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/zeirash/recapo/arion/common/i18n"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -62,6 +63,26 @@ func SetOrderService(s service.OrderService) {
 	orderService = s
 }
 
+// GetUserService returns the current user service (for testing).
+func GetUserService() service.UserService {
+	return userService
+}
+
+// GetCustomerService returns the current customer service (for testing).
+func GetCustomerService() service.CustomerService {
+	return customerService
+}
+
+// GetProductService returns the current product service (for testing).
+func GetProductService() service.ProductService {
+	return productService
+}
+
+// GetOrderService returns the current order service (for testing).
+func GetOrderService() service.OrderService {
+	return orderService
+}
+
 func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -79,19 +100,35 @@ func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 	w.Write(jsonResp)
 }
 
-func WriteErrorJson(w http.ResponseWriter, status int, err error, code string) {
+// WriteErrorJson writes a JSON error response. Message is translated using
+// Accept-Language when r is non-nil, except for code "validation" which
+// always uses err.Error() to preserve field-level validation details.
+func WriteErrorJson(w http.ResponseWriter, r *http.Request, status int, err error, code string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+
+	var message string
+	if code == "validation" && err != nil {
+		message = err.Error()
+	} else {
+		message = i18n.Message(r, code, "")
+		if message == "" && err != nil {
+			message = err.Error()
+		}
+		if message == "" {
+			message = code
+		}
+	}
 
 	res := ApiResponse{
 		Success: false,
 		Code:    code,
-		Message: err.Error(),
+		Message: message,
 	}
 
-	jsonResp, err := json.Marshal(res)
-	if err != nil {
-		logger.WithError(err).Error("error marshall body")
+	jsonResp, errMarshal := json.Marshal(res)
+	if errMarshal != nil {
+		logger.WithError(errMarshal).Error("error marshall body")
 		return
 	}
 	w.Write(jsonResp)

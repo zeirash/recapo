@@ -206,9 +206,10 @@ func Test_uservice_UserLogin(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockUser, mockToken := tt.mockSetup(ctrl)
+			oldUserStore, oldTokenStore := userStore, tokenStore
+			defer func() { userStore, tokenStore = oldUserStore, oldTokenStore }()
 
-			// Inject mocks
+			mockUser, mockToken := tt.mockSetup(ctrl)
 			userStore = mockUser
 			tokenStore = mockToken
 			cfg = config.Config{SecretKey: "testsecret"}
@@ -408,8 +409,10 @@ func Test_uservice_RefreshToken(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockUser, mockToken := tt.mockSetup(ctrl)
+			oldUserStore, oldTokenStore := userStore, tokenStore
+			defer func() { userStore, tokenStore = oldUserStore, oldTokenStore }()
 
+			mockUser, mockToken := tt.mockSetup(ctrl)
 			userStore = mockUser
 			tokenStore = mockToken
 			cfg = config.Config{SecretKey: "testsecret"}
@@ -752,6 +755,13 @@ func Test_uservice_UserRegister(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldUserStore, oldShopStore, oldTokenStore := userStore, shopStore, tokenStore
+			oldDBGetter := dbGetter
+			defer func() {
+				userStore, shopStore, tokenStore = oldUserStore, oldShopStore, oldTokenStore
+				dbGetter = oldDBGetter
+			}()
+
 			tt.mockSetup(ctrl)
 			cfg = config.Config{SecretKey: "testsecret"}
 
@@ -910,6 +920,8 @@ func Test_uservice_UpdateUser(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := userStore
+			defer func() { userStore = oldStore }()
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice
@@ -1001,6 +1013,8 @@ func Test_uservice_GetUserByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := userStore
+			defer func() { userStore = oldStore }()
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice
@@ -1081,6 +1095,8 @@ func Test_uservice_GetUsers(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := userStore
+			defer func() { userStore = oldStore }()
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice

@@ -104,7 +104,8 @@ func Test_cservice_CreateCustomer(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			// Inject mock store
+			oldStore := customerStore
+			defer func() { customerStore = oldStore }()
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
@@ -240,6 +241,8 @@ func Test_cservice_GetCustomerByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := customerStore
+			defer func() { customerStore = oldStore }()
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
@@ -344,6 +347,8 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := customerStore
+			defer func() { customerStore = oldStore }()
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
@@ -482,6 +487,8 @@ func Test_cservice_UpdateCustomer(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := customerStore
+			defer func() { customerStore = oldStore }()
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
@@ -542,6 +549,8 @@ func Test_cservice_DeleteCustomerByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := customerStore
+			defer func() { customerStore = oldStore }()
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice

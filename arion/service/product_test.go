@@ -116,6 +116,8 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := productStore
+			defer func() { productStore = oldStore }()
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
@@ -250,6 +252,8 @@ func Test_pservice_GetProductByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := productStore
+			defer func() { productStore = oldStore }()
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
@@ -358,6 +362,8 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := productStore
+			defer func() { productStore = oldStore }()
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
@@ -493,6 +499,8 @@ func Test_pservice_UpdateProduct(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := productStore
+			defer func() { productStore = oldStore }()
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
@@ -553,6 +561,8 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			oldStore := productStore
+			defer func() { productStore = oldStore }()
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice

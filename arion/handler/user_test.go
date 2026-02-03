@@ -32,6 +32,9 @@ func TestGetUserHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	handler.SetUserService(mockUserService)
 
@@ -82,7 +85,7 @@ func TestGetUserHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to get user",
 		},
 	}
 
@@ -114,6 +117,9 @@ func TestGetUserHandler(t *testing.T) {
 func TestGetUsersHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
 
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	handler.SetUserService(mockUserService)
@@ -185,6 +191,9 @@ func TestUpdateUserHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
 	mockUserService := mock_service.NewMockUserService(ctrl)
 	handler.SetUserService(mockUserService)
 
@@ -246,7 +255,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to update user",
 		},
 	}
 

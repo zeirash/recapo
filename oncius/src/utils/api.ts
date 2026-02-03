@@ -106,6 +106,15 @@ const refreshTokens = async (): Promise<boolean> => {
   }
 }
 
+// Get locale for Accept-Language header (matches frontend i18n)
+const getApiLocale = (): string => {
+  if (typeof window !== 'undefined') {
+    const locale = localStorage.getItem('locale')
+    if (locale === 'id' || locale === 'en') return locale
+  }
+  return 'en'
+}
+
 // Base API request function
 const apiRequest = async <T>(
   endpoint: string,
@@ -117,6 +126,7 @@ const apiRequest = async <T>(
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      'Accept-Language': getApiLocale(),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },

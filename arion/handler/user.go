@@ -22,12 +22,12 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := userService.GetUserByID(int(userID))
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_user")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_user")
 		return
 	}
 
 	if res == nil {
-		WriteErrorJson(w, http.StatusNotFound, errors.New("user not found"), "get_user")
+		WriteErrorJson(w, r, http.StatusNotFound, errors.New("user not found"), "user_not_found")
 		return
 	}
 
@@ -37,7 +37,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := userService.GetUsers()
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_users")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_users")
 		return
 	}
 
@@ -50,7 +50,7 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	inp := UpdateUserRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
@@ -61,7 +61,7 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		Password: inp.Password,
 	})
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "update_user")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_user")
 		return
 	}
 

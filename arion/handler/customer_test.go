@@ -22,6 +22,9 @@ func TestCreateCustomerHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetCustomerService()
+	defer handler.SetCustomerService(oldService)
+
 	mockCustomerService := mock_service.NewMockCustomerService(ctrl)
 	handler.SetCustomerService(mockCustomerService)
 
@@ -71,7 +74,7 @@ func TestCreateCustomerHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to create customer",
 		},
 		{
 			name:       "create customer returns 400 on invalid json",
@@ -156,6 +159,9 @@ func TestGetCustomerHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetCustomerService()
+	defer handler.SetCustomerService(oldService)
+
 	mockCustomerService := mock_service.NewMockCustomerService(ctrl)
 	handler.SetCustomerService(mockCustomerService)
 
@@ -219,7 +225,7 @@ func TestGetCustomerHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to get customer",
 		},
 	}
 
@@ -254,6 +260,9 @@ func TestGetCustomerHandler(t *testing.T) {
 func TestGetCustomersHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	oldService := handler.GetCustomerService()
+	defer handler.SetCustomerService(oldService)
 
 	mockCustomerService := mock_service.NewMockCustomerService(ctrl)
 	handler.SetCustomerService(mockCustomerService)
@@ -348,6 +357,9 @@ func TestUpdateCustomerHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetCustomerService()
+	defer handler.SetCustomerService(oldService)
+
 	mockCustomerService := mock_service.NewMockCustomerService(ctrl)
 	handler.SetCustomerService(mockCustomerService)
 
@@ -421,7 +433,7 @@ func TestUpdateCustomerHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to update customer",
 		},
 	}
 
@@ -466,6 +478,9 @@ func TestDeleteCustomerHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	oldService := handler.GetCustomerService()
+	defer handler.SetCustomerService(oldService)
+
 	mockCustomerService := mock_service.NewMockCustomerService(ctrl)
 	handler.SetCustomerService(mockCustomerService)
 
@@ -505,7 +520,7 @@ func TestDeleteCustomerHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "database error",
+			wantErrMessage: "Failed to delete customer",
 		},
 	}
 

@@ -261,7 +261,8 @@ func (u *uservice) GetUsers() ([]response.UserData, error) {
 		}
 
 		if user.UpdatedAt.Valid {
-			res.UpdatedAt = &user.UpdatedAt.Time
+			t := user.UpdatedAt.Time
+			res.UpdatedAt = &t
 		}
 
 		usersData = append(usersData, res)

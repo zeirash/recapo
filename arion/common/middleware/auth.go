@@ -32,25 +32,25 @@ func Authentication(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		t := strings.Split(authHeader, " ")
 		if len(t) != 2 {
-			handler.WriteErrorJson(w, http.StatusUnauthorized, errors.New("invalid token format"), "unauthorized")
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New("invalid token format"), "unauthorized")
 			return
 		}
 
 		authToken := t[1]
 		authorized, err := tokenStore.IsAuthorized(authToken, secret)
 		if err != nil {
-			handler.WriteErrorJson(w, http.StatusUnauthorized, err, "unauthorized")
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, err, "unauthorized")
 			return
 		}
 
 		if !authorized {
-			handler.WriteErrorJson(w, http.StatusUnauthorized, errors.New("is not authorzed"), "unauthorized")
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New("is not authorzed"), "unauthorized")
 			return
 		}
 
 		tokenData, err := tokenStore.ExtractDataFromToken(authToken, secret)
 		if err != nil {
-			handler.WriteErrorJson(w, http.StatusInternalServerError, err, "extract_data")
+			handler.WriteErrorJson(w, r, http.StatusInternalServerError, err, "extract_data")
 			return
 		}
 
@@ -69,7 +69,7 @@ func CheckSystemMode(next http.Handler) http.Handler {
 		isSystemMode := ctx.Value(common.SystemModeKey).(bool)
 
 		if !isSystemMode {
-			handler.WriteErrorJson(w, http.StatusUnauthorized, errors.New("doesn't have system mode access"), "unauthorized")
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New("doesn't have system mode access"), "unauthorized")
 			return
 		}
 

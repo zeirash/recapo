@@ -30,18 +30,18 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	inp := CreateProductRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
 	if valid, err := validateCreateProduct(inp); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
 	res, err := productService.CreateProduct(shopID, inp.Name, inp.Description, inp.Price)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "create_product")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_product")
 		return
 	}
 
@@ -54,7 +54,7 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	if valid, err := validateProductID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -63,12 +63,12 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := productService.GetProductByID(productID, shopID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_product")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_product")
 		return
 	}
 
 	if res == nil {
-		WriteErrorJson(w, http.StatusNotFound, errors.New("product not found"), "get_product")
+		WriteErrorJson(w, r, http.StatusNotFound, errors.New("product not found"), "product_not_found")
 		return
 	}
 
@@ -86,7 +86,7 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := productService.GetProductsByShopID(shopID, searchQuery)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "get_products")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_products")
 		return
 	}
 
@@ -96,7 +96,7 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateProductID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -105,7 +105,7 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	inp := UpdateProductRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
-		WriteErrorJson(w, http.StatusBadRequest, err, "parse_json")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
@@ -116,7 +116,7 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 		Price:       inp.Price,
 	})
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "update_product")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_product")
 		return
 	}
 
@@ -126,7 +126,7 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateProductID(params); !valid {
-		WriteErrorJson(w, http.StatusBadRequest, err, "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
@@ -135,7 +135,7 @@ func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := productService.DeleteProductByID(productID)
 	if err != nil {
-		WriteErrorJson(w, http.StatusInternalServerError, err, "delete_product")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_product")
 		return
 	}
 
