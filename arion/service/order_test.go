@@ -240,13 +240,15 @@ func Test_oservice_GetOrderByID(t *testing.T) {
 func Test_oservice_GetOrdersByShopID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	updatedTime := time.Date(2024, 1, 16, 12, 0, 0, 0, time.UTC)
+	strPtr := func(s string) *string { return &s }
 
 	tests := []struct {
-		name       string
-		shopID     int
-		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockOrderStore
-		wantResult []response.OrderData
-		wantErr    bool
+		name        string
+		shopID      int
+		searchQuery *string
+		mockSetup   func(ctrl *gomock.Controller) *mock_store.MockOrderStore
+		wantResult  []response.OrderData
+		wantErr     bool
 	}{
 		{
 			name:   "successfully get orders by shop ID",
@@ -254,7 +256,7 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					GetOrdersByShopID(1).
+					GetOrdersByShopID(1, nil).
 					Return([]model.Order{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
 						{ID: 2, CustomerName: "Jane Doe", TotalPrice: 200, Status: constant.OrderStatusCompleted, CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: updatedTime, Valid: true}},
@@ -273,7 +275,7 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					GetOrdersByShopID(1).
+					GetOrdersByShopID(1, nil).
 					Return([]model.Order{}, nil)
 				return mock
 			},
@@ -286,12 +288,30 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					GetOrdersByShopID(1).
+					GetOrdersByShopID(1, nil).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
 			wantResult: []response.OrderData{},
 			wantErr:    true,
+		},
+		{
+			name:        "get orders by shop ID with search query returns filtered orders",
+			shopID:      1,
+			searchQuery: strPtr("john"),
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					GetOrdersByShopID(1, gomock.Any()).
+					Return([]model.Order{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
+					}, nil)
+				return mock
+			},
+			wantResult: []response.OrderData{
+				{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
+			},
+			wantErr: false,
 		},
 	}
 
@@ -303,7 +323,7 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 			orderStore = tt.mockSetup(ctrl)
 
 			var o oservice
-			got, gotErr := o.GetOrdersByShopID(tt.shopID)
+			got, gotErr := o.GetOrdersByShopID(tt.shopID, tt.searchQuery)
 
 			if gotErr != nil {
 				if !tt.wantErr {

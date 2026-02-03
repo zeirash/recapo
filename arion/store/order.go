@@ -13,7 +13,7 @@ import (
 type (
 	OrderStore interface {
 		GetOrderByID(id int, shopID ...int) (*model.Order, error)
-		GetOrdersByShopID(shopID int) ([]model.Order, error)
+		GetOrdersByShopID(shopID int, searchQuery *string) ([]model.Order, error)
 		CreateOrder(customerID int, shopID int, status string, notes *string) (*model.Order, error)
 		UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error)
 		DeleteOrderByID(tx database.Tx, id int) error
@@ -66,16 +66,21 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 	return &order, nil
 }
 
-func (o *order) GetOrdersByShopID(shopID int) ([]model.Order, error) {
-
+func (o *order) GetOrdersByShopID(shopID int, searchQuery *string) ([]model.Order, error) {
 	q := `
 		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at
 		FROM orders o
 		INNER JOIN customers c ON o.customer_id = c.id
 		WHERE o.shop_id = $1
 	`
+	args := []interface{}{shopID}
 
-	rows, err := o.db.Query(q, shopID)
+	if searchQuery != nil && strings.TrimSpace(*searchQuery) != "" {
+		q += ` AND c.name ILIKE $2`
+		args = append(args, "%"+strings.TrimSpace(*searchQuery)+"%")
+	}
+
+	rows, err := o.db.Query(q, args...)
 	if err != nil {
 		return nil, err
 	}

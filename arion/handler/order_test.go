@@ -250,6 +250,7 @@ func TestGetOrdersHandler(t *testing.T) {
 	tests := []struct {
 		name           string
 		shopID         int
+		searchQuery    string
 		mockSetup      func()
 		wantStatus     int
 		wantSuccess    bool
@@ -260,7 +261,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1).
+					GetOrdersByShopID(1, nil).
 					Return([]response.OrderData{
 						{
 							ID:           1,
@@ -279,7 +280,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1).
+					GetOrdersByShopID(1, nil).
 					Return([]response.OrderData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -290,12 +291,32 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1).
+					GetOrdersByShopID(1, nil).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
 			wantErrMessage: "database error",
+		},
+		{
+			name:        "get orders with search query passes search to service",
+			shopID:      1,
+			searchQuery: "john",
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetOrdersByShopID(1, gomock.Any()).
+					Return([]response.OrderData{
+						{
+							ID:           1,
+							CustomerName: "John Doe",
+							TotalPrice:   10000,
+							Status:       "created",
+							CreatedAt:    time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
 		},
 	}
 
@@ -303,7 +324,11 @@ func TestGetOrdersHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
 
-			req := newRequestWithShopID("GET", "/orders", nil, tt.shopID)
+			path := "/orders"
+			if tt.searchQuery != "" {
+				path += "?search=" + tt.searchQuery
+			}
+			req := newRequestWithShopID("GET", path, nil, tt.shopID)
 			rec := httptest.NewRecorder()
 
 			handler.GetOrdersHandler(rec, req)

@@ -86,18 +86,18 @@ func (mr *MockOrderStoreMockRecorder) GetOrderByID(id interface{}, shopID ...int
 }
 
 // GetOrdersByShopID mocks base method.
-func (m *MockOrderStore) GetOrdersByShopID(shopID int) ([]model.Order, error) {
+func (m *MockOrderStore) GetOrdersByShopID(shopID int, searchQuery *string) ([]model.Order, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrdersByShopID", shopID)
+	ret := m.ctrl.Call(m, "GetOrdersByShopID", shopID, searchQuery)
 	ret0, _ := ret[0].([]model.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrdersByShopID indicates an expected call of GetOrdersByShopID.
-func (mr *MockOrderStoreMockRecorder) GetOrdersByShopID(shopID interface{}) *gomock.Call {
+func (mr *MockOrderStoreMockRecorder) GetOrdersByShopID(shopID, searchQuery interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByShopID", reflect.TypeOf((*MockOrderStore)(nil).GetOrdersByShopID), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByShopID", reflect.TypeOf((*MockOrderStore)(nil).GetOrdersByShopID), shopID, searchQuery)
 }
 
 // UpdateOrder mocks base method.

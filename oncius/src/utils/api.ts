@@ -285,8 +285,9 @@ export const api = {
   },
 
   // Orders
-  getOrders: () => {
-    return apiRequest<ApiResponse<any[]>>('/orders')
+  getOrders: (search?: string) => {
+    const params = search ? `?search=${encodeURIComponent(search)}` : ''
+    return apiRequest<ApiResponse<any[]>>(`/orders${params}`)
   },
 
   getOrder: (id: number | string) => {

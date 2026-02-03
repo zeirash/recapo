@@ -73,15 +73,23 @@ export default function OrdersPage() {
   const [addItemForm, setAddItemForm] = useState<AddItemForm>(emptyAddItemForm)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  // Debounce search: only trigger API after user stops typing for 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   // Fetch orders
   const { data: ordersRes, isLoading, isError, error } = useQuery(
-    ['orders'],
+    ['orders', debouncedSearch],
     async () => {
-      const res = await api.getOrders()
+      const res = await api.getOrders(debouncedSearch || undefined)
       if (!res.success) throw new Error(res.message || to('fetchFailed'))
       return res.data as Order[]
-    }
+    },
+    { keepPreviousData: true }
   )
 
   // Fetch selected order details (includes order items)
@@ -232,18 +240,6 @@ export default function OrdersPage() {
     }
   }, [ordersRes, selectedOrderId])
 
-  const filteredOrders: Order[] = useMemo(() => {
-    if (!ordersRes) return []
-    const q = searchInput.trim().toLowerCase()
-    if (!q) return ordersRes
-    return ordersRes.filter(
-      (o) =>
-        String(o.id).includes(q) ||
-        (o.customer_name || '').toLowerCase().includes(q) ||
-        (o.status || '').toLowerCase().includes(q)
-    )
-  }, [ordersRes, searchInput])
-
   const selectedOrder: Order | null = useMemo(() => {
     if (!selectedOrderDetails) {
       // Fallback to basic order data from list
@@ -354,7 +350,7 @@ export default function OrdersPage() {
                   </Flex>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                  {filteredOrders.map((o) => {
+                  {(ordersRes || []).map((o) => {
                     const isActive = o.id === selectedOrderId
                     const statusStyle = getStatusStyle(o.status)
                     return (
@@ -395,7 +391,7 @@ export default function OrdersPage() {
                       </Box>
                     )
                   })}
-                  {filteredOrders.length === 0 && (
+                  {(ordersRes || []).length === 0 && (
                     <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>{to('noOrders')}</Text>
                   )}
                 </Box>
