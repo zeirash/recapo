@@ -79,7 +79,12 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
-	res, err := customerService.GetCustomersByShopID(int(shopID))
+	var searchQuery *string
+	if q := r.URL.Query().Get("search"); q != "" {
+		searchQuery = &q
+	}
+
+	res, err := customerService.GetCustomersByShopID(int(shopID), searchQuery)
 	if err != nil {
 		WriteErrorJson(w, http.StatusInternalServerError, err, "get_customers")
 		return

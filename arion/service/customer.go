@@ -12,7 +12,7 @@ type (
 	CustomerService interface {
 		CreateCustomer(name, email, password string, shopID int) (response.CustomerData, error)
 		GetCustomerByID(customerID int, shopID ...int) (*response.CustomerData, error)
-		GetCustomersByShopID(shopID int) ([]response.CustomerData, error)
+		GetCustomersByShopID(shopID int, searchQuery *string) ([]response.CustomerData, error)
 		UpdateCustomer(input UpdateCustomerInput) (response.CustomerData, error)
 		DeleteCustomerByID(id int) error
 	}
@@ -79,8 +79,8 @@ func (c *cservice) GetCustomerByID(customerID int, shopID ...int) (*response.Cus
 	return &res, nil
 }
 
-func (c *cservice) GetCustomersByShopID(shopID int) ([]response.CustomerData, error) {
-	customers, err := customerStore.GetCustomersByShopID(shopID)
+func (c *cservice) GetCustomersByShopID(shopID int, searchQuery *string) ([]response.CustomerData, error) {
+	customers, err := customerStore.GetCustomersByShopID(shopID, searchQuery)
 	if err != nil {
 		return []response.CustomerData{}, err
 	}

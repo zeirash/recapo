@@ -144,6 +144,7 @@ func Test_oservice_GetOrderByID(t *testing.T) {
 				OrderItems: []response.OrderItemData{
 					{ID: 1, ProductName: "Product 1", Price: 50, Qty: 2, CreatedAt: fixedTime},
 				},
+				CreatedAt: fixedTime,
 			},
 			wantErr: false,
 		},

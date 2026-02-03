@@ -85,18 +85,18 @@ func (mr *MockCustomerStoreMockRecorder) GetCustomerByID(id interface{}, shopID 
 }
 
 // GetCustomersByShopID mocks base method.
-func (m *MockCustomerStore) GetCustomersByShopID(shopID int) ([]model.Customer, error) {
+func (m *MockCustomerStore) GetCustomersByShopID(shopID int, searchQuery *string) ([]model.Customer, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCustomersByShopID", shopID)
+	ret := m.ctrl.Call(m, "GetCustomersByShopID", shopID, searchQuery)
 	ret0, _ := ret[0].([]model.Customer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetCustomersByShopID indicates an expected call of GetCustomersByShopID.
-func (mr *MockCustomerStoreMockRecorder) GetCustomersByShopID(shopID interface{}) *gomock.Call {
+func (mr *MockCustomerStoreMockRecorder) GetCustomersByShopID(shopID, searchQuery interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomersByShopID", reflect.TypeOf((*MockCustomerStore)(nil).GetCustomersByShopID), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomersByShopID", reflect.TypeOf((*MockCustomerStore)(nil).GetCustomersByShopID), shopID, searchQuery)
 }
 
 // UpdateCustomer mocks base method.

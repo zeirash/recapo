@@ -194,7 +194,7 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "description", "price", "created_at", "updated_at"}).
 					AddRow(1, "Widget A", "A useful widget", 1000, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, name, description, price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1\s+AND \(name ILIKE \$2 OR description ILIKE \$2\)`).
+				mock.ExpectQuery(`SELECT id, name, description, price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1\s+AND name ILIKE \$2`).
 					WithArgs(10, "%widget%").
 					WillReturnRows(rows)
 			},

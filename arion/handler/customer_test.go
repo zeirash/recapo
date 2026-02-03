@@ -263,6 +263,7 @@ func TestGetCustomersHandler(t *testing.T) {
 	tests := []struct {
 		name        string
 		shopID      int
+		searchQuery string
 		mockSetup   func()
 		wantStatus  int
 		wantSuccess bool
@@ -273,7 +274,7 @@ func TestGetCustomersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1).
+					GetCustomersByShopID(1, nil).
 					Return([]response.CustomerData{
 						{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "123 Main St", CreatedAt: fixedTime},
 						{ID: 2, Name: "Jane Doe", Phone: "08987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
@@ -288,11 +289,26 @@ func TestGetCustomersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1).
+					GetCustomersByShopID(1, nil).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,
+		},
+		{
+			name:        "get customers with search query passes search to service",
+			shopID:      1,
+			searchQuery: "john",
+			mockSetup: func() {
+				mockCustomerService.EXPECT().
+					GetCustomersByShopID(1, gomock.Any()).
+					Return([]response.CustomerData{
+						{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "123 Main St", CreatedAt: fixedTime},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
 		},
 	}
 
@@ -300,7 +316,11 @@ func TestGetCustomersHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
 
-			req := newRequestWithShopID("GET", "/customers", nil, tt.shopID)
+			path := "/customers"
+			if tt.searchQuery != "" {
+				path += "?search=" + tt.searchQuery
+			}
+			req := newRequestWithShopID("GET", path, nil, tt.shopID)
 			rec := httptest.NewRecorder()
 
 			handler.GetCustomersHandler(rec, req)

@@ -19,7 +19,7 @@ var ErrDuplicatePhone = errors.New("customer with this phone number already exis
 type (
 	CustomerStore interface {
 		GetCustomerByID(id int, shopID ...int) (*model.Customer, error)
-		GetCustomersByShopID(shopID int) ([]model.Customer, error)
+		GetCustomersByShopID(shopID int, searchQuery *string) ([]model.Customer, error)
 		CreateCustomer(name, phone, address string, shopID int) (*model.Customer, error)
 		UpdateCustomer(id int, input UpdateCustomerInput) (*model.Customer, error)
 		DeleteCustomerByID(id int) error
@@ -71,14 +71,20 @@ func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, erro
 	return &customer, nil
 }
 
-func (c *customer) GetCustomersByShopID(shopID int) ([]model.Customer, error) {
+func (c *customer) GetCustomersByShopID(shopID int, searchQuery *string) ([]model.Customer, error) {
 	q := `
 		SELECT id, name, phone, address, created_at, updated_at
 		FROM customers
 		WHERE shop_id = $1
 	`
+	args := []interface{}{shopID}
 
-	rows, err := c.db.Query(q, shopID)
+	if searchQuery != nil && strings.TrimSpace(*searchQuery) != "" {
+		q += ` AND (name ILIKE $2 OR phone ILIKE $2)`
+		args = append(args, "%"+strings.TrimSpace(*searchQuery)+"%")
+	}
+
+	rows, err := c.db.Query(q, args...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

@@ -134,13 +134,15 @@ func Test_customer_GetCustomerByID(t *testing.T) {
 
 func Test_customer_GetCustomersByShopID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+	strPtr := func(s string) *string { return &s }
 
 	tests := []struct {
-		name       string
-		shopID     int
-		mockSetup  func(mock sqlmock.Sqlmock)
-		wantResult []model.Customer
-		wantErr    bool
+		name        string
+		shopID      int
+		searchQuery *string
+		mockSetup   func(mock sqlmock.Sqlmock)
+		wantResult  []model.Customer
+		wantErr     bool
 	}{
 		{
 			name:   "get customers by shop ID returns multiple customers",
@@ -205,6 +207,28 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 			wantResult: nil,
 			wantErr:    false,
 		},
+		{
+			name:        "get customers by shop ID with search query filters by name, phone",
+			shopID:      1,
+			searchQuery: strPtr("john"),
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"}).
+					AddRow(1, "John Doe", "1234567890", "123 Main St", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE shop_id = \$1\s+AND \(name ILIKE \$2 OR phone ILIKE \$2\)`).
+					WithArgs(1, "%john%").
+					WillReturnRows(rows)
+			},
+			wantResult: []model.Customer{
+				{
+					ID:        1,
+					Name:      "John Doe",
+					Phone:     "1234567890",
+					Address:   "123 Main St",
+					CreatedAt: fixedTime,
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -218,7 +242,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewCustomerStoreWithDB(db)
 
-			got, gotErr := store.GetCustomersByShopID(tt.shopID)
+			got, gotErr := store.GetCustomersByShopID(tt.shopID, tt.searchQuery)
 
 			if gotErr != nil {
 				if !tt.wantErr {

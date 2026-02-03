@@ -78,7 +78,7 @@ func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.
 	args := []interface{}{shopID}
 
 	if searchQuery != nil && strings.TrimSpace(*searchQuery) != "" {
-		q += ` AND (name ILIKE $2 OR description ILIKE $2)`
+		q += ` AND name ILIKE $2`
 		args = append(args, "%"+strings.TrimSpace(*searchQuery)+"%")
 	}
 

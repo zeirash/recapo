@@ -252,8 +252,9 @@ export const api = {
   },
 
   // Customers
-  getCustomers: () => {
-    return apiRequest<ApiResponse<any[]>>('/customers')
+  getCustomers: (search?: string) => {
+    const params = search ? `?search=${encodeURIComponent(search)}` : ''
+    return apiRequest<ApiResponse<any[]>>(`/customers${params}`)
   },
 
   getCustomer: (id: number | string) => {

@@ -33,14 +33,22 @@ export default function CustomersPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  // Debounce search: only trigger API after user stops typing for 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   const { data: customersRes, isLoading, isError, error } = useQuery(
-    ['customers'],
+    ['customers', debouncedSearch],
     async () => {
-      const res = await api.getCustomers()
-      if (!res.success) throw new Error(res.message || 'Failed to fetch customers')
+      const res = await api.getCustomers(debouncedSearch || undefined)
+      if (!res.success) throw new Error(res.message || tc('fetchFailed'))
       return res.data as Customer[]
-    }
+    },
+    { keepPreviousData: true }
   )
 
   const createMutation = useMutation(
@@ -90,18 +98,6 @@ export default function CustomersPage() {
       setSelectedCustomerId(customersRes[0].id)
     }
   }, [customersRes, selectedCustomerId])
-
-  const filteredCustomers: Customer[] = useMemo(() => {
-    if (!customersRes) return []
-    const q = searchInput.trim().toLowerCase()
-    if (!q) return customersRes
-    return customersRes.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        (c.phone || '').toLowerCase().includes(q) ||
-        (c.address || '').toLowerCase().includes(q)
-    )
-  }, [customersRes, searchInput])
 
   const selectedCustomer: Customer | null = useMemo(() => {
     if (!customersRes) return null
@@ -176,7 +172,7 @@ export default function CustomersPage() {
                   </Flex>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                  {filteredCustomers.map((c) => {
+                  {(customersRes || []).map((c) => {
                     const isActive = c.id === selectedCustomerId
                     return (
                       <Box
@@ -212,7 +208,7 @@ export default function CustomersPage() {
                       </Box>
                     )
                   })}
-                  {filteredCustomers.length === 0 && (
+                  {(customersRes || []).length === 0 && (
                     <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>No customers</Text>
                   )}
                 </Box>
