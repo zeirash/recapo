@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { Box, Button, Card, Container, Flex, Heading, Input, Label, Text, Textarea } from 'theme-ui'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
+import AddButton from '@/components/AddButton'
 import { api } from '@/utils/api'
 
 type Customer = {
@@ -151,24 +152,7 @@ export default function CustomersPage() {
                       onChange={(e) => setSearchInput(e.target.value)}
                       placeholder={tc('searchPlaceholder')}
                     />
-                    <Button
-                      onClick={openCreateForm}
-                      sx={{
-                        width: 44,
-                        minWidth: 44,
-                        height: 44,
-                        p: 0,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: 'medium',
-                        fontSize: 3,
-                        fontWeight: 'bold',
-                      }}
-                      title={tc('addCustomer')}
-                    >
-                      +
-                    </Button>
+                    <AddButton onClick={openCreateForm} title={tc('addCustomer')} />
                   </Flex>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>

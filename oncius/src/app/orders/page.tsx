@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { Box, Button, Card, Container, Flex, Heading, Input, Label, Select, Text } from 'theme-ui'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
+import AddButton from '@/components/AddButton'
 import { api } from '@/utils/api'
 
 type OrderItem = {
@@ -329,24 +330,7 @@ export default function OrdersPage() {
                       onChange={(e) => setSearchInput(e.target.value)}
                       placeholder={to('searchPlaceholder')}
                     />
-                    <Button
-                      onClick={openCreateForm}
-                      sx={{
-                        width: 44,
-                        minWidth: 44,
-                        height: 44,
-                        p: 0,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: 'medium',
-                        fontSize: 3,
-                        fontWeight: 'bold',
-                      }}
-                      title={to('addOrder')}
-                    >
-                      +
-                    </Button>
+                    <AddButton onClick={openCreateForm} title={to('addOrder')} />
                   </Flex>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
