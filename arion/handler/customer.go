@@ -24,6 +24,20 @@ type (
 	}
 )
 
+// CreateCustomerHandler godoc
+//
+//	@Summary		Create customer
+//	@Description	Create a new customer for the shop.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			customer
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		CreateCustomerRequest	true	"Customer data"
+//	@Success		200		{object}	response.CustomerData
+//	@Failure		400		{object}	ErrorApiResponse	"Bad request (invalid JSON or validation)"
+//	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/customer [post]
 func CreateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -48,6 +62,21 @@ func CreateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetCustomerHandler godoc
+//
+//	@Summary		Get customer by ID
+//	@Description	Get a single customer by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			customer
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			customer_id	path		int	true	"Customer ID"
+//	@Success		200			{object}	response.CustomerData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid customer_id)"
+//	@Failure		404	{object}	ErrorApiResponse	"Customer not found"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/customers/{customer_id} [get]
 func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -75,6 +104,19 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetCustomersHandler godoc
+//
+//	@Summary		List customers
+//	@Description	Get all customers for the shop. Optional search query to filter by name, phone, or address.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			customer
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query		string	false	"Search query"
+//	@Success		200		{array}		response.CustomerData
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/customers [get]
 func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -93,6 +135,21 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// UpdateCustomerHandler godoc
+//
+//	@Summary		Update customer
+//	@Description	Update an existing customer. Only provided fields are updated.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			customer
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			customer_id	path		int						true	"Customer ID"
+//	@Param			body		body		UpdateCustomerRequest	true	"Fields to update"
+//	@Success		200			{object}	response.CustomerData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON or customer_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/customers/{customer_id} [patch]
 func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateCustomerID(params); !valid {
@@ -123,6 +180,20 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// DeleteCustomerHandler godoc
+//
+//	@Summary		Delete customer
+//	@Description	Delete a customer by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+//	@Tags			customer
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			customer_id	path	int	true	"Customer ID"
+//	@Success		200			{string}	string	"Success. data contains \"OK\""
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid customer_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/customers/{customer_id} [delete]
 func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateCustomerID(params); !valid {

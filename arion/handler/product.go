@@ -24,6 +24,20 @@ type (
 	}
 )
 
+// CreateProductHandler godoc
+//
+//	@Summary		Create product
+//	@Description	Create a new product for the shop.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			product
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		CreateProductRequest	true	"Product data"
+//	@Success		200		{object}	response.ProductData
+//	@Failure		400		{object}	ErrorApiResponse	"Bad request (invalid JSON or validation)"
+//	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/product [post]
 func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -48,6 +62,21 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetProductHandler godoc
+//
+//	@Summary		Get product by ID
+//	@Description	Get a single product by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			product
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			product_id	path		int	true	"Product ID"
+//	@Success		200			{object}	response.ProductData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid product_id)"
+//	@Failure		404	{object}	ErrorApiResponse	"Product not found"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/products/{product_id} [get]
 func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -75,6 +104,19 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetProductsHandler godoc
+//
+//	@Summary		List products
+//	@Description	Get all products for the shop. Optional search query to filter by name or description.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			product
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query		string	false	"Search query"
+//	@Success		200		{array}		response.ProductData
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/products [get]
 func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -123,6 +165,20 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// DeleteProductHandler godoc
+//
+//	@Summary		Delete product
+//	@Description	Delete a product by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+//	@Tags			product
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			product_id	path	int	true	"Product ID"
+//	@Success		200			{string}	string	"Success. data contains \"OK\""
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid product_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/products/{product_id} [delete]
 func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateProductID(params); !valid {

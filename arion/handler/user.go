@@ -34,6 +34,18 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetUsersHandler godoc
+//
+//	@Summary		List users
+//	@Description	Get all users. Requires appropriate permissions.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}	response.UserData
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/users [get]
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := userService.GetUsers()
 	if err != nil {
@@ -44,6 +56,20 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// UpdateUserHandler godoc
+//
+//	@Summary		Update current user
+//	@Description	Update the authenticated user's profile. Only provided fields are updated.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		UpdateUserRequest	true	"Fields to update"
+//	@Success		200		{object}	response.UserData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/user [patch]
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := ctx.Value(common.UserIDKey).(int)

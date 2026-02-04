@@ -18,6 +18,15 @@ type ApiResponse struct {
 	Message string      `json:"message"`
 }
 
+// ErrorApiResponse is the shape of error responses for Swagger. Data is an
+// empty object {} rather than a string or null.
+type ErrorApiResponse struct {
+	Success bool     `json:"success"`
+	Data    struct{} `json:"data"`
+	Code    string   `json:"code"`
+	Message string   `json:"message"`
+}
+
 var (
 	userService     service.UserService
 	customerService service.CustomerService
@@ -120,8 +129,9 @@ func WriteErrorJson(w http.ResponseWriter, r *http.Request, status int, err erro
 		}
 	}
 
-	res := ApiResponse{
+	res := ErrorApiResponse{
 		Success: false,
+		Data:    struct{}{},
 		Code:    code,
 		Message: message,
 	}

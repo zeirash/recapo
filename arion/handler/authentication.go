@@ -23,6 +23,20 @@ type (
 	}
 )
 
+// LoginHandler godoc
+//
+//	@Summary		Login
+//	@Description	Authenticate with email and password. Returns access and refresh tokens.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		LoginRequest	true	"Login credentials"
+//	@Success		200		{object}	response.TokenResponse
+//	@Failure		400		{object}	ErrorApiResponse	"Bad request (invalid JSON or validation)"
+//	@Failure		401		{object}	ErrorApiResponse	"Invalid credentials"
+//	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	inp := LoginRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
@@ -49,6 +63,19 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// RegisterHandler godoc
+//
+//	@Summary		Register
+//	@Description	Create a new user account. Returns access and refresh tokens.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		RegisterRequest	true	"Registration data"
+//	@Success		200		{object}	response.TokenResponse
+//	@Failure		400		{object}	ErrorApiResponse	"Bad request (invalid JSON or validation)"
+//	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/register [post]
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	inp := RegisterRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
@@ -70,6 +97,19 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// RefreshHandler godoc
+//
+//	@Summary		Refresh token
+//	@Description	Exchange a valid refresh token for new access and refresh tokens.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		RefreshRequest	true	"Refresh token"
+//	@Success		200		{object}	response.TokenResponse
+//	@Failure		400		{object}	ErrorApiResponse	"Bad request (invalid JSON or refresh_token required)"
+//	@Failure		401		{object}	ErrorApiResponse	"Invalid or expired refresh token"
+//	@Router			/refresh [post]
 func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	inp := RefreshRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {

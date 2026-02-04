@@ -1,3 +1,19 @@
+// Package main Recapo API server.
+//
+//	@title			Recapo API
+//	@version		1.0
+//	@description	Order management API for Jastipers
+//	@description
+//	@description	All responses use this envelope:
+//	@description	{ "success": bool, "data": <payload>, "code": string, "message": string }
+//	@description	Success: success=true, data holds the payload. Error: success=false, data={}, code and message describe the error.
+//	@host			localhost:4000
+//	@BasePath		/
+//	@schemes		http
+//
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
 package main
 
 import (
@@ -6,11 +22,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
+	"github.com/swaggo/http-swagger"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/common/middleware"
 	"github.com/zeirash/recapo/arion/handler"
+
+	_ "github.com/zeirash/recapo/arion/docs" // swagger docs
 )
 
 func NewRouter() *mux.Router {
@@ -19,6 +38,9 @@ func NewRouter() *mux.Router {
 
 	// Global middleware
 	r.Use(middleware.Recovery)
+
+	// Swagger UI (WrapHandler is http.HandlerFunc; doc is served from swag registry)
+	r.PathPrefix("/swagger/").HandlerFunc(httpSwagger.WrapHandler)
 
 	// Routes API
 	r.HandleFunc("/health", handler.HealthHandler)

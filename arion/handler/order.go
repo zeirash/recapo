@@ -34,6 +34,20 @@ type (
 	}
 )
 
+// CreateOrderHandler godoc
+//
+//	@Summary		Create order
+//	@Description	Create a new order for the shop.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		CreateOrderRequest	true	"Order data"
+//	@Success		200		{object}	response.OrderData
+//	@Failure		400		{object}	ErrorApiResponse	"Bad request (invalid JSON or validation)"
+//	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/order [post]
 func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -58,6 +72,21 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetOrderHandler godoc
+//
+//	@Summary		Get order by ID
+//	@Description	Get a single order by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path		int	true	"Order ID"
+//	@Success		200			{object}	response.OrderData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid order_id)"
+//	@Failure		404	{object}	ErrorApiResponse	"Order not found"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id} [get]
 func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -85,6 +114,19 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetOrdersHandler godoc
+//
+//	@Summary		List orders
+//	@Description	Get all orders for the shop. Optional search query to filter.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query		string	false	"Search query"
+//	@Success		200		{array}		response.OrderData
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders [get]
 func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -103,6 +145,21 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// UpdateOrderHandler godoc
+//
+//	@Summary		Update order
+//	@Description	Update an existing order. Only provided fields are updated.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path		int					true	"Order ID"
+//	@Param			body		body		UpdateOrderRequest	true	"Fields to update"
+//	@Success		200			{object}	response.OrderData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON or order_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id} [patch]
 func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
@@ -133,6 +190,20 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// DeleteOrderHandler godoc
+//
+//	@Summary		Delete order
+//	@Description	Delete an order by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path	int	true	"Order ID"
+//	@Success		200		{string}	string	"Success. data contains \"OK\""
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid order_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id} [delete]
 func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
@@ -183,6 +254,22 @@ func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// UpdateOrderItemHandler godoc
+//
+//	@Summary		Update order item
+//	@Description	Update an order item. Only provided fields are updated.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path		int						true	"Order ID"
+//	@Param			item_id	path		int						true	"Order item ID"
+//	@Param			body		body		UpdateOrderItemRequest	true	"Fields to update"
+//	@Success		200			{object}	response.OrderItemData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON, order_id, or item_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/items/{item_id} [patch]
 func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
@@ -222,6 +309,21 @@ func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// DeleteOrderItemHandler godoc
+//
+//	@Summary		Delete order item
+//	@Description	Delete an order item by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path	int	true	"Order ID"
+//	@Param			item_id	path	int	true	"Order item ID"
+//	@Success		200		{string}	string	"Success. data contains \"OK\""
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid order_id or item_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/items/{item_id} [delete]
 func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
@@ -250,6 +352,21 @@ func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, "OK")
 }
 
+// GetOrderItemHandler godoc
+//
+//	@Summary		Get order item by ID
+//	@Description	Get a single order item by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path	int	true	"Order ID"
+//	@Param			item_id	path	int	true	"Order item ID"
+//	@Success		200		{object}	response.OrderItemData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid order_id or item_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/items/{item_id} [get]
 func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
@@ -278,6 +395,20 @@ func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetOrderItemsHandler godoc
+//
+//	@Summary		List order items
+//	@Description	Get all items for an order.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path	int	true	"Order ID"
+//	@Success		200		{array}	response.OrderItemData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid order_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/items [get]
 func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 

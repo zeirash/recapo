@@ -1,0 +1,990 @@
+basePath: /
+definitions:
+  handler.CreateCustomerRequest:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  handler.CreateOrderRequest:
+    properties:
+      customer_id:
+        type: integer
+      notes:
+        type: string
+    type: object
+  handler.CreateProductRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        type: integer
+    type: object
+  handler.ErrorApiResponse:
+    properties:
+      code:
+        type: string
+      data:
+        type: object
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  handler.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handler.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  handler.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  handler.UpdateCustomerRequest:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  handler.UpdateOrderItemRequest:
+    properties:
+      product_id:
+        type: integer
+      qty:
+        type: integer
+    type: object
+  handler.UpdateOrderRequest:
+    properties:
+      customer_id:
+        type: integer
+      notes:
+        type: string
+      status:
+        type: string
+      total_price:
+        type: integer
+    type: object
+  handler.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  response.CustomerData:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phone:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  response.OrderData:
+    properties:
+      created_at:
+        type: string
+      customer_name:
+        type: string
+      id:
+        type: integer
+      notes:
+        type: string
+      order_items:
+        items:
+          $ref: '#/definitions/response.OrderItemData'
+        type: array
+      status:
+        type: string
+      total_price:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  response.OrderItemData:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      order_id:
+        type: integer
+      price:
+        type: integer
+      product_name:
+        type: string
+      qty:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  response.ProductData:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  response.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  response.UserData:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:4000
+info:
+  contact: {}
+  description: |-
+    Order management API for Jastipers
+
+    All responses use this envelope:
+    { "success": bool, "data": <payload>, "code": string, "message": string }
+    Success: success=true, data holds the payload. Error: success=false, data={}, code and message describe the error.
+  title: Recapo API
+  version: "1.0"
+paths:
+  /customer:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Create a new customer for the shop.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Customer data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomerData'
+        "400":
+          description: Bad request (invalid JSON or validation)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Create customer
+      tags:
+      - customer
+  /customers:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get all customers for the shop. Optional search query to filter by name, phone, or address.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.CustomerData'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: List customers
+      tags:
+      - customer
+  /customers/{customer_id}:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        Delete a customer by ID.
+        Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+      parameters:
+      - description: Customer ID
+        in: path
+        name: customer_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success. data contains \"OK\
+          schema:
+            type: string
+        "400":
+          description: Bad request (invalid customer_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete customer
+      tags:
+      - customer
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get a single customer by ID.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Customer ID
+        in: path
+        name: customer_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomerData'
+        "400":
+          description: Bad request (invalid customer_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "404":
+          description: Customer not found
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get customer by ID
+      tags:
+      - customer
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Update an existing customer. Only provided fields are updated.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Customer ID
+        in: path
+        name: customer_id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CustomerData'
+        "400":
+          description: Bad request (invalid JSON or customer_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update customer
+      tags:
+      - customer
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Authenticate with email and password. Returns access and refresh tokens.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.TokenResponse'
+        "400":
+          description: Bad request (invalid JSON or validation)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      summary: Login
+      tags:
+      - auth
+  /order:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Create a new order for the shop.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Order data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OrderData'
+        "400":
+          description: Bad request (invalid JSON or validation)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Create order
+      tags:
+      - order
+  /orders:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get all orders for the shop. Optional search query to filter.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.OrderData'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: List orders
+      tags:
+      - order
+  /orders/{order_id}:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        Delete an order by ID.
+        Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success. data contains \"OK\
+          schema:
+            type: string
+        "400":
+          description: Bad request (invalid order_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete order
+      tags:
+      - order
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get a single order by ID.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OrderData'
+        "400":
+          description: Bad request (invalid order_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "404":
+          description: Order not found
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get order by ID
+      tags:
+      - order
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Update an existing order. Only provided fields are updated.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OrderData'
+        "400":
+          description: Bad request (invalid JSON or order_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update order
+      tags:
+      - order
+  /orders/{order_id}/items:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get all items for an order.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.OrderItemData'
+            type: array
+        "400":
+          description: Bad request (invalid order_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: List order items
+      tags:
+      - order
+  /orders/{order_id}/items/{item_id}:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        Delete an order item by ID.
+        Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      - description: Order item ID
+        in: path
+        name: item_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success. data contains \"OK\
+          schema:
+            type: string
+        "400":
+          description: Bad request (invalid order_id or item_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete order item
+      tags:
+      - order
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get a single order item by ID.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      - description: Order item ID
+        in: path
+        name: item_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OrderItemData'
+        "400":
+          description: Bad request (invalid order_id or item_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get order item by ID
+      tags:
+      - order
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Update an order item. Only provided fields are updated.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      - description: Order item ID
+        in: path
+        name: item_id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateOrderItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OrderItemData'
+        "400":
+          description: Bad request (invalid JSON, order_id, or item_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update order item
+      tags:
+      - order
+  /product:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Create a new product for the shop.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Product data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ProductData'
+        "400":
+          description: Bad request (invalid JSON or validation)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Create product
+      tags:
+      - product
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get all products for the shop. Optional search query to filter by name or description.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Search query
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.ProductData'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: List products
+      tags:
+      - product
+  /products/{product_id}:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        Delete a product by ID.
+        Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success. data contains \"OK\
+          schema:
+            type: string
+        "400":
+          description: Bad request (invalid product_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete product
+      tags:
+      - product
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get a single product by ID.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ProductData'
+        "400":
+          description: Bad request (invalid product_id)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get product by ID
+      tags:
+      - product
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Exchange a valid refresh token for new access and refresh tokens.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.TokenResponse'
+        "400":
+          description: Bad request (invalid JSON or refresh_token required)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      summary: Refresh token
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Create a new user account. Returns access and refresh tokens.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Registration data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.TokenResponse'
+        "400":
+          description: Bad request (invalid JSON or validation)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      summary: Register
+      tags:
+      - auth
+  /user:
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Update the authenticated user's profile. Only provided fields are updated.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.UserData'
+        "400":
+          description: Bad request (invalid JSON)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update current user
+      tags:
+      - user
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Get all users. Requires appropriate permissions.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.UserData'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - user
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
