@@ -4,9 +4,11 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -123,7 +125,9 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			search	query		string	false	"Search query"
+//	@Param			search		query		string	false	"Search query"
+//	@Param			date_from	query		string	false	"Filter orders from date (YYYY-MM-DD)"
+//	@Param			date_to		query		string	false	"Filter orders to date (YYYY-MM-DD)"
 //	@Success		200		{array}		response.OrderData
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders [get]
@@ -131,12 +135,23 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
-	var searchQuery *string
+	opts := model.OrderFilterOptions{}
 	if q := r.URL.Query().Get("search"); q != "" {
-		searchQuery = &q
+		opts.SearchQuery = &q
+	}
+	if df := r.URL.Query().Get("date_from"); df != "" {
+		if t, err := parseDate(df); err == nil {
+			opts.DateFrom = &t
+		}
+	}
+	if dt := r.URL.Query().Get("date_to"); dt != "" {
+		if t, err := parseDate(dt); err == nil {
+			endOfDay := t.Add(24 * time.Hour)
+			opts.DateTo = &endOfDay
+		}
 	}
 
-	res, err := orderService.GetOrdersByShopID(shopID, searchQuery)
+	res, err := orderService.GetOrdersByShopID(shopID, opts)
 	if err != nil {
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_orders")
 		return
@@ -463,4 +478,9 @@ func validateOrderItemID(params map[string]string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// parseDate parses a date string in YYYY-MM-DD format.
+func parseDate(s string) (time.Time, error) {
+	return time.ParseInLocation("2006-01-02", s, time.UTC)
 }

@@ -74,6 +74,14 @@ type (
 	}
 
 	/******************** Order **********************/
+	// OrderFilterOptions holds optional filters for listing orders.
+	// Used by handler and service; store consumes it. Add fields as needed (e.g. Status, CustomerID).
+	OrderFilterOptions struct {
+		SearchQuery *string
+		DateFrom    *time.Time
+		DateTo      *time.Time
+	}
+
 	Order struct {
 		ID           int          `db:"id"`
 		ShopID       int          `db:"shop_id"`

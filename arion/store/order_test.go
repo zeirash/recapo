@@ -123,11 +123,12 @@ func Test_order_GetOrderByID(t *testing.T) {
 func Test_order_GetOrdersByShopID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	strPtr := func(s string) *string { return &s }
+	ptrTime := func(t time.Time) *time.Time { return &t }
 
 	tests := []struct {
 		name        string
 		shopID      int
-		searchQuery *string
+		opts        model.OrderFilterOptions
 		mockSetup   func(mock sqlmock.Sqlmock)
 		wantResult  []model.Order
 		wantErr     bool
@@ -166,6 +167,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 		{
 			name:   "get orders by shop ID returns empty slice when no orders exist",
 			shopID: 9999,
+			opts:   model.OrderFilterOptions{},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"})
 				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1`).
@@ -178,6 +180,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 		{
 			name:   "get orders returns error on database failure",
 			shopID: 10,
+			opts:   model.OrderFilterOptions{},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1`).
 					WithArgs(10).
@@ -187,14 +190,40 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name:        "get orders by shop ID with search query filters by customer name",
-			shopID:      10,
-			searchQuery: strPtr("john"),
+			name:   "get orders by shop ID with search query filters by customer name",
+			shopID: 10,
+			opts:   model.OrderFilterOptions{SearchQuery: strPtr("john")},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
 					AddRow(1, 10, "John Doe", 5000, "pending", "", fixedTime, nil)
 				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND c.name ILIKE \$2`).
 					WithArgs(10, "%john%").
+					WillReturnRows(rows)
+			},
+			wantResult: []model.Order{
+				{
+					ID:           1,
+					ShopID:       10,
+					CustomerName: "John Doe",
+					TotalPrice:   5000,
+					Status:       "pending",
+					CreatedAt:    fixedTime,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "get orders by shop ID with date range filters by created_at",
+			shopID: 10,
+			opts: model.OrderFilterOptions{
+				DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+				DateTo:   ptrTime(time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)), // exclusive: < Feb 1 = through Jan 31
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
+					AddRow(1, 10, "John Doe", 5000, "pending", "", fixedTime, nil)
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND o.created_at >= \$2\s+AND o.created_at < \$3`).
+					WithArgs(10, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)).
 					WillReturnRows(rows)
 			},
 			wantResult: []model.Order{
@@ -222,7 +251,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.GetOrdersByShopID(tt.shopID, tt.searchQuery)
+			got, gotErr := store.GetOrdersByShopID(tt.shopID, tt.opts)
 
 			if gotErr != nil {
 				if !tt.wantErr {

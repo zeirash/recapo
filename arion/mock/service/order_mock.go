@@ -9,6 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	response "github.com/zeirash/recapo/arion/common/response"
+	model "github.com/zeirash/recapo/arion/model"
 	service "github.com/zeirash/recapo/arion/service"
 )
 
@@ -144,18 +145,18 @@ func (mr *MockOrderServiceMockRecorder) GetOrderItemsByOrderID(orderID interface
 }
 
 // GetOrdersByShopID mocks base method.
-func (m *MockOrderService) GetOrdersByShopID(shopID int, searchQuery *string) ([]response.OrderData, error) {
+func (m *MockOrderService) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrdersByShopID", shopID, searchQuery)
+	ret := m.ctrl.Call(m, "GetOrdersByShopID", shopID, opts)
 	ret0, _ := ret[0].([]response.OrderData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrdersByShopID indicates an expected call of GetOrdersByShopID.
-func (mr *MockOrderServiceMockRecorder) GetOrdersByShopID(shopID, searchQuery interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GetOrdersByShopID(shopID, opts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByShopID", reflect.TypeOf((*MockOrderService)(nil).GetOrdersByShopID), shopID, searchQuery)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByShopID", reflect.TypeOf((*MockOrderService)(nil).GetOrdersByShopID), shopID, opts)
 }
 
 // UpdateOrderByID mocks base method.

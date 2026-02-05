@@ -396,6 +396,18 @@ const docTemplate = `{
                         "description": "Search query",
                         "name": "search",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter orders from date (YYYY-MM-DD)",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter orders to date (YYYY-MM-DD)",
+                        "name": "date_to",
+                        "in": "query"
                     }
                 ],
                 "responses": {

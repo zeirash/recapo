@@ -246,22 +246,24 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	updatedTime := time.Date(2024, 1, 16, 12, 0, 0, 0, time.UTC)
 	strPtr := func(s string) *string { return &s }
+	ptrTime := func(t time.Time) *time.Time { return &t }
 
 	tests := []struct {
-		name        string
-		shopID      int
-		searchQuery *string
-		mockSetup   func(ctrl *gomock.Controller) *mock_store.MockOrderStore
-		wantResult  []response.OrderData
-		wantErr     bool
+		name       string
+		shopID     int
+		opts       model.OrderFilterOptions
+		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockOrderStore
+		wantResult []response.OrderData
+		wantErr    bool
 	}{
 		{
 			name:   "successfully get orders by shop ID",
 			shopID: 1,
+			opts:   model.OrderFilterOptions{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					GetOrdersByShopID(1, nil).
+					GetOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return([]model.Order{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
 						{ID: 2, CustomerName: "Jane Doe", TotalPrice: 200, Status: constant.OrderStatusCompleted, CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: updatedTime, Valid: true}},
@@ -277,10 +279,11 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 		{
 			name:   "get orders by shop ID returns empty slice",
 			shopID: 1,
+			opts:   model.OrderFilterOptions{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					GetOrdersByShopID(1, nil).
+					GetOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return([]model.Order{}, nil)
 				return mock
 			},
@@ -290,10 +293,11 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 		{
 			name:   "get orders by shop ID returns error on store failure",
 			shopID: 1,
+			opts:   model.OrderFilterOptions{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					GetOrdersByShopID(1, nil).
+					GetOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -301,13 +305,71 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name:        "get orders by shop ID with search query returns filtered orders",
-			shopID:      1,
-			searchQuery: strPtr("john"),
+			name:   "get orders by shop ID with search query returns filtered orders",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{SearchQuery: strPtr("john")},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					GetOrdersByShopID(1, gomock.Any()).
+					GetOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: strPtr("john")}).
+					Return([]model.Order{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
+					}, nil)
+				return mock
+			},
+			wantResult: []response.OrderData{
+				{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "get orders by shop ID with date_from returns filtered orders",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC))},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				dateFrom := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				mock.EXPECT().GetOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &dateFrom}).
+					Return([]model.Order{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
+					}, nil)
+				return mock
+			},
+			wantResult: []response.OrderData{
+				{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "get orders by shop ID with date_to returns filtered orders",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{DateTo: ptrTime(time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC))},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				dateTo := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
+				mock.EXPECT().GetOrdersByShopID(1, model.OrderFilterOptions{DateTo: &dateTo}).
+					Return([]model.Order{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
+					}, nil)
+				return mock
+			},
+			wantResult: []response.OrderData{
+				{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
+			},
+			wantErr: false,
+		},
+		{
+			name: "get orders by shop ID with date_from and date_to returns filtered orders",
+			shopID: 1,
+			opts: model.OrderFilterOptions{
+				DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+				DateTo:   ptrTime(time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)),
+			},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				dateFrom := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				dateTo := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
+				mock.EXPECT().GetOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &dateFrom, DateTo: &dateTo}).
 					Return([]model.Order{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
 					}, nil)
@@ -330,7 +392,7 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 			orderStore = tt.mockSetup(ctrl)
 
 			var o oservice
-			got, gotErr := o.GetOrdersByShopID(tt.shopID, tt.searchQuery)
+			got, gotErr := o.GetOrdersByShopID(tt.shopID, tt.opts)
 
 			if gotErr != nil {
 				if !tt.wantErr {

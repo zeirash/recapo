@@ -13,7 +13,7 @@ import (
 type (
 	OrderStore interface {
 		GetOrderByID(id int, shopID ...int) (*model.Order, error)
-		GetOrdersByShopID(shopID int, searchQuery *string) ([]model.Order, error)
+		GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.Order, error)
 		CreateOrder(customerID int, shopID int, status string, notes *string) (*model.Order, error)
 		UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error)
 		DeleteOrderByID(tx database.Tx, id int) error
@@ -66,7 +66,7 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 	return &order, nil
 }
 
-func (o *order) GetOrdersByShopID(shopID int, searchQuery *string) ([]model.Order, error) {
+func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.Order, error) {
 	q := `
 		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at
 		FROM orders o
@@ -74,10 +74,22 @@ func (o *order) GetOrdersByShopID(shopID int, searchQuery *string) ([]model.Orde
 		WHERE o.shop_id = $1
 	`
 	args := []interface{}{shopID}
+	argNum := 2
 
-	if searchQuery != nil && strings.TrimSpace(*searchQuery) != "" {
-		q += ` AND c.name ILIKE $2`
-		args = append(args, "%"+strings.TrimSpace(*searchQuery)+"%")
+	if opts.SearchQuery != nil && strings.TrimSpace(*opts.SearchQuery) != "" {
+		q += fmt.Sprintf(" AND c.name ILIKE $%d", argNum)
+		args = append(args, "%"+strings.TrimSpace(*opts.SearchQuery)+"%")
+		argNum++
+	}
+	if opts.DateFrom != nil {
+		q += fmt.Sprintf(" AND o.created_at >= $%d", argNum)
+		args = append(args, *opts.DateFrom)
+		argNum++
+	}
+	if opts.DateTo != nil {
+		q += fmt.Sprintf(" AND o.created_at < $%d", argNum)
+		args = append(args, *opts.DateTo)
+		argNum++
 	}
 
 	rows, err := o.db.Query(q, args...)

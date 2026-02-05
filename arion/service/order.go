@@ -6,6 +6,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/response"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
 )
 
@@ -13,7 +14,7 @@ type (
 	OrderService interface {
 		CreateOrder(customerID int, shopID int, notes *string) (response.OrderData, error)
 		GetOrderByID(id int, shopID ...int) (*response.OrderData, error)
-		GetOrdersByShopID(shopID int, searchQuery *string) ([]response.OrderData, error)
+		GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error)
 		UpdateOrderByID(input UpdateOrderInput) (response.OrderData, error)
 		DeleteOrderByID(id int) error
 		CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error)
@@ -116,8 +117,8 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 	return &res, nil
 }
 
-func (o *oservice) GetOrdersByShopID(shopID int, searchQuery *string) ([]response.OrderData, error) {
-	orders, err := orderStore.GetOrdersByShopID(shopID, searchQuery)
+func (o *oservice) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error) {
+	orders, err := orderStore.GetOrdersByShopID(shopID, opts)
 	if err != nil {
 		return []response.OrderData{}, err
 	}

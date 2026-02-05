@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -247,10 +249,16 @@ func TestGetOrdersHandler(t *testing.T) {
 	mockOrderService := mock_service.NewMockOrderService(ctrl)
 	handler.SetOrderService(mockOrderService)
 
+	type queryOpts struct {
+		search   string
+		dateFrom string
+		dateTo   string
+	}
+
 	tests := []struct {
 		name           string
 		shopID         int
-		searchQuery    string
+		opts           queryOpts
 		mockSetup      func()
 		wantStatus     int
 		wantSuccess    bool
@@ -261,7 +269,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, nil).
+					GetOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return([]response.OrderData{
 						{
 							ID:           1,
@@ -280,7 +288,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, nil).
+					GetOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return([]response.OrderData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -291,7 +299,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, nil).
+					GetOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -301,10 +309,11 @@ func TestGetOrdersHandler(t *testing.T) {
 		{
 			name:        "get orders with search query passes search to service",
 			shopID:      1,
-			searchQuery: "john",
+			opts:        queryOpts{search: "john"},
 			mockSetup: func() {
+				q := "john"
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, gomock.Any()).
+					GetOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q}).
 					Return([]response.OrderData{
 						{
 							ID:           1,
@@ -318,6 +327,52 @@ func TestGetOrdersHandler(t *testing.T) {
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
+		{
+			name:   "get orders with date_from passes filter to service",
+			shopID: 1,
+			opts:   queryOpts{dateFrom: "2024-01-01"},
+			mockSetup: func() {
+				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				mockOrderService.EXPECT().
+					GetOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &df}).
+					Return([]response.OrderData{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name: "get orders with date_to passes filter to service",
+			shopID: 1,
+			opts: queryOpts{dateTo: "2024-01-31"},
+			mockSetup: func() {
+				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC) // handler adds 24h for inclusive end of day
+				mockOrderService.EXPECT().
+					GetOrdersByShopID(1, model.OrderFilterOptions{DateTo: &dt}).
+					Return([]response.OrderData{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:   "get orders with date_from and date_to passes filters to service",
+			shopID: 1,
+			opts:   queryOpts{dateFrom: "2024-01-01", dateTo: "2024-01-31"},
+			mockSetup: func() {
+				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
+				mockOrderService.EXPECT().
+					GetOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &df, DateTo: &dt}).
+					Return([]response.OrderData{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -325,8 +380,18 @@ func TestGetOrdersHandler(t *testing.T) {
 			tt.mockSetup()
 
 			path := "/orders"
-			if tt.searchQuery != "" {
-				path += "?search=" + tt.searchQuery
+			var params []string
+			if tt.opts.search != "" {
+				params = append(params, "search="+tt.opts.search)
+			}
+			if tt.opts.dateFrom != "" {
+				params = append(params, "date_from="+tt.opts.dateFrom)
+			}
+			if tt.opts.dateTo != "" {
+				params = append(params, "date_to="+tt.opts.dateTo)
+			}
+			if len(params) > 0 {
+				path += "?" + strings.Join(params, "&")
 			}
 			req := newRequestWithShopID("GET", path, nil, tt.shopID)
 			rec := httptest.NewRecorder()
