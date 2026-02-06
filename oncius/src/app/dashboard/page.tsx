@@ -57,13 +57,24 @@ const StatCard = ({
   </Card>
 )
 
+const getThisMonthRange = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const dateFrom = `${year}-${String(month + 1).padStart(2, '0')}-01`
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const dateTo = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { dateFrom, dateTo }
+}
+
 const DashboardPage = () => {
   const { isAuthenticated } = useAuth()
+  const { dateFrom, dateTo } = getThisMonthRange()
 
   const { data: ordersRes, isLoading: ordersLoading } = useQuery(
-    ['orders'],
+    ['orders', 'dashboard', dateFrom, dateTo],
     async () => {
-      const res = await api.getOrders()
+      const res = await api.getOrders({ date_from: dateFrom, date_to: dateTo })
       if (!res.success) throw new Error(res.message)
       return res.data as Order[]
     }
@@ -151,8 +162,8 @@ const DashboardPage = () => {
                 flexWrap: 'wrap',
               }}
             >
-              <StatCard label="Total Orders" value={stats.totalOrders} icon="📦" />
-              <StatCard label="Revenue" value={formatPrice(stats.revenue)} icon="💰" />
+              <StatCard label="Total Orders (this month)" value={stats.totalOrders} icon="📦" />
+              <StatCard label="Revenue (this month)" value={formatPrice(stats.revenue)} icon="💰" />
               <StatCard label="Customers" value={stats.customers} icon="👥" />
               <StatCard label="Products" value={stats.products} icon="🛍️" />
             </Flex>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Box, Flex, Text, IconButton } from 'theme-ui'
+import { Box, Flex, Text, Button } from 'theme-ui'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -11,7 +11,8 @@ interface SideMenuProps {
 }
 
 const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -86,6 +87,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
         {/* Profile Account */}
         <Flex sx={{ alignItems: 'center', justifyContent: 'center' }}>
           <Box
+            onClick={() => setShowLogoutDialog(true)}
             sx={{
               width: '32px',
               height: '32px',
@@ -97,12 +99,62 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               fontSize: 1,
               color: 'white',
               fontWeight: 'bold',
+              cursor: 'pointer',
+              '&:hover': { opacity: 0.9 },
             }}
           >
             {user?.name?.charAt(0) || 'U'}
           </Box>
         </Flex>
       </Box>
+
+      {/* Logout Dialog */}
+      {showLogoutDialog && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            bg: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowLogoutDialog(false)}
+        >
+          <Box
+            sx={{
+              bg: 'white',
+              borderRadius: 'large',
+              p: 4,
+              maxWidth: 360,
+              boxShadow: 'large',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Text sx={{ fontSize: 3, fontWeight: 600, mb: 2, display: 'block' }}>
+              Log out?
+            </Text>
+            <Text sx={{ fontSize: 1, color: 'text.secondary', mb: 4 }}>
+              Are you sure you want to log out?
+            </Text>
+            <Flex sx={{ gap: 3, justifyContent: 'flex-end' }}>
+              <Button variant="secondary" onClick={() => setShowLogoutDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setShowLogoutDialog(false)
+                  logout()
+                }}
+              >
+                Log out
+              </Button>
+            </Flex>
+          </Box>
+        </Box>
+      )}
     </Box>
   )
 }

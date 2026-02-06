@@ -86,7 +86,7 @@ export default function OrdersPage() {
   const { data: ordersRes, isLoading, isError, error } = useQuery(
     ['orders', debouncedSearch],
     async () => {
-      const res = await api.getOrders(debouncedSearch || undefined)
+      const res = await api.getOrders(debouncedSearch ? { search: debouncedSearch } : undefined)
       if (!res.success) throw new Error(res.message || to('fetchFailed'))
       return res.data as Order[]
     },
