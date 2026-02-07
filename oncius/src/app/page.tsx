@@ -2,30 +2,9 @@
 
 import Link from 'next/link'
 import { Box, Heading, Text, Button, Flex, Card } from 'theme-ui'
+import { useTranslations, useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
-
-const features = [
-  {
-    title: 'Order Management',
-    description: 'Track and manage orders from creation to delivery. Status updates, notes, and full order history.',
-    icon: '📦',
-  },
-  {
-    title: 'Product Catalog',
-    description: 'Maintain your product inventory with prices, variants, and multi-currency support.',
-    icon: '🏷️',
-  },
-  {
-    title: 'Customer Database',
-    description: 'Keep customer info organized. Quick lookup for repeat orders and order history.',
-    icon: '👥',
-  },
-  {
-    title: 'Dashboard & Reports',
-    description: 'Monthly revenue, order counts, and insights at a glance. Filter by date range.',
-    icon: '📊',
-  },
-]
+import { useChangeLocale } from '@/hooks/useLocale'
 
 const BLOB_PATH =
   'M76.5 42.2c-12.3 8.5-28.2 12.8-38.5 24.2-10.3 11.4-15 29.8-12.8 46.2 2.2 16.4 12.6 30.8 25.5 42.2 12.9 11.4 28.3 19.8 42.2 25.2 13.9 5.4 26.3 7.8 38.5 4.2 12.2-3.6 24.2-12.6 35.5-22 11.3-9.4 21.9-19.4 30.5-30.4 8.6-11 15.2-23 18.5-35.5 3.3-12.5 3.3-25.5-1.5-37.5-4.8-12-14.4-23-26.4-31-12-8-26.4-13-40.4-14.5-14-1.5-27.6 1-39.6 6.5z'
@@ -34,13 +13,14 @@ const BlobShape = ({
   variant,
   sx = {},
 }: {
-  variant: 'primary' | 'accent' | 'success'
+  variant: 'primary' | 'accent' | 'success' | 'light'
   sx?: Record<string, unknown>
 }) => {
   const colors = {
     primary: 'rgba(37, 99, 235, 0.1)',
     accent: 'rgba(245, 158, 11, 0.08)',
     success: 'rgba(16, 185, 129, 0.08)',
+    light: 'rgba(255, 255, 255, 0.15)',
   }
   return (
     <Box
@@ -101,23 +81,23 @@ const CurveLines = () => (
   </Box>
 )
 
-const pricingTier = {
-  name: 'Standard',
-  price: '$4',
-  period: 'per user/month',
-  description: 'Everything you need to manage your orders',
-  features: ['Order management', 'Product catalog', 'Customer database', 'Dashboard & analytics'],
-  cta: 'Get Started',
-  href: '/register',
-}
+const FEATURES = [
+  { titleKey: 'landing.featureOrderManagement', descKey: 'landing.featureOrderManagementDesc', icon: '📦' },
+  { titleKey: 'landing.featureProductCatalog', descKey: 'landing.featureProductCatalogDesc', icon: '🏷️' },
+  { titleKey: 'landing.featureCustomerDatabase', descKey: 'landing.featureCustomerDatabaseDesc', icon: '👥' },
+  { titleKey: 'landing.featureDashboardReports', descKey: 'landing.featureDashboardReportsDesc', icon: '📊' },
+]
 
 export default function HomePage() {
+  const t = useTranslations()
+  const locale = useLocale()
+  const changeLocale = useChangeLocale()
   const { isAuthenticated, isLoadingUser } = useAuth()
 
   if (isLoadingUser) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Text>Loading...</Text>
+        <Text>{t('common.loading')}</Text>
       </Box>
     )
   }
@@ -189,23 +169,58 @@ export default function HomePage() {
           <Heading as="h1" sx={{ fontSize: [3, 4], fontWeight: 700, color: 'primary' }}>
             Recapo
           </Heading>
-          <Flex sx={{ gap: 3 }}>
+          <Flex sx={{ gap: 3, alignItems: 'center' }}>
+            <Flex sx={{ gap: 2, mr: 2 }}>
+              <Box
+                as="button"
+                onClick={() => changeLocale('en')}
+                sx={{
+                  bg: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 1,
+                  fontWeight: locale === 'en' ? 600 : 400,
+                  color: locale === 'en' ? 'primary' : 'text.secondary',
+                  textDecoration: 'none',
+                  '&:hover': { color: 'primary' },
+                }}
+              >
+                EN
+              </Box>
+              <Text sx={{ color: 'border' }}>|</Text>
+              <Box
+                as="button"
+                onClick={() => changeLocale('id')}
+                sx={{
+                  bg: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 1,
+                  fontWeight: locale === 'id' ? 600 : 400,
+                  color: locale === 'id' ? 'primary' : 'text.secondary',
+                  textDecoration: 'none',
+                  '&:hover': { color: 'primary' },
+                }}
+              >
+                ID
+              </Box>
+            </Flex>
             {isAuthenticated ? (
               <Link href="/dashboard">
                 <Button variant="primary" sx={{ py: 2 }}>
-                  Go to Dashboard
+                  {t('landing.goToDashboard')}
                 </Button>
               </Link>
             ) : (
               <>
                 <Link href="/login">
                   <Button variant="secondary" sx={{ py: 2 }}>
-                    Login
+                    {t('nav.login')}
                   </Button>
                 </Link>
                 <Link href="/register">
                   <Button variant="primary" sx={{ py: 2 }}>
-                    Get Started
+                    {t('landing.getStarted')}
                   </Button>
                 </Link>
               </>
@@ -235,41 +250,41 @@ export default function HomePage() {
             color: 'text',
           }}
         >
-          Order Management for{' '}
+          {t('landing.heroTitle')}{' '}
           <Box as="span" sx={{ color: 'primary' }}>
-            Jastipers
+            {t('landing.heroHighlight')}
           </Box>
         </Heading>
         <Text
           sx={{
+            display: 'block',
             fontSize: [2, 3],
             color: 'text.secondary',
-            maxWidth: 560,
+            maxWidth: 840,
             mx: 'auto',
-            mb: 5,
+            mb: 3,
             lineHeight: 1.6,
           }}
         >
-          Streamline your cross-border social media selling business. Track products, manage orders,
-          and serve customers efficiently—all in one place.
+          {t('landing.heroDescription')}
         </Text>
         <Flex sx={{ gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
           {isAuthenticated ? (
             <Link href="/dashboard">
               <Button variant="primary" sx={{ px: 5, py: 3, fontSize: 2 }}>
-                Go to Dashboard
+                {t('landing.goToDashboard')}
               </Button>
             </Link>
           ) : (
             <>
               <Link href="/register">
                 <Button variant="primary" sx={{ px: 5, py: 3, fontSize: 2 }}>
-                  Start for Free
+                  {t('landing.startForFree')}
                 </Button>
               </Link>
               <Link href="#pricing">
                 <Button variant="secondary" sx={{ px: 5, py: 3, fontSize: 2 }}>
-                  View Pricing
+                  {t('landing.viewPricing')}
                 </Button>
               </Link>
             </>
@@ -295,7 +310,7 @@ export default function HomePage() {
               color: 'text',
             }}
           >
-            Everything you need to run your shop
+            {t('landing.featuresTitle')}
           </Heading>
           <Text
             sx={{
@@ -308,7 +323,7 @@ export default function HomePage() {
               mb: 6,
             }}
           >
-            Built specifically for Indonesian cross-border sellers. No bloat—just the tools that matter.
+            {t('landing.featuresSubtitle')}
           </Text>
           <Flex
             sx={{
@@ -317,9 +332,9 @@ export default function HomePage() {
               gap: 4,
             }}
           >
-            {features.map((f) => (
+            {FEATURES.map((f) => (
               <Card
-                key={f.title}
+                key={f.titleKey}
                 sx={{
                   p: 4,
                   borderRadius: 'large',
@@ -332,10 +347,10 @@ export default function HomePage() {
               >
                 <Text sx={{ fontSize: 5, mb: 2 }}>{f.icon}</Text>
                 <Heading as="h4" sx={{ fontSize: 2, mb: 2, color: 'text' }}>
-                  {f.title}
+                  {t(f.titleKey)}
                 </Heading>
                 <Text sx={{ fontSize: 1, color: 'text.secondary', lineHeight: 1.6 }}>
-                  {f.description}
+                  {t(f.descKey)}
                 </Text>
               </Card>
             ))}
@@ -357,11 +372,11 @@ export default function HomePage() {
               fontSize: [4, 5],
               fontWeight: 700,
               textAlign: 'center',
-              mb: 2,
+              mb: 3,
               color: 'text',
             }}
           >
-            Simple, transparent pricing
+            {t('landing.pricingTitle')}
           </Heading>
           <Flex sx={{ justifyContent: 'center' }}>
             <Card
@@ -377,19 +392,24 @@ export default function HomePage() {
               }}
             >
               <Heading as="h4" sx={{ fontSize: 3, mb: 1, color: 'text' }}>
-                {pricingTier.name}
+                {t('landing.pricingName')}
               </Heading>
               <Flex sx={{ alignItems: 'baseline', mb: 2 }}>
-                <Text sx={{ fontSize: 5, fontWeight: 700, color: 'text' }}>{pricingTier.price}</Text>
-                <Text sx={{ fontSize: 1, color: 'text.secondary', ml: 1 }}>{pricingTier.period}</Text>
+                <Text sx={{ fontSize: 5, fontWeight: 700, color: 'text' }}>{t('landing.pricingPrice')}</Text>
+                <Text sx={{ fontSize: 1, color: 'text.secondary', ml: 1 }}>{t('landing.pricingPeriod')}</Text>
               </Flex>
               <Text sx={{ fontSize: 1, color: 'text.secondary', mb: 4 }}>
-                {pricingTier.description}
+                {t('landing.pricingDescription')}
               </Text>
               <Box as="ul" sx={{ listStyle: 'none', p: 0, m: 0, mb: 4, flex: 1 }}>
-                {pricingTier.features.map((f) => (
+                {[
+                  t('landing.pricingFeature1'),
+                  t('landing.pricingFeature2'),
+                  t('landing.pricingFeature3'),
+                  t('landing.pricingFeature4'),
+                ].map((feature) => (
                   <Flex
-                    key={f}
+                    key={feature}
                     as="li"
                     sx={{
                       alignItems: 'center',
@@ -402,14 +422,14 @@ export default function HomePage() {
                     }}
                   >
                     <Text sx={{ color: 'success' }}>✓</Text>
-                    {f}
+                    {feature}
                   </Flex>
                 ))}
               </Box>
               <Box sx={{ mt: 'auto' }}>
-                <Link href={pricingTier.href} style={{ display: 'block' }}>
+                <Link href="/register" style={{ display: 'block' }}>
                   <Button variant="primary" sx={{ width: '100%', py: 3 }}>
-                    {pricingTier.cta}
+                    {t('landing.pricingCta')}
                   </Button>
                 </Link>
               </Box>
@@ -419,13 +439,47 @@ export default function HomePage() {
       </Box>
 
       {/* CTA */}
-      <Box
-        sx={{
-          bg: 'primary',
-          py: 6,
-        }}
-      >
-        <Box sx={{ maxWidth: 1200, mx: 'auto', px: [3, 4], textAlign: 'center' }}>
+      <Box sx={{ maxWidth: 1000, mx: 'auto', px: [3, 4], py: 6 }}>
+        <Card
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            p: 6,
+            borderRadius: 'large',
+            bg: 'primary',
+            border: 'none',
+            boxShadow: 'medium',
+            textAlign: 'center',
+          }}
+        >
+          <BlobShape
+            variant="light"
+            sx={{
+              width: 180,
+              height: 180,
+              top: -40,
+              right: -30,
+            }}
+          />
+          <BlobShape
+            variant="light"
+            sx={{
+              width: 240,
+              height: 240,
+              top: 120,
+              right: 100,
+            }}
+          />
+          <BlobShape
+            variant="light"
+            sx={{
+              width: 520,
+              height: 480,
+              bottom: -240,
+              left: -120,
+            }}
+          />
+          <Box sx={{ position: 'relative', zIndex: 1 }}>
           <Heading
             as="h3"
             sx={{
@@ -435,34 +489,33 @@ export default function HomePage() {
               mb: 2,
             }}
           >
-            Ready to simplify your orders?
+            {t('landing.ctaTitle')}
           </Heading>
           <Text sx={{ fontSize: [1, 2], color: 'rgba(255,255,255,0.9)', mb: 4, maxWidth: 560, mx: 'auto', display: 'block' }}>
-            {isAuthenticated
-              ? "You're already signed in. Head to your dashboard to manage your orders."
-              : 'Join Jastipers who use Recapo to manage their cross-border business.'}
+            {isAuthenticated ? t('landing.ctaSignedIn') : t('landing.ctaJoin')}
           </Text>
           <Flex sx={{ justifyContent: 'center' }}>
             <Link href={isAuthenticated ? '/dashboard' : '/register'}>
               <Button
                 sx={{
-                bg: 'white',
-                color: 'primary',
-                px: 5,
-                py: 3,
-                fontSize: 2,
-                fontWeight: 600,
-                border: 'none',
-                borderRadius: 'medium',
-                cursor: 'pointer',
-                '&:hover': { bg: 'backgroundLight', color: 'primary' },
+                  bg: 'white',
+                  color: 'primary',
+                  px: 5,
+                  py: 3,
+                  fontSize: 2,
+                  fontWeight: 600,
+                  border: 'none',
+                  borderRadius: 'medium',
+                  cursor: 'pointer',
+                  '&:hover': { bg: 'backgroundLight', color: 'primary' },
                 }}
               >
-                {isAuthenticated ? 'Go to Dashboard' : 'Create Free Account'}
+                {isAuthenticated ? t('landing.goToDashboard') : t('landing.ctaButton')}
               </Button>
             </Link>
           </Flex>
-        </Box>
+          </Box>
+        </Card>
       </Box>
 
       {/* Footer */}
@@ -486,7 +539,7 @@ export default function HomePage() {
             gap: 3,
           }}
         >
-          <Text sx={{ fontSize: 1, color: 'text.secondary' }}>© Recapo. Order management for Jastipers.</Text>
+          <Text sx={{ fontSize: 1, color: 'text.secondary' }}>{t('landing.footer')}</Text>
         </Flex>
       </Box>
     </Box>

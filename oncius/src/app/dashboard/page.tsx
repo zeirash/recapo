@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { useQuery } from 'react-query'
 import Link from 'next/link'
 import { Box, Button, Card, Flex, Heading, Text } from 'theme-ui'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
@@ -68,6 +69,7 @@ const getThisMonthRange = () => {
 }
 
 const DashboardPage = () => {
+  const t = useTranslations()
   const { isAuthenticated } = useAuth()
   const { dateFrom, dateTo } = getThisMonthRange()
 
@@ -137,7 +139,7 @@ const DashboardPage = () => {
     return (
       <Layout>
         <Box sx={{ p: 4, textAlign: 'center' }}>
-          <Text>Please log in to access the dashboard.</Text>
+          <Text>{t('dashboard.loginRequired')}</Text>
         </Box>
       </Layout>
     )
@@ -147,11 +149,11 @@ const DashboardPage = () => {
     <Layout>
       <Box sx={{ maxWidth: 1200, mx: 'auto', p: [4, 5] }}>
         <Heading as="h1" sx={{ mb: 4, fontSize: 3 }}>
-          Dashboard
+          {t('nav.dashboard')}
         </Heading>
 
         {ordersLoading ? (
-          <Text sx={{ color: 'text.secondary' }}>Loading...</Text>
+          <Text sx={{ color: 'text.secondary' }}>{t('common.loading')}</Text>
         ) : (
           <>
             {/* Stat cards */}
@@ -172,17 +174,17 @@ const DashboardPage = () => {
             <Flex sx={{ gap: 2, mb: 5, flexWrap: 'wrap' }}>
               <Link href="/orders" passHref legacyBehavior>
                 <Button as="a" variant="secondary">
-                  New Order
+                  {t('dashboard.newOrder')}
                 </Button>
               </Link>
               <Link href="/customers" passHref legacyBehavior>
                 <Button as="a" variant="secondary">
-                  Add Customer
+                  {t('dashboard.addCustomer')}
                 </Button>
               </Link>
               <Link href="/products" passHref legacyBehavior>
                 <Button as="a" variant="secondary">
-                  Add Product
+                  {t('dashboard.addProduct')}
                 </Button>
               </Link>
             </Flex>
@@ -209,11 +211,11 @@ const DashboardPage = () => {
                 }}
               >
                 <Heading as="h2" sx={{ fontSize: 2, fontWeight: 600 }}>
-                  Recent Orders
+                  {t('dashboard.recentOrders')}
                 </Heading>
                 <Link href="/orders" passHref legacyBehavior>
                   <Button as="a" variant="secondary" sx={{ fontSize: 0, py: 1, px: 2 }}>
-                    View all
+                    {t('dashboard.viewAll')}
                   </Button>
                 </Link>
               </Flex>
@@ -233,7 +235,7 @@ const DashboardPage = () => {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Order
+                        {t('dashboard.order')}
                       </Box>
                       <Box
                         as="th"
@@ -247,7 +249,7 @@ const DashboardPage = () => {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Customer
+                        {t('common.customer')}
                       </Box>
                       <Box
                         as="th"
@@ -261,7 +263,7 @@ const DashboardPage = () => {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Total
+                        {t('common.total')}
                       </Box>
                       <Box
                         as="th"
@@ -275,7 +277,7 @@ const DashboardPage = () => {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Status
+                        {t('common.status')}
                       </Box>
                       <Box
                         as="th"
@@ -289,7 +291,7 @@ const DashboardPage = () => {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Date
+                        {t('dashboard.date')}
                       </Box>
                     </Box>
                   </Box>
@@ -334,7 +336,7 @@ const DashboardPage = () => {
                                 textTransform: 'capitalize',
                               }}
                             >
-                              {order.status}
+                              {t(`orderStatus.${order.status}`)}
                             </Box>
                           </Box>
                           <Box as="td" sx={{ py: 2, px: 3, fontSize: 1, color: 'text.secondary' }}>
@@ -347,9 +349,9 @@ const DashboardPage = () => {
                 </Box>
               ) : (
                 <Box sx={{ p: 5, textAlign: 'center', color: 'text.secondary' }}>
-                  <Text sx={{ fontSize: 2, display: 'block', mb: 2 }}>No orders yet</Text>
+                  <Text sx={{ fontSize: 2, display: 'block', mb: 2 }}>{t('dashboard.noOrdersYet')}</Text>
                   <Link href="/orders" passHref legacyBehavior>
-                    <Button as="a">Create your first order</Button>
+                    <Button as="a">{t('dashboard.createFirstOrder')}</Button>
                   </Link>
                 </Box>
               )}

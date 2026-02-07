@@ -36,6 +36,40 @@
     "subtitle": "Order Management System for Jastipers",
     "description": "Streamline your cross-border social media selling business with our comprehensive order management solution."
   },
+  "landing": {
+    "goToDashboard": "Go to Dashboard",
+    "getStarted": "Get Started",
+    "heroTitle": "Order Management for",
+    "heroHighlight": "Jastipers",
+    "heroDescription": "Streamline your cross-border social media selling business. Track products, manage orders, and serve customers efficiently—all in one place.",
+    "startForFree": "Start for Free",
+    "viewPricing": "View Pricing",
+    "featuresTitle": "Everything you need to run your shop",
+    "featuresSubtitle": "Built specifically for Indonesian cross-border sellers. No bloat—just the tools that matter.",
+    "featureOrderManagement": "Order Management",
+    "featureOrderManagementDesc": "Track and manage orders from creation to delivery. Status updates, notes, and full order history.",
+    "featureProductCatalog": "Product Catalog",
+    "featureProductCatalogDesc": "Maintain your product inventory with prices, variants, and multi-currency support.",
+    "featureCustomerDatabase": "Customer Database",
+    "featureCustomerDatabaseDesc": "Keep customer info organized. Quick lookup for repeat orders and order history.",
+    "featureDashboardReports": "Dashboard & Reports",
+    "featureDashboardReportsDesc": "Monthly revenue, order counts, and insights at a glance. Filter by date range.",
+    "pricingTitle": "Simple, transparent pricing",
+    "pricingName": "Standard",
+    "pricingPrice": "$4",
+    "pricingPeriod": "per user/month",
+    "pricingDescription": "Everything you need to manage your orders",
+    "pricingFeature1": "Order management",
+    "pricingFeature2": "Product catalog",
+    "pricingFeature3": "Customer database",
+    "pricingFeature4": "Dashboard & analytics",
+    "pricingCta": "Get Started",
+    "ctaTitle": "Ready to simplify your orders?",
+    "ctaSignedIn": "You're already signed in. Head to your dashboard to manage your orders.",
+    "ctaJoin": "Join Jastipers who use Recapo to manage their cross-border business.",
+    "ctaButton": "Create Free Account",
+    "footer": "© Recapo. Order management for Jastipers."
+  },
   "auth": {
     "login": "Login",
     "loginFailed": "Login failed",
@@ -135,7 +169,20 @@
     "cancelled": "Cancelled"
   },
   "dashboard": {
-    "loginRequired": "Please log in to access the dashboard."
+    "loginRequired": "Please log in to access the dashboard.",
+    "totalOrdersThisMonth": "Total Orders (this month)",
+    "revenueThisMonth": "Revenue (this month)",
+    "customers": "Customers",
+    "products": "Products",
+    "newOrder": "New Order",
+    "addCustomer": "Add Customer",
+    "addProduct": "Add Product",
+    "recentOrders": "Recent Orders",
+    "viewAll": "View all",
+    "order": "Order",
+    "date": "Date",
+    "noOrdersYet": "No orders yet",
+    "createFirstOrder": "Create your first order"
   },
   "errors": {
     "loadingError": "Error loading {resource}"

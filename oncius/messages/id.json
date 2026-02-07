@@ -36,6 +36,40 @@
     "subtitle": "Sistem Manajemen Pesanan untuk Jastiper",
     "description": "Sederhanakan bisnis jual beli media sosial lintas negara Anda dengan solusi manajemen pesanan komprehensif kami."
   },
+  "landing": {
+    "goToDashboard": "Ke Dasbor",
+    "getStarted": "Mulai",
+    "heroTitle": "Manajemen Pesanan untuk",
+    "heroHighlight": "Jastiper",
+    "heroDescription": "Sederhanakan bisnis jual beli media sosial lintas negara Anda. Lacak produk, kelola pesanan, dan layani pelanggan dengan efisien—semua dalam satu tempat.",
+    "startForFree": "Mulai Gratis",
+    "viewPricing": "Lihat Harga",
+    "featuresTitle": "Semua yang Anda butuhkan untuk menjalankan toko",
+    "featuresSubtitle": "Dirancang khusus untuk penjual lintas negara Indonesia. Tanpa ribet—hanya alat yang penting.",
+    "featureOrderManagement": "Manajemen Pesanan",
+    "featureOrderManagementDesc": "Lacak dan kelola pesanan dari pembuatan hingga pengiriman. Pembaruan status, catatan, dan riwayat pesanan lengkap.",
+    "featureProductCatalog": "Katalog Produk",
+    "featureProductCatalogDesc": "Kelola inventaris produk dengan harga, varian, dan dukungan multi-mata uang.",
+    "featureCustomerDatabase": "Basis Data Pelanggan",
+    "featureCustomerDatabaseDesc": "Jaga informasi pelanggan tetap terorganisir. Pencarian cepat untuk pesanan berulang dan riwayat pesanan.",
+    "featureDashboardReports": "Dasbor & Laporan",
+    "featureDashboardReportsDesc": "Pendapatan bulanan, jumlah pesanan, dan wawasan sekilas. Filter berdasarkan rentang tanggal.",
+    "pricingTitle": "Harga sederhana dan transparan",
+    "pricingName": "Standard",
+    "pricingPrice": "$4",
+    "pricingPeriod": "per pengguna/bulan",
+    "pricingDescription": "Semua yang Anda butuhkan untuk mengelola pesanan",
+    "pricingFeature1": "Manajemen pesanan",
+    "pricingFeature2": "Katalog produk",
+    "pricingFeature3": "Basis data pelanggan",
+    "pricingFeature4": "Dasbor & analitik",
+    "pricingCta": "Mulai",
+    "ctaTitle": "Siap menyederhanakan pesanan Anda?",
+    "ctaSignedIn": "Anda sudah masuk. Buka dasbor untuk mengelola pesanan Anda.",
+    "ctaJoin": "Bergabung dengan Jastiper yang menggunakan Recapo untuk mengelola bisnis lintas negara mereka.",
+    "ctaButton": "Buat Akun Gratis",
+    "footer": "© Recapo. Manajemen pesanan untuk Jastiper."
+  },
   "auth": {
     "login": "Masuk",
     "loginFailed": "Gagal masuk",
@@ -135,7 +169,20 @@
     "cancelled": "Dibatalkan"
   },
   "dashboard": {
-    "loginRequired": "Silakan masuk untuk mengakses dasbor."
+    "loginRequired": "Silakan masuk untuk mengakses dasbor.",
+    "totalOrdersThisMonth": "Total Pesanan (bulan ini)",
+    "revenueThisMonth": "Pendapatan (bulan ini)",
+    "customers": "Pelanggan",
+    "products": "Produk",
+    "newOrder": "Pesanan Baru",
+    "addCustomer": "Tambah Pelanggan",
+    "addProduct": "Tambah Produk",
+    "recentOrders": "Pesanan Terbaru",
+    "viewAll": "Lihat semua",
+    "order": "Pesanan",
+    "date": "Tanggal",
+    "noOrdersYet": "Belum ada pesanan",
+    "createFirstOrder": "Buat pesanan pertama Anda"
   },
   "errors": {
     "loadingError": "Gagal memuat {resource}"
