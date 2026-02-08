@@ -7,20 +7,23 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
 
 type (
 	CreateProductRequest struct {
-		Name        string  `json:"name"`
-		Price       int     `json:"price"`
-		Description *string `json:"description"`
+		Name          string  `json:"name"`
+		Price         int     `json:"price"`
+		Description   *string `json:"description"`
+		OriginalPrice *int    `json:"original_price"`
 	}
 
 	UpdateProductRequest struct {
-		Name        *string `json:"name"`
-		Price       *int    `json:"price"`
-		Description *string `json:"description"`
+		Name          *string `json:"name"`
+		Price         *int    `json:"price"`
+		Description   *string `json:"description"`
+		OriginalPrice *int    `json:"original_price"`
 	}
 )
 
@@ -53,8 +56,9 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := productService.CreateProduct(shopID, inp.Name, inp.Description, inp.Price)
+	res, err := productService.CreateProduct(shopID, inp.Name, inp.Description, inp.Price, inp.OriginalPrice)
 	if err != nil {
+		logger.WithError(err).Error("create_product_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_product")
 		return
 	}
@@ -92,6 +96,7 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := productService.GetProductByID(productID, shopID)
 	if err != nil {
+		logger.WithError(err).Error("get_product_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_product")
 		return
 	}
@@ -128,6 +133,7 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := productService.GetProductsByShopID(shopID, searchQuery)
 	if err != nil {
+		logger.WithError(err).Error("get_products_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_products")
 		return
 	}
@@ -135,6 +141,21 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// UpdateProductHandler godoc
+//
+//	@Summary		Update product
+//	@Description	Update a product by ID. Only provided fields are updated (partial update).
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			product
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			product_id	path		int						true	"Product ID"
+//	@Param			body		body		UpdateProductRequest	true	"Fields to update (name, description, price)"
+//	@Success		200			{object}	response.ProductData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid product_id or JSON)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/products/{product_id} [patch]
 func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if valid, err := validateProductID(params); !valid {
@@ -152,12 +173,14 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := productService.UpdateProduct(service.UpdateProductInput{
-		ID:          productID,
-		Name:        inp.Name,
-		Description: inp.Description,
-		Price:       inp.Price,
+		ID:            productID,
+		Name:          inp.Name,
+		Description:   inp.Description,
+		Price:         inp.Price,
+		OriginalPrice: inp.OriginalPrice,
 	})
 	if err != nil {
+		logger.WithError(err).Error("update_product_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_product")
 		return
 	}
@@ -191,6 +214,7 @@ func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := productService.DeleteProductByID(productID)
 	if err != nil {
+		logger.WithError(err).Error("delete_product_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_product")
 		return
 	}

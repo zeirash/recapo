@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	"github.com/zeirash/recapo/arion/common/i18n"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -116,24 +115,11 @@ func WriteErrorJson(w http.ResponseWriter, r *http.Request, status int, err erro
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
-	var message string
-	if code == "validation" && err != nil {
-		message = err.Error()
-	} else {
-		message = i18n.Message(r, code, "")
-		if message == "" && err != nil {
-			message = err.Error()
-		}
-		if message == "" {
-			message = code
-		}
-	}
-
 	res := ErrorApiResponse{
 		Success: false,
 		Data:    struct{}{},
 		Code:    code,
-		Message: message,
+		Message: err.Error(),
 	}
 
 	jsonResp, errMarshal := json.Marshal(res)

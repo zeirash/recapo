@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"net/mail"
+
+	"github.com/zeirash/recapo/arion/common/logger"
 )
 
 type (
@@ -40,6 +42,7 @@ type (
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	inp := LoginRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
+		logger.WithError(err).Error("login_error")
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
@@ -90,6 +93,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := userService.UserRegister(inp.Name, inp.Email, inp.Password)
 	if err != nil {
+		logger.WithError(err).Error("user_register_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "user_register")
 		return
 	}

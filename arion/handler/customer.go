@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -55,6 +56,7 @@ func CreateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := customerService.CreateCustomer(inp.Name, inp.Phone, inp.Address, shopID)
 	if err != nil {
+		logger.WithError(err).Error("create_customer_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_customer")
 		return
 	}
@@ -92,6 +94,7 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := customerService.GetCustomerByID(customerID, shopID)
 	if err != nil {
+		logger.WithError(err).Error("get_customer_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_customer")
 		return
 	}
@@ -128,6 +131,7 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := customerService.GetCustomersByShopID(int(shopID), searchQuery)
 	if err != nil {
+		logger.WithError(err).Error("get_customers_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_customers")
 		return
 	}
@@ -173,6 +177,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		Address: inp.Address,
 	})
 	if err != nil {
+		logger.WithError(err).Error("update_customer_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_customer")
 		return
 	}
@@ -206,6 +211,7 @@ func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := customerService.DeleteCustomerByID(customerID)
 	if err != nil {
+		logger.WithError(err).Error("delete_customer_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_customer")
 		return
 	}

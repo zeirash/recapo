@@ -64,13 +64,14 @@ type (
 
 	/******************* Product *********************/
 	Product struct {
-		ID          int          `db:"id"`
-		ShopID      int          `db:"shop_id"`
-		Name        string       `db:"name"`
-		Description string       `db:"description"`
-		Price       int          `db:"price"`
-		CreatedAt   time.Time    `db:"created_at"`
-		UpdatedAt   sql.NullTime `db:"updated_at"`
+		ID            int          `db:"id"`
+		ShopID        int          `db:"shop_id"`
+		Name          string       `db:"name"`
+		Description   string       `db:"description"`
+		Price         int          `db:"price"`
+		OriginalPrice int          `db:"original_price"`
+		CreatedAt     time.Time    `db:"created_at"`
+		UpdatedAt     sql.NullTime `db:"updated_at"`
 	}
 
 	/******************** Order **********************/

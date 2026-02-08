@@ -36,18 +36,18 @@ func (m *MockProductService) EXPECT() *MockProductServiceMockRecorder {
 }
 
 // CreateProduct mocks base method.
-func (m *MockProductService) CreateProduct(shopID int, name string, description *string, price int) (response.ProductData, error) {
+func (m *MockProductService) CreateProduct(shopID int, name string, description *string, price int, originalPrice *int) (response.ProductData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateProduct", shopID, name, description, price)
+	ret := m.ctrl.Call(m, "CreateProduct", shopID, name, description, price, originalPrice)
 	ret0, _ := ret[0].(response.ProductData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateProduct indicates an expected call of CreateProduct.
-func (mr *MockProductServiceMockRecorder) CreateProduct(shopID, name, description, price interface{}) *gomock.Call {
+func (mr *MockProductServiceMockRecorder) CreateProduct(shopID, name, description, price, originalPrice interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductService)(nil).CreateProduct), shopID, name, description, price)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductService)(nil).CreateProduct), shopID, name, description, price, originalPrice)
 }
 
 // DeleteProductByID mocks base method.

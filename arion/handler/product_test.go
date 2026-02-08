@@ -58,18 +58,21 @@ func TestCreateProductHandler(t *testing.T) {
 				"name":        "Test Product",
 				"price":       1000,
 				"description": "Test description",
+				"original_price": 800,
 			},
 			shopID: 1,
 			mockSetup: func() {
 				desc := "Test description"
+				orgPrice := 800
 				mockProductService.EXPECT().
-					CreateProduct(1, "Test Product", &desc, 1000).
+					CreateProduct(1, "Test Product", &desc, 1000, &orgPrice).
 					Return(response.ProductData{
-						ID:          1,
-						Name:        "Test Product",
-						Description: "Test description",
-						Price:       1000,
-						CreatedAt:   time.Now(),
+						ID:            1,
+						Name:          "Test Product",
+						Description:   "Test description",
+						Price:         1000,
+						OriginalPrice: 800,
+						CreatedAt:     time.Now(),
 					}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -84,7 +87,7 @@ func TestCreateProductHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					CreateProduct(1, "Test", nil, 100).
+					CreateProduct(1, "Test", nil, 100, nil).
 					Return(response.ProductData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -378,23 +381,26 @@ func TestUpdateProductHandler(t *testing.T) {
 			name:      "successfully update product",
 			productID: "1",
 			body: map[string]interface{}{
-				"name":  "Updated Product",
-				"price": 2000,
+				"name":           "Updated Product",
+				"price":          2000,
+				"original_price": 2000,
 			},
 			mockSetup: func() {
 				name := "Updated Product"
 				price := 2000
 				mockProductService.EXPECT().
 					UpdateProduct(service.UpdateProductInput{
-						ID:    1,
-						Name:  &name,
-						Price: &price,
+						ID:            1,
+						Name:          &name,
+						Price:         &price,
+						OriginalPrice: &price,
 					}).
 					Return(response.ProductData{
-						ID:          1,
-						Name:        "Updated Product",
-						Price:       2000,
-						CreatedAt:   fixedTime,
+						ID:            1,
+						Name:          "Updated Product",
+						Price:         2000,
+						OriginalPrice: 2000,
+						CreatedAt:     fixedTime,
 					}, nil)
 			},
 			wantStatus:  http.StatusOK,

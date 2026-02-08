@@ -18,7 +18,7 @@ type (
 	ProductStore interface {
 		GetProductByID(productID int, shopID ...int) (*model.Product, error)
 		GetProductsByShopID(shopID int, searchQuery *string) ([]model.Product, error)
-		CreateProduct(name string, description *string, price int, shopID int) (*model.Product, error)
+		CreateProduct(name string, description *string, price int, shopID int, originalPrice *int) (*model.Product, error)
 		UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error)
 		DeleteProductByID(productID int) error
 	}
@@ -28,9 +28,10 @@ type (
 	}
 
 	UpdateProductInput struct {
-		Name        *string
-		Description *string
-		Price       *int
+		Name          *string
+		Description   *string
+		Price         *int
+		OriginalPrice *int
 	}
 )
 
@@ -47,7 +48,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	criteria := []interface{}{productID}
 
 	q := `
-		SELECT id, name, description, price, created_at, updated_at
+		SELECT id, shop_id, name, description, price, original_price, created_at, updated_at
 		FROM products
 		WHERE id = $1
 	`
@@ -58,7 +59,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	}
 
 	var product model.Product
-	err := p.db.QueryRow(q, criteria...).Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRow(q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -71,7 +72,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 
 func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.Product, error) {
 	q := `
-		SELECT id, name, description, price, created_at, updated_at
+		SELECT id, shop_id, name, description, price, original_price, created_at, updated_at
 		FROM products
 		WHERE shop_id = $1
 	`
@@ -94,7 +95,7 @@ func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.
 	products := []model.Product{}
 	for rows.Next() {
 		var product model.Product
-		err := rows.Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CreatedAt, &product.UpdatedAt)
+		err := rows.Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.CreatedAt, &product.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -104,18 +105,23 @@ func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.
 	return products, nil
 }
 
-func (p *product) CreateProduct(name string, description *string, price int, shopID int) (*model.Product, error) {
+func (p *product) CreateProduct(name string, description *string, price int, shopID int, originalPrice *int) (*model.Product, error) {
 	now := time.Now()
+	origPrice := price
+	if originalPrice != nil {
+		origPrice = *originalPrice
+	}
+
 	var id int
+	var desc string
 
 	q := `
-		INSERT INTO products (name, description, price, shop_id, created_at)
-		VALUES ($1, COALESCE($2, ''), $3, $4, $5)
+		INSERT INTO products (name, description, price, original_price, shop_id, created_at)
+		VALUES ($1, COALESCE($2, ''), $3, $4, $5, $6)
 		RETURNING id, description
 	`
 
-	var desc string
-	err := p.db.QueryRow(q, name, description, price, shopID, now).Scan(&id, &desc)
+	err := p.db.QueryRow(q, name, description, price, origPrice, shopID, now).Scan(&id, &desc)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName
@@ -124,12 +130,13 @@ func (p *product) CreateProduct(name string, description *string, price int, sho
 	}
 
 	return &model.Product{
-		ID:          id,
-		Name:        name,
-		Description: desc,
-		Price:       price,
-		ShopID:      shopID,
-		CreatedAt:   now,
+		ID:            id,
+		Name:          name,
+		Description:   desc,
+		Price:         price,
+		OriginalPrice: origPrice,
+		ShopID:        shopID,
+		CreatedAt:     now,
 	}, nil
 }
 
@@ -150,6 +157,10 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 		newSet := fmt.Sprintf("price = %d", *input.Price)
 		set = append(set, newSet)
 	}
+	if input.OriginalPrice != nil {
+		newSet := fmt.Sprintf("original_price = %d", *input.OriginalPrice)
+		set = append(set, newSet)
+	}
 
 	set = append(set, "updated_at = now()")
 
@@ -157,12 +168,12 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 		UPDATE products
 		SET %s
 		WHERE id = $1
-		RETURNING id, name, description, price, created_at, updated_at
+		RETURNING id, shop_id, name, description, price, original_price, created_at, updated_at
 	`
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := p.db.QueryRow(q, productID).Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRow(q, productID).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName

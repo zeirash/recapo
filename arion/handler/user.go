@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -22,6 +23,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := userService.GetUserByID(int(userID))
 	if err != nil {
+		logger.WithError(err).Error("get_user_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_user")
 		return
 	}
@@ -49,6 +51,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := userService.GetUsers()
 	if err != nil {
+		logger.WithError(err).Error("get_users_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_users")
 		return
 	}
@@ -87,6 +90,7 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		Password: inp.Password,
 	})
 	if err != nil {
+		logger.WithError(err).Error("update_user_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_user")
 		return
 	}

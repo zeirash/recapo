@@ -30,12 +30,13 @@ type (
 	}
 
 	ProductData struct {
-		ID          int         `json:"id"`
-		Name        string      `json:"name"`
-		Description string      `json:"description"`
-		Price       int         `json:"price"`
-		CreatedAt   time.Time   `json:"created_at"`
-		UpdatedAt   *time.Time  `json:"updated_at"`
+		ID            int         `json:"id"`
+		Name          string      `json:"name"`
+		Description   string      `json:"description"`
+		Price         int         `json:"price"`
+		OriginalPrice int         `json:"original_price"`
+		CreatedAt     time.Time   `json:"created_at"`
+		UpdatedAt     *time.Time  `json:"updated_at"`
 	}
 
 	OrderData struct {

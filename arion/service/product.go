@@ -10,7 +10,7 @@ import (
 
 type (
 	ProductService interface {
-		CreateProduct(shopID int, name string, description *string, price int) (response.ProductData, error)
+		CreateProduct(shopID int, name string, description *string, price int, originalPrice *int) (response.ProductData, error)
 		GetProductByID(productID int, shopID ...int) (*response.ProductData, error)
 		GetProductsByShopID(shopID int, searchQuery *string) ([]response.ProductData, error)
 		UpdateProduct(input UpdateProductInput) (response.ProductData, error)
@@ -20,10 +20,11 @@ type (
 	pservice struct{}
 
 	UpdateProductInput struct {
-		ID          int
-		Name        *string
-		Description *string
-		Price       *int
+		ID            int
+		Name          *string
+		Description   *string
+		Price         *int
+		OriginalPrice *int
 	}
 )
 
@@ -37,18 +38,19 @@ func NewProductService() ProductService {
 	return &pservice{}
 }
 
-func (p *pservice) CreateProduct(shopID int, name string, description *string, price int) (response.ProductData, error) {
-	product, err := productStore.CreateProduct(name, description, price, shopID)
+func (p *pservice) CreateProduct(shopID int, name string, description *string, price int, originalPrice *int) (response.ProductData, error) {
+	product, err := productStore.CreateProduct(name, description, price, shopID, originalPrice)
 	if err != nil {
 		return response.ProductData{}, err
 	}
 
 	res := response.ProductData{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       product.Price,
-		CreatedAt:   product.CreatedAt,
+		ID:            product.ID,
+		Name:          product.Name,
+		Description:   product.Description,
+		Price:         product.Price,
+		OriginalPrice: product.OriginalPrice,
+		CreatedAt:     product.CreatedAt,
 	}
 
 	return res, nil
@@ -65,11 +67,12 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 	}
 
 	res := response.ProductData{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		CreatedAt:   product.CreatedAt,
-		Price:       product.Price,
+		ID:            product.ID,
+		Name:          product.Name,
+		Description:   product.Description,
+		Price:         product.Price,
+		OriginalPrice: product.OriginalPrice,
+		CreatedAt:     product.CreatedAt,
 	}
 
 	if product.UpdatedAt.Valid {
@@ -88,11 +91,12 @@ func (p *pservice) GetProductsByShopID(shopID int, searchQuery *string) ([]respo
 	var productsData []response.ProductData
 	for _, product := range products {
 		res := response.ProductData{
-			ID:          product.ID,
-			Name:        product.Name,
-			Description: product.Description,
-			CreatedAt:   product.CreatedAt,
-			Price:       product.Price,
+			ID:            product.ID,
+			Name:          product.Name,
+			Description:   product.Description,
+			Price:         product.Price,
+			OriginalPrice: product.OriginalPrice,
+			CreatedAt:     product.CreatedAt,
 		}
 
 		if product.UpdatedAt.Valid {
@@ -108,9 +112,10 @@ func (p *pservice) GetProductsByShopID(shopID int, searchQuery *string) ([]respo
 
 func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData, error) {
 	updateData := store.UpdateProductInput{
-		Name:        input.Name,
-		Description: input.Description,
-		Price:       input.Price,
+		Name:          input.Name,
+		Description:   input.Description,
+		Price:         input.Price,
+		OriginalPrice: input.OriginalPrice,
 	}
 	productData, err := productStore.UpdateProduct(input.ID, updateData)
 	if err != nil {
@@ -122,11 +127,12 @@ func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData
 	}
 
 	res := response.ProductData{
-		ID:          productData.ID,
-		Name:        productData.Name,
-		Description: productData.Description,
-		Price:       productData.Price,
-		CreatedAt:   productData.CreatedAt,
+		ID:            productData.ID,
+		Name:          productData.Name,
+		Description:   productData.Description,
+		Price:         productData.Price,
+		OriginalPrice: productData.OriginalPrice,
+		CreatedAt:     productData.CreatedAt,
 	}
 
 	if productData.UpdatedAt.Valid {

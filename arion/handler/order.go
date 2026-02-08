@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -67,6 +68,7 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.CreateOrder(inp.CustomerID, shopID, inp.Notes)
 	if err != nil {
+		logger.WithError(err).Error("create_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order")
 		return
 	}
@@ -104,6 +106,7 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrderByID(orderID, shopID)
 	if err != nil {
+		logger.WithError(err).Error("get_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order")
 		return
 	}
@@ -153,6 +156,7 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrdersByShopID(shopID, opts)
 	if err != nil {
+		logger.WithError(err).Error("get_orders_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_orders")
 		return
 	}
@@ -198,6 +202,7 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 		Notes:      inp.Notes,
 	})
 	if err != nil {
+		logger.WithError(err).Error("update_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_order")
 		return
 	}
@@ -231,6 +236,7 @@ func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := orderService.DeleteOrderByID(orderID)
 	if err != nil {
+		logger.WithError(err).Error("delete_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order")
 		return
 	}
@@ -262,6 +268,7 @@ func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.CreateOrderItem(orderID, inp.ProductID, inp.Qty)
 	if err != nil {
+		logger.WithError(err).Error("create_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order_item")
 		return
 	}
@@ -317,6 +324,7 @@ func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 		Qty:         inp.Qty,
 	})
 	if err != nil {
+		logger.WithError(err).Error("update_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_order_item")
 		return
 	}
@@ -360,6 +368,7 @@ func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := orderService.DeleteOrderItemByID(orderItemID, orderID)
 	if err != nil {
+		logger.WithError(err).Error("delete_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order_item")
 		return
 	}
@@ -403,6 +412,7 @@ func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrderItemByID(orderItemID, orderID)
 	if err != nil {
+		logger.WithError(err).Error("get_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_item")
 		return
 	}
@@ -437,6 +447,7 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrderItemsByOrderID(orderID)
 	if err != nil {
+		logger.WithError(err).Error("get_order_items_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_items")
 		return
 	}

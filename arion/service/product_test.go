@@ -20,10 +20,11 @@ func Test_pservice_CreateProduct(t *testing.T) {
 	strPtr := func(s string) *string { return &s }
 
 	type input struct {
-		shopID      int
-		name        string
-		description *string
-		price       int
+		shopID        int
+		name          string
+		description   *string
+		price         int
+		originalPrice *int
 	}
 
 	tests := []struct {
@@ -36,73 +37,80 @@ func Test_pservice_CreateProduct(t *testing.T) {
 		{
 			name: "successfully create product",
 			input: input{
-				shopID:      10,
-				name:        "Product A",
-				description: strPtr("A great product"),
-				price:       1000,
+				shopID:        10,
+				name:          "Product A",
+				description:   strPtr("A great product"),
+				price:         1000,
+				originalPrice: nil,
 			},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product A", strPtr("A great product"), 1000, 10).
+					CreateProduct("Product A", strPtr("A great product"), 1000, 10, nil).
 					Return(&model.Product{
-						ID:          1,
-						Name:        "Product A",
-						Description: "A great product",
-						Price:       1000,
-						CreatedAt:   fixedTime,
+						ID:            1,
+						Name:          "Product A",
+						Description:   "A great product",
+						Price:         1000,
+						OriginalPrice: 1000,
+						CreatedAt:     fixedTime,
 					}, nil)
 				return mock
 			},
 			wantResult: response.ProductData{
-				ID:          1,
-				Name:        "Product A",
-				Description: "A great product",
-				Price:       1000,
-				CreatedAt:   fixedTime,
+				ID:            1,
+				Name:          "Product A",
+				Description:   "A great product",
+				Price:         1000,
+				OriginalPrice: 1000,
+				CreatedAt:     fixedTime,
 			},
 			wantErr: false,
 		},
 		{
 			name: "create product without description",
 			input: input{
-				shopID:      10,
-				name:        "Product B",
-				description: nil,
-				price:       500,
+				shopID:        10,
+				name:          "Product B",
+				description:   nil,
+				price:         500,
+				originalPrice: nil,
 			},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product B", nil, 500, 10).
+					CreateProduct("Product B", nil, 500, 10, nil).
 					Return(&model.Product{
-						ID:        2,
-						Name:      "Product B",
-						Price:     500,
-						CreatedAt: fixedTime,
+						ID:            2,
+						Name:          "Product B",
+						Price:         500,
+						OriginalPrice: 500,
+						CreatedAt:     fixedTime,
 					}, nil)
 				return mock
 			},
 			wantResult: response.ProductData{
-				ID:        2,
-				Name:      "Product B",
-				Price:     500,
-				CreatedAt: fixedTime,
+				ID:            2,
+				Name:          "Product B",
+				Price:         500,
+				OriginalPrice: 500,
+				CreatedAt:     fixedTime,
 			},
 			wantErr: false,
 		},
 		{
 			name: "create product returns error on database failure",
 			input: input{
-				shopID:      10,
-				name:        "Product A",
-				description: nil,
-				price:       1000,
+				shopID:        10,
+				name:          "Product A",
+				description:   nil,
+				price:         1000,
+				originalPrice: nil,
 			},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product A", nil, 1000, 10).
+					CreateProduct("Product A", nil, 1000, 10, nil).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -121,7 +129,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			got, gotErr := p.CreateProduct(tt.input.shopID, tt.input.name, tt.input.description, tt.input.price)
+			got, gotErr := p.CreateProduct(tt.input.shopID, tt.input.name, tt.input.description, tt.input.price, tt.input.originalPrice)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -166,22 +174,24 @@ func Test_pservice_GetProductByID(t *testing.T) {
 				mock.EXPECT().
 					GetProductByID(1).
 					Return(&model.Product{
-						ID:          1,
-						Name:        "Product A",
-						Description: "A great product",
-						Price:       1000,
-						CreatedAt:   fixedTime,
-						UpdatedAt:   sql.NullTime{Time: fixedTime, Valid: true},
+						ID:            1,
+						Name:          "Product A",
+						Description:   "A great product",
+						Price:         1000,
+						OriginalPrice: 1000,
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{Time: fixedTime, Valid: true},
 					}, nil)
 				return mock
 			},
 			wantResult: &response.ProductData{
-				ID:          1,
-				Name:        "Product A",
-				Description: "A great product",
-				Price:       1000,
-				CreatedAt:   fixedTime,
-				UpdatedAt:   &fixedTime,
+				ID:            1,
+				Name:          "Product A",
+				Description:   "A great product",
+				Price:         1000,
+				OriginalPrice: 1000,
+				CreatedAt:     fixedTime,
+				UpdatedAt:     &fixedTime,
 			},
 			wantErr: false,
 		},
@@ -196,20 +206,22 @@ func Test_pservice_GetProductByID(t *testing.T) {
 				mock.EXPECT().
 					GetProductByID(1, 10).
 					Return(&model.Product{
-						ID:          1,
-						Name:        "Product A",
-						Description: "A great product",
-						Price:       1000,
-						CreatedAt:   fixedTime,
+						ID:            1,
+						Name:          "Product A",
+						Description:   "A great product",
+						Price:         1000,
+						OriginalPrice: 1000,
+						CreatedAt:     fixedTime,
 					}, nil)
 				return mock
 			},
 			wantResult: &response.ProductData{
-				ID:          1,
-				Name:        "Product A",
-				Description: "A great product",
-				Price:       1000,
-				CreatedAt:   fixedTime,
+				ID:            1,
+				Name:          "Product A",
+				Description:   "A great product",
+				Price:         1000,
+				OriginalPrice: 1000,
+				CreatedAt:     fixedTime,
 			},
 			wantErr: false,
 		},
@@ -298,14 +310,14 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 				mock.EXPECT().
 					GetProductsByShopID(10, nil).
 					Return([]model.Product{
-						{ID: 1, Name: "Product A", Description: "Desc A", Price: 1000, CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
-						{ID: 2, Name: "Product B", Price: 500, CreatedAt: fixedTime},
+						{ID: 1, Name: "Product A", Description: "Desc A", Price: 1000, OriginalPrice: 800, CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
+						{ID: 2, Name: "Product B", Price: 500, OriginalPrice: 500, CreatedAt: fixedTime},
 					}, nil)
 				return mock
 			},
 			wantResult: []response.ProductData{
-				{ID: 1, Name: "Product A", Description: "Desc A", Price: 1000, CreatedAt: fixedTime, UpdatedAt: &fixedTime},
-				{ID: 2, Name: "Product B", Price: 500, CreatedAt: fixedTime},
+				{ID: 1, Name: "Product A", Description: "Desc A", Price: 1000, OriginalPrice: 800, CreatedAt: fixedTime, UpdatedAt: &fixedTime},
+				{ID: 2, Name: "Product B", Price: 500, OriginalPrice: 500, CreatedAt: fixedTime},
 			},
 			wantErr: false,
 		},
@@ -346,12 +358,12 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 				mock.EXPECT().
 					GetProductsByShopID(10, strPtr("widget")).
 					Return([]model.Product{
-						{ID: 1, Name: "Widget A", Description: "A useful widget", Price: 1000, CreatedAt: fixedTime},
+						{ID: 1, Name: "Widget A", Description: "A useful widget", Price: 1000, OriginalPrice: 800, CreatedAt: fixedTime},
 					}, nil)
 				return mock
 			},
 			wantResult: []response.ProductData{
-				{ID: 1, Name: "Widget A", Description: "A useful widget", Price: 1000, CreatedAt: fixedTime},
+				{ID: 1, Name: "Widget A", Description: "A useful widget", Price: 1000, OriginalPrice: 800, CreatedAt: fixedTime},
 			},
 			wantErr: false,
 		},
@@ -411,22 +423,24 @@ func Test_pservice_UpdateProduct(t *testing.T) {
 				mock.EXPECT().
 					UpdateProduct(1, store.UpdateProductInput{Name: strPtr("Updated Product")}).
 					Return(&model.Product{
-						ID:          1,
-						Name:        "Updated Product",
-						Description: "Desc",
-						Price:       1000,
-						CreatedAt:   fixedTime,
-						UpdatedAt:   sql.NullTime{Time: updatedTime, Valid: true},
+						ID:            1,
+						Name:          "Updated Product",
+						Description:   "Desc",
+						Price:         1000,
+						OriginalPrice: 800,
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{Time: updatedTime, Valid: true},
 					}, nil)
 				return mock
 			},
 			wantResult: response.ProductData{
-				ID:          1,
-				Name:        "Updated Product",
-				Description: "Desc",
-				Price:       1000,
-				CreatedAt:   fixedTime,
-				UpdatedAt:   &updatedTime,
+				ID:            1,
+				Name:          "Updated Product",
+				Description:   "Desc",
+				Price:         1000,
+				OriginalPrice: 800,
+				CreatedAt:     fixedTime,
+				UpdatedAt:     &updatedTime,
 			},
 			wantErr: false,
 		},
@@ -441,22 +455,24 @@ func Test_pservice_UpdateProduct(t *testing.T) {
 				mock.EXPECT().
 					UpdateProduct(1, store.UpdateProductInput{Price: intPtr(2000)}).
 					Return(&model.Product{
-						ID:          1,
-						Name:        "Product A",
-						Description: "Desc",
-						Price:       2000,
-						CreatedAt:   fixedTime,
-						UpdatedAt:   sql.NullTime{Time: updatedTime, Valid: true},
+						ID:            1,
+						Name:          "Product A",
+						Description:   "Desc",
+						Price:         2000,
+						OriginalPrice: 800,
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{Time: updatedTime, Valid: true},
 					}, nil)
 				return mock
 			},
 			wantResult: response.ProductData{
-				ID:          1,
-				Name:        "Product A",
-				Description: "Desc",
-				Price:       2000,
-				CreatedAt:   fixedTime,
-				UpdatedAt:   &updatedTime,
+				ID:            1,
+				Name:          "Product A",
+				Description:   "Desc",
+				Price:         2000,
+				OriginalPrice: 800,
+				CreatedAt:     fixedTime,
+				UpdatedAt:     &updatedTime,
 			},
 			wantErr: false,
 		},
