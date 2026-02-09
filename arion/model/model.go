@@ -45,10 +45,11 @@ type (
 
 	/********************* Shop ************************/
 	Shop struct {
-		ID        int          `db:"id"`
-		Name      string       `db:"name"`
-		CreatedAt time.Time    `db:"created_at"`
-		UpdatedAt sql.NullTime `db:"updated_at"`
+		ID         int          `db:"id"`
+		Name       string       `db:"name"`
+		ShareToken string       `db:"share_token"`
+		CreatedAt  time.Time    `db:"created_at"`
+		UpdatedAt  sql.NullTime `db:"updated_at"`
 	}
 
 	/******************* Customer *********************/
