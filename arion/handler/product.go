@@ -102,7 +102,7 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if res == nil {
-		WriteErrorJson(w, r, http.StatusNotFound, errors.New("product not found"), "product_not_found")
+		WriteErrorJson(w, r, http.StatusNotFound, errors.New("product not found"), "not_found")
 		return
 	}
 

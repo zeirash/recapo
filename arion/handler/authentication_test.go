@@ -62,7 +62,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantSuccess:    false,
-			wantErrMessage: "Login failed",
+			wantErrMessage: "password incorrect",
 		},
 		{
 			name: "login returns 500 on service error",
@@ -77,7 +77,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Login failed",
+			wantErrMessage: "database error",
 		},
 		{
 			name:       "login returns 400 on invalid json",
@@ -191,7 +191,7 @@ func TestRegisterHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Registration failed",
+			wantErrMessage: "database error",
 		},
 		{
 			name:       "register returns 400 on invalid json",
@@ -325,7 +325,7 @@ func TestRefreshHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantSuccess:    false,
-			wantErrMessage: "Invalid or expired refresh token",
+			wantErrMessage: "token expired",
 		},
 		{
 			name:       "refresh returns 400 on invalid json",

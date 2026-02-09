@@ -112,7 +112,7 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if res == nil {
-		WriteErrorJson(w, r, http.StatusNotFound, errors.New("order not found"), "order_not_found")
+		WriteErrorJson(w, r, http.StatusNotFound, errors.New("order not found"), "not_found")
 		return
 	}
 

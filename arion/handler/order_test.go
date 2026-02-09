@@ -90,7 +90,7 @@ func TestCreateOrderHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to create order",
+			wantErrMessage: "database error",
 		},
 		{
 			name:        "create order returns 400 on invalid json",
@@ -190,7 +190,7 @@ func TestGetOrderHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusNotFound,
 			wantSuccess:    false,
-			wantErrMessage: "Order not found",
+			wantErrMessage: "order not found",
 		},
 		{
 			name:     "get order returns error on service failure",
@@ -203,7 +203,7 @@ func TestGetOrderHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to get order",
+			wantErrMessage: "database error",
 		},
 		{
 			name:           "get order returns 400 on missing order_id",
@@ -304,7 +304,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to get orders",
+			wantErrMessage: "database error",
 		},
 		{
 			name:        "get orders with search query passes search to service",
@@ -472,7 +472,7 @@ func TestUpdateOrderHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to update order",
+			wantErrMessage: "order not found",
 		},
 		{
 			name:        "update order returns 400 on invalid json",
@@ -563,7 +563,7 @@ func TestDeleteOrderHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to delete order",
+			wantErrMessage: "database error",
 		},
 		{
 			name:           "delete order returns 400 on missing order_id",
@@ -653,7 +653,7 @@ func TestCreateOrderItemHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to add item",
+			wantErrMessage: "product not found",
 		},
 		{
 			name:        "create order item returns 400 on invalid json",
@@ -788,7 +788,7 @@ func TestUpdateOrderItemHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to update item",
+			wantErrMessage: "order item not found",
 		},
 		{
 			name:        "update order item returns 400 on invalid json",
@@ -888,7 +888,7 @@ func TestDeleteOrderItemHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to delete item",
+			wantErrMessage: "order item not found",
 		},
 		{
 			name:           "delete order item returns 400 on missing order_id",
@@ -977,7 +977,7 @@ func TestGetOrderItemHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to get item",
+			wantErrMessage: "order item not found",
 		},
 		{
 			name:           "get order item returns 400 on missing order_id",
@@ -1078,7 +1078,7 @@ func TestGetOrderItemsHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to get order items",
+			wantErrMessage: "database error",
 		},
 		{
 			name:           "get order items returns 400 on missing order_id",

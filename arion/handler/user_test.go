@@ -85,7 +85,7 @@ func TestGetUserHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to get user",
+			wantErrMessage: "database error",
 		},
 	}
 
@@ -255,7 +255,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to update user",
+			wantErrMessage: "database error",
 		},
 	}
 

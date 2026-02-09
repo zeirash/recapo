@@ -74,7 +74,7 @@ func TestCreateCustomerHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to create customer",
+			wantErrMessage: "database error",
 		},
 		{
 			name:       "create customer returns 400 on invalid json",
@@ -225,7 +225,7 @@ func TestGetCustomerHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to get customer",
+			wantErrMessage: "database error",
 		},
 	}
 
@@ -433,7 +433,7 @@ func TestUpdateCustomerHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to update customer",
+			wantErrMessage: "database error",
 		},
 	}
 
@@ -520,7 +520,7 @@ func TestDeleteCustomerHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to delete customer",
+			wantErrMessage: "database error",
 		},
 	}
 

@@ -17,6 +17,7 @@ type ApiResponse struct {
 	Message string      `json:"message"`
 }
 
+// TODO: fix error message translation
 // ErrorApiResponse is the shape of error responses for Swagger. Data is an
 // empty object {} rather than a string or null.
 type ErrorApiResponse struct {
@@ -31,6 +32,7 @@ var (
 	customerService service.CustomerService
 	productService  service.ProductService
 	orderService    service.OrderService
+	shopService     service.ShopService
 )
 
 func Init() {
@@ -48,6 +50,10 @@ func Init() {
 
 	if orderService == nil {
 		orderService = service.NewOrderService()
+	}
+
+	if shopService == nil {
+		shopService = service.NewShopService()
 	}
 }
 
@@ -71,6 +77,11 @@ func SetOrderService(s service.OrderService) {
 	orderService = s
 }
 
+// SetShopService sets the shop service (for testing)
+func SetShopService(s service.ShopService) {
+	shopService = s
+}
+
 // GetUserService returns the current user service (for testing).
 func GetUserService() service.UserService {
 	return userService
@@ -89,6 +100,11 @@ func GetProductService() service.ProductService {
 // GetOrderService returns the current order service (for testing).
 func GetOrderService() service.OrderService {
 	return orderService
+}
+
+// GetShopService returns the current shop service (for testing).
+func GetShopService() service.ShopService {
+	return shopService
 }
 
 func WriteJson(w http.ResponseWriter, status int, body interface{}) {

@@ -29,7 +29,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if res == nil {
-		WriteErrorJson(w, r, http.StatusNotFound, errors.New("user not found"), "user_not_found")
+		WriteErrorJson(w, r, http.StatusNotFound, errors.New("user_not_found"), "not_found")
 		return
 	}
 

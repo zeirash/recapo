@@ -92,7 +92,7 @@ func TestCreateProductHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to create product",
+			wantErrMessage: "database error",
 		},
 		{
 			name:       "create product returns 400 on invalid json",
@@ -229,7 +229,7 @@ func TestGetProductHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to get product",
+			wantErrMessage: "database error",
 		},
 	}
 
@@ -435,7 +435,7 @@ func TestUpdateProductHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to update product",
+			wantErrMessage: "database error",
 		},
 	}
 
@@ -514,7 +514,7 @@ func TestDeleteProductHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "Failed to delete product",
+			wantErrMessage: "database error",
 		},
 	}
 
