@@ -14,6 +14,7 @@ type Product = {
   name: string
   description: string
   price: number
+  original_price?: number | null
   created_at?: string
   updated_at?: string | null
 }
@@ -22,9 +23,10 @@ type FormState = {
   name: string
   description: string
   price: number
+  originalPrice: number | ''
 }
 
-const emptyForm: FormState = { name: '', description: '', price: 0 }
+const emptyForm: FormState = { name: '', description: '', price: 0, originalPrice: '' }
 
 export default function ProductsPage() {
   const t = useTranslations('common')
@@ -56,7 +58,13 @@ export default function ProductsPage() {
 
   const createMutation = useMutation(
     async (payload: FormState) => {
-      const res = await api.createProduct(payload)
+      const data: Parameters<typeof api.createProduct>[0] = {
+        name: payload.name,
+        description: payload.description || undefined,
+        price: payload.price,
+      }
+      if (payload.originalPrice !== '') data.original_price = payload.originalPrice
+      const res = await api.createProduct(data)
       if (!res.success) throw new Error(res.message || tp('createFailed'))
       return res
     },
@@ -70,7 +78,12 @@ export default function ProductsPage() {
 
   const updateMutation = useMutation(
     async ({ id, payload }: { id: number; payload: Partial<FormState> }) => {
-      const res = await api.updateProduct(id, payload)
+      const data: Parameters<typeof api.updateProduct>[1] = {}
+      if (payload.name !== undefined) data.name = payload.name
+      if (payload.description !== undefined) data.description = payload.description
+      if (payload.price !== undefined) data.price = payload.price
+      if (payload.originalPrice !== undefined && payload.originalPrice !== '') data.original_price = payload.originalPrice
+      const res = await api.updateProduct(id, data)
       if (!res.success) throw new Error(res.message || tp('updateFailed'))
       return res
     },
@@ -115,7 +128,12 @@ export default function ProductsPage() {
 
   function openEditForm(product: Product) {
     setEditingProduct(product)
-    setForm({ name: product.name, description: product.description, price: product.price })
+    setForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      originalPrice: product.original_price ?? '',
+    })
     setIsFormOpen(true)
   }
 
@@ -276,6 +294,16 @@ export default function ProductsPage() {
                           {selectedProduct.description || '—'}
                         </Text>
                       </Box>
+
+                      {/* Original price */}
+                      <Box sx={{ mt: 4 }}>
+                        <Text sx={{ fontWeight: 600, fontSize: 2, color: 'text.secondary', mb: 1, display: 'block' }}>
+                          {tp('originalPrice')}
+                        </Text>
+                        <Text sx={{ fontSize: 1, color: 'text.secondary' }}>
+                          Rp. {(selectedProduct.original_price ?? selectedProduct.price).toLocaleString()}
+                        </Text>
+                      </Box>
                     </Card>
                   </Box>
                 ) : (
@@ -331,6 +359,23 @@ export default function ProductsPage() {
                 <Box sx={{ mb: 3 }}>
                   <Label htmlFor="price">{t('price')}</Label>
                   <Input id="price" type="number" step="1" min={0} value={form.price ?? ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required />
+                </Box>
+                <Box sx={{ mb: 3 }}>
+                  <Label htmlFor="originalPrice">{tp('originalPrice')}</Label>
+                  <Input
+                    id="originalPrice"
+                    type="number"
+                    step="1"
+                    min={0}
+                    placeholder={tp('originalPricePlaceholder')}
+                    value={form.originalPrice === '' ? '' : form.originalPrice}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        originalPrice: e.target.value === '' ? '' : Number(e.target.value) || 0,
+                      })
+                    }
+                  />
                 </Box>
                 <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
                   <Button type="button" variant="secondary" onClick={closeForm}>

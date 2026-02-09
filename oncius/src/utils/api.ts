@@ -239,7 +239,7 @@ export const api = {
     return apiRequest<ApiResponse<any>>(`/products/${id}`)
   },
 
-  createProduct: (data: { name: string; description?: string; price: number }) => {
+  createProduct: (data: { name: string; description?: string; price: number; original_price?: number }) => {
     return apiRequest<ApiResponse>('/product', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -247,7 +247,7 @@ export const api = {
   },
 
   updateProduct: (id: number | string,
-    data: Partial<{ name: string; description: string; price: number }>
+    data: Partial<{ name: string; description: string; price: number; original_price: number }>
   ) => {
     return apiRequest<ApiResponse>(`/products/${id}`, {
       method: 'PATCH',

@@ -111,6 +111,8 @@
     "selectProduct": "Select a product to view details",
     "chooseFromList": "Choose from the list on the left",
     "deleteConfirm": "Delete this product?",
+    "originalPrice": "Original Price",
+    "originalPricePlaceholder": "If empty, will be set the same as price",
     "fetchFailed": "Failed to fetch products",
     "createFailed": "Failed to create product",
     "updateFailed": "Failed to update product",

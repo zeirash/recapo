@@ -111,6 +111,8 @@
     "selectProduct": "Pilih produk untuk melihat detail",
     "chooseFromList": "Pilih dari daftar di sebelah kiri",
     "deleteConfirm": "Hapus produk ini?",
+    "originalPrice": "Harga Modal",
+    "originalPricePlaceholder": "Jika kosong, akan diisi sama dengan harga",
     "fetchFailed": "Gagal memuat produk",
     "createFailed": "Gagal membuat produk",
     "updateFailed": "Gagal memperbarui produk",
