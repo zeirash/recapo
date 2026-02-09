@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
@@ -34,7 +36,7 @@ func (s *shopService) GetPublicProducts(shareToken string) ([]response.ProductDa
 	}
 
 	if shop == nil {
-		return nil, nil
+		return nil, errors.New("shop not found")
 	}
 
 	products, err := productStore.GetProductsByShopID(shop.ID, nil)

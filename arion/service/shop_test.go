@@ -101,7 +101,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 				return shopMock, nil
 			},
 			want:    nil,
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name:       "GetShopByShareToken returns error",

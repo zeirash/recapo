@@ -42,8 +42,10 @@ func NewRouter() *mux.Router {
 	// Swagger UI (WrapHandler is http.HandlerFunc; doc is served from swag registry)
 	r.PathPrefix("/swagger/").HandlerFunc(httpSwagger.WrapHandler)
 
-	// Routes API
+	// Routes API No Auth
 	r.HandleFunc("/health", handler.HealthHandler)
+	r.HandleFunc("/public/shops/{share_token}/products", handler.GetShopProductsHandler).Methods("GET")
+
 
 	r.HandleFunc("/login", handler.LoginHandler).Methods("POST")
 	r.HandleFunc("/register", handler.RegisterHandler).Methods("POST")
