@@ -308,7 +308,7 @@ export const api = {
     return apiRequest<ApiResponse<any>>(`/orders/${id}`)
   },
 
-  createOrder: (data: { customer_id: number }) => {
+  createOrder: (data: { customer_id: number; notes?: string }) => {
     return apiRequest<ApiResponse>('/order', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -317,7 +317,7 @@ export const api = {
 
   updateOrder: (
     id: number | string,
-    data: Partial<{ customer_id: number; total_price: number; status: string }>
+    data: Partial<{ customer_id: number; total_price: number; status: string; notes: string }>
   ) => {
     return apiRequest<ApiResponse>(`/orders/${id}`, {
       method: 'PATCH',

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Card, Container, Flex, Heading, Input, Label, Select, Text } from 'theme-ui'
+import { Box, Button, Card, Container, Flex, Heading, Input, Label, Select, Text, Textarea } from 'theme-ui'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
@@ -24,6 +24,7 @@ type Order = {
   customer_name: string
   total_price: number
   status: string
+  notes?: string
   order_items?: OrderItem[]
   created_at: string
   updated_at?: string | null
@@ -44,6 +45,7 @@ type Product = {
 
 type CreateOrderForm = {
   customer_id: number | null
+  notes: string
 }
 
 type AddItemForm = {
@@ -51,7 +53,7 @@ type AddItemForm = {
   qty: number
 }
 
-const emptyCreateForm: CreateOrderForm = { customer_id: null }
+const emptyCreateForm: CreateOrderForm = { customer_id: null, notes: '' }
 const emptyAddItemForm: AddItemForm = { product_id: null, qty: 1 }
 
 const statusColors: Record<string, { bg: string; color: string }> = {
@@ -128,7 +130,7 @@ export default function OrdersPage() {
   )
 
   const createMutation = useMutation(
-    async (payload: { customer_id: number }) => {
+    async (payload: { customer_id: number; notes?: string }) => {
       const res = await api.createOrder(payload)
       if (!res.success) throw new Error(res.message || to('createFailed'))
       return res
@@ -159,6 +161,20 @@ export default function OrdersPage() {
     async ({ id, status }: { id: number; status: string }) => {
       const res = await api.updateOrder(id, { status })
       if (!res.success) throw new Error(res.message || to('updateStatusFailed'))
+      return res
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['orders'])
+        queryClient.invalidateQueries(['order', selectedOrderId])
+      },
+    }
+  )
+
+  const updateNotesMutation = useMutation(
+    async ({ id, notes }: { id: number; notes: string }) => {
+      const res = await api.updateOrder(id, { notes })
+      if (!res.success) throw new Error(res.message || to('updateNotesFailed'))
       return res
     },
     {
@@ -273,7 +289,10 @@ export default function OrdersPage() {
   function submitCreateForm(e: React.FormEvent) {
     e.preventDefault()
     if (createForm.customer_id) {
-      createMutation.mutate({ customer_id: createForm.customer_id })
+      createMutation.mutate({
+        customer_id: createForm.customer_id,
+        notes: createForm.notes.trim() || undefined
+      })
     }
   }
 
@@ -429,7 +448,7 @@ export default function OrdersPage() {
                     >
                       <Flex sx={{ flexWrap: 'wrap', gap: [4, 5] }}>
                         <Box sx={{ minWidth: 140 }}>
-                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>Customer</Text>
+                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>{t('customer')}</Text>
                           <Text sx={{ fontSize: 1, fontWeight: 'medium' }}>{selectedOrder.customer_name}</Text>
                         </Box>
                         <Box sx={{ minWidth: 140 }}>
@@ -458,6 +477,31 @@ export default function OrdersPage() {
                             <option value="completed">{toStatus('completed')}</option>
                             <option value="cancelled">{toStatus('cancelled')}</option>
                           </Select>
+                        </Box>
+                        <Box sx={{ flex: '1 1 100%', minWidth: 0 }}>
+                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>{to('notes')}</Text>
+                          <Textarea
+                            key={selectedOrder.id}
+                            defaultValue={selectedOrder.notes || ''}
+                            onBlur={(e) => {
+                              const notes = e.target.value
+                              if (notes !== (selectedOrder.notes || '')) {
+                                updateNotesMutation.mutate({ id: selectedOrder.id, notes })
+                              }
+                            }}
+                            rows={2}
+                            sx={{
+                              width: '100%',
+                              py: 2,
+                              px: 3,
+                              fontSize: 1,
+                              borderRadius: 'medium',
+                              border: '1px solid',
+                              borderColor: 'border',
+                              resize: 'vertical',
+                              minHeight: '60px',
+                            }}
+                          />
                         </Box>
                       </Flex>
                     </Card>
@@ -615,6 +659,25 @@ export default function OrdersPage() {
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </Select>
+                </Box>
+                <Box sx={{ mb: 3 }}>
+                  <Label htmlFor="notes">{to('notes')}</Label>
+                  <Textarea
+                    id="notes"
+                    value={createForm.notes}
+                    onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
+                    rows={3}
+                    sx={{
+                      width: '100%',
+                      py: 2,
+                      px: 3,
+                      fontSize: 1,
+                      borderRadius: 'medium',
+                      border: '1px solid',
+                      borderColor: 'border',
+                      resize: 'vertical',
+                    }}
+                  />
                 </Box>
                 <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
                   <Button type="button" variant="secondary" onClick={closeCreateForm}>
