@@ -28,7 +28,7 @@ func Test_order_GetOrderByID(t *testing.T) {
 			shopID: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", 5000, "pending", "", fixedTime, nil)
+					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil)
 				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.id = \$1`).
 					WithArgs(1).
 					WillReturnRows(rows)
@@ -38,7 +38,7 @@ func Test_order_GetOrderByID(t *testing.T) {
 				ShopID:       10,
 				CustomerName: "John Doe",
 				TotalPrice:   5000,
-				Status:       "pending",
+				Status:       "in_progress",
 				CreatedAt:    fixedTime,
 			},
 			wantErr: false,
@@ -49,7 +49,7 @@ func Test_order_GetOrderByID(t *testing.T) {
 			shopID: []int{10},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", 5000, "pending", "", fixedTime, nil)
+					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil)
 				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.id = \$1\s+AND o.shop_id = \$2`).
 					WithArgs(1, 10).
 					WillReturnRows(rows)
@@ -59,7 +59,7 @@ func Test_order_GetOrderByID(t *testing.T) {
 				ShopID:       10,
 				CustomerName: "John Doe",
 				TotalPrice:   5000,
-				Status:       "pending",
+				Status:       "in_progress",
 				CreatedAt:    fixedTime,
 			},
 			wantErr: false,
@@ -138,8 +138,8 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			shopID: 10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", 5000, "pending", "", fixedTime, nil).
-					AddRow(2, 10, "Jane Doe", 3000, "completed", "", fixedTime, nil)
+					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil).
+					AddRow(2, 10, "Jane Doe", 3000, "done", "", fixedTime, nil)
 				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1`).
 					WithArgs(10).
 					WillReturnRows(rows)
@@ -150,7 +150,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 					ShopID:       10,
 					CustomerName: "John Doe",
 					TotalPrice:   5000,
-					Status:       "pending",
+					Status:       "in_progress",
 					CreatedAt:    fixedTime,
 				},
 				{
@@ -158,7 +158,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 					ShopID:       10,
 					CustomerName: "Jane Doe",
 					TotalPrice:   3000,
-					Status:       "completed",
+					Status:       "done",
 					CreatedAt:    fixedTime,
 				},
 			},
@@ -195,7 +195,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			opts:   model.OrderFilterOptions{SearchQuery: strPtr("john")},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", 5000, "pending", "", fixedTime, nil)
+					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil)
 				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND c.name ILIKE \$2`).
 					WithArgs(10, "%john%").
 					WillReturnRows(rows)
@@ -206,7 +206,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 					ShopID:       10,
 					CustomerName: "John Doe",
 					TotalPrice:   5000,
-					Status:       "pending",
+					Status:       "in_progress",
 					CreatedAt:    fixedTime,
 				},
 			},
@@ -221,7 +221,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", 5000, "pending", "", fixedTime, nil)
+					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil)
 				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND o.created_at >= \$2\s+AND o.created_at < \$3`).
 					WithArgs(10, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)).
 					WillReturnRows(rows)
@@ -232,7 +232,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 					ShopID:       10,
 					CustomerName: "John Doe",
 					TotalPrice:   5000,
-					Status:       "pending",
+					Status:       "in_progress",
 					CreatedAt:    fixedTime,
 				},
 			},
@@ -294,14 +294,14 @@ func Test_order_CreateOrder(t *testing.T) {
 			input: input{
 				customerID: 1,
 				shopID:     10,
-				status:     "pending",
+				status:     "in_progress",
 				notes:      strPtr("test notes"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "total_price", "status", "customer_name", "shop_id", "notes", "created_at"}).
-					AddRow(1, 0, "pending", "John Doe", 10, "test notes", fixedTime)
+					AddRow(1, 0, "in_progress", "John Doe", 10, "test notes", fixedTime)
 				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, customer_id, shop_id, notes, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, COALESCE\(\$5, ''\), \$6\)\s+RETURNING id, total_price, status, customer_id, shop_id, notes, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, c.name as customer_name, i.shop_id, i.notes, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
-					WithArgs(0, "pending", 1, 10, strPtr("test notes"), sqlmock.AnyArg()).
+					WithArgs(0, "in_progress", 1, 10, strPtr("test notes"), sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
 			wantResult: &model.Order{
@@ -309,7 +309,7 @@ func Test_order_CreateOrder(t *testing.T) {
 				ShopID:       10,
 				CustomerName: "John Doe",
 				TotalPrice:   0,
-				Status:       "pending",
+				Status:       "in_progress",
 				Notes:        "test notes",
 				CreatedAt:    fixedTime,
 			},
@@ -320,11 +320,11 @@ func Test_order_CreateOrder(t *testing.T) {
 			input: input{
 				customerID: 1,
 				shopID:     10,
-				status:     "pending",
+				status:     "in_progress",
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, customer_id, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id, total_price, status, customer_id, shop_id, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, c.name as customer_name, i.shop_id, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
-					WithArgs(0, "pending", 1, 10, sqlmock.AnyArg()).
+					WithArgs(0, "in_progress", 1, 10, sqlmock.AnyArg()).
 					WillReturnError(errors.New("database error"))
 			},
 			wantResult: nil,
@@ -384,12 +384,12 @@ func Test_order_UpdateOrder(t *testing.T) {
 			name: "update order with status",
 			id:   1,
 			input: UpdateOrderInput{
-				Status: strPtr("completed"),
+				Status: strPtr("done"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", 5000, "completed", "", fixedTime, updatedTime)
-				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE orders\s+SET status = 'completed',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, customer_id, total_price, status, notes, created_at, updated_at\s+\)\s+SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.notes, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN customers c ON u.customer_id = c.id`).
+					AddRow(1, 10, "John Doe", 5000, "done", "", fixedTime, updatedTime)
+				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE orders\s+SET status = 'done',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, customer_id, total_price, status, notes, created_at, updated_at\s+\)\s+SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.notes, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN customers c ON u.customer_id = c.id`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
@@ -398,7 +398,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 				ShopID:       10,
 				CustomerName: "John Doe",
 				TotalPrice:   5000,
-				Status:       "completed",
+				Status:       "done",
 				CreatedAt:    fixedTime,
 				UpdatedAt:    sql.NullTime{Time: updatedTime, Valid: true},
 			},
@@ -412,7 +412,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", 10000, "pending", "", fixedTime, updatedTime)
+					AddRow(1, 10, "John Doe", 10000, "in_progress", "", fixedTime, updatedTime)
 				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE orders\s+SET total_price = 10000,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, customer_id, total_price, status, notes, created_at, updated_at\s+\)\s+SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.notes, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN customers c ON u.customer_id = c.id`).
 					WithArgs(1).
 					WillReturnRows(rows)
@@ -422,7 +422,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 				ShopID:       10,
 				CustomerName: "John Doe",
 				TotalPrice:   10000,
-				Status:       "pending",
+				Status:       "in_progress",
 				CreatedAt:    fixedTime,
 				UpdatedAt:    sql.NullTime{Time: updatedTime, Valid: true},
 			},
@@ -436,7 +436,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", 5000, "pending", "updated notes", fixedTime, updatedTime)
+					AddRow(1, 10, "John Doe", 5000, "in_progress", "updated notes", fixedTime, updatedTime)
 				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE orders\s+SET notes = 'updated notes',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, customer_id, total_price, status, notes, created_at, updated_at\s+\)\s+SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.notes, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN customers c ON u.customer_id = c.id`).
 					WithArgs(1).
 					WillReturnRows(rows)
@@ -446,7 +446,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 				ShopID:       10,
 				CustomerName: "John Doe",
 				TotalPrice:   5000,
-				Status:       "pending",
+				Status:       "in_progress",
 				Notes:        "updated notes",
 				CreatedAt:    fixedTime,
 				UpdatedAt:    sql.NullTime{Time: updatedTime, Valid: true},
@@ -457,7 +457,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 			name: "update non-existent order returns error",
 			id:   9999,
 			input: UpdateOrderInput{
-				Status: strPtr("completed"),
+				Status: strPtr("done"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE orders\s+SET status = 'completed',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, customer_id, total_price, status, notes, created_at, updated_at\s+\)\s+SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.notes, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN customers c ON u.customer_id = c.id`).
@@ -471,7 +471,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 			name: "update order returns error on database failure",
 			id:   1,
 			input: UpdateOrderInput{
-				Status: strPtr("completed"),
+				Status: strPtr("done"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE orders\s+SET status = 'completed',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, customer_id, total_price, status, notes, created_at, updated_at\s+\)\s+SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.notes, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN customers c ON u.customer_id = c.id`).

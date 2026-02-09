@@ -19,9 +19,9 @@ type Order = {
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   created: { bg: '#E3F2FD', color: '#1565C0' },
-  pending: { bg: '#FFF3E0', color: '#E65100' },
-  processing: { bg: '#F3E5F5', color: '#7B1FA2' },
-  completed: { bg: '#E8F5E9', color: '#2E7D32' },
+  in_progress: { bg: '#FFF3E0', color: '#E65100' },
+  in_delivery: { bg: '#F3E5F5', color: '#7B1FA2' },
+  done: { bg: '#E8F5E9', color: '#2E7D32' },
   cancelled: { bg: '#FFEBEE', color: '#C62828' },
 }
 

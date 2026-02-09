@@ -58,9 +58,9 @@ const emptyAddItemForm: AddItemForm = { product_id: null, qty: 1 }
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   created: { bg: '#E3F2FD', color: '#1565C0' },
-  pending: { bg: '#FFF3E0', color: '#E65100' },
-  processing: { bg: '#F3E5F5', color: '#7B1FA2' },
-  completed: { bg: '#E8F5E9', color: '#2E7D32' },
+  in_progress: { bg: '#FFF3E0', color: '#E65100' },
+  in_delivery: { bg: '#F3E5F5', color: '#7B1FA2' },
+  done: { bg: '#E8F5E9', color: '#2E7D32' },
   cancelled: { bg: '#FFEBEE', color: '#C62828' },
 }
 
@@ -385,7 +385,7 @@ export default function OrdersPage() {
                                 textTransform: 'capitalize',
                               }}
                             >
-                              {o.status}
+                              {toStatus(o.status)}
                             </Box>
                           </Flex>
                           <Text sx={{ fontSize: 0, color: 'text.secondary' }}>{o.customer_name}</Text>
@@ -419,7 +419,7 @@ export default function OrdersPage() {
                             textTransform: 'capitalize',
                           }}
                         >
-                          {selectedOrder.status}
+                          {toStatus(selectedOrder.status)}
                         </Box>
                       </Flex>
                       <Button
@@ -472,9 +472,9 @@ export default function OrdersPage() {
                             }}
                           >
                             <option value="created">{toStatus('created')}</option>
-                            <option value="pending">{toStatus('pending')}</option>
-                            <option value="processing">{toStatus('processing')}</option>
-                            <option value="completed">{toStatus('completed')}</option>
+                            <option value="in_progress">{toStatus('in_progress')}</option>
+                            <option value="in_delivery">{toStatus('in_delivery')}</option>
+                            <option value="done">{toStatus('done')}</option>
                             <option value="cancelled">{toStatus('cancelled')}</option>
                           </Select>
                         </Box>

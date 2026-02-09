@@ -9,8 +9,9 @@ const (
 
 // Order status constants
 const (
-	OrderStatusCreated   = "created"
-	OrderStatusPending   = "pending"
-	OrderStatusCompleted = "completed"
-	OrderStatusCancelled = "cancelled"
+	OrderStatusCreated    = "created"
+	OrderStatusInProgress = "in_progress"
+	OrderStatusInDelivery = "in_delivery"
+	OrderStatusDone       = "done"
+	OrderStatusCancelled  = "cancelled"
 )

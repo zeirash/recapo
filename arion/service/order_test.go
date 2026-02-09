@@ -266,13 +266,13 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 					GetOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return([]model.Order{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
-						{ID: 2, CustomerName: "Jane Doe", TotalPrice: 200, Status: constant.OrderStatusCompleted, CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: updatedTime, Valid: true}},
+						{ID: 2, CustomerName: "Jane Doe", TotalPrice: 200, Status: constant.OrderStatusDone, CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: updatedTime, Valid: true}},
 					}, nil)
 				return mock
 			},
 			wantResult: []response.OrderData{
 				{ID: 1, CustomerName: "John Doe", TotalPrice: 100, Status: constant.OrderStatusCreated, CreatedAt: fixedTime},
-				{ID: 2, CustomerName: "Jane Doe", TotalPrice: 200, Status: constant.OrderStatusCompleted, CreatedAt: fixedTime, UpdatedAt: &updatedTime},
+				{ID: 2, CustomerName: "Jane Doe", TotalPrice: 200, Status: constant.OrderStatusDone, CreatedAt: fixedTime, UpdatedAt: &updatedTime},
 			},
 			wantErr: false,
 		},
@@ -429,7 +429,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 			name: "successfully update order",
 			input: UpdateOrderInput{
 				ID:     1,
-				Status: strPtr(constant.OrderStatusCompleted),
+				Status: strPtr(constant.OrderStatusDone),
 			},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
@@ -437,12 +437,12 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 					GetOrderByID(1).
 					Return(&model.Order{ID: 1, CustomerName: "John Doe", Status: constant.OrderStatusCreated}, nil)
 				mock.EXPECT().
-					UpdateOrder(1, store.UpdateOrderInput{Status: strPtr(constant.OrderStatusCompleted)}).
+					UpdateOrder(1, store.UpdateOrderInput{Status: strPtr(constant.OrderStatusDone)}).
 					Return(&model.Order{
 						ID:           1,
 						CustomerName: "John Doe",
 						TotalPrice:   100,
-						Status:       constant.OrderStatusCompleted,
+						Status:       constant.OrderStatusDone,
 						CreatedAt:    fixedTime,
 						UpdatedAt:    sql.NullTime{Time: updatedTime, Valid: true},
 					}, nil)
@@ -452,7 +452,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 				ID:           1,
 				CustomerName: "John Doe",
 				TotalPrice:   100,
-				Status:       constant.OrderStatusCompleted,
+				Status:       constant.OrderStatusDone,
 				CreatedAt:    fixedTime,
 				UpdatedAt:    &updatedTime,
 			},
@@ -463,7 +463,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 			input: UpdateOrderInput{
 				ID:         1,
 				TotalPrice: intPtr(500),
-				Status:     strPtr(constant.OrderStatusCompleted),
+				Status:     strPtr(constant.OrderStatusDone),
 			},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
@@ -471,12 +471,12 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 					GetOrderByID(1).
 					Return(&model.Order{ID: 1, CustomerName: "John Doe", Status: constant.OrderStatusCreated}, nil)
 				mock.EXPECT().
-					UpdateOrder(1, store.UpdateOrderInput{TotalPrice: intPtr(500), Status: strPtr(constant.OrderStatusCompleted)}).
+					UpdateOrder(1, store.UpdateOrderInput{TotalPrice: intPtr(500), Status: strPtr(constant.OrderStatusDone)}).
 					Return(&model.Order{
 						ID:           1,
 						CustomerName: "Jane Doe",
 						TotalPrice:   500,
-						Status:       constant.OrderStatusCompleted,
+						Status:       constant.OrderStatusDone,
 						CreatedAt:    fixedTime,
 						UpdatedAt:    sql.NullTime{Time: updatedTime, Valid: true},
 					}, nil)
@@ -486,7 +486,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 				ID:           1,
 				CustomerName: "Jane Doe",
 				TotalPrice:   500,
-				Status:       constant.OrderStatusCompleted,
+				Status:       constant.OrderStatusDone,
 				CreatedAt:    fixedTime,
 				UpdatedAt:    &updatedTime,
 			},
@@ -496,7 +496,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 			name: "update order not found returns error",
 			input: UpdateOrderInput{
 				ID:     999,
-				Status: strPtr(constant.OrderStatusCompleted),
+				Status: strPtr(constant.OrderStatusDone),
 			},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
@@ -512,7 +512,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 			name: "update order returns error on get failure",
 			input: UpdateOrderInput{
 				ID:     1,
-				Status: strPtr(constant.OrderStatusCompleted),
+				Status: strPtr(constant.OrderStatusDone),
 			},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
@@ -528,7 +528,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 			name: "update order returns error on update failure",
 			input: UpdateOrderInput{
 				ID:     1,
-				Status: strPtr(constant.OrderStatusCompleted),
+				Status: strPtr(constant.OrderStatusDone),
 			},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
@@ -536,7 +536,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 					GetOrderByID(1).
 					Return(&model.Order{ID: 1, CustomerName: "John Doe"}, nil)
 				mock.EXPECT().
-					UpdateOrder(1, store.UpdateOrderInput{Status: strPtr(constant.OrderStatusCompleted)}).
+					UpdateOrder(1, store.UpdateOrderInput{Status: strPtr(constant.OrderStatusDone)}).
 					Return(nil, errors.New("update error"))
 				return mock
 			},

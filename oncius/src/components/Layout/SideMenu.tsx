@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { Box, Flex, Text, Button } from 'theme-ui'
 import { useRouter, usePathname } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
+import { useChangeLocale } from '@/hooks/useLocale'
 
 interface SideMenuProps {
   selectedMenu: string
@@ -15,6 +17,8 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const locale = useLocale()
+  const changeLocale = useChangeLocale()
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '🏠', path: '/dashboard' },
@@ -84,6 +88,43 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
 
       {/* Bottom Section */}
       <Box sx={{ p: 3, borderTop: '1px solid', borderColor: 'border' }}>
+        <Flex sx={{ alignItems: 'center', justifyContent: 'center', gap: 2, mb: 3 }}>
+          <Box
+            as="button"
+            onClick={() => changeLocale('en')}
+            sx={{
+              bg: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 0,
+              fontWeight: locale === 'en' ? 600 : 400,
+              color: locale === 'en' ? 'primary' : 'text.secondary',
+              textDecoration: 'none',
+              p: 0,
+              '&:hover': { color: 'primary' },
+            }}
+          >
+            EN
+          </Box>
+          <Text sx={{ color: 'border', fontSize: 0 }}>|</Text>
+          <Box
+            as="button"
+            onClick={() => changeLocale('id')}
+            sx={{
+              bg: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 0,
+              fontWeight: locale === 'id' ? 600 : 400,
+              color: locale === 'id' ? 'primary' : 'text.secondary',
+              textDecoration: 'none',
+              p: 0,
+              '&:hover': { color: 'primary' },
+            }}
+          >
+            ID
+          </Box>
+        </Flex>
         {/* Profile Account */}
         <Flex sx={{ alignItems: 'center', justifyContent: 'center' }}>
           <Box

@@ -115,7 +115,7 @@ export interface OrderItem {
   currency: string
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+export type OrderStatus = 'created' | 'in_progress' | 'in_delivery' | 'done' | 'cancelled'
 
 export interface CreateOrderRequest {
   customerId: string

@@ -167,9 +167,9 @@
   },
   "orderStatus": {
     "created": "Created",
-    "pending": "Pending",
-    "processing": "Processing",
-    "completed": "Completed",
+    "in_progress": "In Progress",
+    "in_delivery": "In Delivery",
+    "done": "Done",
     "cancelled": "Cancelled"
   },
   "dashboard": {

@@ -433,12 +433,12 @@ func TestUpdateOrderHandler(t *testing.T) {
 		{
 			name: "successfully update order",
 			body: map[string]interface{}{
-				"status":      "completed",
+				"status":      "done",
 				"total_price": 15000,
 			},
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
-				status := "completed"
+				status := "done"
 				totalPrice := 15000
 				mockOrderService.EXPECT().
 					UpdateOrderByID(service.UpdateOrderInput{
@@ -450,7 +450,7 @@ func TestUpdateOrderHandler(t *testing.T) {
 						ID:           1,
 						CustomerName: "John Doe",
 						TotalPrice:   15000,
-						Status:       "completed",
+						Status:       "done",
 						CreatedAt:    time.Now(),
 					}, nil)
 			},
@@ -459,10 +459,10 @@ func TestUpdateOrderHandler(t *testing.T) {
 		},
 		{
 			name:     "update order returns error on service failure",
-			body:     map[string]interface{}{"status": "completed"},
+			body:     map[string]interface{}{"status": "done"},
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
-				status := "completed"
+				status := "done"
 				mockOrderService.EXPECT().
 					UpdateOrderByID(service.UpdateOrderInput{
 						ID:     1,
@@ -484,7 +484,7 @@ func TestUpdateOrderHandler(t *testing.T) {
 		},
 		{
 			name:           "update order returns 400 on missing order_id",
-			body:           map[string]interface{}{"status": "completed"},
+			body:           map[string]interface{}{"status": "done"},
 			pathVars:       map[string]string{},
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
