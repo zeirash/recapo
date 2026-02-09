@@ -93,7 +93,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "login with wrong password returns error",
@@ -116,7 +116,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "login returns error on database failure",
@@ -135,7 +135,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "login returns error when access token creation fails",
@@ -164,7 +164,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "login returns error when refresh token creation fails",
@@ -197,7 +197,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 	}
 
@@ -298,7 +298,7 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name:         "refresh token with user not found returns error",
@@ -318,7 +318,7 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name:         "refresh token returns error on database failure",
@@ -338,7 +338,7 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name:         "refresh token returns error when access token creation fails",
@@ -367,7 +367,7 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name:         "refresh token returns error when refresh token creation fails",
@@ -400,7 +400,7 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				return mockUser, mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 	}
 
@@ -468,7 +468,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 				userStore = mockUser
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "register returns error on database lookup failure",
@@ -485,7 +485,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 				userStore = mockUser
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "register returns error on db.Begin failure",
@@ -508,7 +508,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 				dbGetter = func() database.DB { return mockDB }
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "register returns error on CreateShop failure",
@@ -540,7 +540,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 				shopStore = mockShop
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "register returns error on CreateUser failure",
@@ -611,7 +611,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 				shopStore = mockShop
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "register returns error on CreateAccessToken failure",
@@ -653,7 +653,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 				tokenStore = mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "register returns error on CreateRefreshToken failure",
@@ -698,7 +698,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 				tokenStore = mockToken
 			},
 			wantResult: response.TokenResponse{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "successfully register user",
@@ -876,7 +876,7 @@ func Test_uservice_UpdateUser(t *testing.T) {
 				return mock
 			},
 			wantResult: response.UserData{},
-			wantErr:    true,
+			wantErr: true,
 		},
 		{
 			name: "update user returns error on get failure",
@@ -911,7 +911,7 @@ func Test_uservice_UpdateUser(t *testing.T) {
 				return mock
 			},
 			wantResult: response.UserData{},
-			wantErr:    true,
+			wantErr: true,
 		},
 	}
 
@@ -981,7 +981,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "get user by ID not found returns error",
+			name:   "get user by ID not found returns nil result",
 			userID: 9999,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
@@ -991,7 +991,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 				return mock
 			},
 			wantResult: nil,
-			wantErr:    true,
+			wantErr:    false,
 		},
 		{
 			name:   "get user by ID returns error on database failure",
@@ -1004,7 +1004,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 				return mock
 			},
 			wantResult: &response.UserData{},
-			wantErr:    true,
+			wantErr: true,
 		},
 	}
 
@@ -1086,7 +1086,7 @@ func Test_uservice_GetUsers(t *testing.T) {
 				return mock
 			},
 			wantResult: []response.UserData{},
-			wantErr:    true,
+			wantErr: true,
 		},
 	}
 

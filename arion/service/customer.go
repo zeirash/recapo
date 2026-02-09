@@ -61,7 +61,7 @@ func (c *cservice) GetCustomerByID(customerID int, shopID ...int) (*response.Cus
 	}
 
 	if customer == nil {
-		return nil, errors.New("customer not found")
+		return nil, nil
 	}
 
 	res := response.CustomerData{

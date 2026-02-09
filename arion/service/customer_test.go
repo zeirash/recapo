@@ -203,7 +203,7 @@ func Test_cservice_GetCustomerByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "get customer not found returns error",
+			name: "get customer not found returns nil result",
 			input: input{
 				customerID: 9999,
 				shopID:     nil,
@@ -216,7 +216,7 @@ func Test_cservice_GetCustomerByID(t *testing.T) {
 				return mock
 			},
 			wantResult: nil,
-			wantErr:    true,
+			wantErr:    false,
 		},
 		{
 			name: "get customer returns error on database failure",

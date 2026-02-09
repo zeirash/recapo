@@ -151,7 +151,7 @@ func Test_oservice_GetOrderByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "get order by ID not found returns error",
+			name:   "get order by ID not found returns nil result",
 			id:     999,
 			shopID: []int{1},
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
@@ -164,7 +164,7 @@ func Test_oservice_GetOrderByID(t *testing.T) {
 				return mockOrder, mockOrderItem
 			},
 			wantResult: nil,
-			wantErr:    true,
+			wantErr:    false,
 		},
 		{
 			name:   "get order by ID returns error on store failure",
@@ -1087,7 +1087,7 @@ func Test_oservice_GetOrderItemByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "get order item by ID not found returns error",
+			name:        "get order item by ID not found returns nil result",
 			orderItemID: 999,
 			orderID:     1,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderItemStore {
@@ -1098,7 +1098,7 @@ func Test_oservice_GetOrderItemByID(t *testing.T) {
 				return mock
 			},
 			wantResult: response.OrderItemData{},
-			wantErr:    true,
+			wantErr:    false,
 		},
 		{
 			name:        "get order item by ID returns error on store failure",
