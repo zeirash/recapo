@@ -39,6 +39,7 @@ export default function ProductsPage() {
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [shareCopied, setShareCopied] = useState(false)
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {
@@ -152,6 +153,28 @@ export default function ProductsPage() {
     }
   }
 
+  async function handleShare() {
+    try {
+      const res = await api.getShopShareToken()
+      if (!res.success || !res.data?.share_token) throw new Error(tp('fetchFailed'))
+      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/share/${res.data.share_token}`
+      try {
+        await navigator.clipboard.writeText(url)
+      } catch {
+        const textarea = document.createElement('textarea')
+        textarea.value = url
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    } catch {
+      // Silent fail - user can try again
+    }
+  }
+
   return (
     <Layout>
       <Container sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -166,13 +189,31 @@ export default function ProductsPage() {
               {/* Left list (compact like side menu) */}
               <Box sx={{ width: ['100%', '300px'], minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: ['none', '1px solid'], borderColor: 'border' }}>
                 <Box sx={{ p: 4, flexShrink: 0 }}>
-                  <Flex sx={{ gap: 2, alignItems: 'center' }}>
+                  <Flex sx={{ gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <SearchInput
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       placeholder={tp('searchPlaceholder')}
                     />
                     <AddButton onClick={openCreateForm} title={tp('addProduct')} />
+                    <Button
+                      variant="secondary"
+                      onClick={handleShare}
+                      title={shareCopied ? tp('linkCopied') : tp('shareButton')}
+                      sx={{
+                        minWidth: 36,
+                        width: 36,
+                        height: 36,
+                        p: 0,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 'medium',
+                        fontSize: 1,
+                      }}
+                    >
+                      {shareCopied ? '✓' : '🔗'}
+                    </Button>
                   </Flex>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>

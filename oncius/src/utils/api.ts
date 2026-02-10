@@ -222,6 +222,11 @@ export const api = {
     return apiRequest<ApiResponse<any>>('/user')
   },
 
+  // Shop
+  getShopShareToken: async () => {
+    return apiRequest<ApiResponse<{ share_token: string }>>('/shop/share_token')
+  },
+
   updateUser: async (data: any) => {
     return apiRequest<ApiResponse>('/user', {
       method: 'PATCH',
@@ -363,6 +368,11 @@ export const api = {
   // Health check
   health: () => {
     return apiRequest<ApiResponse>('/health')
+  },
+
+  // Public (no auth)
+  getPublicProducts: (shareToken: string) => {
+    return apiRequest<ApiResponse<any[]>>(`/public/shops/${encodeURIComponent(shareToken)}/products`, {}, true)
   },
 }
 

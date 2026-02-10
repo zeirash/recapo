@@ -116,7 +116,9 @@
     "fetchFailed": "Gagal memuat produk",
     "createFailed": "Gagal membuat produk",
     "updateFailed": "Gagal memperbarui produk",
-    "deleteFailed": "Gagal menghapus produk"
+    "deleteFailed": "Gagal menghapus produk",
+    "shareButton": "Bagikan",
+    "linkCopied": "Link disalin!"
   },
   "customers": {
     "title": "Pelanggan",
@@ -190,5 +192,15 @@
   },
   "errors": {
     "loadingError": "Gagal memuat {resource}"
+  },
+  "share": {
+    "title": "Katalog Produk",
+    "noProducts": "Belum ada produk tersedia.",
+    "fetchFailed": "Gagal memuat produk",
+    "invalidLink": "Tautan berbagi tidak valid",
+    "shopNotFound": "Toko tidak ditemukan",
+    "shopNotFoundDesc": "Tautan katalog ini mungkin telah kedaluwarsa atau tidak valid.",
+    "errorTitle": "Terjadi kesalahan",
+    "products": "produk"
   }
 }

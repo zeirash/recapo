@@ -85,3 +85,6 @@ jspm_packages/
 # Temporary folders
 tmp/
 temp/
+
+# Temporary ignored it (manually exec queries in migrations folder)
+arion/migrations/*

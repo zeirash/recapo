@@ -116,7 +116,9 @@
     "fetchFailed": "Failed to fetch products",
     "createFailed": "Failed to create product",
     "updateFailed": "Failed to update product",
-    "deleteFailed": "Failed to delete product"
+    "deleteFailed": "Failed to delete product",
+    "shareButton": "Share",
+    "linkCopied": "Link copied!"
   },
   "customers": {
     "title": "Customers",
@@ -190,5 +192,15 @@
   },
   "errors": {
     "loadingError": "Error loading {resource}"
+  },
+  "share": {
+    "title": "Product Catalog",
+    "noProducts": "No products available yet.",
+    "fetchFailed": "Failed to load products",
+    "invalidLink": "Invalid share link",
+    "shopNotFound": "Shop not found",
+    "shopNotFoundDesc": "This catalog link may be expired or invalid.",
+    "errorTitle": "Something went wrong",
+    "products": "products"
   }
 }

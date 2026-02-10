@@ -196,7 +196,7 @@ func TestGetShopShareTokenHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
 
-			req := newRequestWithShopID("GET", "/shop", nil, tt.shopID)
+			req := newRequestWithShopID("GET", "/shop/share_token", nil, tt.shopID)
 			rec := httptest.NewRecorder()
 
 			handler.GetShopShareTokenHandler(rec, req)

@@ -13,15 +13,15 @@ export default function AddButton({ onClick, title }: AddButtonProps) {
       onClick={onClick}
       title={title}
       sx={{
-        width: 26,
-        minWidth: 40,
-        height: 40,
+        width: 36,
+        minWidth: 36,
+        height: 36,
         p: 0,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 'medium',
-        fontSize: 3,
+        fontSize: 2,
         fontWeight: 'bold',
       }}
     >
