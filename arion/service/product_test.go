@@ -226,7 +226,7 @@ func Test_pservice_GetProductByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "get product not found returns nil result",
+			name: "get product not found returns error",
 			input: input{
 				productID: 9999,
 				shopID:    nil,
@@ -239,7 +239,7 @@ func Test_pservice_GetProductByID(t *testing.T) {
 				return mock
 			},
 			wantResult: nil,
-			wantErr:    false,
+			wantErr:    true,
 		},
 		{
 			name: "get product returns error on database failure",

@@ -70,10 +70,11 @@ func TestGetUserHandler(t *testing.T) {
 			mockSetup: func() {
 				mockUserService.EXPECT().
 					GetUserByID(999).
-					Return(nil, nil)
+					Return(nil, errors.New("user not found"))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
+			wantErrMessage: "user not found",
 		},
 		{
 			name:   "get user returns 500 on service error",

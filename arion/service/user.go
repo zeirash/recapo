@@ -228,7 +228,7 @@ func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
 	}
 
 	if user == nil {
-		return nil, nil
+		return nil, errors.New("user not found")
 	}
 
 	res := response.UserData{

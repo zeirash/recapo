@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
@@ -24,10 +25,9 @@ import (
 func GetShopShareTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
-	// TODO: generalized other handler error handling (follow this pattern)
 	token, err := shopService.GetShareTokenByID(shopID)
 	if err != nil {
-		if err.Error() == "shop not found" {
+		if strings.Contains(err.Error(), "not found") {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}

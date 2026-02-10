@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
@@ -96,13 +97,12 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := productService.GetProductByID(productID, shopID)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
 		logger.WithError(err).Error("get_product_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_product")
-		return
-	}
-
-	if res == nil {
-		WriteErrorJson(w, r, http.StatusNotFound, errors.New("product not found"), "not_found")
 		return
 	}
 

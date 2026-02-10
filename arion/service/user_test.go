@@ -981,7 +981,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "get user by ID not found returns nil result",
+			name:   "get user by ID not found returns error",
 			userID: 9999,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
@@ -991,7 +991,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 				return mock
 			},
 			wantResult: nil,
-			wantErr:    false,
+			wantErr:    true,
 		},
 		{
 			name:   "get user by ID returns error on database failure",

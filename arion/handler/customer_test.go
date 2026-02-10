@@ -209,7 +209,7 @@ func TestGetCustomerHandler(t *testing.T) {
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
 					GetCustomerByID(999, 1).
-					Return(nil, nil)
+					Return(nil, errors.New("customer not found"))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,

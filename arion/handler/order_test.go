@@ -186,7 +186,7 @@ func TestGetOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetOrderByID(999, 1).
-					Return(nil, nil)
+					Return(nil, errors.New("order not found"))
 			},
 			wantStatus:     http.StatusNotFound,
 			wantSuccess:    false,

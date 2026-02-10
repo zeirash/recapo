@@ -213,7 +213,7 @@ func TestGetProductHandler(t *testing.T) {
 			mockSetup: func() {
 				mockProductService.EXPECT().
 					GetProductByID(999, 1).
-					Return(nil, nil)
+					Return(nil, errors.New("product not found"))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,

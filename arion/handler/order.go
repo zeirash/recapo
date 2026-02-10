@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -106,13 +107,12 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrderByID(orderID, shopID)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
 		logger.WithError(err).Error("get_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order")
-		return
-	}
-
-	if res == nil {
-		WriteErrorJson(w, r, http.StatusNotFound, errors.New("order not found"), "not_found")
 		return
 	}
 

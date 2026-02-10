@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/common/logger"
@@ -23,13 +23,12 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := userService.GetUserByID(int(userID))
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
 		logger.WithError(err).Error("get_user_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_user")
-		return
-	}
-
-	if res == nil {
-		WriteErrorJson(w, r, http.StatusNotFound, errors.New("user_not_found"), "not_found")
 		return
 	}
 

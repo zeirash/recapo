@@ -63,7 +63,7 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 	}
 
 	if product == nil {
-		return nil, nil
+		return nil, errors.New("product not found")
 	}
 
 	res := response.ProductData{

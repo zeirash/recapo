@@ -80,7 +80,7 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 	}
 
 	if order == nil {
-		return nil, nil
+		return nil, errors.New("order not found")
 	}
 
 	orderItems, err := orderItemStore.GetOrderItemsByOrderID(order.ID)

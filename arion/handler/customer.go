@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
@@ -94,13 +95,12 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := customerService.GetCustomerByID(customerID, shopID)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
 		logger.WithError(err).Error("get_customer_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_customer")
-		return
-	}
-
-	if res == nil {
-		WriteErrorJson(w, r, http.StatusNotFound, errors.New("customer not found"), "not_found")
 		return
 	}
 
