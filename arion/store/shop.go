@@ -15,6 +15,7 @@ const shareTokenLength = 12
 type (
 	ShopStore interface {
 		CreateShop(tx database.Tx, name string) (*model.Shop, error)
+		GetShareTokenByID(shopID int) (string, error)
 		GetShopByShareToken(shareToken string) (*model.Shop, error)
 	}
 
@@ -70,6 +71,21 @@ func (s *shop) CreateShop(tx database.Tx, name string) (*model.Shop, error) {
 		ShareToken: shareToken,
 		CreatedAt:  now,
 	}, nil
+}
+
+func (s *shop) GetShareTokenByID(shopID int) (string, error) {
+	q := `SELECT share_token FROM shops WHERE id = $1`
+
+	var token string
+	err := s.db.QueryRow(q, shopID).Scan(&token)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return token, nil
 }
 
 func (s *shop) GetShopByShareToken(shareToken string) (*model.Shop, error) {

@@ -10,6 +10,7 @@ import (
 
 type (
 	ShopService interface {
+		GetShareTokenByID(shopID int) (string, error)
 		GetPublicProducts(shareToken string) ([]response.ProductData, error)
 	}
 
@@ -27,6 +28,17 @@ func NewShopService() ShopService {
 	}
 
 	return &shopService{}
+}
+
+func (s *shopService) GetShareTokenByID(shopID int) (string, error) {
+	token, err := shopStore.GetShareTokenByID(shopID)
+	if err != nil {
+		return "", err
+	}
+	if token == "" {
+		return "", errors.New("shop not found")
+	}
+	return token, nil
 }
 
 func (s *shopService) GetPublicProducts(shareToken string) ([]response.ProductData, error) {

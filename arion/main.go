@@ -66,6 +66,9 @@ func NewRouter() *mux.Router {
 	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteCustomerHandler))).Methods("DELETE")
 	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetCustomerHandler))).Methods("GET")
 
+	// For Shop
+	r.Handle("/shop/share_token", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetShopShareTokenHandler))).Methods("GET")
+
 	// For Product
 	r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateProductHandler))).Methods("POST")
 	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")

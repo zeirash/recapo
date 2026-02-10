@@ -159,3 +159,74 @@ func Test_shop_CreateShop(t *testing.T) {
 		})
 	}
 }
+
+func Test_shop_GetShareTokenByID(t *testing.T) {
+	tests := []struct {
+		name      string
+		shopID    int
+		mockSetup func(mock sqlmock.Sqlmock)
+		want      string
+		wantErr   bool
+	}{
+		{
+			name:   "successfully get share token by shop id",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"share_token"}).AddRow("abc123xyz789")
+				mock.ExpectQuery(`SELECT share_token FROM shops WHERE id = \$1`).
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			want:    "abc123xyz789",
+			wantErr: false,
+		},
+		{
+			name:   "returns empty string when shop not found",
+			shopID: 999,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT share_token FROM shops WHERE id = \$1`).
+					WithArgs(999).
+					WillReturnError(sql.ErrNoRows)
+			},
+			want:    "",
+			wantErr: false,
+		},
+		{
+			name:   "returns error on database failure",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT share_token FROM shops WHERE id = \$1`).
+					WithArgs(1).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+
+			s := &shop{db: db}
+			got, gotErr := s.GetShareTokenByID(tt.shopID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetShareTokenByID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetShareTokenByID() succeeded unexpectedly")
+			}
+			if got != tt.want {
+				t.Errorf("GetShareTokenByID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

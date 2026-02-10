@@ -134,3 +134,93 @@ func TestGetShopProductsHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestGetShopShareTokenHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetShopService()
+	defer handler.SetShopService(oldService)
+
+	mockShopService := mock_service.NewMockShopService(ctrl)
+	handler.SetShopService(mockShopService)
+
+	tests := []struct {
+		name           string
+		shopID         int
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantShareToken string
+		wantErrMessage string
+	}{
+		{
+			name:   "successfully get share token",
+			shopID: 1,
+			mockSetup: func() {
+				mockShopService.EXPECT().
+					GetShareTokenByID(1).
+					Return("abc123xyz789", nil)
+			},
+			wantStatus:     http.StatusOK,
+			wantSuccess:    true,
+			wantShareToken: "abc123xyz789",
+		},
+		{
+			name:   "returns 404 when shop not found",
+			shopID: 999,
+			mockSetup: func() {
+				mockShopService.EXPECT().
+					GetShareTokenByID(999).
+					Return("", errors.New("shop not found"))
+			},
+			wantStatus:     http.StatusNotFound,
+			wantSuccess:    false,
+			wantErrMessage: "shop not found",
+		},
+		{
+			name:   "returns 500 on service error",
+			shopID: 1,
+			mockSetup: func() {
+				mockShopService.EXPECT().
+					GetShareTokenByID(1).
+					Return("", errors.New("database error"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "database error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := newRequestWithShopID("GET", "/shop", nil, tt.shopID)
+			rec := httptest.NewRecorder()
+
+			handler.GetShopShareTokenHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("GetShopShareTokenHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("GetShopShareTokenHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("GetShopShareTokenHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+			if tt.wantShareToken != "" {
+				data, ok := resp.Data.(map[string]interface{})
+				if !ok {
+					t.Errorf("GetShopShareTokenHandler() data = %T, want map", resp.Data)
+				} else if data["share_token"] != tt.wantShareToken {
+					t.Errorf("GetShopShareTokenHandler() data.share_token = %v, want %v", data["share_token"], tt.wantShareToken)
+				}
+			}
+		})
+	}
+}
