@@ -22,7 +22,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
-	"github.com/swaggo/http-swagger"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/logger"
@@ -45,7 +45,7 @@ func NewRouter() *mux.Router {
 	// Routes API No Auth
 	r.HandleFunc("/health", handler.HealthHandler)
 	r.HandleFunc("/public/shops/{share_token}/products", handler.GetShopProductsHandler).Methods("GET")
-
+	r.HandleFunc("/public/shops/{share_token}/order", handler.CreateShopOrderTempHandler).Methods("POST")
 
 	r.HandleFunc("/login", handler.LoginHandler).Methods("POST")
 	r.HandleFunc("/register", handler.RegisterHandler).Methods("POST")

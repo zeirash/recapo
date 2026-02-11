@@ -574,3 +574,152 @@ func Test_order_DeleteOrderByID(t *testing.T) {
 		})
 	}
 }
+
+func Test_order_CreateOrderTemp(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name          string
+		customerName  string
+		customerPhone string
+		shopID        int
+		mockSetup     func(mock sqlmock.Sqlmock)
+		want          *model.OrderTemp
+		wantErr       bool
+	}{
+		{
+			name:          "successfully create order temp",
+			customerName:  "Jane Doe",
+			customerPhone: "+62812345678",
+			shopID:        5,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "customer_name", "customer_phone", "shop_id", "total_price", "status", "created_at"}).
+					AddRow(1, "Jane Doe", "+62812345678", 5, 0, "pending", fixedTime)
+				mock.ExpectQuery(`INSERT INTO orders_temp \(customer_name, customer_phone, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
+					WithArgs("Jane Doe", "+62812345678", 5, sqlmock.AnyArg()).
+					WillReturnRows(rows)
+			},
+			want: &model.OrderTemp{
+				ID:            1,
+				CustomerName:  "Jane Doe",
+				CustomerPhone: "+62812345678",
+				ShopID:        5,
+				TotalPrice:    0,
+				Status:        "pending",
+				CreatedAt:     fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:          "create order temp returns error on database failure",
+			customerName:  "Jane Doe",
+			customerPhone: "+62812345678",
+			shopID:        5,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`INSERT INTO orders_temp \(customer_name, customer_phone, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
+					WithArgs("Jane Doe", "+62812345678", 5, sqlmock.AnyArg()).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			mock.ExpectBegin()
+			tt.mockSetup(mock)
+			store := NewOrderStoreWithDB(db)
+
+			tx, err := db.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin tx: %v", err)
+			}
+			defer tx.Rollback()
+
+			got, gotErr := store.CreateOrderTemp(tx, tt.customerName, tt.customerPhone, tt.shopID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("CreateOrderTemp() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("CreateOrderTemp() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CreateOrderTemp() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_order_UpdateOrderTempTotalPrice(t *testing.T) {
+	tests := []struct {
+		name        string
+		orderTempID int
+		totalPrice  int
+		mockSetup   func(mock sqlmock.Sqlmock)
+		wantErr     bool
+	}{
+		{
+			name:        "successfully update order temp total price",
+			orderTempID: 1,
+			totalPrice:  2500,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(`UPDATE orders_temp\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+					WithArgs(2500, 1).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:        "update order temp total price returns error on database failure",
+			orderTempID: 1,
+			totalPrice:  2500,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(`UPDATE orders_temp\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+					WithArgs(2500, 1).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewOrderStoreWithDB(db)
+
+			tx, err := db.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin tx: %v", err)
+			}
+			defer tx.Rollback()
+
+			gotErr := store.UpdateOrderTempTotalPrice(tx, tt.orderTempID, tt.totalPrice)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("UpdateOrderTempTotalPrice() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("UpdateOrderTempTotalPrice() succeeded unexpectedly")
+			}
+		})
+	}
+}

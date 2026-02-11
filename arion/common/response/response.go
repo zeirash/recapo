@@ -59,4 +59,24 @@ type (
 		CreatedAt   time.Time  `json:"created_at"`
 		UpdatedAt   *time.Time `json:"updated_at"`
 	}
+
+	OrderTempData struct {
+		ID             int                 `json:"id"`
+		CustomerName   string              `json:"customer_name"`
+		CustomerPhone  string              `json:"customer_phone"`
+		TotalPrice     int                 `json:"total_price"`
+		Status         string              `json:"status"`
+		OrderTempItems []OrderItemTempData `json:"order_items,omitempty"`
+		CreatedAt      time.Time           `json:"created_at"`
+		UpdatedAt      *time.Time          `json:"updated_at"`
+	}
+
+	OrderItemTempData struct {
+		ID          int        `json:"id"`
+		OrderTempID int        `json:"order_temp_id,omitempty"`
+		ProductName string     `json:"product_name"`
+		Price       int        `json:"price"`
+		Qty         int        `json:"qty"`
+		CreatedAt   time.Time  `json:"created_at"`
+	}
 )

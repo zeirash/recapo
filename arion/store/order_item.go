@@ -18,6 +18,8 @@ type (
 		UpdateOrderItemByID(id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error)
 		DeleteOrderItemByID(id, orderID int) error
 		DeleteOrderItemsByOrderID(tx database.Tx, orderID int) error
+
+		CreateOrderItemTemp(tx database.Tx, orderTempID, productID, qty int) (*model.OrderTempItem, error)
 	}
 
 	orderitem struct {
@@ -181,4 +183,27 @@ func (o *orderitem) DeleteOrderItemsByOrderID(tx database.Tx, orderID int) error
 	}
 
 	return nil
+}
+
+func (o *orderitem) CreateOrderItemTemp(tx database.Tx, orderTempID, productID, qty int) (*model.OrderTempItem, error) {
+	now := time.Now()
+	var orderTempItem model.OrderTempItem
+
+	q := `
+		WITH inserted AS (
+			INSERT INTO order_items_temp (order_temp_id, product_id, qty, created_at)
+			VALUES ($1, $2, $3, $4)
+			RETURNING id, order_temp_id, product_id, qty, created_at
+		)
+		SELECT i.id, i.order_temp_id, p.name as product_name, p.price as price, i.qty, i.created_at
+		FROM inserted i
+		INNER JOIN products p ON i.product_id = p.id
+	`
+
+	err := tx.QueryRow(q, orderTempID, productID, qty, now).Scan(&orderTempItem.ID, &orderTempItem.OrderTempID, &orderTempItem.ProductName, &orderTempItem.Price, &orderTempItem.Qty, &orderTempItem.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &orderTempItem, nil
 }

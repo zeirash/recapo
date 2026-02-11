@@ -8,6 +8,20 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/common/logger"
+	"github.com/zeirash/recapo/arion/service"
+)
+
+type (
+	CreateShopOrderTempRequest struct {
+		CustomerName  string                           `json:"customer_name"`
+		CustomerPhone string                           `json:"customer_phone"`
+		Items         []CreateShopOrderTempItemRequest `json:"order_items"`
+	}
+
+	CreateShopOrderTempItemRequest struct {
+		ProductID int `json:"product_id"`
+		Qty       int `json:"qty"`
+	}
 )
 
 // GetShopShareTokenHandler godoc
@@ -18,7 +32,7 @@ import (
 //	@Tags			shop
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Success		200	{object}	response.ShareTokenData
+//	@Success		200	{object}	object{share_token=string}
 //	@Failure		404	{object}	ErrorApiResponse	"Shop not found"
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/shop/share_token [get]
@@ -73,4 +87,83 @@ func GetShopProductsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJson(w, http.StatusOK, products)
+}
+
+// CreateShopOrderTempHandler godoc
+//
+//	@Summary		Create order temp (public)
+//	@Description	Create a temporary order for a shop by share token. No authentication required. Used for public share-page checkout.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			shop
+//	@Accept			json
+//	@Produce		json
+//	@Param			share_token	path		string						true	"Shop share token"
+//	@Param			body		body		CreateShopOrderTempRequest	true	"Customer name, phone, and order items (product_id, qty)"
+//	@Success		200			{object}	response.OrderTempData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (missing share_token, invalid JSON, or validation: customer_name/customer_phone required)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/public/shops/{share_token}/orders [post]
+func CreateShopOrderTempHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	shareToken := params["share_token"]
+
+	if shareToken == "" {
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("share_token is required"), "validation")
+		return
+	}
+
+	inp := CreateShopOrderTempRequest{}
+	if err := ParseJson(r.Body, &inp); err != nil {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
+		return
+	}
+
+	if valid, err := validateCreateShopOrderTemp(inp); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	items := []service.CreateOrderTempItemInput{}
+	for _, item := range inp.Items {
+		items = append(items, service.CreateOrderTempItemInput{
+			ProductID: item.ProductID,
+			Qty:       item.Qty,
+		})
+	}
+	res, err := orderService.CreateOrderTemp(inp.CustomerName, inp.CustomerPhone, shareToken, items)
+	if err != nil {
+		logger.WithError(err).Error("create_shop_order_temp_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_shop_order_temp")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
+func validateCreateShopOrderTemp(inp CreateShopOrderTempRequest) (bool, error) {
+	if inp.CustomerName == "" {
+		return false, errors.New("customer_name is required")
+	}
+
+	if inp.CustomerPhone == "" {
+		return false, errors.New("customer_phone is required")
+	}
+
+	if len(inp.Items) == 0 {
+		return false, errors.New("order_items is required")
+	}
+
+	for _, item := range inp.Items {
+		if item.ProductID <= 0 {
+			return false, errors.New("product_id is required")
+		}
+	}
+
+	for _, item := range inp.Items {
+		if item.Qty <= 0 {
+			return false, errors.New("qty is required")
+		}
+	}
+
+	return true, nil
 }

@@ -104,4 +104,24 @@ type (
 		CreatedAt   time.Time    `db:"created_at"`
 		UpdatedAt   sql.NullTime `db:"updated_at"`
 	}
+
+	OrderTemp struct {
+		ID            int          `db:"id"`
+		ShopID        int          `db:"shop_id"`
+		CustomerName  string       `db:"customer_name"`
+		CustomerPhone string       `db:"customer_phone"`
+		TotalPrice    int          `db:"total_price"`
+		Status        string       `db:"status"`
+		CreatedAt     time.Time    `db:"created_at"`
+		UpdatedAt     sql.NullTime `db:"updated_at"`
+	}
+
+	OrderTempItem struct {
+		ID          int          `db:"id"`
+		OrderTempID int          `db:"order_temp_id"`
+		ProductName string       `db:"product_name"`
+		Price       int          `db:"price"`
+		Qty         int          `db:"qty"`
+		CreatedAt   time.Time    `db:"created_at"`
+	}
 )

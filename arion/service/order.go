@@ -17,11 +17,21 @@ type (
 		GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error)
 		UpdateOrderByID(input UpdateOrderInput) (response.OrderData, error)
 		DeleteOrderByID(id int) error
+
 		CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error)
 		UpdateOrderItemByID(input UpdateOrderItemInput) (response.OrderItemData, error)
 		DeleteOrderItemByID(orderItemID, orderID int) error
 		GetOrderItemByID(orderItemID, orderID int) (response.OrderItemData, error)
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
+
+		CreateOrderTemp(customerName, customerPhone, shareToken string, items []CreateOrderTempItemInput) (response.OrderTempData, error)
+		// GetOrderTempByID(id int, shopID ...int) (*response.OrderTempData, error)
+		// GetOrderTempsByShopID(shopID int, opts model.OrderTempFilterOptions) ([]response.OrderTempData, error)
+		// UpdateOrderTempByID(input UpdateOrderTempInput) (response.OrderTempData, error)
+		// DeleteOrderTempByID(id int) error
+
+		// UpdateOrderTempItemByID(input UpdateOrderTempItemInput) (response.OrderTempItemData, error)
+		// DeleteOrderTempItemByID(orderTempItemID, orderTempID int) error
 	}
 
 	oservice struct{}
@@ -38,6 +48,11 @@ type (
 		OrderItemID int
 		ProductID   *int
 		Qty         *int
+	}
+
+	CreateOrderTempItemInput struct {
+		ProductID int
+		Qty       int
 	}
 )
 
@@ -214,8 +229,8 @@ func (o *oservice) CreateOrderItem(orderID, productID, qty int) (response.OrderI
 		ID:          orderItem.ID,
 		OrderID:     orderItem.OrderID,
 		ProductName: orderItem.ProductName,
-		Price:			 orderItem.Price,
-		Qty:				 orderItem.Qty,
+		Price:       orderItem.Price,
+		Qty:         orderItem.Qty,
 		CreatedAt:   orderItem.CreatedAt,
 	}
 
@@ -317,4 +332,70 @@ func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData
 	}
 
 	return orderItemsData, nil
+}
+
+func (o *oservice) CreateOrderTemp(customerName, customerPhone, shareToken string, items []CreateOrderTempItemInput) (response.OrderTempData, error) {
+	shop, err := shopStore.GetShopByShareToken(shareToken)
+	if err != nil {
+		return response.OrderTempData{}, err
+	}
+
+	if shop == nil {
+		return response.OrderTempData{}, errors.New("shop not found")
+	}
+
+	db := dbGetter()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return response.OrderTempData{}, err
+	}
+	defer tx.Rollback()
+
+	orderTemp, err := orderStore.CreateOrderTemp(tx, customerName, customerPhone, shop.ID)
+	if err != nil {
+		return response.OrderTempData{}, err
+	}
+
+	orderItemTempsData := []response.OrderItemTempData{}
+	totalPrice := 0
+	for _, item := range items {
+		orderItemTemp, err := orderItemStore.CreateOrderItemTemp(tx, orderTemp.ID, item.ProductID, item.Qty)
+		if err != nil {
+			return response.OrderTempData{}, err
+		}
+		orderItemTempsData = append(orderItemTempsData, response.OrderItemTempData{
+			ID:          orderItemTemp.ID,
+			OrderTempID: orderItemTemp.OrderTempID,
+			ProductName: orderItemTemp.ProductName,
+			Price:       orderItemTemp.Price,
+			Qty:         orderItemTemp.Qty,
+			CreatedAt:   orderItemTemp.CreatedAt,
+		})
+		totalPrice += item.Qty * orderItemTemp.Price
+	}
+
+	err = orderStore.UpdateOrderTempTotalPrice(tx, orderTemp.ID, totalPrice)
+	if err != nil {
+		return response.OrderTempData{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return response.OrderTempData{}, err
+	}
+
+	res := response.OrderTempData{
+		ID:             orderTemp.ID,
+		CustomerName:   orderTemp.CustomerName,
+		CustomerPhone:  orderTemp.CustomerPhone,
+		TotalPrice:     orderTemp.TotalPrice,
+		Status:         orderTemp.Status,
+		OrderTempItems: orderItemTempsData,
+		CreatedAt:      orderTemp.CreatedAt,
+	}
+	if orderTemp.UpdatedAt.Valid {
+		res.UpdatedAt = &orderTemp.UpdatedAt.Time
+	}
+	return res, nil
 }

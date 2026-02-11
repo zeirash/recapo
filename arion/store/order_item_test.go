@@ -535,3 +535,90 @@ func Test_orderitem_DeleteOrderItemsByOrderID(t *testing.T) {
 		})
 	}
 }
+
+func Test_orderitem_CreateOrderItemTemp(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	queryRegex := `WITH inserted AS \(\s*INSERT INTO order_items_temp \(order_temp_id, product_id, qty, created_at\)\s*VALUES \(\$1, \$2, \$3, \$4\)\s*RETURNING id, order_temp_id, product_id, qty, created_at\s*\)\s*SELECT i\.id, i\.order_temp_id, p\.name as product_name, p\.price as price, i\.qty, i\.created_at\s*FROM inserted i\s*INNER JOIN products p ON i\.product_id = p\.id`
+
+	tests := []struct {
+		name        string
+		orderTempID int
+		productID   int
+		qty         int
+		mockSetup   func(mock sqlmock.Sqlmock)
+		want        *model.OrderTempItem
+		wantErr     bool
+	}{
+		{
+			name:        "successfully create order item temp",
+			orderTempID: 1,
+			productID:   10,
+			qty:         2,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "order_temp_id", "product_name", "price", "qty", "created_at"}).
+					AddRow(1, 1, "Product A", 1000, 2, fixedTime)
+				mock.ExpectQuery(queryRegex).
+					WithArgs(1, 10, 2, sqlmock.AnyArg()).
+					WillReturnRows(rows)
+			},
+			want: &model.OrderTempItem{
+				ID:          1,
+				OrderTempID: 1,
+				ProductName: "Product A",
+				Price:       1000,
+				Qty:         2,
+				CreatedAt:   fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:        "create order item temp returns error on database failure",
+			orderTempID: 1,
+			productID:   10,
+			qty:         2,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(queryRegex).
+					WithArgs(1, 10, 2, sqlmock.AnyArg()).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			mock.ExpectBegin()
+			tt.mockSetup(mock)
+			store := NewOrderItemStoreWithDB(db)
+
+			tx, err := db.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin tx: %v", err)
+			}
+			defer tx.Rollback()
+
+			got, gotErr := store.CreateOrderItemTemp(tx, tt.orderTempID, tt.productID, tt.qty)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("CreateOrderItemTemp() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("CreateOrderItemTemp() succeeded unexpectedly")
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CreateOrderItemTemp() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

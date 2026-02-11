@@ -51,6 +51,21 @@ func (mr *MockOrderStoreMockRecorder) CreateOrder(customerID, shopID, status, no
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockOrderStore)(nil).CreateOrder), customerID, shopID, status, notes)
 }
 
+// CreateOrderTemp mocks base method.
+func (m *MockOrderStore) CreateOrderTemp(tx database.Tx, customerName, customerPhone string, shopID int) (*model.OrderTemp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOrderTemp", tx, customerName, customerPhone, shopID)
+	ret0, _ := ret[0].(*model.OrderTemp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOrderTemp indicates an expected call of CreateOrderTemp.
+func (mr *MockOrderStoreMockRecorder) CreateOrderTemp(tx, customerName, customerPhone, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrderTemp", reflect.TypeOf((*MockOrderStore)(nil).CreateOrderTemp), tx, customerName, customerPhone, shopID)
+}
+
 // DeleteOrderByID mocks base method.
 func (m *MockOrderStore) DeleteOrderByID(tx database.Tx, id int) error {
 	m.ctrl.T.Helper()
@@ -113,4 +128,18 @@ func (m *MockOrderStore) UpdateOrder(id int, input store.UpdateOrderInput) (*mod
 func (mr *MockOrderStoreMockRecorder) UpdateOrder(id, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrder", reflect.TypeOf((*MockOrderStore)(nil).UpdateOrder), id, input)
+}
+
+// UpdateOrderTempTotalPrice mocks base method.
+func (m *MockOrderStore) UpdateOrderTempTotalPrice(tx database.Tx, orderTempID, totalPrice int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateOrderTempTotalPrice", tx, orderTempID, totalPrice)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateOrderTempTotalPrice indicates an expected call of UpdateOrderTempTotalPrice.
+func (mr *MockOrderStoreMockRecorder) UpdateOrderTempTotalPrice(tx, orderTempID, totalPrice interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderTempTotalPrice", reflect.TypeOf((*MockOrderStore)(nil).UpdateOrderTempTotalPrice), tx, orderTempID, totalPrice)
 }

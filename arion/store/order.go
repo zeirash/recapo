@@ -17,6 +17,13 @@ type (
 		CreateOrder(customerID int, shopID int, status string, notes *string) (*model.Order, error)
 		UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error)
 		DeleteOrderByID(tx database.Tx, id int) error
+
+		CreateOrderTemp(tx database.Tx, customerName, customerPhone string, shopID int) (*model.OrderTemp, error)
+		UpdateOrderTempTotalPrice(tx database.Tx, orderTempID int, totalPrice int) error
+		// GetOrderTempByID(id int, shopID ...int) (*model.OrderTemp, error)
+		// GetOrderTempsByShopID(shopID int, opts model.OrderTempFilterOptions) ([]model.OrderTemp, error)
+		// UpdateOrderTempByID(id int, input UpdateOrderTempInput) (*model.OrderTemp, error)
+		// DeleteOrderTempByID(tx database.Tx, id int) error
 	}
 
 	order struct {
@@ -196,5 +203,36 @@ func (o *order) DeleteOrderByID(tx database.Tx, id int) error {
 		return err
 	}
 
+	return nil
+}
+
+func (o *order) CreateOrderTemp(tx database.Tx, customerName, customerPhone string, shopID int) (*model.OrderTemp, error) {
+	now := time.Now()
+	var orderTemp model.OrderTemp
+
+	q := `
+		INSERT INTO orders_temp (customer_name, customer_phone, shop_id, created_at)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at
+	`
+
+	err := tx.QueryRow(q, customerName, customerPhone, shopID, now).Scan(&orderTemp.ID, &orderTemp.CustomerName, &orderTemp.CustomerPhone, &orderTemp.ShopID, &orderTemp.TotalPrice, &orderTemp.Status, &orderTemp.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &orderTemp, nil
+}
+
+func (o *order) UpdateOrderTempTotalPrice(tx database.Tx, orderTempID int, totalPrice int) error {
+	q := `
+		UPDATE orders_temp
+		SET total_price = $1, updated_at = now()
+		WHERE id = $2
+	`
+	_, err := tx.Exec(q, totalPrice, orderTempID)
+	if err != nil {
+		return err
+	}
 	return nil
 }

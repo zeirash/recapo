@@ -5,3 +5,6 @@ To build docker image
 
 To run docker image
 `docker run -p 4000:4000 arion`
+
+To regenerate Swagger docs (after changing handler godoc comments)
+`swag init -g main.go`

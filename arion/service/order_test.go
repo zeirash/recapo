@@ -1231,3 +1231,257 @@ func Test_oservice_GetOrderItemsByOrderID(t *testing.T) {
 		})
 	}
 }
+
+func Test_oservice_CreateOrderTemp(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+	updatedTime := time.Date(2024, 1, 16, 12, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name          string
+		customerName  string
+		customerPhone string
+		shareToken    string
+		items         []CreateOrderTempItemInput
+		mockSetup     func(ctrl *gomock.Controller) (*mock_store.MockShopStore, *mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB)
+		wantResult    response.OrderTempData
+		wantErr       bool
+	}{
+		{
+			name:          "successfully create order temp with no items",
+			customerName:  "Jane Doe",
+			customerPhone: "+62812345678",
+			shareToken:    "share-abc123",
+			items:         nil,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockShopStore, *mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				shopMock := mock_store.NewMockShopStore(ctrl)
+				shopMock.EXPECT().
+					GetShopByShareToken("share-abc123").
+					Return(&model.Shop{ID: 5, Name: "Test Shop", ShareToken: "share-abc123", CreatedAt: fixedTime}, nil)
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					CreateOrderTemp(gomock.Any(), "Jane Doe", "+62812345678", 5).
+					Return(&model.OrderTemp{
+						ID:            1,
+						CustomerName:  "Jane Doe",
+						CustomerPhone: "+62812345678",
+						ShopID:        5,
+						TotalPrice:    0,
+						Status:        "pending",
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{Time: updatedTime, Valid: true},
+					}, nil)
+				orderMock.EXPECT().
+					UpdateOrderTempTotalPrice(gomock.Any(), 1, 0).
+					Return(nil)
+				return shopMock, orderMock, nil, mockDB
+			},
+			wantResult: response.OrderTempData{
+				ID:            1,
+				CustomerName:  "Jane Doe",
+				CustomerPhone: "+62812345678",
+				TotalPrice:    0,
+				Status:        "pending",
+				OrderTempItems: []response.OrderItemTempData{},
+				CreatedAt:     fixedTime,
+				UpdatedAt:     &updatedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:          "successfully create order temp with items",
+			customerName:  "Jane Doe",
+			customerPhone: "+62812345678",
+			shareToken:    "share-abc123",
+			items:         []CreateOrderTempItemInput{{ProductID: 10, Qty: 2}, {ProductID: 20, Qty: 1}},
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockShopStore, *mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				shopMock := mock_store.NewMockShopStore(ctrl)
+				shopMock.EXPECT().
+					GetShopByShareToken("share-abc123").
+					Return(&model.Shop{ID: 5, Name: "Test Shop", ShareToken: "share-abc123", CreatedAt: fixedTime}, nil)
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					CreateOrderTemp(gomock.Any(), "Jane Doe", "+62812345678", 5).
+					Return(&model.OrderTemp{
+						ID:            1,
+						CustomerName:  "Jane Doe",
+						CustomerPhone: "+62812345678",
+						ShopID:        5,
+						TotalPrice:    0,
+						Status:        "pending",
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{Time: updatedTime, Valid: true},
+					}, nil)
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					CreateOrderItemTemp(gomock.Any(), 1, 10, 2).
+					Return(&model.OrderTempItem{ID: 1, OrderTempID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime}, nil)
+				orderItemMock.EXPECT().
+					CreateOrderItemTemp(gomock.Any(), 1, 20, 1).
+					Return(&model.OrderTempItem{ID: 2, OrderTempID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime}, nil)
+				orderMock.EXPECT().
+					UpdateOrderTempTotalPrice(gomock.Any(), 1, 2500).
+					Return(nil)
+				return shopMock, orderMock, orderItemMock, mockDB
+			},
+			wantResult: response.OrderTempData{
+				ID:            1,
+				CustomerName:  "Jane Doe",
+				CustomerPhone: "+62812345678",
+				TotalPrice:    0,
+				Status:        "pending",
+				OrderTempItems: []response.OrderItemTempData{
+					{ID: 1, OrderTempID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					{ID: 2, OrderTempID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+				UpdatedAt: &updatedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:          "create order temp returns error when shop not found",
+			customerName:  "Jane Doe",
+			customerPhone: "+62812345678",
+			shareToken:    "invalid-token",
+			items:         nil,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockShopStore, *mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				shopMock := mock_store.NewMockShopStore(ctrl)
+				shopMock.EXPECT().
+					GetShopByShareToken("invalid-token").
+					Return(nil, errors.New("shop not found"))
+				return shopMock, nil, nil, nil
+			},
+			wantResult: response.OrderTempData{},
+			wantErr:    true,
+		},
+		{
+			name:          "create order temp returns error when shop is nil",
+			customerName:  "Jane Doe",
+			customerPhone: "+62812345678",
+			shareToken:    "share-abc123",
+			items:         nil,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockShopStore, *mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				shopMock := mock_store.NewMockShopStore(ctrl)
+				shopMock.EXPECT().
+					GetShopByShareToken("share-abc123").
+					Return(nil, nil)
+				return shopMock, nil, nil, nil
+			},
+			wantResult: response.OrderTempData{},
+			wantErr:    true,
+		},
+		{
+			name:          "create order temp returns error on order store failure",
+			customerName:  "Jane Doe",
+			customerPhone: "+62812345678",
+			shareToken:    "share-abc123",
+			items:         nil,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockShopStore, *mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				shopMock := mock_store.NewMockShopStore(ctrl)
+				shopMock.EXPECT().
+					GetShopByShareToken("share-abc123").
+					Return(&model.Shop{ID: 5, Name: "Test Shop", ShareToken: "share-abc123", CreatedAt: fixedTime}, nil)
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					CreateOrderTemp(gomock.Any(), "Jane Doe", "+62812345678", 5).
+					Return(nil, errors.New("database error"))
+				return shopMock, orderMock, nil, mockDB
+			},
+			wantResult: response.OrderTempData{},
+			wantErr:    true,
+		},
+		{
+			name:          "create order temp returns error when UpdateOrderTempTotalPrice fails",
+			customerName:  "Jane Doe",
+			customerPhone: "+62812345678",
+			shareToken:    "share-abc123",
+			items:         nil,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockShopStore, *mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				shopMock := mock_store.NewMockShopStore(ctrl)
+				shopMock.EXPECT().
+					GetShopByShareToken("share-abc123").
+					Return(&model.Shop{ID: 5, Name: "Test Shop", ShareToken: "share-abc123", CreatedAt: fixedTime}, nil)
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					CreateOrderTemp(gomock.Any(), "Jane Doe", "+62812345678", 5).
+					Return(&model.OrderTemp{
+						ID:            1,
+						CustomerName:  "Jane Doe",
+						CustomerPhone: "+62812345678",
+						ShopID:        5,
+						TotalPrice:    0,
+						Status:        "pending",
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					UpdateOrderTempTotalPrice(gomock.Any(), 1, 0).
+					Return(errors.New("update total price error"))
+				return shopMock, orderMock, nil, mockDB
+			},
+			wantResult: response.OrderTempData{},
+			wantErr:    true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			shopMock, orderMock, orderItemMock, mockDB := tt.mockSetup(ctrl)
+			oldShopStore := shopStore
+			oldOrderStore := orderStore
+			oldOrderItemStore := orderItemStore
+			oldDBGetter := dbGetter
+			defer func() {
+				shopStore = oldShopStore
+				orderStore = oldOrderStore
+				orderItemStore = oldOrderItemStore
+				dbGetter = oldDBGetter
+			}()
+			shopStore = shopMock
+			orderStore = orderMock
+			if orderItemMock != nil {
+				orderItemStore = orderItemMock
+			}
+			if mockDB != nil {
+				dbGetter = func() database.DB { return mockDB }
+			}
+
+			var o oservice
+			got, gotErr := o.CreateOrderTemp(tt.customerName, tt.customerPhone, tt.shareToken, tt.items)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("CreateOrderTemp() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("CreateOrderTemp() succeeded unexpectedly")
+			}
+
+			if !reflect.DeepEqual(got, tt.wantResult) {
+				t.Errorf("CreateOrderTemp() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}

@@ -1008,6 +1008,165 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a product by ID. Only provided fields are updated (partial update).\nSuccess Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Update product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to update (name, description, price)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateProductRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ProductData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (invalid product_id or JSON)",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/shops/{share_token}/orders": {
+            "post": {
+                "description": "Create a temporary order for a shop by share token. No authentication required. Used for public share-page checkout.\nSuccess Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shop"
+                ],
+                "summary": "Create order temp (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Shop share token",
+                        "name": "share_token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Customer name, phone, and order items (product_id, qty)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CreateShopOrderTempRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.OrderTempData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (missing share_token, invalid JSON, or validation: customer_name/customer_phone required)",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/shops/{share_token}/products": {
+            "get": {
+                "description": "Get all products for a shop by its share token. No authentication required. Used for public product catalog share links.\nSuccess Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shop"
+                ],
+                "summary": "List shop products (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Shop share token",
+                        "name": "share_token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.ProductData"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (share_token required)",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Shop not found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    }
+                }
             }
         },
         "/refresh": {
@@ -1089,6 +1248,48 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad request (invalid JSON or validation)",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/shop/share_token": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated shop's share_token. Used for generating share links.\nSuccess Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "shop"
+                ],
+                "summary": "Get shop share token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "share_token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Shop not found",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorApiResponse"
                         }
@@ -1226,8 +1427,39 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "original_price": {
+                    "type": "integer"
+                },
                 "price": {
                     "type": "integer"
+                }
+            }
+        },
+        "handler.CreateShopOrderTempItemRequest": {
+            "type": "object",
+            "properties": {
+                "product_id": {
+                    "type": "integer"
+                },
+                "qty": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.CreateShopOrderTempRequest": {
+            "type": "object",
+            "properties": {
+                "customer_name": {
+                    "type": "string"
+                },
+                "customer_phone": {
+                    "type": "string"
+                },
+                "order_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.CreateShopOrderTempItemRequest"
+                    }
                 }
             }
         },
@@ -1319,6 +1551,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "total_price": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.UpdateProductRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "original_price": {
+                    "type": "integer"
+                },
+                "price": {
                     "type": "integer"
                 }
             }
@@ -1418,6 +1667,61 @@ const docTemplate = `{
                 }
             }
         },
+        "response.OrderItemTempData": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order_temp_id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "qty": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.OrderTempData": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "customer_name": {
+                    "type": "string"
+                },
+                "customer_phone": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.OrderItemTempData"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_price": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "response.ProductData": {
             "type": "object",
             "properties": {
@@ -1432,6 +1736,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "original_price": {
+                    "type": "integer"
                 },
                 "price": {
                     "type": "integer"

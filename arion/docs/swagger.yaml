@@ -22,8 +22,28 @@ definitions:
         type: string
       name:
         type: string
+      original_price:
+        type: integer
       price:
         type: integer
+    type: object
+  handler.CreateShopOrderTempItemRequest:
+    properties:
+      product_id:
+        type: integer
+      qty:
+        type: integer
+    type: object
+  handler.CreateShopOrderTempRequest:
+    properties:
+      customer_name:
+        type: string
+      customer_phone:
+        type: string
+      order_items:
+        items:
+          $ref: '#/definitions/handler.CreateShopOrderTempItemRequest'
+        type: array
     type: object
   handler.ErrorApiResponse:
     properties:
@@ -82,6 +102,17 @@ definitions:
       status:
         type: string
       total_price:
+        type: integer
+    type: object
+  handler.UpdateProductRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      original_price:
+        type: integer
+      price:
         type: integer
     type: object
   handler.UpdateUserRequest:
@@ -146,6 +177,42 @@ definitions:
       updated_at:
         type: string
     type: object
+  response.OrderItemTempData:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      order_temp_id:
+        type: integer
+      price:
+        type: integer
+      product_name:
+        type: string
+      qty:
+        type: integer
+    type: object
+  response.OrderTempData:
+    properties:
+      created_at:
+        type: string
+      customer_name:
+        type: string
+      customer_phone:
+        type: string
+      id:
+        type: integer
+      order_items:
+        items:
+          $ref: '#/definitions/response.OrderItemTempData'
+        type: array
+      status:
+        type: string
+      total_price:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   response.ProductData:
     properties:
       created_at:
@@ -156,6 +223,8 @@ definitions:
         type: integer
       name:
         type: string
+      original_price:
+        type: integer
       price:
         type: integer
       updated_at:
@@ -865,6 +934,117 @@ paths:
       summary: Get product by ID
       tags:
       - product
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        Update a product by ID. Only provided fields are updated (partial update).
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Fields to update (name, description, price)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ProductData'
+        "400":
+          description: Bad request (invalid product_id or JSON)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Update product
+      tags:
+      - product
+  /public/shops/{share_token}/orders:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Create a temporary order for a shop by share token. No authentication required. Used for public share-page checkout.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Shop share token
+        in: path
+        name: share_token
+        required: true
+        type: string
+      - description: Customer name, phone, and order items (product_id, qty)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateShopOrderTempRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OrderTempData'
+        "400":
+          description: 'Bad request (missing share_token, invalid JSON, or validation:
+            customer_name/customer_phone required)'
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      summary: Create order temp (public)
+      tags:
+      - shop
+  /public/shops/{share_token}/products:
+    get:
+      description: |-
+        Get all products for a shop by its share token. No authentication required. Used for public product catalog share links.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      parameters:
+      - description: Shop share token
+        in: path
+        name: share_token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.ProductData'
+            type: array
+        "400":
+          description: Bad request (share_token required)
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "404":
+          description: Shop not found
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      summary: List shop products (public)
+      tags:
+      - shop
   /refresh:
     post:
       consumes:
@@ -929,6 +1109,34 @@ paths:
       summary: Register
       tags:
       - auth
+  /shop/share_token:
+    get:
+      description: |-
+        Get the authenticated shop's share_token. Used for generating share links.
+        Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              share_token:
+                type: string
+            type: object
+        "404":
+          description: Shop not found
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorApiResponse'
+      security:
+      - BearerAuth: []
+      summary: Get shop share token
+      tags:
+      - shop
   /user:
     patch:
       consumes:
