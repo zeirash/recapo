@@ -195,12 +195,21 @@
   },
   "share": {
     "title": "Katalog Produk",
+    "description": "Jelajahi dan pesan dari katalog produk yang dibagikan ini.",
     "noProducts": "Belum ada produk tersedia.",
     "fetchFailed": "Gagal memuat produk",
     "invalidLink": "Tautan berbagi tidak valid",
     "shopNotFound": "Toko tidak ditemukan",
     "shopNotFoundDesc": "Tautan katalog ini mungkin telah kedaluwarsa atau tidak valid.",
     "errorTitle": "Terjadi kesalahan",
-    "products": "produk"
+    "products": "produk",
+    "orderSummary": "Ringkasan pesanan",
+    "noItemsInSummary": "Tambahkan produk untuk memesan",
+    "customerName": "Nama Anda",
+    "customerPhone": "Nomor telepon",
+    "placeOrder": "Kirim pesanan",
+    "total": "Total",
+    "orderSuccess": "Pesanan berhasil dikirim",
+    "orderFailed": "Gagal mengirim pesanan"
   }
 }

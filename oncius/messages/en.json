@@ -195,12 +195,21 @@
   },
   "share": {
     "title": "Product Catalog",
+    "description": "Browse and order from this shared product catalog.",
     "noProducts": "No products available yet.",
     "fetchFailed": "Failed to load products",
     "invalidLink": "Invalid share link",
     "shopNotFound": "Shop not found",
     "shopNotFoundDesc": "This catalog link may be expired or invalid.",
     "errorTitle": "Something went wrong",
-    "products": "products"
+    "products": "products",
+    "orderSummary": "Order summary",
+    "noItemsInSummary": "Add products to place an order",
+    "customerName": "Your name",
+    "customerPhone": "Phone number",
+    "placeOrder": "Place order",
+    "total": "Total",
+    "orderSuccess": "Order submitted successfully",
+    "orderFailed": "Failed to submit order"
   }
 }

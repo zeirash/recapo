@@ -374,6 +374,17 @@ export const api = {
   getPublicProducts: (shareToken: string) => {
     return apiRequest<ApiResponse<any[]>>(`/public/shops/${encodeURIComponent(shareToken)}/products`, {}, true)
   },
+
+  createPublicOrderTemp: (
+    shareToken: string,
+    data: { customer_name: string; customer_phone: string; order_items: Array<{ product_id: number; qty: number }> }
+  ) => {
+    return apiRequest<ApiResponse<any>>(
+      `/public/shops/${encodeURIComponent(shareToken)}/order`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) },
+      true
+    )
+  },
 }
 
 export { ApiError, getAuthToken, setAuthToken, removeAuthToken, getRefreshToken, setRefreshToken, removeRefreshToken }
