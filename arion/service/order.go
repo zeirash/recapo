@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/zeirash/recapo/arion/common/config"
-	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
@@ -71,7 +70,7 @@ func NewOrderService() OrderService {
 }
 
 func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (response.OrderData, error) {
-	order, err := orderStore.CreateOrder(customerID, shopID, constant.OrderStatusCreated, notes)
+	order, err := orderStore.CreateOrder(customerID, shopID, notes)
 	if err != nil {
 		return response.OrderData{}, err
 	}

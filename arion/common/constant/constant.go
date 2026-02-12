@@ -14,4 +14,8 @@ const (
 	OrderStatusInDelivery = "in_delivery"
 	OrderStatusDone       = "done"
 	OrderStatusCancelled  = "cancelled"
+
+	OrderTempStatusPending   = "pending"
+	OrderTempStatusAccepted  = "accepted"
+	OrderTempStatusRejected  = "rejected"
 )

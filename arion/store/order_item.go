@@ -191,7 +191,7 @@ func (o *orderitem) CreateOrderItemTemp(tx database.Tx, orderTempID, productID, 
 
 	q := `
 		WITH inserted AS (
-			INSERT INTO order_items_temp (order_temp_id, product_id, qty, created_at)
+			INSERT INTO order_temp_items (order_temp_id, product_id, qty, created_at)
 			VALUES ($1, $2, $3, $4)
 			RETURNING id, order_temp_id, product_id, qty, created_at
 		)

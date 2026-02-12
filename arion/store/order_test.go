@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/model"
 )
 
@@ -126,12 +127,12 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 	ptrTime := func(t time.Time) *time.Time { return &t }
 
 	tests := []struct {
-		name        string
-		shopID      int
-		opts        model.OrderFilterOptions
-		mockSetup   func(mock sqlmock.Sqlmock)
-		wantResult  []model.Order
-		wantErr     bool
+		name       string
+		shopID     int
+		opts       model.OrderFilterOptions
+		mockSetup  func(mock sqlmock.Sqlmock)
+		wantResult []model.Order
+		wantErr    bool
 	}{
 		{
 			name:   "get orders by shop ID returns multiple orders",
@@ -278,7 +279,6 @@ func Test_order_CreateOrder(t *testing.T) {
 	type input struct {
 		customerID int
 		shopID     int
-		status     string
 		notes      *string
 	}
 
@@ -294,14 +294,13 @@ func Test_order_CreateOrder(t *testing.T) {
 			input: input{
 				customerID: 1,
 				shopID:     10,
-				status:     "in_progress",
 				notes:      strPtr("test notes"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "total_price", "status", "customer_name", "shop_id", "notes", "created_at"}).
-					AddRow(1, 0, "in_progress", "John Doe", 10, "test notes", fixedTime)
+					AddRow(1, 0, constant.OrderStatusCreated, "John Doe", 10, "test notes", fixedTime)
 				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, customer_id, shop_id, notes, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, COALESCE\(\$5, ''\), \$6\)\s+RETURNING id, total_price, status, customer_id, shop_id, notes, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, c.name as customer_name, i.shop_id, i.notes, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
-					WithArgs(0, "in_progress", 1, 10, strPtr("test notes"), sqlmock.AnyArg()).
+					WithArgs(0, constant.OrderStatusCreated, 1, 10, strPtr("test notes"), sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
 			wantResult: &model.Order{
@@ -309,7 +308,7 @@ func Test_order_CreateOrder(t *testing.T) {
 				ShopID:       10,
 				CustomerName: "John Doe",
 				TotalPrice:   0,
-				Status:       "in_progress",
+				Status:       constant.OrderStatusCreated,
 				Notes:        "test notes",
 				CreatedAt:    fixedTime,
 			},
@@ -320,11 +319,10 @@ func Test_order_CreateOrder(t *testing.T) {
 			input: input{
 				customerID: 1,
 				shopID:     10,
-				status:     "in_progress",
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, customer_id, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id, total_price, status, customer_id, shop_id, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, c.name as customer_name, i.shop_id, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
-					WithArgs(0, "in_progress", 1, 10, sqlmock.AnyArg()).
+					WithArgs(0, constant.OrderStatusCreated, 1, 10, sqlmock.AnyArg()).
 					WillReturnError(errors.New("database error"))
 			},
 			wantResult: nil,
@@ -343,7 +341,7 @@ func Test_order_CreateOrder(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.CreateOrder(tt.input.customerID, tt.input.shopID, tt.input.status, tt.input.notes)
+			got, gotErr := store.CreateOrder(tt.input.customerID, tt.input.shopID, tt.input.notes)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -595,8 +593,8 @@ func Test_order_CreateOrderTemp(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "customer_name", "customer_phone", "shop_id", "total_price", "status", "created_at"}).
 					AddRow(1, "Jane Doe", "+62812345678", 5, 0, "pending", fixedTime)
-				mock.ExpectQuery(`INSERT INTO orders_temp \(customer_name, customer_phone, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
-					WithArgs("Jane Doe", "+62812345678", 5, sqlmock.AnyArg()).
+				mock.ExpectQuery(`INSERT INTO order_temp \(customer_name, customer_phone, status, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
+					WithArgs("Jane Doe", "+62812345678", "pending", 5, sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
 			want: &model.OrderTemp{
@@ -616,7 +614,7 @@ func Test_order_CreateOrderTemp(t *testing.T) {
 			customerPhone: "+62812345678",
 			shopID:        5,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`INSERT INTO orders_temp \(customer_name, customer_phone, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
+				mock.ExpectQuery(`INSERT INTO order_temp \(customer_name, customer_phone, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
 					WithArgs("Jane Doe", "+62812345678", 5, sqlmock.AnyArg()).
 					WillReturnError(errors.New("database error"))
 			},
@@ -673,7 +671,7 @@ func Test_order_UpdateOrderTempTotalPrice(t *testing.T) {
 			totalPrice:  2500,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
-				mock.ExpectExec(`UPDATE orders_temp\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+				mock.ExpectExec(`UPDATE order_temp\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
 					WithArgs(2500, 1).
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
@@ -685,7 +683,7 @@ func Test_order_UpdateOrderTempTotalPrice(t *testing.T) {
 			totalPrice:  2500,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
-				mock.ExpectExec(`UPDATE orders_temp\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+				mock.ExpectExec(`UPDATE order_temp\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
 					WithArgs(2500, 1).
 					WillReturnError(errors.New("database error"))
 			},

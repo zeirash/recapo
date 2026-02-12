@@ -37,7 +37,7 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					CreateOrder(1, 1, constant.OrderStatusCreated, nil).
+					CreateOrder(1, 1, nil).
 					Return(&model.Order{
 						ID:           1,
 						CustomerName: "John Doe",
@@ -64,7 +64,7 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					CreateOrder(1, 1, constant.OrderStatusCreated, nil).
+					CreateOrder(1, 1, nil).
 					Return(nil, errors.New("database error"))
 				return mock
 			},

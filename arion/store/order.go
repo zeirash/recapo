@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/zeirash/recapo/arion/common/database"
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/model"
 )
 
@@ -14,7 +15,7 @@ type (
 	OrderStore interface {
 		GetOrderByID(id int, shopID ...int) (*model.Order, error)
 		GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.Order, error)
-		CreateOrder(customerID int, shopID int, status string, notes *string) (*model.Order, error)
+		CreateOrder(customerID int, shopID int, notes *string) (*model.Order, error)
 		UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error)
 		DeleteOrderByID(tx database.Tx, id int) error
 
@@ -118,7 +119,7 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 	return orders, nil
 }
 
-func (o *order) CreateOrder(customerID int, shopID int, status string, notes *string) (*model.Order, error) {
+func (o *order) CreateOrder(customerID int, shopID int, notes *string) (*model.Order, error) {
 	now := time.Now()
 	var order model.Order
 
@@ -134,7 +135,7 @@ func (o *order) CreateOrder(customerID int, shopID int, status string, notes *st
 	`
 
 	// total price is 0 as default, it will be calculated later
-	err := o.db.QueryRow(q, 0, status, customerID, shopID, notes, now).Scan(
+	err := o.db.QueryRow(q, 0, constant.OrderStatusCreated, customerID, shopID, notes, now).Scan(
 		&order.ID,
 		&order.TotalPrice,
 		&order.Status,
@@ -211,12 +212,12 @@ func (o *order) CreateOrderTemp(tx database.Tx, customerName, customerPhone stri
 	var orderTemp model.OrderTemp
 
 	q := `
-		INSERT INTO orders_temp (customer_name, customer_phone, shop_id, created_at)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO order_temp (customer_name, customer_phone, status, shop_id, created_at)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at
 	`
 
-	err := tx.QueryRow(q, customerName, customerPhone, shopID, now).Scan(&orderTemp.ID, &orderTemp.CustomerName, &orderTemp.CustomerPhone, &orderTemp.ShopID, &orderTemp.TotalPrice, &orderTemp.Status, &orderTemp.CreatedAt)
+	err := tx.QueryRow(q, customerName, customerPhone, constant.OrderTempStatusPending, shopID, now).Scan(&orderTemp.ID, &orderTemp.CustomerName, &orderTemp.CustomerPhone, &orderTemp.ShopID, &orderTemp.TotalPrice, &orderTemp.Status, &orderTemp.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +227,7 @@ func (o *order) CreateOrderTemp(tx database.Tx, customerName, customerPhone stri
 
 func (o *order) UpdateOrderTempTotalPrice(tx database.Tx, orderTempID int, totalPrice int) error {
 	q := `
-		UPDATE orders_temp
+		UPDATE order_temp
 		SET total_price = $1, updated_at = now()
 		WHERE id = $2
 	`

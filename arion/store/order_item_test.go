@@ -539,7 +539,7 @@ func Test_orderitem_DeleteOrderItemsByOrderID(t *testing.T) {
 func Test_orderitem_CreateOrderItemTemp(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
-	queryRegex := `WITH inserted AS \(\s*INSERT INTO order_items_temp \(order_temp_id, product_id, qty, created_at\)\s*VALUES \(\$1, \$2, \$3, \$4\)\s*RETURNING id, order_temp_id, product_id, qty, created_at\s*\)\s*SELECT i\.id, i\.order_temp_id, p\.name as product_name, p\.price as price, i\.qty, i\.created_at\s*FROM inserted i\s*INNER JOIN products p ON i\.product_id = p\.id`
+	queryRegex := `WITH inserted AS \(\s*INSERT INTO order_temp_items \(order_temp_id, product_id, qty, created_at\)\s*VALUES \(\$1, \$2, \$3, \$4\)\s*RETURNING id, order_temp_id, product_id, qty, created_at\s*\)\s*SELECT i\.id, i\.order_temp_id, p\.name as product_name, p\.price as price, i\.qty, i\.created_at\s*FROM inserted i\s*INNER JOIN products p ON i\.product_id = p\.id`
 
 	tests := []struct {
 		name        string
