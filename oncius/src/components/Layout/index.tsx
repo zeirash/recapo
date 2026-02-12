@@ -5,6 +5,7 @@ import { Box, Flex } from 'theme-ui'
 import { usePathname } from 'next/navigation'
 import Header from './Header'
 import SideMenu from './SideMenu'
+import LandingHeader from '@/components/LandingHeader'
 
 interface LayoutProps {
   children: ReactNode
@@ -35,8 +36,8 @@ const Layout = ({ children }: LayoutProps) => {
 
   if (isAuthPage) {
     return (
-      <Box sx={{ minHeight: '100vh', bg: 'background.secondary' }}>
-        <Header />
+      <Box sx={{ minHeight: '100vh', background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #ffffff 100%)' }}>
+        <LandingHeader />
         <Box as="main" sx={{ py: 4 }}>
           {children}
         </Box>

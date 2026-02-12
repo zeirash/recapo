@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { Box, Heading, Text, Button, Flex, Card } from 'theme-ui'
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
-import { useChangeLocale } from '@/hooks/useLocale'
+import LandingHeader from '@/components/LandingHeader'
 
 const BLOB_PATH =
   'M76.5 42.2c-12.3 8.5-28.2 12.8-38.5 24.2-10.3 11.4-15 29.8-12.8 46.2 2.2 16.4 12.6 30.8 25.5 42.2 12.9 11.4 28.3 19.8 42.2 25.2 13.9 5.4 26.3 7.8 38.5 4.2 12.2-3.6 24.2-12.6 35.5-22 11.3-9.4 21.9-19.4 30.5-30.4 8.6-11 15.2-23 18.5-35.5 3.3-12.5 3.3-25.5-1.5-37.5-4.8-12-14.4-23-26.4-31-12-8-26.4-13-40.4-14.5-14-1.5-27.6 1-39.6 6.5z'
@@ -90,8 +90,6 @@ const FEATURES = [
 
 export default function HomePage() {
   const t = useTranslations()
-  const locale = useLocale()
-  const changeLocale = useChangeLocale()
   const { isAuthenticated, isLoadingUser } = useAuth()
 
   if (isLoadingUser) {
@@ -143,91 +141,7 @@ export default function HomePage() {
         }}
       />
 
-      {/* Simple header */}
-      <Box
-        as="header"
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          bg: 'rgba(255,255,255,0.9)',
-          backdropFilter: 'saturate(180%) blur(10px)',
-          borderBottom: '1px solid',
-          borderColor: 'border',
-        }}
-      >
-        <Flex
-          sx={{
-            maxWidth: 1200,
-            mx: 'auto',
-            px: [3, 4],
-            py: 3,
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Heading as="h1" sx={{ fontSize: [3, 4], fontWeight: 700, color: 'primary' }}>
-            Recapo
-          </Heading>
-          <Flex sx={{ gap: 3, alignItems: 'center' }}>
-            <Flex sx={{ gap: 2, mr: 2 }}>
-              <Box
-                as="button"
-                onClick={() => changeLocale('en')}
-                sx={{
-                  bg: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 1,
-                  fontWeight: locale === 'en' ? 600 : 400,
-                  color: locale === 'en' ? 'primary' : 'text.secondary',
-                  textDecoration: 'none',
-                  '&:hover': { color: 'primary' },
-                }}
-              >
-                EN
-              </Box>
-              <Text sx={{ color: 'border' }}>|</Text>
-              <Box
-                as="button"
-                onClick={() => changeLocale('id')}
-                sx={{
-                  bg: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 1,
-                  fontWeight: locale === 'id' ? 600 : 400,
-                  color: locale === 'id' ? 'primary' : 'text.secondary',
-                  textDecoration: 'none',
-                  '&:hover': { color: 'primary' },
-                }}
-              >
-                ID
-              </Box>
-            </Flex>
-            {isAuthenticated ? (
-              <Link href="/dashboard">
-                <Button variant="primary" sx={{ py: 2 }}>
-                  {t('landing.goToDashboard')}
-                </Button>
-              </Link>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="secondary" sx={{ py: 2 }}>
-                    {t('nav.login')}
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button variant="primary" sx={{ py: 2 }}>
-                    {t('landing.getStarted')}
-                  </Button>
-                </Link>
-              </>
-            )}
-          </Flex>
-        </Flex>
-      </Box>
+      <LandingHeader />
 
       {/* Hero */}
       <Box
