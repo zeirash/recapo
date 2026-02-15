@@ -24,6 +24,7 @@
     "dashboard": "Dasbor",
     "products": "Produk",
     "orders": "Pesanan",
+    "tempOrders": "Pesanan Sementara",
     "customers": "Pelanggan",
     "login": "Masuk",
     "register": "Daftar",
@@ -169,10 +170,21 @@
   },
   "orderStatus": {
     "created": "Dibuat",
+    "pending": "Menunggu",
     "in_progress": "Diproses",
     "in_delivery": "Dalam Pengiriman",
     "done": "Selesai",
     "cancelled": "Dibatalkan"
+  },
+  "tempOrders": {
+    "title": "Pesanan Sementara",
+    "searchPlaceholder": "Cari pesanan sementara",
+    "noOrders": "Tidak ada pesanan sementara",
+    "selectOrder": "Pilih pesanan sementara untuk melihat detail",
+    "orderNumber": "Pesanan sementara #{id}",
+    "phone": "Telepon",
+    "fetchFailed": "Gagal memuat pesanan sementara",
+    "fetchDetailsFailed": "Gagal memuat detail pesanan sementara"
   },
   "dashboard": {
     "loginRequired": "Silakan masuk untuk mengakses dasbor.",

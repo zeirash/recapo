@@ -365,6 +365,20 @@ export const api = {
     })
   },
 
+  // Temp orders (from public share page)
+  getTempOrders: (opts?: { search?: string; date_from?: string; date_to?: string }) => {
+    const params = new URLSearchParams()
+    if (opts?.search) params.set('search', opts.search)
+    if (opts?.date_from) params.set('date_from', opts.date_from)
+    if (opts?.date_to) params.set('date_to', opts.date_to)
+    const qs = params.toString()
+    return apiRequest<ApiResponse<any[]>>(`/temp_orders${qs ? `?${qs}` : ''}`)
+  },
+
+  getTempOrder: (id: number | string) => {
+    return apiRequest<ApiResponse<any>>(`/temp_orders/${id}`)
+  },
+
   // Health check
   health: () => {
     return apiRequest<ApiResponse>('/health')

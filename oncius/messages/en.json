@@ -24,6 +24,7 @@
     "dashboard": "Dashboard",
     "products": "Products",
     "orders": "Orders",
+    "tempOrders": "Temp Orders",
     "customers": "Customers",
     "login": "Login",
     "register": "Register",
@@ -169,10 +170,21 @@
   },
   "orderStatus": {
     "created": "Created",
+    "pending": "Pending",
     "in_progress": "In Progress",
     "in_delivery": "In Delivery",
     "done": "Done",
     "cancelled": "Cancelled"
+  },
+  "tempOrders": {
+    "title": "Temp Orders",
+    "searchPlaceholder": "Search temp orders",
+    "noOrders": "No temp orders",
+    "selectOrder": "Select a temp order to view details",
+    "orderNumber": "Temp order #{id}",
+    "phone": "Phone",
+    "fetchFailed": "Failed to fetch temp orders",
+    "fetchDetailsFailed": "Failed to fetch temp order details"
   },
   "dashboard": {
     "loginRequired": "Please log in to access the dashboard.",

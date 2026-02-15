@@ -22,6 +22,7 @@ const Layout = ({ children }: LayoutProps) => {
       '/dashboard': 'dashboard',
       '/products': 'products',
       '/orders': 'orders',
+      '/temp_orders': 'temp_orders',
       '/customers': 'customers',
     }
 

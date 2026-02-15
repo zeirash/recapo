@@ -24,6 +24,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     { id: 'dashboard', label: 'Dashboard', icon: '🏠', path: '/dashboard' },
     { id: 'products', label: 'Products', icon: '🛍️', path: '/products' },
     { id: 'orders', label: 'Orders', icon: '📦', path: '/orders' },
+    { id: 'temp_orders', label: 'Temp Orders', icon: '📋', path: '/temp_orders' },
     { id: 'customers', label: 'Customers', icon: '👥', path: '/customers' },
   ]
 
