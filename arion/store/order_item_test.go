@@ -622,3 +622,85 @@ func Test_orderitem_CreateTempOrderItem(t *testing.T) {
 		})
 	}
 }
+
+func Test_orderitem_GetTempOrderItemsByTempOrderID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name       string
+		tempOrderID int
+		mockSetup  func(mock sqlmock.Sqlmock)
+		wantResult []model.TempOrderItem
+		wantErr    bool
+	}{
+		{
+			name:        "get temp order items by temp order ID returns multiple items",
+			tempOrderID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "temp_order_id", "product_name", "price", "qty", "created_at"}).
+					AddRow(1, 1, "Product A", 1000, 2, fixedTime).
+					AddRow(2, 1, "Product B", 500, 1, fixedTime)
+				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			wantResult: []model.TempOrderItem{
+				{ID: 1, TempOrderID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+				{ID: 2, TempOrderID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+			},
+			wantErr: false,
+		},
+		{
+			name:        "get temp order items returns empty slice when none exist",
+			tempOrderID: 99,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "temp_order_id", "product_name", "price", "qty", "created_at"})
+				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
+					WithArgs(99).
+					WillReturnRows(rows)
+			},
+			wantResult: []model.TempOrderItem{},
+			wantErr:    false,
+		},
+		{
+			name:        "get temp order items returns error on database failure",
+			tempOrderID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
+					WithArgs(1).
+					WillReturnError(errors.New("database error"))
+			},
+			wantResult: nil,
+			wantErr:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewOrderItemStoreWithDB(db)
+
+			got, gotErr := store.GetTempOrderItemsByTempOrderID(tt.tempOrderID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetTempOrderItemsByTempOrderID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetTempOrderItemsByTempOrderID() succeeded unexpectedly")
+			}
+
+			if !reflect.DeepEqual(got, tt.wantResult) {
+				t.Errorf("GetTempOrderItemsByTempOrderID() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}

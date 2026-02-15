@@ -455,6 +455,21 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// GetTempOrdersHandler godoc
+//
+//	@Summary		List temp orders
+//	@Description	Get all temp orders for the shop. Optional query params: search (customer name or phone), date_from, date_to (YYYY-MM-DD).
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search		query		string	false	"Search by customer name or phone"
+//	@Param			date_from	query		string	false	"Filter from date (YYYY-MM-DD)"
+//	@Param			date_to		query		string	false	"Filter to date (YYYY-MM-DD)"
+//	@Success		200			{array}		response.TempOrderData
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/temp_orders [get]
 func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -479,6 +494,48 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.WithError(err).Error("get_temp_orders_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_temp_orders")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
+// GetTempOrderHandler godoc
+//
+//	@Summary		Get temp order by ID
+//	@Description	Get a single temp order by ID, including its items.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			temp_order_id	path		int	true	"Temp order ID"
+//	@Success		200				{object}	response.TempOrderData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid temp_order_id)"
+//	@Failure		404	{object}	ErrorApiResponse	"Temp order not found"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/temp_orders/{temp_order_id} [get]
+func GetTempOrderHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+	params := mux.Vars(r)
+
+	if valid, err := validateTempOrderID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	tempOrderIDInt, _ := strconv.Atoi(params["temp_order_id"])
+	tempOrderID := tempOrderIDInt
+
+	res, err := orderService.GetTempOrderByID(tempOrderID, shopID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
+		logger.WithError(err).Error("get_temp_order_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_temp_order")
 		return
 	}
 
@@ -516,6 +573,14 @@ func validateOrderID(params map[string]string) (bool, error) {
 func validateOrderItemID(params map[string]string) (bool, error) {
 	if params["item_id"] == "" {
 		return false, errors.New("item_id is required")
+	}
+
+	return true, nil
+}
+
+func validateTempOrderID(params map[string]string) (bool, error) {
+	if params["temp_order_id"] == "" {
+		return false, errors.New("temp_order_id is required")
 	}
 
 	return true, nil

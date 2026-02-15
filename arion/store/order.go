@@ -21,7 +21,7 @@ type (
 
 		CreateTempOrder(tx database.Tx, customerName, customerPhone string, shopID int) (*model.TempOrder, error)
 		UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, totalPrice int) error
-		// GetOrderTempByID(id int, shopID ...int) (*model.OrderTemp, error)
+		GetTempOrderByID(id int, shopID ...int) (*model.TempOrder, error)
 		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error)
 		// UpdateOrderTempByID(id int, input UpdateOrderTempInput) (*model.OrderTemp, error)
 		// DeleteOrderTempByID(tx database.Tx, id int) error
@@ -236,6 +236,32 @@ func (o *order) UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, total
 		return err
 	}
 	return nil
+}
+
+func (o *order) GetTempOrderByID(id int, shopID ...int) (*model.TempOrder, error) {
+	criteria := []interface{}{id}
+
+	q := `
+		SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at
+		FROM temp_orders
+		WHERE id = $1
+	`
+
+	if len(shopID) > 0 {
+		q += " AND shop_id = $2"
+		criteria = append(criteria, shopID[0])
+	}
+
+	var tempOrder model.TempOrder
+	err := o.db.QueryRow(q, criteria...).Scan(&tempOrder.ID, &tempOrder.ShopID, &tempOrder.CustomerName, &tempOrder.CustomerPhone, &tempOrder.TotalPrice, &tempOrder.Status, &tempOrder.CreatedAt, &tempOrder.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &tempOrder, nil
 }
 
 func (o *order) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error) {

@@ -174,6 +174,26 @@ func (mr *MockOrderServiceMockRecorder) GetOrdersByShopID(shopID, opts interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByShopID", reflect.TypeOf((*MockOrderService)(nil).GetOrdersByShopID), shopID, opts)
 }
 
+// GetTempOrderByID mocks base method.
+func (m *MockOrderService) GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{id}
+	for _, a := range shopID {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetTempOrderByID", varargs...)
+	ret0, _ := ret[0].(*response.TempOrderData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTempOrderByID indicates an expected call of GetTempOrderByID.
+func (mr *MockOrderServiceMockRecorder) GetTempOrderByID(id interface{}, shopID ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{id}, shopID...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTempOrderByID", reflect.TypeOf((*MockOrderService)(nil).GetTempOrderByID), varargs...)
+}
+
 // GetTempOrdersByShopID mocks base method.
 func (m *MockOrderService) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error) {
 	m.ctrl.T.Helper()

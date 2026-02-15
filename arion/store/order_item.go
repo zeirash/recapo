@@ -20,6 +20,7 @@ type (
 		DeleteOrderItemsByOrderID(tx database.Tx, orderID int) error
 
 		CreateTempOrderItem(tx database.Tx, tempOrderID, productID, qty int) (*model.TempOrderItem, error)
+		GetTempOrderItemsByTempOrderID(tempOrderID int) ([]model.TempOrderItem, error)
 	}
 
 	orderitem struct {
@@ -206,4 +207,31 @@ func (o *orderitem) CreateTempOrderItem(tx database.Tx, tempOrderID, productID, 
 	}
 
 	return &tempOrderItem, nil
+}
+
+func (o *orderitem) GetTempOrderItemsByTempOrderID(tempOrderID int) ([]model.TempOrderItem, error) {
+	q := `
+		SELECT ti.id, ti.temp_order_id, p.name as product_name, p.price as price, ti.qty, ti.created_at
+		FROM temp_order_items ti
+		INNER JOIN products p ON ti.product_id = p.id
+		WHERE ti.temp_order_id = $1
+	`
+
+	rows, err := o.db.Query(q, tempOrderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tempOrderItems := []model.TempOrderItem{}
+	for rows.Next() {
+		var tempOrderItem model.TempOrderItem
+		err := rows.Scan(&tempOrderItem.ID, &tempOrderItem.TempOrderID, &tempOrderItem.ProductName, &tempOrderItem.Price, &tempOrderItem.Qty, &tempOrderItem.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		tempOrderItems = append(tempOrderItems, tempOrderItem)
+	}
+
+	return tempOrderItems, nil
 }

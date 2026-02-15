@@ -24,7 +24,7 @@ type (
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
 
 		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
-		// GetOrderTempByID(id int, shopID ...int) (*response.OrderTempData, error)
+		GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error)
 		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error)
 		// UpdateOrderTempByID(input UpdateOrderTempInput) (response.OrderTempData, error)
 		// DeleteOrderTempByID(id int) error
@@ -397,6 +397,51 @@ func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken strin
 		res.UpdatedAt = &tempOrder.UpdatedAt.Time
 	}
 	return res, nil
+}
+
+func (o *oservice) GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error) {
+	tempOrder, err := orderStore.GetTempOrderByID(id, shopID...)
+	if err != nil {
+		return nil, err
+	}
+
+	if tempOrder == nil {
+		return nil, errors.New("temp order not found")
+	}
+
+	tempOrderItems, err := orderItemStore.GetTempOrderItemsByTempOrderID(tempOrder.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	tempOrderItemsData := []response.TempOrderItemData{}
+	for _, tempOrderItem := range tempOrderItems {
+		tempOrderItemsData = append(tempOrderItemsData, response.TempOrderItemData{
+			ID:          tempOrderItem.ID,
+			TempOrderID: tempOrderItem.TempOrderID,
+			ProductName: tempOrderItem.ProductName,
+			Price:       tempOrderItem.Price,
+			Qty:         tempOrderItem.Qty,
+			CreatedAt:   tempOrderItem.CreatedAt,
+		})
+	}
+
+	res := response.TempOrderData{
+		ID:             tempOrder.ID,
+		CustomerName:   tempOrder.CustomerName,
+		CustomerPhone:  tempOrder.CustomerPhone,
+		TotalPrice:     tempOrder.TotalPrice,
+		Status:         tempOrder.Status,
+		TempOrderItems: tempOrderItemsData,
+		CreatedAt:      tempOrder.CreatedAt,
+	}
+
+	if tempOrder.UpdatedAt.Valid {
+		t := tempOrder.UpdatedAt.Time
+		res.UpdatedAt = &t
+	}
+
+	return &res, nil
 }
 
 func (o *oservice) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error) {
