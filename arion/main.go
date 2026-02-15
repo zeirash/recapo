@@ -65,6 +65,7 @@ func NewRouter() *mux.Router {
 	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateCustomerHandler))).Methods("PATCH")
 	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteCustomerHandler))).Methods("DELETE")
 	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetCustomerHandler))).Methods("GET")
+	r.Handle("/customers/{customer_id}/merge_order_check", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CustomerMergeOrderCheckHandler))).Methods("GET")
 
 	// For Shop
 	r.Handle("/shop/share_token", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetShopShareTokenHandler))).Methods("GET")
@@ -90,7 +91,8 @@ func NewRouter() *mux.Router {
 
 	// For Order Temp
 	r.Handle("/temp_orders", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrdersHandler))).Methods("GET")
-	r.Handle("/temp_orders/{temp_order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrderHandler))).Methods("GET")
+	// r.Handle("/temp_orders/{temp_order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrderHandler))).Methods("GET")
+	// r.Handle("/temp_orders/{temp_order_id}/merge", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.MergeTempOrderHandler))).Methods("POST")
 
 	// For System
 	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")

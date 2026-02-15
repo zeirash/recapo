@@ -15,6 +15,7 @@ type (
 		GetCustomersByShopID(shopID int, searchQuery *string) ([]response.CustomerData, error)
 		UpdateCustomer(input UpdateCustomerInput) (response.CustomerData, error)
 		DeleteCustomerByID(id int) error
+		HasActiveOrders(customerID int, shopID int) (response.CustomerHasActiveOrdersData, error)
 	}
 
 	cservice struct{}
@@ -149,4 +150,12 @@ func (c *cservice) DeleteCustomerByID(id int) error {
 	}
 
 	return nil
+}
+
+func (c *cservice) HasActiveOrders(customerID int, shopID int) (response.CustomerHasActiveOrdersData, error) {
+	hasActiveOrders, err := orderStore.HasActiveOrdersByCustomerID(customerID, shopID)
+	if err != nil {
+		return response.CustomerHasActiveOrdersData{}, err
+	}
+	return response.CustomerHasActiveOrdersData{HasActiveOrders: hasActiveOrders}, nil
 }

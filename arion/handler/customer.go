@@ -219,6 +219,43 @@ func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, "OK")
 }
 
+// CustomerMergeOrderCheckHandler godoc
+//
+//	@Summary		Check if customer has active orders
+//	@Description	Returns whether the customer has any active order (status created or in_progress). Used before creating a new order to decide whether to show a merge/conflict message.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			customer
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			customer_id	path		int	true	"Customer ID"
+//	@Success		200			{object}	response.CustomerHasActiveOrdersData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid customer_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/customers/{customer_id}/merge_order_check [get]
+func CustomerMergeOrderCheckHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+	params := mux.Vars(r)
+
+	if valid, err := validateCustomerID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	customerIDInt, _ := strconv.Atoi(params["customer_id"])
+	customerID := customerIDInt
+
+	res, err := customerService.HasActiveOrders(customerID, shopID)
+	if err != nil {
+		logger.WithError(err).Error("has_active_orders_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "has_active_orders")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
 func validateCreateCustomer(inp CreateCustomerRequest) (bool, error) {
 	if inp.Name == "" {
 		return false, errors.New("name is required")

@@ -957,3 +957,80 @@ func Test_order_GetTempOrderByID(t *testing.T) {
 		})
 	}
 }
+
+func Test_order_HasActiveOrdersByCustomerID(t *testing.T) {
+	tests := []struct {
+		name       string
+		customerID int
+		shopID     int
+		mockSetup  func(mock sqlmock.Sqlmock)
+		want       bool
+		wantErr    bool
+	}{
+		{
+			name:       "returns true when customer has active order",
+			customerID: 10,
+			shopID:     5,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"exists"}).AddRow(true)
+				mock.ExpectQuery(`SELECT EXISTS \(\s*SELECT 1 FROM orders\s+WHERE customer_id = \$1 AND shop_id = \$2 AND status IN \(\$3, \$4\)\s*\)`).
+					WithArgs(10, 5, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+					WillReturnRows(rows)
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:       "returns false when customer has no active order",
+			customerID: 99,
+			shopID:     5,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"exists"}).AddRow(false)
+				mock.ExpectQuery(`SELECT EXISTS \(\s*SELECT 1 FROM orders\s+WHERE customer_id = \$1 AND shop_id = \$2 AND status IN \(\$3, \$4\)\s*\)`).
+					WithArgs(99, 5, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+					WillReturnRows(rows)
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name:       "returns error on database failure",
+			customerID: 10,
+			shopID:     5,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT EXISTS \(\s*SELECT 1 FROM orders\s+WHERE customer_id = \$1 AND shop_id = \$2 AND status IN \(\$3, \$4\)\s*\)`).
+					WithArgs(10, 5, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    false,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewOrderStoreWithDB(db)
+
+			got, gotErr := store.HasActiveOrdersByCustomerID(tt.customerID, tt.shopID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("HasActiveOrdersByCustomerID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("HasActiveOrdersByCustomerID() succeeded unexpectedly")
+			}
+			if got != tt.want {
+				t.Errorf("HasActiveOrdersByCustomerID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -29,6 +29,10 @@ type (
 		UpdatedAt *time.Time `json:"updated_at"`
 	}
 
+	CustomerHasActiveOrdersData struct {
+		HasActiveOrders bool `json:"has_active_orders"`
+	}
+
 	ProductData struct {
 		ID            int        `json:"id"`
 		Name          string     `json:"name"`

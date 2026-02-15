@@ -150,6 +150,21 @@ func (mr *MockOrderStoreMockRecorder) GetTempOrdersByShopID(shopID, opts interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTempOrdersByShopID", reflect.TypeOf((*MockOrderStore)(nil).GetTempOrdersByShopID), shopID, opts)
 }
 
+// HasActiveOrdersByCustomerID mocks base method.
+func (m *MockOrderStore) HasActiveOrdersByCustomerID(customerID, shopID int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasActiveOrdersByCustomerID", customerID, shopID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasActiveOrdersByCustomerID indicates an expected call of HasActiveOrdersByCustomerID.
+func (mr *MockOrderStoreMockRecorder) HasActiveOrdersByCustomerID(customerID, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasActiveOrdersByCustomerID", reflect.TypeOf((*MockOrderStore)(nil).HasActiveOrdersByCustomerID), customerID, shopID)
+}
+
 // UpdateOrder mocks base method.
 func (m *MockOrderStore) UpdateOrder(id int, input store.UpdateOrderInput) (*model.Order, error) {
 	m.ctrl.T.Helper()

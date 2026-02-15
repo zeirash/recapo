@@ -568,3 +568,83 @@ func Test_cservice_DeleteCustomerByID(t *testing.T) {
 		})
 	}
 }
+
+func Test_cservice_HasActiveOrders(t *testing.T) {
+	tests := []struct {
+		name       string
+		customerID int
+		shopID     int
+		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockOrderStore
+		want       response.CustomerHasActiveOrdersData
+		wantErr    bool
+	}{
+		{
+			name:       "returns has_active_orders true when customer has active order",
+			customerID: 10,
+			shopID:     5,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					HasActiveOrdersByCustomerID(10, 5).
+					Return(true, nil)
+				return mock
+			},
+			want:    response.CustomerHasActiveOrdersData{HasActiveOrders: true},
+			wantErr: false,
+		},
+		{
+			name:       "returns has_active_orders false when customer has no active order",
+			customerID: 99,
+			shopID:     5,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					HasActiveOrdersByCustomerID(99, 5).
+					Return(false, nil)
+				return mock
+			},
+			want:    response.CustomerHasActiveOrdersData{HasActiveOrders: false},
+			wantErr: false,
+		},
+		{
+			name:       "returns error when store fails",
+			customerID: 10,
+			shopID:     5,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					HasActiveOrdersByCustomerID(10, 5).
+					Return(false, errors.New("database error"))
+				return mock
+			},
+			want:    response.CustomerHasActiveOrdersData{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldStore := orderStore
+			defer func() { orderStore = oldStore }()
+			orderStore = tt.mockSetup(ctrl)
+
+			var c cservice
+			got, gotErr := c.HasActiveOrders(tt.customerID, tt.shopID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("HasActiveOrders() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("HasActiveOrders() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("HasActiveOrders() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

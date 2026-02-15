@@ -551,3 +551,121 @@ func TestDeleteCustomerHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestCustomerMergeOrderCheckHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetCustomerService()
+	defer handler.SetCustomerService(oldService)
+
+	mockCustomerService := mock_service.NewMockCustomerService(ctrl)
+	handler.SetCustomerService(mockCustomerService)
+
+	tests := []struct {
+		name              string
+		customerID        string
+		shopID            int
+		mockSetup         func()
+		wantStatus        int
+		wantSuccess       bool
+		wantHasActive     *bool // nil = do not check
+		wantErrMessage    string
+	}{
+		{
+			name:       "returns has_active_orders true when customer has active order",
+			customerID: "1",
+			shopID:     1,
+			mockSetup: func() {
+				mockCustomerService.EXPECT().
+					HasActiveOrders(1, 1).
+					Return(response.CustomerHasActiveOrdersData{HasActiveOrders: true}, nil)
+			},
+			wantStatus:    http.StatusOK,
+			wantSuccess:   true,
+			wantHasActive: ptrBool(true),
+		},
+		{
+			name:       "returns has_active_orders false when customer has no active order",
+			customerID: "5",
+			shopID:     1,
+			mockSetup: func() {
+				mockCustomerService.EXPECT().
+					HasActiveOrders(5, 1).
+					Return(response.CustomerHasActiveOrdersData{HasActiveOrders: false}, nil)
+			},
+			wantStatus:    http.StatusOK,
+			wantSuccess:   true,
+			wantHasActive: ptrBool(false),
+		},
+		{
+			name:       "returns 400 when customer_id missing",
+			customerID: "",
+			shopID:     1,
+			mockSetup:  func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:       "returns 500 on service error",
+			customerID: "1",
+			shopID:     1,
+			mockSetup: func() {
+				mockCustomerService.EXPECT().
+					HasActiveOrders(1, 1).
+					Return(response.CustomerHasActiveOrdersData{}, errors.New("database error"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "database error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			path := "/customers/merge_order_check"
+			if tt.customerID != "" {
+				path = "/customers/" + tt.customerID + "/merge_order_check"
+			}
+			req := newRequestWithShopID("GET", path, nil, tt.shopID)
+			if tt.customerID != "" {
+				req = newRequestWithPathVars(req, map[string]string{"customer_id": tt.customerID})
+			}
+			rec := httptest.NewRecorder()
+
+			handler.CustomerMergeOrderCheckHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("CustomerMergeOrderCheckHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("CustomerMergeOrderCheckHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("CustomerMergeOrderCheckHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+			if tt.wantHasActive != nil {
+				dataMap, ok := resp.Data.(map[string]interface{})
+				if !ok {
+					t.Fatalf("CustomerMergeOrderCheckHandler() data = %T, want object", resp.Data)
+				}
+				hasActive, ok := dataMap["has_active_orders"].(bool)
+				if !ok {
+					t.Fatalf("CustomerMergeOrderCheckHandler() data.has_active_orders = %T, want bool", dataMap["has_active_orders"])
+				}
+				if hasActive != *tt.wantHasActive {
+					t.Errorf("CustomerMergeOrderCheckHandler() has_active_orders = %v, want %v", hasActive, *tt.wantHasActive)
+				}
+			}
+		})
+	}
+}
+
+func ptrBool(b bool) *bool {
+	return &b
+}

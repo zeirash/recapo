@@ -15,6 +15,8 @@ type (
 	OrderStore interface {
 		GetOrderByID(id int, shopID ...int) (*model.Order, error)
 		GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.Order, error)
+		// GetActiveOrderByCustomerID(customerID int, shopID int) (*model.Order, error)
+		HasActiveOrdersByCustomerID(customerID int, shopID int) (bool, error)
 		CreateOrder(customerID int, shopID int, notes *string) (*model.Order, error)
 		UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error)
 		DeleteOrderByID(tx database.Tx, id int) error
@@ -23,8 +25,6 @@ type (
 		UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, totalPrice int) error
 		GetTempOrderByID(id int, shopID ...int) (*model.TempOrder, error)
 		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error)
-		// UpdateOrderTempByID(id int, input UpdateOrderTempInput) (*model.OrderTemp, error)
-		// DeleteOrderTempByID(tx database.Tx, id int) error
 	}
 
 	order struct {
@@ -117,6 +117,50 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 	}
 
 	return orders, nil
+}
+
+// func (o *order) GetActiveOrderByCustomerID(customerID int, shopID int) (*model.Order, error) {
+// 	q := `
+// 		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at
+// 		FROM orders o
+// 		INNER JOIN customers c ON o.customer_id = c.id
+// 		WHERE o.customer_id = $1 AND o.shop_id = $2 AND o.status IN ($3, $4)
+// 		ORDER BY o.created_at DESC
+// 		LIMIT 1
+// 	`
+// 	var order model.Order
+// 	err := o.db.QueryRow(q, customerID, shopID, constant.OrderStatusCreated, constant.OrderStatusInProgress).Scan(
+// 		&order.ID,
+// 		&order.ShopID,
+// 		&order.CustomerName,
+// 		&order.TotalPrice,
+// 		&order.Status,
+// 		&order.Notes,
+// 		&order.CreatedAt,
+// 		&order.UpdatedAt,
+// 	)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			return nil, nil
+// 		}
+// 		return nil, err
+// 	}
+// 	return &order, nil
+// }
+
+func (o *order) HasActiveOrdersByCustomerID(customerID int, shopID int) (bool, error) {
+	var exists bool
+	q := `
+		SELECT EXISTS (
+			SELECT 1 FROM orders
+			WHERE customer_id = $1 AND shop_id = $2 AND status IN ($3, $4)
+		)
+	`
+	err := o.db.QueryRow(q, customerID, shopID, constant.OrderStatusCreated, constant.OrderStatusInProgress).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 func (o *order) CreateOrder(customerID int, shopID int, notes *string) (*model.Order, error) {

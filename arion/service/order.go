@@ -23,6 +23,8 @@ type (
 		GetOrderItemByID(orderItemID, orderID int) (response.OrderItemData, error)
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
 
+		// MergeOrderNotes(orderID int, shopID int, notesToAppend string) (*response.OrderData, error)
+
 		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
 		GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error)
 		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error)
@@ -70,6 +72,14 @@ func NewOrderService() OrderService {
 }
 
 func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (response.OrderData, error) {
+	existing, err := orderStore.HasActiveOrdersByCustomerID(customerID, shopID)
+	if err != nil {
+		return response.OrderData{}, err
+	}
+	if existing {
+		return response.OrderData{}, errors.New("customer already has an active order")
+	}
+
 	order, err := orderStore.CreateOrder(customerID, shopID, notes)
 	if err != nil {
 		return response.OrderData{}, err
@@ -332,6 +342,30 @@ func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData
 
 	return orderItemsData, nil
 }
+
+// func (o *oservice) MergeOrderNotes(orderID int, shopID int, notesToAppend string) (*response.OrderData, error) {
+// 	order, err := orderStore.GetOrderByID(orderID, shopID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if order == nil {
+// 		return nil, errors.New("order not found")
+// 	}
+// 	trimmed := strings.TrimSpace(notesToAppend)
+// 	if trimmed != "" {
+// 		var newNotes string
+// 		if strings.TrimSpace(order.Notes) != "" {
+// 			newNotes = order.Notes + "\n" + trimmed
+// 		} else {
+// 			newNotes = trimmed
+// 		}
+// 		_, err = orderStore.UpdateOrder(orderID, store.UpdateOrderInput{Notes: &newNotes})
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	}
+// 	return o.GetOrderByID(orderID, shopID)
+// }
 
 func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error) {
 	shop, err := shopStore.GetShopByShareToken(shareToken)

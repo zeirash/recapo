@@ -36,6 +36,10 @@ type (
 		ProductID *int `json:"product_id"`
 		Qty       *int `json:"qty"`
 	}
+
+	MergeOrderRequest struct {
+		Notes *string `json:"notes"`
+	}
 )
 
 // CreateOrderHandler godoc
@@ -69,6 +73,10 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.CreateOrder(inp.CustomerID, shopID, inp.Notes)
 	if err != nil {
+		if strings.Contains(err.Error(), "customer already has an active order") {
+			WriteErrorJson(w, r, http.StatusConflict, err, "duplicate_customer_order")
+			return
+		}
 		logger.WithError(err).Error("create_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order")
 		return
@@ -243,6 +251,54 @@ func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	WriteJson(w, http.StatusOK, "OK")
 }
+
+// MergeOrderHandler godoc
+//
+//	@Summary		Merge into order (append notes)
+//	@Description	Append notes to an existing order. Used when user chooses to merge instead of creating a new order for a customer who already has an active order.
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path		int	true	"Order ID"
+//	@Param			body		body		MergeOrderRequest	true	"Notes to append (optional)"
+//	@Success		200			{object}	response.OrderData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request"
+//	@Failure		404	{object}	ErrorApiResponse	"Order not found"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/merge [post]
+// func MergeOrderHandler(w http.ResponseWriter, r *http.Request) {
+// 	ctx := r.Context()
+// 	shopID := ctx.Value(common.ShopIDKey).(int)
+// 	params := mux.Vars(r)
+
+// 	if valid, err := validateOrderID(params); !valid {
+// 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+// 		return
+// 	}
+
+// 	inp := MergeOrderRequest{}
+// 	_ = ParseJson(r.Body, &inp)
+
+// 	orderIDInt, _ := strconv.Atoi(params["order_id"])
+// 	notesToAppend := ""
+// 	if inp.Notes != nil {
+// 		notesToAppend = *inp.Notes
+// 	}
+
+// 	res, err := orderService.MergeOrderNotes(orderIDInt, shopID, notesToAppend)
+// 	if err != nil {
+// 		if err.Error() == "order not found" {
+// 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+// 			return
+// 		}
+// 		logger.WithError(err).Error("merge_order_error")
+// 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "merge_order")
+// 		return
+// 	}
+
+// 	WriteJson(w, http.StatusOK, res)
+// }
 
 func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)

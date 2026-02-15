@@ -99,6 +99,21 @@ func (mr *MockCustomerServiceMockRecorder) GetCustomersByShopID(shopID, searchQu
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomersByShopID", reflect.TypeOf((*MockCustomerService)(nil).GetCustomersByShopID), shopID, searchQuery)
 }
 
+// HasActiveOrders mocks base method.
+func (m *MockCustomerService) HasActiveOrders(customerID, shopID int) (response.CustomerHasActiveOrdersData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasActiveOrders", customerID, shopID)
+	ret0, _ := ret[0].(response.CustomerHasActiveOrdersData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasActiveOrders indicates an expected call of HasActiveOrders.
+func (mr *MockCustomerServiceMockRecorder) HasActiveOrders(customerID, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasActiveOrders", reflect.TypeOf((*MockCustomerService)(nil).HasActiveOrders), customerID, shopID)
+}
+
 // UpdateCustomer mocks base method.
 func (m *MockCustomerService) UpdateCustomer(input service.UpdateCustomerInput) (response.CustomerData, error) {
 	m.ctrl.T.Helper()

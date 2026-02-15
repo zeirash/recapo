@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ func Test_oservice_CreateOrder(t *testing.T) {
 		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockOrderStore
 		wantResult response.OrderData
 		wantErr    bool
+		wantErrMsg string // if non-empty, error must contain this string
 	}{
 		{
 			name:       "successfully create order",
@@ -36,6 +38,9 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			notes:      nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					HasActiveOrdersByCustomerID(1, 1).
+					Return(false, nil)
 				mock.EXPECT().
 					CreateOrder(1, 1, nil).
 					Return(&model.Order{
@@ -57,12 +62,46 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:       "create order returns error on store failure",
+			name:       "create order returns error when customer has active order",
 			customerID: 1,
 			shopID:     1,
 			notes:      nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					HasActiveOrdersByCustomerID(1, 1).
+					Return(true, nil)
+				return mock
+			},
+			wantResult: response.OrderData{},
+			wantErr:    true,
+			wantErrMsg: "customer already has an active order",
+		},
+		{
+			name:       "create order returns error when HasActiveOrdersByCustomerID fails",
+			customerID: 1,
+			shopID:     1,
+			notes:      nil,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					HasActiveOrdersByCustomerID(1, 1).
+					Return(false, errors.New("database error"))
+				return mock
+			},
+			wantResult: response.OrderData{},
+			wantErr:    true,
+		},
+		{
+			name:       "create order returns error on CreateOrder store failure",
+			customerID: 1,
+			shopID:     1,
+			notes:      nil,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					HasActiveOrdersByCustomerID(1, 1).
+					Return(false, nil)
 				mock.EXPECT().
 					CreateOrder(1, 1, nil).
 					Return(nil, errors.New("database error"))
@@ -88,6 +127,9 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("CreateOrder() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				if tt.wantErrMsg != "" && !strings.Contains(gotErr.Error(), tt.wantErrMsg) {
+					t.Errorf("CreateOrder() error = %v, want message containing %q", gotErr, tt.wantErrMsg)
 				}
 				return
 			}
