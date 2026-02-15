@@ -45,7 +45,7 @@ func NewRouter() *mux.Router {
 	// Routes API No Auth
 	r.HandleFunc("/health", handler.HealthHandler)
 	r.HandleFunc("/public/shops/{share_token}/products", handler.GetShopProductsHandler).Methods("GET")
-	r.HandleFunc("/public/shops/{share_token}/order", handler.CreateShopOrderTempHandler).Methods("POST")
+	r.HandleFunc("/public/shops/{share_token}/order", handler.CreateShopTempOrderHandler).Methods("POST")
 
 	r.HandleFunc("/login", handler.LoginHandler).Methods("POST")
 	r.HandleFunc("/register", handler.RegisterHandler).Methods("POST")
@@ -87,6 +87,9 @@ func NewRouter() *mux.Router {
 	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateOrderItemHandler))).Methods("PATCH")
 	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteOrderItemHandler))).Methods("DELETE")
 	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderItemHandler))).Methods("GET")
+
+	// For Order Temp
+	r.Handle("/temp_orders", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrdersHandler))).Methods("GET")
 
 	// For System
 	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")

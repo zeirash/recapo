@@ -19,8 +19,8 @@ type (
 		UpdateOrder(id int, input UpdateOrderInput) (*model.Order, error)
 		DeleteOrderByID(tx database.Tx, id int) error
 
-		CreateOrderTemp(tx database.Tx, customerName, customerPhone string, shopID int) (*model.OrderTemp, error)
-		UpdateOrderTempTotalPrice(tx database.Tx, orderTempID int, totalPrice int) error
+		CreateTempOrder(tx database.Tx, customerName, customerPhone string, shopID int) (*model.TempOrder, error)
+		UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, totalPrice int) error
 		// GetOrderTempByID(id int, shopID ...int) (*model.OrderTemp, error)
 		// GetOrderTempsByShopID(shopID int, opts model.OrderTempFilterOptions) ([]model.OrderTemp, error)
 		// UpdateOrderTempByID(id int, input UpdateOrderTempInput) (*model.OrderTemp, error)
@@ -207,31 +207,31 @@ func (o *order) DeleteOrderByID(tx database.Tx, id int) error {
 	return nil
 }
 
-func (o *order) CreateOrderTemp(tx database.Tx, customerName, customerPhone string, shopID int) (*model.OrderTemp, error) {
+func (o *order) CreateTempOrder(tx database.Tx, customerName, customerPhone string, shopID int) (*model.TempOrder, error) {
 	now := time.Now()
-	var orderTemp model.OrderTemp
+	var tempOrder model.TempOrder
 
 	q := `
-		INSERT INTO order_temp (customer_name, customer_phone, status, shop_id, created_at)
+		INSERT INTO temp_orders (customer_name, customer_phone, status, shop_id, created_at)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at
 	`
 
-	err := tx.QueryRow(q, customerName, customerPhone, constant.OrderTempStatusPending, shopID, now).Scan(&orderTemp.ID, &orderTemp.CustomerName, &orderTemp.CustomerPhone, &orderTemp.ShopID, &orderTemp.TotalPrice, &orderTemp.Status, &orderTemp.CreatedAt)
+	err := tx.QueryRow(q, customerName, customerPhone, constant.TempOrderStatusPending, shopID, now).Scan(&tempOrder.ID, &tempOrder.CustomerName, &tempOrder.CustomerPhone, &tempOrder.ShopID, &tempOrder.TotalPrice, &tempOrder.Status, &tempOrder.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	return &orderTemp, nil
+	return &tempOrder, nil
 }
 
-func (o *order) UpdateOrderTempTotalPrice(tx database.Tx, orderTempID int, totalPrice int) error {
+func (o *order) UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, totalPrice int) error {
 	q := `
-		UPDATE order_temp
+		UPDATE temp_orders
 		SET total_price = $1, updated_at = now()
 		WHERE id = $2
 	`
-	_, err := tx.Exec(q, totalPrice, orderTempID)
+	_, err := tx.Exec(q, totalPrice, tempOrderID)
 	if err != nil {
 		return err
 	}

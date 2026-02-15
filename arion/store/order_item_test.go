@@ -536,35 +536,35 @@ func Test_orderitem_DeleteOrderItemsByOrderID(t *testing.T) {
 	}
 }
 
-func Test_orderitem_CreateOrderItemTemp(t *testing.T) {
+func Test_orderitem_CreateTempOrderItem(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
-	queryRegex := `WITH inserted AS \(\s*INSERT INTO order_temp_items \(order_temp_id, product_id, qty, created_at\)\s*VALUES \(\$1, \$2, \$3, \$4\)\s*RETURNING id, order_temp_id, product_id, qty, created_at\s*\)\s*SELECT i\.id, i\.order_temp_id, p\.name as product_name, p\.price as price, i\.qty, i\.created_at\s*FROM inserted i\s*INNER JOIN products p ON i\.product_id = p\.id`
+	queryRegex := `WITH inserted AS \(\s*INSERT INTO temp_order_items \(temp_order_id, product_id, qty, created_at\)\s*VALUES \(\$1, \$2, \$3, \$4\)\s*RETURNING id, temp_order_id, product_id, qty, created_at\s*\)\s*SELECT i\.id, i\.temp_order_id, p\.name as product_name, p\.price as price, i\.qty, i\.created_at\s*FROM inserted i\s*INNER JOIN products p ON i\.product_id = p\.id`
 
 	tests := []struct {
 		name        string
-		orderTempID int
+		tempOrderID int
 		productID   int
 		qty         int
 		mockSetup   func(mock sqlmock.Sqlmock)
-		want        *model.OrderTempItem
+		want        *model.TempOrderItem
 		wantErr     bool
 	}{
 		{
-			name:        "successfully create order item temp",
-			orderTempID: 1,
+			name:        "successfully create temp order item",
+			tempOrderID: 1,
 			productID:   10,
 			qty:         2,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "order_temp_id", "product_name", "price", "qty", "created_at"}).
+				rows := sqlmock.NewRows([]string{"id", "temp_order_id", "product_name", "price", "qty", "created_at"}).
 					AddRow(1, 1, "Product A", 1000, 2, fixedTime)
 				mock.ExpectQuery(queryRegex).
 					WithArgs(1, 10, 2, sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
-			want: &model.OrderTempItem{
+			want: &model.TempOrderItem{
 				ID:          1,
-				OrderTempID: 1,
+				TempOrderID: 1,
 				ProductName: "Product A",
 				Price:       1000,
 				Qty:         2,
@@ -573,8 +573,8 @@ func Test_orderitem_CreateOrderItemTemp(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "create order item temp returns error on database failure",
-			orderTempID: 1,
+			name:        "create temp order item returns error on database failure",
+			tempOrderID: 1,
 			productID:   10,
 			qty:         2,
 			mockSetup: func(mock sqlmock.Sqlmock) {
@@ -604,20 +604,20 @@ func Test_orderitem_CreateOrderItemTemp(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			got, gotErr := store.CreateOrderItemTemp(tx, tt.orderTempID, tt.productID, tt.qty)
+			got, gotErr := store.CreateTempOrderItem(tx, tt.tempOrderID, tt.productID, tt.qty)
 
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("CreateOrderItemTemp() error = %v, wantErr %v", gotErr, tt.wantErr)
+					t.Errorf("CreateTempOrderItem() error = %v, wantErr %v", gotErr, tt.wantErr)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("CreateOrderItemTemp() succeeded unexpectedly")
+				t.Fatal("CreateTempOrderItem() succeeded unexpectedly")
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreateOrderItemTemp() = %v, want %v", got, tt.want)
+				t.Errorf("CreateTempOrderItem() = %v, want %v", got, tt.want)
 			}
 		})
 	}

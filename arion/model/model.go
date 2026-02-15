@@ -105,7 +105,7 @@ type (
 		UpdatedAt   sql.NullTime `db:"updated_at"`
 	}
 
-	OrderTemp struct {
+	TempOrder struct {
 		ID            int          `db:"id"`
 		ShopID        int          `db:"shop_id"`
 		CustomerName  string       `db:"customer_name"`
@@ -116,9 +116,9 @@ type (
 		UpdatedAt     sql.NullTime `db:"updated_at"`
 	}
 
-	OrderTempItem struct {
+	TempOrderItem struct {
 		ID          int          `db:"id"`
-		OrderTempID int          `db:"order_temp_id"`
+		TempOrderID int          `db:"temp_order_id"`
 		ProductName string       `db:"product_name"`
 		Price       int          `db:"price"`
 		Qty         int          `db:"qty"`

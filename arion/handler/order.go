@@ -455,6 +455,20 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	// ctx := r.Context()
+	// shopID := ctx.Value(common.ShopIDKey).(int)
+
+	// res, err := orderService.GetTempOrdersByShopID(shopID)
+	// if err != nil {
+	// 	logger.WithError(err).Error("get_temp_orders_error")
+	// 	WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_temp_orders")
+	// 	return
+	// }
+
+	// WriteJson(w, http.StatusOK, res)
+}
+
 func validateCreateOrderItem(inp CreateOrderItemRequest) (bool, error) {
 	if inp.ProductID <= 0 {
 		return false, errors.New("product_id is required")

@@ -12,13 +12,13 @@ import (
 )
 
 type (
-	CreateShopOrderTempRequest struct {
+	CreateShopTempOrderRequest struct {
 		CustomerName  string                           `json:"customer_name"`
 		CustomerPhone string                           `json:"customer_phone"`
-		Items         []CreateShopOrderTempItemRequest `json:"order_items"`
+		Items         []CreateShopTempOrderItemRequest `json:"order_items"`
 	}
 
-	CreateShopOrderTempItemRequest struct {
+	CreateShopTempOrderItemRequest struct {
 		ProductID int `json:"product_id"`
 		Qty       int `json:"qty"`
 	}
@@ -103,7 +103,7 @@ func GetShopProductsHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		400	{object}	ErrorApiResponse	"Bad request (missing share_token, invalid JSON, or validation: customer_name/customer_phone required)"
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/public/shops/{share_token}/orders [post]
-func CreateShopOrderTempHandler(w http.ResponseWriter, r *http.Request) {
+func CreateShopTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	shareToken := params["share_token"]
 
@@ -112,35 +112,35 @@ func CreateShopOrderTempHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inp := CreateShopOrderTempRequest{}
+	inp := CreateShopTempOrderRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
-	if valid, err := validateCreateShopOrderTemp(inp); !valid {
+	if valid, err := validateCreateShopTempOrder(inp); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
-	items := []service.CreateOrderTempItemInput{}
+	items := []service.CreateTempOrderItemInput{}
 	for _, item := range inp.Items {
-		items = append(items, service.CreateOrderTempItemInput{
+		items = append(items, service.CreateTempOrderItemInput{
 			ProductID: item.ProductID,
 			Qty:       item.Qty,
 		})
 	}
-	res, err := orderService.CreateOrderTemp(inp.CustomerName, inp.CustomerPhone, shareToken, items)
+	res, err := orderService.CreateTempOrder(inp.CustomerName, inp.CustomerPhone, shareToken, items)
 	if err != nil {
-		logger.WithError(err).Error("create_shop_order_temp_error")
-		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_shop_order_temp")
+		logger.WithError(err).Error("create_shop_temp_order_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_shop_temp_order")
 		return
 	}
 
 	WriteJson(w, http.StatusOK, res)
 }
 
-func validateCreateShopOrderTemp(inp CreateShopOrderTempRequest) (bool, error) {
+func validateCreateShopTempOrder(inp CreateShopTempOrderRequest) (bool, error) {
 	if inp.CustomerName == "" {
 		return false, errors.New("customer_name is required")
 	}

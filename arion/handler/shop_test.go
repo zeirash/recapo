@@ -226,7 +226,7 @@ func TestGetShopShareTokenHandler(t *testing.T) {
 	}
 }
 
-func TestCreateShopOrderTempHandler(t *testing.T) {
+func TestCreateShopTempOrderHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -248,7 +248,7 @@ func TestCreateShopOrderTempHandler(t *testing.T) {
 		wantErrMessage string
 	}{
 		{
-			name:       "successfully create shop order temp",
+			name:       "successfully create shop temp order",
 			shareToken: "share-abc123",
 			body: map[string]interface{}{
 				"customer_name":  "Jane Doe",
@@ -260,16 +260,16 @@ func TestCreateShopOrderTempHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrderTemp("Jane Doe", "+62812345678", "share-abc123", gomock.Any()).
-					Return(response.OrderTempData{
+					CreateTempOrder("Jane Doe", "+62812345678", "share-abc123", gomock.Any()).
+					Return(response.TempOrderData{
 						ID:            1,
 						CustomerName:  "Jane Doe",
 						CustomerPhone: "+62812345678",
 						TotalPrice:    2500,
 						Status:        "pending",
-						OrderTempItems: []response.OrderItemTempData{
-							{ID: 1, OrderTempID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
-							{ID: 2, OrderTempID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+						TempOrderItems: []response.TempOrderItemData{
+							{ID: 1, TempOrderID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+							{ID: 2, TempOrderID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
 						},
 						CreatedAt: fixedTime,
 					}, nil)
@@ -409,8 +409,8 @@ func TestCreateShopOrderTempHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrderTemp("Jane Doe", "+62812345678", "share-abc123", gomock.Any()).
-					Return(response.OrderTempData{}, errors.New("database error"))
+					CreateTempOrder("Jane Doe", "+62812345678", "share-abc123", gomock.Any()).
+					Return(response.TempOrderData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
@@ -439,19 +439,19 @@ func TestCreateShopOrderTempHandler(t *testing.T) {
 			}
 
 			rec := httptest.NewRecorder()
-			handler.CreateShopOrderTempHandler(rec, req)
+			handler.CreateShopTempOrderHandler(rec, req)
 
 			if rec.Code != tt.wantStatus {
-				t.Errorf("CreateShopOrderTempHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+				t.Errorf("CreateShopTempOrderHandler() status = %v, want %v", rec.Code, tt.wantStatus)
 			}
 
 			var resp handler.ApiResponse
 			json.NewDecoder(rec.Body).Decode(&resp)
 			if resp.Success != tt.wantSuccess {
-				t.Errorf("CreateShopOrderTempHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+				t.Errorf("CreateShopTempOrderHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
 			}
 			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
-				t.Errorf("CreateShopOrderTempHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+				t.Errorf("CreateShopTempOrderHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
 			}
 		})
 	}

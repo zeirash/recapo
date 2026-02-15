@@ -573,7 +573,7 @@ func Test_order_DeleteOrderByID(t *testing.T) {
 	}
 }
 
-func Test_order_CreateOrderTemp(t *testing.T) {
+func Test_order_CreateTempOrder(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
 	tests := []struct {
@@ -582,22 +582,22 @@ func Test_order_CreateOrderTemp(t *testing.T) {
 		customerPhone string
 		shopID        int
 		mockSetup     func(mock sqlmock.Sqlmock)
-		want          *model.OrderTemp
+		want          *model.TempOrder
 		wantErr       bool
 	}{
 		{
-			name:          "successfully create order temp",
+			name:          "successfully create temp order",
 			customerName:  "Jane Doe",
 			customerPhone: "+62812345678",
 			shopID:        5,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "customer_name", "customer_phone", "shop_id", "total_price", "status", "created_at"}).
 					AddRow(1, "Jane Doe", "+62812345678", 5, 0, "pending", fixedTime)
-				mock.ExpectQuery(`INSERT INTO order_temp \(customer_name, customer_phone, status, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
+				mock.ExpectQuery(`INSERT INTO temp_orders \(customer_name, customer_phone, status, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
 					WithArgs("Jane Doe", "+62812345678", "pending", 5, sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
-			want: &model.OrderTemp{
+			want: &model.TempOrder{
 				ID:            1,
 				CustomerName:  "Jane Doe",
 				CustomerPhone: "+62812345678",
@@ -609,12 +609,12 @@ func Test_order_CreateOrderTemp(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:          "create order temp returns error on database failure",
+			name:          "create temp order returns error on database failure",
 			customerName:  "Jane Doe",
 			customerPhone: "+62812345678",
 			shopID:        5,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`INSERT INTO order_temp \(customer_name, customer_phone, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
+				mock.ExpectQuery(`INSERT INTO temp_orders \(customer_name, customer_phone, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at`).
 					WithArgs("Jane Doe", "+62812345678", 5, sqlmock.AnyArg()).
 					WillReturnError(errors.New("database error"))
 			},
@@ -640,50 +640,50 @@ func Test_order_CreateOrderTemp(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			got, gotErr := store.CreateOrderTemp(tx, tt.customerName, tt.customerPhone, tt.shopID)
+			got, gotErr := store.CreateTempOrder(tx, tt.customerName, tt.customerPhone, tt.shopID)
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("CreateOrderTemp() error = %v, wantErr %v", gotErr, tt.wantErr)
+					t.Errorf("CreateTempOrder() error = %v, wantErr %v", gotErr, tt.wantErr)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("CreateOrderTemp() succeeded unexpectedly")
+				t.Fatal("CreateTempOrder() succeeded unexpectedly")
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreateOrderTemp() = %v, want %v", got, tt.want)
+				t.Errorf("CreateTempOrder() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_order_UpdateOrderTempTotalPrice(t *testing.T) {
+func Test_order_UpdateTempOrderTotalPrice(t *testing.T) {
 	tests := []struct {
 		name        string
-		orderTempID int
+		tempOrderID int
 		totalPrice  int
 		mockSetup   func(mock sqlmock.Sqlmock)
 		wantErr     bool
 	}{
 		{
-			name:        "successfully update order temp total price",
-			orderTempID: 1,
+			name:        "successfully update temp order total price",
+			tempOrderID: 1,
 			totalPrice:  2500,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
-				mock.ExpectExec(`UPDATE order_temp\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+				mock.ExpectExec(`UPDATE temp_orders\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
 					WithArgs(2500, 1).
 					WillReturnResult(sqlmock.NewResult(0, 1))
 			},
 			wantErr: false,
 		},
 		{
-			name:        "update order temp total price returns error on database failure",
-			orderTempID: 1,
+			name:        "update temp order total price returns error on database failure",
+			tempOrderID: 1,
 			totalPrice:  2500,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
-				mock.ExpectExec(`UPDATE order_temp\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+				mock.ExpectExec(`UPDATE temp_orders\s+SET total_price = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
 					WithArgs(2500, 1).
 					WillReturnError(errors.New("database error"))
 			},
@@ -707,16 +707,16 @@ func Test_order_UpdateOrderTempTotalPrice(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			gotErr := store.UpdateOrderTempTotalPrice(tx, tt.orderTempID, tt.totalPrice)
+			gotErr := store.UpdateTempOrderTotalPrice(tx, tt.tempOrderID, tt.totalPrice)
 
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("UpdateOrderTempTotalPrice() error = %v, wantErr %v", gotErr, tt.wantErr)
+					t.Errorf("UpdateTempOrderTotalPrice() error = %v, wantErr %v", gotErr, tt.wantErr)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("UpdateOrderTempTotalPrice() succeeded unexpectedly")
+				t.Fatal("UpdateTempOrderTotalPrice() succeeded unexpectedly")
 			}
 		})
 	}

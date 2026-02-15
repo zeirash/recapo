@@ -15,7 +15,7 @@ const (
 	OrderStatusDone       = "done"
 	OrderStatusCancelled  = "cancelled"
 
-	OrderTempStatusPending   = "pending"
-	OrderTempStatusAccepted  = "accepted"
-	OrderTempStatusRejected  = "rejected"
+	TempOrderStatusPending   = "pending"
+	TempOrderStatusCompleted = "completed"
+	TempOrderStatusCancelled = "cancelled"
 )

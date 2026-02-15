@@ -23,7 +23,7 @@ type (
 		GetOrderItemByID(orderItemID, orderID int) (response.OrderItemData, error)
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
 
-		CreateOrderTemp(customerName, customerPhone, shareToken string, items []CreateOrderTempItemInput) (response.OrderTempData, error)
+		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
 		// GetOrderTempByID(id int, shopID ...int) (*response.OrderTempData, error)
 		// GetOrderTempsByShopID(shopID int, opts model.OrderTempFilterOptions) ([]response.OrderTempData, error)
 		// UpdateOrderTempByID(input UpdateOrderTempInput) (response.OrderTempData, error)
@@ -49,7 +49,7 @@ type (
 		Qty         *int
 	}
 
-	CreateOrderTempItemInput struct {
+	CreateTempOrderItemInput struct {
 		ProductID int
 		Qty       int
 	}
@@ -333,39 +333,39 @@ func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData
 	return orderItemsData, nil
 }
 
-func (o *oservice) CreateOrderTemp(customerName, customerPhone, shareToken string, items []CreateOrderTempItemInput) (response.OrderTempData, error) {
+func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error) {
 	shop, err := shopStore.GetShopByShareToken(shareToken)
 	if err != nil {
-		return response.OrderTempData{}, err
+		return response.TempOrderData{}, err
 	}
 
 	if shop == nil {
-		return response.OrderTempData{}, errors.New("shop not found")
+		return response.TempOrderData{}, errors.New("shop not found")
 	}
 
 	db := dbGetter()
 
 	tx, err := db.Begin()
 	if err != nil {
-		return response.OrderTempData{}, err
+		return response.TempOrderData{}, err
 	}
 	defer tx.Rollback()
 
-	orderTemp, err := orderStore.CreateOrderTemp(tx, customerName, customerPhone, shop.ID)
+	tempOrder, err := orderStore.CreateTempOrder(tx, customerName, customerPhone, shop.ID)
 	if err != nil {
-		return response.OrderTempData{}, err
+		return response.TempOrderData{}, err
 	}
 
-	orderItemTempsData := []response.OrderItemTempData{}
+	tempOrderItemsData := []response.TempOrderItemData{}
 	totalPrice := 0
 	for _, item := range items {
-		orderItemTemp, err := orderItemStore.CreateOrderItemTemp(tx, orderTemp.ID, item.ProductID, item.Qty)
+		orderItemTemp, err := orderItemStore.CreateTempOrderItem(tx, tempOrder.ID, item.ProductID, item.Qty)
 		if err != nil {
-			return response.OrderTempData{}, err
+			return response.TempOrderData{}, err
 		}
-		orderItemTempsData = append(orderItemTempsData, response.OrderItemTempData{
+		tempOrderItemsData = append(tempOrderItemsData, response.TempOrderItemData{
 			ID:          orderItemTemp.ID,
-			OrderTempID: orderItemTemp.OrderTempID,
+			TempOrderID: orderItemTemp.TempOrderID,
 			ProductName: orderItemTemp.ProductName,
 			Price:       orderItemTemp.Price,
 			Qty:         orderItemTemp.Qty,
@@ -374,27 +374,27 @@ func (o *oservice) CreateOrderTemp(customerName, customerPhone, shareToken strin
 		totalPrice += item.Qty * orderItemTemp.Price
 	}
 
-	err = orderStore.UpdateOrderTempTotalPrice(tx, orderTemp.ID, totalPrice)
+	err = orderStore.UpdateTempOrderTotalPrice(tx, tempOrder.ID, totalPrice)
 	if err != nil {
-		return response.OrderTempData{}, err
+		return response.TempOrderData{}, err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return response.OrderTempData{}, err
+		return response.TempOrderData{}, err
 	}
 
-	res := response.OrderTempData{
-		ID:             orderTemp.ID,
-		CustomerName:   orderTemp.CustomerName,
-		CustomerPhone:  orderTemp.CustomerPhone,
-		TotalPrice:     orderTemp.TotalPrice,
-		Status:         orderTemp.Status,
-		OrderTempItems: orderItemTempsData,
-		CreatedAt:      orderTemp.CreatedAt,
+	res := response.TempOrderData{
+		ID:             tempOrder.ID,
+		CustomerName:   tempOrder.CustomerName,
+		CustomerPhone:  tempOrder.CustomerPhone,
+		TotalPrice:     tempOrder.TotalPrice,
+		Status:         tempOrder.Status,
+		TempOrderItems: tempOrderItemsData,
+		CreatedAt:      tempOrder.CreatedAt,
 	}
-	if orderTemp.UpdatedAt.Valid {
-		res.UpdatedAt = &orderTemp.UpdatedAt.Time
+	if tempOrder.UpdatedAt.Valid {
+		res.UpdatedAt = &tempOrder.UpdatedAt.Time
 	}
 	return res, nil
 }
