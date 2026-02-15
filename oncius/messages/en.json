@@ -166,7 +166,12 @@
     "addItemFailed": "Failed to add item",
     "updateItemFailed": "Failed to update item",
     "deleteItemFailed": "Failed to delete item",
-    "fetchDetailsFailed": "Failed to fetch order details"
+    "fetchDetailsFailed": "Failed to fetch order details",
+    "duplicateOrderTitle": "Customer already has an active order",
+    "duplicateOrderMessage": "This customer already has an active order (#{id}). Add your notes to that order (Merge) or cancel.",
+    "duplicateOrderMessageInline": "This customer already has an active order. Choose a different customer or close and find their order in the list.",
+    "chooseDifferentCustomer": "Choose different customer",
+    "mergeOrder": "Merge into order"
   },
   "orderStatus": {
     "created": "Created",

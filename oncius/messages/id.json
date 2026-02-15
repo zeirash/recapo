@@ -166,7 +166,12 @@
     "addItemFailed": "Gagal menambah item",
     "updateItemFailed": "Gagal memperbarui item",
     "deleteItemFailed": "Gagal menghapus item",
-    "fetchDetailsFailed": "Gagal memuat detail pesanan"
+    "fetchDetailsFailed": "Gagal memuat detail pesanan",
+    "duplicateOrderTitle": "Pelanggan sudah memiliki pesanan aktif",
+    "duplicateOrderMessage": "Pelanggan ini sudah memiliki pesanan aktif (#{id}). Tambahkan catatan ke pesanan itu (Gabungkan) atau batal.",
+    "duplicateOrderMessageInline": "Pelanggan ini sudah memiliki pesanan aktif. Pilih pelanggan lain atau tutup dan cari pesanan mereka di daftar.",
+    "chooseDifferentCustomer": "Pilih pelanggan lain",
+    "mergeOrder": "Gabung ke pesanan"
   },
   "orderStatus": {
     "created": "Dibuat",

@@ -7,7 +7,7 @@ import { Box, Button, Card, Container, Flex, Heading, Input, Label, Select, Text
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
-import { api } from '@/utils/api'
+import { api, ApiError } from '@/utils/api'
 
 type OrderItem = {
   id: number
@@ -77,6 +77,7 @@ export default function OrdersPage() {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [createFormConflict, setCreateFormConflict] = useState(false)
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {
@@ -139,6 +140,15 @@ export default function OrdersPage() {
       onSuccess: () => {
         queryClient.invalidateQueries(['orders'])
         closeCreateForm()
+      },
+      onError: (error) => {
+        if (
+          error instanceof ApiError &&
+          error.status === 409 &&
+          (error.data as { code?: string })?.code === 'duplicate_customer_order'
+        ) {
+          setCreateFormConflict(true)
+        }
       },
     }
   )
@@ -274,6 +284,7 @@ export default function OrdersPage() {
   function closeCreateForm() {
     setIsCreateFormOpen(false)
     setCreateForm(emptyCreateForm)
+    setCreateFormConflict(false)
   }
 
   function openAddItemForm() {
@@ -643,51 +654,74 @@ export default function OrdersPage() {
               if (e.target === e.currentTarget) closeCreateForm()
             }}
           >
-            <Card sx={{ width: ['100%', '540px'] }}>
-              <Heading as="h3" sx={{ mb: 3 }}>{to('newOrder')}</Heading>
-              <Box as="form" onSubmit={submitCreateForm}>
-                <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="customer">{t('customer')}</Label>
-                  <Select
-                    id="customer"
-                    value={createForm.customer_id || ''}
-                    onChange={(e) => setCreateForm({ ...createForm, customer_id: Number(e.target.value) || null })}
-                    required
-                  >
-                    <option value="">{to('selectCustomer')}</option>
-                    {(customersRes || []).map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </Select>
-                </Box>
-                <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="notes">{to('notes')}</Label>
-                  <Textarea
-                    id="notes"
-                    value={createForm.notes}
-                    onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
-                    rows={3}
-                    sx={{
-                      width: '100%',
-                      py: 2,
-                      px: 3,
-                      fontSize: 1,
-                      borderRadius: 'medium',
-                      border: '1px solid',
-                      borderColor: 'border',
-                      resize: 'vertical',
-                    }}
-                  />
-                </Box>
+            <Card sx={{ width: ['100%', '540px'] }} onClick={(e) => e.stopPropagation()}>
+            {createFormConflict ? (
+              <>
+                <Heading as="h3" sx={{ mb: 2 }}>{to('duplicateOrderTitle')}</Heading>
+                <Text sx={{ mb: 4, color: 'text.secondary', display: 'block' }}>
+                  {to('duplicateOrderMessageInline')}
+                </Text>
                 <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
-                  <Button type="button" variant="secondary" onClick={closeCreateForm}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setCreateFormConflict(false)}
+                  >
+                    {to('chooseDifferentCustomer')}
+                  </Button>
+                  <Button type="button" onClick={closeCreateForm}>
                     {t('cancel')}
                   </Button>
-                  <Button type="submit" disabled={createMutation.isLoading || !createForm.customer_id}>
-                    {to('createOrder')}
-                  </Button>
                 </Flex>
-              </Box>
+              </>
+            ) : (
+              <>
+                <Heading as="h3" sx={{ mb: 3 }}>{to('newOrder')}</Heading>
+                <Box as="form" onSubmit={submitCreateForm}>
+                  <Box sx={{ mb: 3 }}>
+                    <Label htmlFor="customer">{t('customer')}</Label>
+                    <Select
+                      id="customer"
+                      value={createForm.customer_id || ''}
+                      onChange={(e) => setCreateForm({ ...createForm, customer_id: Number(e.target.value) || null })}
+                      required
+                    >
+                      <option value="">{to('selectCustomer')}</option>
+                      {(customersRes || []).map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </Select>
+                  </Box>
+                  <Box sx={{ mb: 3 }}>
+                    <Label htmlFor="notes">{to('notes')}</Label>
+                    <Textarea
+                      id="notes"
+                      value={createForm.notes}
+                      onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
+                      rows={3}
+                      sx={{
+                        width: '100%',
+                        py: 2,
+                        px: 3,
+                        fontSize: 1,
+                        borderRadius: 'medium',
+                        border: '1px solid',
+                        borderColor: 'border',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </Box>
+                  <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
+                    <Button type="button" variant="secondary" onClick={closeCreateForm}>
+                      {t('cancel')}
+                    </Button>
+                    <Button type="submit" disabled={createMutation.isLoading || !createForm.customer_id}>
+                      {to('createOrder')}
+                    </Button>
+                  </Flex>
+                </Box>
+              </>
+            )}
             </Card>
           </Box>
         )}
@@ -748,6 +782,7 @@ export default function OrdersPage() {
             </Card>
           </Box>
         )}
+
       </Container>
     </Layout>
   )
