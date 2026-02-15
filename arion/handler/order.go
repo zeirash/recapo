@@ -38,7 +38,8 @@ type (
 	}
 
 	MergeOrderRequest struct {
-		Notes *string `json:"notes"`
+		TempOrderID int `json:"temp_order_id"`
+		CustomerID  int `json:"customer_id"`
 	}
 )
 
@@ -252,53 +253,34 @@ func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, "OK")
 }
 
-// MergeOrderHandler godoc
-//
-//	@Summary		Merge into order (append notes)
-//	@Description	Append notes to an existing order. Used when user chooses to merge instead of creating a new order for a customer who already has an active order.
-//	@Tags			order
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			order_id	path		int	true	"Order ID"
-//	@Param			body		body		MergeOrderRequest	true	"Notes to append (optional)"
-//	@Success		200			{object}	response.OrderData
-//	@Failure		400	{object}	ErrorApiResponse	"Bad request"
-//	@Failure		404	{object}	ErrorApiResponse	"Order not found"
-//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
-//	@Router			/orders/{order_id}/merge [post]
-// func MergeOrderHandler(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	shopID := ctx.Value(common.ShopIDKey).(int)
-// 	params := mux.Vars(r)
+func MergeTempOrderHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
 
-// 	if valid, err := validateOrderID(params); !valid {
-// 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
-// 		return
-// 	}
+	inp := MergeOrderRequest{}
+	if err := ParseJson(r.Body, &inp); err != nil {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
+		return
+	}
 
-// 	inp := MergeOrderRequest{}
-// 	_ = ParseJson(r.Body, &inp)
+	if valid, err := validateMergeTempOrder(inp); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
 
-// 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-// 	notesToAppend := ""
-// 	if inp.Notes != nil {
-// 		notesToAppend = *inp.Notes
-// 	}
+	res, err := orderService.MergeTempOrder(inp.TempOrderID, inp.CustomerID, shopID)
+	if err != nil {
+		if err.Error() == "order not found" {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
+		logger.WithError(err).Error("merge_order_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "merge_order")
+		return
+	}
 
-// 	res, err := orderService.MergeOrderNotes(orderIDInt, shopID, notesToAppend)
-// 	if err != nil {
-// 		if err.Error() == "order not found" {
-// 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
-// 			return
-// 		}
-// 		logger.WithError(err).Error("merge_order_error")
-// 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "merge_order")
-// 		return
-// 	}
-
-// 	WriteJson(w, http.StatusOK, res)
-// }
+	WriteJson(w, http.StatusOK, res)
+}
 
 func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
@@ -637,6 +619,18 @@ func validateOrderItemID(params map[string]string) (bool, error) {
 func validateTempOrderID(params map[string]string) (bool, error) {
 	if params["temp_order_id"] == "" {
 		return false, errors.New("temp_order_id is required")
+	}
+
+	return true, nil
+}
+
+func validateMergeTempOrder(inp MergeOrderRequest) (bool, error) {
+	if inp.TempOrderID <= 0 {
+		return false, errors.New("temp_order_id is required")
+	}
+
+	if inp.CustomerID <= 0 {
+		return false, errors.New("customer_id is required")
 	}
 
 	return true, nil

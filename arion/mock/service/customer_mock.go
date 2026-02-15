@@ -35,19 +35,34 @@ func (m *MockCustomerService) EXPECT() *MockCustomerServiceMockRecorder {
 	return m.recorder
 }
 
-// CreateCustomer mocks base method.
-func (m *MockCustomerService) CreateCustomer(name, email, password string, shopID int) (response.CustomerData, error) {
+// CheckActiveOrderByPhone mocks base method.
+func (m *MockCustomerService) CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCustomer", name, email, password, shopID)
+	ret := m.ctrl.Call(m, "CheckActiveOrderByPhone", phone, name, shopID)
+	ret0, _ := ret[0].(response.CustomerCheckActiveOrderByPhone)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckActiveOrderByPhone indicates an expected call of CheckActiveOrderByPhone.
+func (mr *MockCustomerServiceMockRecorder) CheckActiveOrderByPhone(phone, name, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckActiveOrderByPhone", reflect.TypeOf((*MockCustomerService)(nil).CheckActiveOrderByPhone), phone, name, shopID)
+}
+
+// CreateCustomer mocks base method.
+func (m *MockCustomerService) CreateCustomer(name, phone, address string, shopID int) (response.CustomerData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCustomer", name, phone, address, shopID)
 	ret0, _ := ret[0].(response.CustomerData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateCustomer indicates an expected call of CreateCustomer.
-func (mr *MockCustomerServiceMockRecorder) CreateCustomer(name, email, password, shopID interface{}) *gomock.Call {
+func (mr *MockCustomerServiceMockRecorder) CreateCustomer(name, phone, address, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomer", reflect.TypeOf((*MockCustomerService)(nil).CreateCustomer), name, email, password, shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomer", reflect.TypeOf((*MockCustomerService)(nil).CreateCustomer), name, phone, address, shopID)
 }
 
 // DeleteCustomerByID mocks base method.

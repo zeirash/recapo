@@ -209,6 +209,21 @@ func (mr *MockOrderServiceMockRecorder) GetTempOrdersByShopID(shopID, opts inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTempOrdersByShopID", reflect.TypeOf((*MockOrderService)(nil).GetTempOrdersByShopID), shopID, opts)
 }
 
+// MergeTempOrder mocks base method.
+func (m *MockOrderService) MergeTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MergeTempOrder", tempOrderID, customerID, shopID)
+	ret0, _ := ret[0].(*response.OrderData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MergeTempOrder indicates an expected call of MergeTempOrder.
+func (mr *MockOrderServiceMockRecorder) MergeTempOrder(tempOrderID, customerID, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MergeTempOrder", reflect.TypeOf((*MockOrderService)(nil).MergeTempOrder), tempOrderID, customerID, shopID)
+}
+
 // UpdateOrderByID mocks base method.
 func (m *MockOrderService) UpdateOrderByID(input service.UpdateOrderInput) (response.OrderData, error) {
 	m.ctrl.T.Helper()

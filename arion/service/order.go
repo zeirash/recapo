@@ -23,16 +23,11 @@ type (
 		GetOrderItemByID(orderItemID, orderID int) (response.OrderItemData, error)
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
 
-		// MergeOrderNotes(orderID int, shopID int, notesToAppend string) (*response.OrderData, error)
+		MergeTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error)
 
 		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
 		GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error)
 		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error)
-		// UpdateOrderTempByID(input UpdateOrderTempInput) (response.OrderTempData, error)
-		// DeleteOrderTempByID(id int) error
-
-		// UpdateOrderTempItemByID(input UpdateOrderTempItemInput) (response.OrderTempItemData, error)
-		// DeleteOrderTempItemByID(orderTempItemID, orderTempID int) error
 	}
 
 	oservice struct{}
@@ -343,29 +338,34 @@ func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData
 	return orderItemsData, nil
 }
 
-// func (o *oservice) MergeOrderNotes(orderID int, shopID int, notesToAppend string) (*response.OrderData, error) {
-// 	order, err := orderStore.GetOrderByID(orderID, shopID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if order == nil {
-// 		return nil, errors.New("order not found")
-// 	}
-// 	trimmed := strings.TrimSpace(notesToAppend)
-// 	if trimmed != "" {
-// 		var newNotes string
-// 		if strings.TrimSpace(order.Notes) != "" {
-// 			newNotes = order.Notes + "\n" + trimmed
-// 		} else {
-// 			newNotes = trimmed
-// 		}
-// 		_, err = orderStore.UpdateOrder(orderID, store.UpdateOrderInput{Notes: &newNotes})
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 	}
-// 	return o.GetOrderByID(orderID, shopID)
-// }
+func (o *oservice) MergeTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error) {
+	// activeOrder, err := orderStore.GetActiveOrderByCustomerID(customerID, shopID)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// // if no active order, create new order
+	// if activeOrder == nil {
+
+	// } else {
+	// 	// get temp order items
+
+	// 	// merge temp order items to active order and update total price
+	// }
+	// trimmed := strings.TrimSpace(notesToAppend)
+	// if trimmed != "" {
+	// 	var newNotes string
+	// 	if strings.TrimSpace(order.Notes) != "" {
+	// 		newNotes = order.Notes + "\n" + trimmed
+	// 	} else {
+	// 		newNotes = trimmed
+	// 	}
+	// 	_, err = orderStore.UpdateOrder(orderID, store.UpdateOrderInput{Notes: &newNotes})
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+	return &response.OrderData{}, nil
+}
 
 func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error) {
 	shop, err := shopStore.GetShopByShareToken(shareToken)

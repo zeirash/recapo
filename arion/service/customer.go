@@ -10,12 +10,13 @@ import (
 
 type (
 	CustomerService interface {
-		CreateCustomer(name, email, password string, shopID int) (response.CustomerData, error)
+		CreateCustomer(name, phone, address string, shopID int) (response.CustomerData, error)
 		GetCustomerByID(customerID int, shopID ...int) (*response.CustomerData, error)
 		GetCustomersByShopID(shopID int, searchQuery *string) ([]response.CustomerData, error)
 		UpdateCustomer(input UpdateCustomerInput) (response.CustomerData, error)
 		DeleteCustomerByID(id int) error
 		HasActiveOrders(customerID int, shopID int) (response.CustomerHasActiveOrdersData, error)
+		CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error)
 	}
 
 	cservice struct{}
@@ -39,7 +40,12 @@ func NewCustomerService() CustomerService {
 }
 
 func (c *cservice) CreateCustomer(name, phone, address string, shopID int) (response.CustomerData, error) {
-	customer, err := customerStore.CreateCustomer(name, phone, address, shopID)
+	customer, err := customerStore.CreateCustomer(store.CreateCustomerInput{
+		Name:    name,
+		Phone:   phone,
+		Address: &address,
+		ShopID:  shopID,
+	})
 	if err != nil {
 		return response.CustomerData{}, err
 	}
@@ -158,4 +164,32 @@ func (c *cservice) HasActiveOrders(customerID int, shopID int) (response.Custome
 		return response.CustomerHasActiveOrdersData{}, err
 	}
 	return response.CustomerHasActiveOrdersData{HasActiveOrders: hasActiveOrders}, nil
+}
+
+func (c *cservice) CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error) {
+	customer, err := customerStore.GetCustomerByPhone(phone, shopID)
+	if err != nil {
+		return response.CustomerCheckActiveOrderByPhone{}, err
+	}
+
+	if customer == nil {
+		customer, err = customerStore.CreateCustomer(store.CreateCustomerInput{
+			Name:    name,
+			Phone:   phone,
+			ShopID:  shopID,
+		})
+		if err != nil {
+			return response.CustomerCheckActiveOrderByPhone{}, err
+		}
+	}
+
+	hasActiveOrders, err := orderStore.HasActiveOrdersByCustomerID(customer.ID, shopID)
+	if err != nil {
+		return response.CustomerCheckActiveOrderByPhone{}, err
+	}
+
+	return response.CustomerCheckActiveOrderByPhone{
+		CustomerID:      customer.ID,
+		HasActiveOrders: hasActiveOrders,
+	}, nil
 }

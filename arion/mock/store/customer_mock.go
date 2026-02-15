@@ -36,18 +36,18 @@ func (m *MockCustomerStore) EXPECT() *MockCustomerStoreMockRecorder {
 }
 
 // CreateCustomer mocks base method.
-func (m *MockCustomerStore) CreateCustomer(name, phone, address string, shopID int) (*model.Customer, error) {
+func (m *MockCustomerStore) CreateCustomer(input store.CreateCustomerInput) (*model.Customer, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCustomer", name, phone, address, shopID)
+	ret := m.ctrl.Call(m, "CreateCustomer", input)
 	ret0, _ := ret[0].(*model.Customer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateCustomer indicates an expected call of CreateCustomer.
-func (mr *MockCustomerStoreMockRecorder) CreateCustomer(name, phone, address, shopID interface{}) *gomock.Call {
+func (mr *MockCustomerStoreMockRecorder) CreateCustomer(input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomer", reflect.TypeOf((*MockCustomerStore)(nil).CreateCustomer), name, phone, address, shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomer", reflect.TypeOf((*MockCustomerStore)(nil).CreateCustomer), input)
 }
 
 // DeleteCustomerByID mocks base method.
@@ -82,6 +82,21 @@ func (mr *MockCustomerStoreMockRecorder) GetCustomerByID(id interface{}, shopID 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{id}, shopID...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomerByID", reflect.TypeOf((*MockCustomerStore)(nil).GetCustomerByID), varargs...)
+}
+
+// GetCustomerByPhone mocks base method.
+func (m *MockCustomerStore) GetCustomerByPhone(phone string, shopID int) (*model.Customer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCustomerByPhone", phone, shopID)
+	ret0, _ := ret[0].(*model.Customer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCustomerByPhone indicates an expected call of GetCustomerByPhone.
+func (mr *MockCustomerStoreMockRecorder) GetCustomerByPhone(phone, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomerByPhone", reflect.TypeOf((*MockCustomerStore)(nil).GetCustomerByPhone), phone, shopID)
 }
 
 // GetCustomersByShopID mocks base method.

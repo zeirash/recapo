@@ -262,27 +262,20 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 }
 
 func Test_customer_CreateCustomer(t *testing.T) {
-	type input struct {
-		name    string
-		phone   string
-		address string
-		shopID  int
-	}
-
 	tests := []struct {
 		name       string
-		input      input
+		input      CreateCustomerInput
 		mockSetup  func(mock sqlmock.Sqlmock)
 		wantResult *model.Customer
 		wantErr    error
 	}{
 		{
-			name: "successfully create customer",
-			input: input{
-				name:    "John Doe",
-				phone:   "1234567890",
-				address: "123 Main St",
-				shopID:  1,
+			name: "successfully create customer with address",
+			input: CreateCustomerInput{
+				Name:    "John Doe",
+				Phone:   "1234567890",
+				Address: strPtr("123 Main St"),
+				ShopID:  1,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
@@ -299,12 +292,34 @@ func Test_customer_CreateCustomer(t *testing.T) {
 			wantErr: nil,
 		},
 		{
+			name: "successfully create customer without address",
+			input: CreateCustomerInput{
+				Name:    "Jane Doe",
+				Phone:   "0987654321",
+				Address: nil,
+				ShopID:  1,
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id"}).AddRow(2)
+				mock.ExpectQuery(`INSERT INTO customers \(name, phone, address, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id`).
+					WithArgs("Jane Doe", "0987654321", "", 1, sqlmock.AnyArg()).
+					WillReturnRows(rows)
+			},
+			wantResult: &model.Customer{
+				ID:      2,
+				Name:    "Jane Doe",
+				Phone:   "0987654321",
+				Address: "",
+			},
+			wantErr: nil,
+		},
+		{
 			name: "create customer with duplicate phone returns ErrDuplicatePhone",
-			input: input{
-				name:    "Jane Doe",
-				phone:   "1234567890",
-				address: "456 Oak Ave",
-				shopID:  1,
+			input: CreateCustomerInput{
+				Name:    "Jane Doe",
+				Phone:   "1234567890",
+				Address: strPtr("456 Oak Ave"),
+				ShopID:  1,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`INSERT INTO customers \(name, phone, address, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id`).
@@ -316,11 +331,11 @@ func Test_customer_CreateCustomer(t *testing.T) {
 		},
 		{
 			name: "create customer returns error on database failure",
-			input: input{
-				name:    "John Doe",
-				phone:   "1234567890",
-				address: "123 Main St",
-				shopID:  1,
+			input: CreateCustomerInput{
+				Name:    "John Doe",
+				Phone:   "1234567890",
+				Address: strPtr("123 Main St"),
+				ShopID:  1,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`INSERT INTO customers \(name, phone, address, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id`).
@@ -343,7 +358,7 @@ func Test_customer_CreateCustomer(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewCustomerStoreWithDB(db)
 
-			got, gotErr := store.CreateCustomer(tt.input.name, tt.input.phone, tt.input.address, tt.input.shopID)
+			got, gotErr := store.CreateCustomer(tt.input)
 
 			if tt.wantErr != nil {
 				if gotErr == nil {
@@ -367,6 +382,10 @@ func Test_customer_CreateCustomer(t *testing.T) {
 			}
 		})
 	}
+}
+
+func strPtr(s string) *string {
+	return &s
 }
 
 func Test_customer_UpdateCustomer(t *testing.T) {
@@ -568,6 +587,92 @@ func Test_customer_DeleteCustomerByID(t *testing.T) {
 			}
 			if tt.wantErr {
 				t.Fatal("DeleteCustomerByID() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
+func Test_customer_GetCustomerByPhone(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name       string
+		phone      string
+		shopID     int
+		mockSetup  func(mock sqlmock.Sqlmock)
+		wantResult *model.Customer
+		wantErr    bool
+	}{
+		{
+			name:   "returns customer when found",
+			phone:  "08123456789",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"}).
+					AddRow(1, "John Doe", "08123456789", "123 Main St", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE phone = \$1 AND shop_id = \$2`).
+					WithArgs("08123456789", 1).
+					WillReturnRows(rows)
+			},
+			wantResult: &model.Customer{
+				ID:        1,
+				Name:      "John Doe",
+				Phone:     "08123456789",
+				Address:   "123 Main St",
+				CreatedAt: fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:   "returns nil nil when no rows",
+			phone:  "08000000000",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE phone = \$1 AND shop_id = \$2`).
+					WithArgs("08000000000", 1).
+					WillReturnError(sql.ErrNoRows)
+			},
+			wantResult: nil,
+			wantErr:    false,
+		},
+		{
+			name:   "returns error on database failure",
+			phone:  "08123456789",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE phone = \$1 AND shop_id = \$2`).
+					WithArgs("08123456789", 1).
+					WillReturnError(errors.New("database error"))
+			},
+			wantResult: nil,
+			wantErr:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			s := NewCustomerStoreWithDB(db)
+
+			got, gotErr := s.GetCustomerByPhone(tt.phone, tt.shopID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetCustomerByPhone() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetCustomerByPhone() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.wantResult) {
+				t.Errorf("GetCustomerByPhone() = %v, want %v", got, tt.wantResult)
 			}
 		})
 	}

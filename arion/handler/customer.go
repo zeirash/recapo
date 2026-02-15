@@ -24,6 +24,12 @@ type (
 		Phone   *string `json:"phone"`
 		Address *string `json:"address"`
 	}
+
+	// CheckActiveOrderRequest is the body for POST /customers/check_active_order. Phone required; name and address optional (used when creating customer).
+	CheckActiveOrderRequest struct {
+		Phone   string `json:"phone"`
+		Name    string `json:"name"`
+	}
 )
 
 // CreateCustomerHandler godoc
@@ -219,37 +225,38 @@ func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, "OK")
 }
 
-// CustomerMergeOrderCheckHandler godoc
+// CustomerCheckActiveOrderHandler godoc
 //
-//	@Summary		Check if customer has active orders
-//	@Description	Returns whether the customer has any active order (status created or in_progress). Used before creating a new order to decide whether to show a merge/conflict message.
-//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Summary		Check active order by phone (get-or-create customer)
+//	@Description	Looks up customer by phone for the shop. If not found, creates a customer with the given phone (and optional name/address). Returns customer_id and whether that customer has an active order. Use when the client has a phone number but may not have selected a customer yet (e.g. before creating an order).
 //	@Tags			customer
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			customer_id	path		int	true	"Customer ID"
-//	@Success		200			{object}	response.CustomerHasActiveOrdersData
-//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid customer_id)"
+//	@Param			body		body		CheckActiveOrderRequest	true	"Phone required; name and address optional (used only when creating)"
+//	@Success		200			{object}	response.CustomerCheckActiveOrderByPhone
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (phone required or invalid JSON)"
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
-//	@Router			/customers/{customer_id}/merge_order_check [get]
-func CustomerMergeOrderCheckHandler(w http.ResponseWriter, r *http.Request) {
+//	@Router			/customers/check_active_order [post]
+func CustomerCheckActiveOrderHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
-	params := mux.Vars(r)
 
-	if valid, err := validateCustomerID(params); !valid {
+	var inp CheckActiveOrderRequest
+	if err := ParseJson(r.Body, &inp); err != nil {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
+		return
+	}
+
+	if valid, err := validateCheckActiveOrder(inp); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
 	}
 
-	customerIDInt, _ := strconv.Atoi(params["customer_id"])
-	customerID := customerIDInt
-
-	res, err := customerService.HasActiveOrders(customerID, shopID)
+	res, err := customerService.CheckActiveOrderByPhone(inp.Phone, inp.Name, shopID)
 	if err != nil {
-		logger.WithError(err).Error("has_active_orders_error")
-		WriteErrorJson(w, r, http.StatusInternalServerError, err, "has_active_orders")
+		logger.WithError(err).Error("check_active_order_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "check_active_order")
 		return
 	}
 
@@ -275,6 +282,18 @@ func validateCreateCustomer(inp CreateCustomerRequest) (bool, error) {
 func validateCustomerID(params map[string]string) (bool, error) {
 	if params["customer_id"] == "" {
 		return false, errors.New("customer_id is required")
+	}
+
+	return true, nil
+}
+
+func validateCheckActiveOrder(inp CheckActiveOrderRequest) (bool, error) {
+	if inp.Phone == "" {
+		return false, errors.New("phone is required")
+	}
+
+	if inp.Name == "" {
+		return false, errors.New("name is required")
 	}
 
 	return true, nil

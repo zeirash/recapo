@@ -77,10 +77,10 @@ func TestCreateCustomerHandler(t *testing.T) {
 			wantErrMessage: "database error",
 		},
 		{
-			name:       "create customer returns 400 on invalid json",
-			body:       "invalid json",
-			shopID:     1,
-			mockSetup:  func() {},
+			name:        "create customer returns 400 on invalid json",
+			body:        "invalid json",
+			shopID:      1,
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -91,9 +91,9 @@ func TestCreateCustomerHandler(t *testing.T) {
 				"phone":   "08123456789",
 				"address": "123 Main St",
 			},
-			shopID:     1,
-			mockSetup:  func() {},
-			wantStatus: http.StatusBadRequest,
+			shopID:      1,
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 		{
@@ -103,9 +103,9 @@ func TestCreateCustomerHandler(t *testing.T) {
 				"phone":   "",
 				"address": "123 Main St",
 			},
-			shopID:     1,
-			mockSetup:  func() {},
-			wantStatus: http.StatusBadRequest,
+			shopID:      1,
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 		{
@@ -115,9 +115,9 @@ func TestCreateCustomerHandler(t *testing.T) {
 				"phone":   "08123456789",
 				"address": "",
 			},
-			shopID:     1,
-			mockSetup:  func() {},
-			wantStatus: http.StatusBadRequest,
+			shopID:      1,
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 	}
@@ -195,10 +195,10 @@ func TestGetCustomerHandler(t *testing.T) {
 			wantSuccess: true,
 		},
 		{
-			name:       "get customer returns 400 when customer_id missing",
-			customerID: "",
-			shopID:     1,
-			mockSetup:  func() {},
+			name:        "get customer returns 400 when customer_id missing",
+			customerID:  "",
+			shopID:      1,
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -405,18 +405,18 @@ func TestUpdateCustomerHandler(t *testing.T) {
 			wantSuccess: true,
 		},
 		{
-			name:       "update customer returns 400 when customer_id missing",
-			customerID: "",
-			body:       map[string]interface{}{"name": "Test"},
-			mockSetup:  func() {},
+			name:        "update customer returns 400 when customer_id missing",
+			customerID:  "",
+			body:        map[string]interface{}{"name": "Test"},
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 		{
-			name:       "update customer returns 400 on invalid json",
-			customerID: "1",
-			body:       "invalid json",
-			mockSetup:  func() {},
+			name:        "update customer returns 400 on invalid json",
+			customerID:  "1",
+			body:        "invalid json",
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -504,9 +504,9 @@ func TestDeleteCustomerHandler(t *testing.T) {
 			wantSuccess: true,
 		},
 		{
-			name:       "delete customer returns 400 when customer_id missing",
-			customerID: "",
-			mockSetup:  func() {},
+			name:        "delete customer returns 400 when customer_id missing",
+			customerID:  "",
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -552,7 +552,7 @@ func TestDeleteCustomerHandler(t *testing.T) {
 	}
 }
 
-func TestCustomerMergeOrderCheckHandler(t *testing.T) {
+func TestCustomerCheckActiveOrderHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -563,57 +563,78 @@ func TestCustomerMergeOrderCheckHandler(t *testing.T) {
 	handler.SetCustomerService(mockCustomerService)
 
 	tests := []struct {
-		name              string
-		customerID        string
-		shopID            int
-		mockSetup         func()
-		wantStatus        int
-		wantSuccess       bool
-		wantHasActive     *bool // nil = do not check
-		wantErrMessage    string
+		name           string
+		body           interface{}
+		rawBody        []byte // if non-nil, used as request body instead of json.Marshal(body)
+		shopID         int
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantCustomerID *int
+		wantHasActive  *bool
+		wantErrMessage string
 	}{
 		{
-			name:       "returns has_active_orders true when customer has active order",
-			customerID: "1",
-			shopID:     1,
+			name:   "returns customer_id and has_active_orders true when customer has active order",
+			body:   map[string]string{"phone": "08123456789", "name": "John"},
+			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					HasActiveOrders(1, 1).
-					Return(response.CustomerHasActiveOrdersData{HasActiveOrders: true}, nil)
+					CheckActiveOrderByPhone("08123456789", "John", 1).
+					Return(response.CustomerCheckActiveOrderByPhone{CustomerID: 1, HasActiveOrders: true}, nil)
 			},
-			wantStatus:    http.StatusOK,
-			wantSuccess:   true,
-			wantHasActive: ptrBool(true),
+			wantStatus:     http.StatusOK,
+			wantSuccess:    true,
+			wantCustomerID: intPtr(1),
+			wantHasActive:  ptrBool(true),
 		},
 		{
-			name:       "returns has_active_orders false when customer has no active order",
-			customerID: "5",
-			shopID:     1,
+			name:   "returns customer_id and has_active_orders false when customer has no active order",
+			body:   map[string]interface{}{"phone": "08987654321", "name": "Jane", "address": ""},
+			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					HasActiveOrders(5, 1).
-					Return(response.CustomerHasActiveOrdersData{HasActiveOrders: false}, nil)
+					CheckActiveOrderByPhone("08987654321", "Jane", 1).
+					Return(response.CustomerCheckActiveOrderByPhone{CustomerID: 5, HasActiveOrders: false}, nil)
 			},
-			wantStatus:    http.StatusOK,
-			wantSuccess:   true,
-			wantHasActive: ptrBool(false),
+			wantStatus:     http.StatusOK,
+			wantSuccess:    true,
+			wantCustomerID: intPtr(5),
+			wantHasActive:  ptrBool(false),
 		},
 		{
-			name:       "returns 400 when customer_id missing",
-			customerID: "",
+			name:       "returns 400 when phone missing",
+			body:       map[string]string{"name": "John"},
 			shopID:     1,
 			mockSetup:  func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 		{
-			name:       "returns 500 on service error",
-			customerID: "1",
+			name:       "returns 400 when body is invalid JSON",
+			rawBody:    []byte(`{invalid}`),
 			shopID:     1,
+			mockSetup:  func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:          "returns 400 when name missing",
+			body:          map[string]string{"phone": "08123456789"},
+			shopID:        1,
+			mockSetup:     func() {},
+			wantStatus:    http.StatusBadRequest,
+			wantSuccess:   false,
+			wantErrMessage: "name is required",
+		},
+		{
+			name:   "returns 500 on service error",
+			body:   map[string]string{"phone": "08123456789", "name": "John"},
+			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					HasActiveOrders(1, 1).
-					Return(response.CustomerHasActiveOrdersData{}, errors.New("database error"))
+					CheckActiveOrderByPhone("08123456789", "John", 1).
+					Return(response.CustomerCheckActiveOrderByPhone{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
@@ -625,45 +646,57 @@ func TestCustomerMergeOrderCheckHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
 
-			path := "/customers/merge_order_check"
-			if tt.customerID != "" {
-				path = "/customers/" + tt.customerID + "/merge_order_check"
+			bodyBytes := tt.rawBody
+			if bodyBytes == nil {
+				bodyBytes, _ = json.Marshal(tt.body)
 			}
-			req := newRequestWithShopID("GET", path, nil, tt.shopID)
-			if tt.customerID != "" {
-				req = newRequestWithPathVars(req, map[string]string{"customer_id": tt.customerID})
-			}
+			req := newRequestWithShopID("POST", "/customers/check_active_order", bodyBytes, tt.shopID)
 			rec := httptest.NewRecorder()
 
-			handler.CustomerMergeOrderCheckHandler(rec, req)
+			handler.CustomerCheckActiveOrderHandler(rec, req)
 
 			if rec.Code != tt.wantStatus {
-				t.Errorf("CustomerMergeOrderCheckHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+				t.Errorf("CustomerCheckActiveOrderHandler() status = %v, want %v", rec.Code, tt.wantStatus)
 			}
 
 			var resp handler.ApiResponse
 			json.NewDecoder(rec.Body).Decode(&resp)
 			if resp.Success != tt.wantSuccess {
-				t.Errorf("CustomerMergeOrderCheckHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+				t.Errorf("CustomerCheckActiveOrderHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
 			}
 			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
-				t.Errorf("CustomerMergeOrderCheckHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+				t.Errorf("CustomerCheckActiveOrderHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
 			}
-			if tt.wantHasActive != nil {
+			if tt.wantCustomerID != nil || tt.wantHasActive != nil {
 				dataMap, ok := resp.Data.(map[string]interface{})
 				if !ok {
-					t.Fatalf("CustomerMergeOrderCheckHandler() data = %T, want object", resp.Data)
+					t.Fatalf("CustomerCheckActiveOrderHandler() data = %T, want object", resp.Data)
 				}
-				hasActive, ok := dataMap["has_active_orders"].(bool)
-				if !ok {
-					t.Fatalf("CustomerMergeOrderCheckHandler() data.has_active_orders = %T, want bool", dataMap["has_active_orders"])
+				if tt.wantCustomerID != nil {
+					cid, ok := dataMap["customer_id"].(float64)
+					if !ok {
+						t.Fatalf("CustomerCheckActiveOrderHandler() data.customer_id = %T, want number", dataMap["customer_id"])
+					}
+					if int(cid) != *tt.wantCustomerID {
+						t.Errorf("CustomerCheckActiveOrderHandler() customer_id = %v, want %v", int(cid), *tt.wantCustomerID)
+					}
 				}
-				if hasActive != *tt.wantHasActive {
-					t.Errorf("CustomerMergeOrderCheckHandler() has_active_orders = %v, want %v", hasActive, *tt.wantHasActive)
+				if tt.wantHasActive != nil {
+					hasActive, ok := dataMap["has_active_orders"].(bool)
+					if !ok {
+						t.Fatalf("CustomerCheckActiveOrderHandler() data.has_active_orders = %T, want bool", dataMap["has_active_orders"])
+					}
+					if hasActive != *tt.wantHasActive {
+						t.Errorf("CustomerCheckActiveOrderHandler() has_active_orders = %v, want %v", hasActive, *tt.wantHasActive)
+					}
 				}
 			}
 		})
 	}
+}
+
+func intPtr(n int) *int {
+	return &n
 }
 
 func ptrBool(b bool) *bool {

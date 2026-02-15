@@ -19,14 +19,22 @@ var ErrDuplicatePhone = errors.New("customer with this phone number already exis
 type (
 	CustomerStore interface {
 		GetCustomerByID(id int, shopID ...int) (*model.Customer, error)
+		GetCustomerByPhone(phone string, shopID int) (*model.Customer, error)
 		GetCustomersByShopID(shopID int, searchQuery *string) ([]model.Customer, error)
-		CreateCustomer(name, phone, address string, shopID int) (*model.Customer, error)
+		CreateCustomer(input CreateCustomerInput) (*model.Customer, error)
 		UpdateCustomer(id int, input UpdateCustomerInput) (*model.Customer, error)
 		DeleteCustomerByID(id int) error
 	}
 
 	customer struct {
 		db *sql.DB
+	}
+
+	CreateCustomerInput struct {
+		ShopID  int
+		Name    string
+		Phone   string
+		Address *string
 	}
 
 	UpdateCustomerInput struct {
@@ -71,6 +79,23 @@ func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, erro
 	return &customer, nil
 }
 
+func (c *customer) GetCustomerByPhone(phone string, shopID int) (*model.Customer, error) {
+	q := `
+		SELECT id, name, phone, address, created_at, updated_at
+		FROM customers
+		WHERE phone = $1 AND shop_id = $2
+	`
+	var customer model.Customer
+	err := c.db.QueryRow(q, phone, shopID).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &customer, nil
+}
+
 func (c *customer) GetCustomersByShopID(shopID int, searchQuery *string) ([]model.Customer, error) {
 	q := `
 		SELECT id, name, phone, address, created_at, updated_at
@@ -106,17 +131,21 @@ func (c *customer) GetCustomersByShopID(shopID int, searchQuery *string) ([]mode
 	return customers, nil
 }
 
-func (c *customer) CreateCustomer(name, phone, address string, shopID int) (*model.Customer, error) {
+func (c *customer) CreateCustomer(input CreateCustomerInput) (*model.Customer, error) {
 	now := time.Now()
 	var id int
+
+	address := ""
+	if input.Address != nil {
+		address = *input.Address
+	}
 
 	q := `
 		INSERT INTO customers (name, phone, address, shop_id, created_at)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
 	`
-
-	err := c.db.QueryRow(q, name, phone, address, shopID, now).Scan(&id)
+	err := c.db.QueryRow(q, input.Name, input.Phone, address, input.ShopID, now).Scan(&id)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, ErrDuplicatePhone
@@ -126,8 +155,8 @@ func (c *customer) CreateCustomer(name, phone, address string, shopID int) (*mod
 
 	return &model.Customer{
 		ID:        id,
-		Name:      name,
-		Phone:     phone,
+		Name:      input.Name,
+		Phone:     input.Phone,
 		Address:   address,
 		CreatedAt: now,
 	}, nil

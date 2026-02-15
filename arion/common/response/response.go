@@ -33,6 +33,12 @@ type (
 		HasActiveOrders bool `json:"has_active_orders"`
 	}
 
+	// CustomerCheckActiveOrderByPhone is the response when checking active order by phone (get-or-create customer).
+	CustomerCheckActiveOrderByPhone struct {
+		CustomerID      int  `json:"customer_id"`
+		HasActiveOrders bool `json:"has_active_orders"`
+	}
+
 	ProductData struct {
 		ID            int        `json:"id"`
 		Name          string     `json:"name"`
