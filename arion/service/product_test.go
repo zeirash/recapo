@@ -322,7 +322,7 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "get products by shop ID returns nil result",
+			name:        "get products by shop ID returns empty slice",
 			shopID:      10,
 			searchQuery: nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
@@ -332,7 +332,7 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 					Return([]model.Product{}, nil)
 				return mock
 			},
-			wantResult: nil,
+			wantResult: []response.ProductData{},
 			wantErr:    false,
 		},
 		{

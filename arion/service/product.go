@@ -88,7 +88,7 @@ func (p *pservice) GetProductsByShopID(shopID int, searchQuery *string) ([]respo
 		return []response.ProductData{}, err
 	}
 
-	var productsData []response.ProductData
+	productsData := []response.ProductData{}
 	for _, product := range products {
 		res := response.ProductData{
 			ID:            product.ID,

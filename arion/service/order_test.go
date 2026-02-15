@@ -287,7 +287,7 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 					Return([]model.Order{}, nil)
 				return mock
 			},
-			wantResult: nil,
+			wantResult: []response.OrderData{},
 			wantErr:    false,
 		},
 		{
@@ -1481,6 +1481,125 @@ func Test_oservice_CreateTempOrder(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tt.wantResult) {
 				t.Errorf("CreateTempOrder() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func Test_oservice_GetTempOrdersByShopID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+	updatedTime := time.Date(2024, 1, 16, 12, 0, 0, 0, time.UTC)
+	strPtr := func(s string) *string { return &s }
+	ptrTime := func(t time.Time) *time.Time { return &t }
+
+	tests := []struct {
+		name       string
+		shopID     int
+		opts       model.OrderFilterOptions
+		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockOrderStore
+		wantResult []response.TempOrderData
+		wantErr    bool
+	}{
+		{
+			name:   "successfully get temp orders by shop ID",
+			shopID: 5,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					GetTempOrdersByShopID(5, model.OrderFilterOptions{}).
+					Return([]model.TempOrder{
+						{ID: 1, ShopID: 5, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{}},
+						{ID: 2, ShopID: 5, CustomerName: "John Doe", CustomerPhone: "+62887654321", TotalPrice: 1000, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{}},
+					}, nil)
+				return mock
+			},
+			wantResult: []response.TempOrderData{
+				{ID: 1, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: nil},
+				{ID: 2, CustomerName: "John Doe", CustomerPhone: "+62887654321", TotalPrice: 1000, Status: "pending", CreatedAt: fixedTime, UpdatedAt: nil},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "get temp orders returns empty slice when none exist",
+			shopID: 99,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					GetTempOrdersByShopID(99, model.OrderFilterOptions{}).
+					Return([]model.TempOrder{}, nil)
+				return mock
+			},
+			wantResult: []response.TempOrderData{},
+			wantErr:    false,
+		},
+		{
+			name:   "get temp orders returns error on store failure",
+			shopID: 5,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					GetTempOrdersByShopID(5, model.OrderFilterOptions{}).
+					Return(nil, errors.New("database error"))
+				return mock
+			},
+			wantResult: nil,
+			wantErr:    true,
+		},
+		{
+			name:   "get temp orders with search and date filters passes opts to store",
+			shopID: 5,
+			opts: model.OrderFilterOptions{
+				SearchQuery: strPtr("62812"),
+				DateFrom:    ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+				DateTo:      ptrTime(time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)),
+			},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
+				mock := mock_store.NewMockOrderStore(ctrl)
+				mock.EXPECT().
+					GetTempOrdersByShopID(5, model.OrderFilterOptions{
+						SearchQuery: strPtr("62812"),
+						DateFrom:    ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+						DateTo:      ptrTime(time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)),
+					}).
+					Return([]model.TempOrder{
+						{ID: 1, ShopID: 5, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Valid: true, Time: updatedTime}},
+					}, nil)
+				return mock
+			},
+			wantResult: []response.TempOrderData{
+				{ID: 1, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: &updatedTime},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldStore := orderStore
+			defer func() { orderStore = oldStore }()
+			orderStore = tt.mockSetup(ctrl)
+
+			var o oservice
+			got, gotErr := o.GetTempOrdersByShopID(tt.shopID, tt.opts)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetTempOrdersByShopID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetTempOrdersByShopID() succeeded unexpectedly")
+			}
+
+			if !reflect.DeepEqual(got, tt.wantResult) {
+				t.Errorf("GetTempOrdersByShopID() = %v, want %v", got, tt.wantResult)
 			}
 		})
 	}

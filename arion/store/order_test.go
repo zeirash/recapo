@@ -191,13 +191,13 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name:   "get orders by shop ID with search query filters by customer name",
+			name:   "get orders by shop ID with search query filters by customer name or phone",
 			shopID: 10,
 			opts:   model.OrderFilterOptions{SearchQuery: strPtr("john")},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
 					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil)
-				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND c.name ILIKE \$2`).
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND \(c.name ILIKE \$2 OR c.phone ILIKE \$2\)`).
 					WithArgs(10, "%john%").
 					WillReturnRows(rows)
 			},
@@ -717,6 +717,129 @@ func Test_order_UpdateTempOrderTotalPrice(t *testing.T) {
 			}
 			if tt.wantErr {
 				t.Fatal("UpdateTempOrderTotalPrice() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
+func Test_order_GetTempOrdersByShopID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+	strPtr := func(s string) *string { return &s }
+	ptrTime := func(t time.Time) *time.Time { return &t }
+
+	tests := []struct {
+		name       string
+		shopID     int
+		opts       model.OrderFilterOptions
+		mockSetup  func(mock sqlmock.Sqlmock)
+		wantResult []model.TempOrder
+		wantErr    bool
+	}{
+		{
+			name:   "get temp orders by shop ID returns multiple temp orders",
+			shopID: 5,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "customer_phone", "total_price", "status", "created_at", "updated_at"}).
+					AddRow(1, 5, "Jane Doe", "+62812345678", 2500, "pending", fixedTime, nil).
+					AddRow(2, 5, "John Doe", "+62887654321", 1000, "pending", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1`).
+					WithArgs(5).
+					WillReturnRows(rows)
+			},
+			wantResult: []model.TempOrder{
+				{ID: 1, ShopID: 5, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{}},
+				{ID: 2, ShopID: 5, CustomerName: "John Doe", CustomerPhone: "+62887654321", TotalPrice: 1000, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{}},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "get temp orders by shop ID returns empty slice when none exist",
+			shopID: 99,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "customer_phone", "total_price", "status", "created_at", "updated_at"})
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1`).
+					WithArgs(99).
+					WillReturnRows(rows)
+			},
+			wantResult: []model.TempOrder{},
+			wantErr:    false,
+		},
+		{
+			name:   "get temp orders returns error on database failure",
+			shopID: 5,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1`).
+					WithArgs(5).
+					WillReturnError(errors.New("database error"))
+			},
+			wantResult: nil,
+			wantErr:    true,
+		},
+		{
+			name:   "get temp orders with search query filters by customer name or phone",
+			shopID: 5,
+			opts:   model.OrderFilterOptions{SearchQuery: strPtr("62812")},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "customer_phone", "total_price", "status", "created_at", "updated_at"}).
+					AddRow(1, 5, "Jane Doe", "+62812345678", 2500, "pending", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+AND \(customer_name ILIKE \$2 OR customer_phone ILIKE \$2\)`).
+					WithArgs(5, "%62812%").
+					WillReturnRows(rows)
+			},
+			wantResult: []model.TempOrder{
+				{ID: 1, ShopID: 5, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{}},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "get temp orders with date range filters by created_at",
+			shopID: 5,
+			opts: model.OrderFilterOptions{
+				DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+				DateTo:   ptrTime(time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "customer_phone", "total_price", "status", "created_at", "updated_at"}).
+					AddRow(1, 5, "Jane Doe", "+62812345678", 2500, "pending", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+AND created_at >= \$2\s+AND created_at < \$3`).
+					WithArgs(5, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)).
+					WillReturnRows(rows)
+			},
+			wantResult: []model.TempOrder{
+				{ID: 1, ShopID: 5, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{}},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewOrderStoreWithDB(db)
+
+			got, gotErr := store.GetTempOrdersByShopID(tt.shopID, tt.opts)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetTempOrdersByShopID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetTempOrdersByShopID() succeeded unexpectedly")
+			}
+
+			if !reflect.DeepEqual(got, tt.wantResult) {
+				t.Errorf("GetTempOrdersByShopID() = %v, want %v", got, tt.wantResult)
 			}
 		})
 	}

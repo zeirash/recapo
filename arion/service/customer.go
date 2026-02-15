@@ -85,7 +85,7 @@ func (c *cservice) GetCustomersByShopID(shopID int, searchQuery *string) ([]resp
 		return []response.CustomerData{}, err
 	}
 
-	var customersData []response.CustomerData
+	customersData := []response.CustomerData{}
 	for _, customer := range customers {
 		res := response.CustomerData{
 			ID:        customer.ID,

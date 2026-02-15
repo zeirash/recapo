@@ -56,7 +56,7 @@ func (s *shopService) GetPublicProducts(shareToken string) ([]response.ProductDa
 		return nil, err
 	}
 
-	var productsData []response.ProductData
+	productsData := []response.ProductData{}
 	for _, product := range products {
 		res := response.ProductData{
 			ID:            product.ID,

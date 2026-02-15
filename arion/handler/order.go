@@ -456,17 +456,33 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	// shopID := ctx.Value(common.ShopIDKey).(int)
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
 
-	// res, err := orderService.GetTempOrdersByShopID(shopID)
-	// if err != nil {
-	// 	logger.WithError(err).Error("get_temp_orders_error")
-	// 	WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_temp_orders")
-	// 	return
-	// }
+	opts := model.OrderFilterOptions{}
+	if q := r.URL.Query().Get("search"); q != "" {
+		opts.SearchQuery = &q
+	}
+	if df := r.URL.Query().Get("date_from"); df != "" {
+		if t, err := parseDate(df); err == nil {
+			opts.DateFrom = &t
+		}
+	}
+	if dt := r.URL.Query().Get("date_to"); dt != "" {
+		if t, err := parseDate(dt); err == nil {
+			endOfDay := t.Add(24 * time.Hour)
+			opts.DateTo = &endOfDay
+		}
+	}
 
-	// WriteJson(w, http.StatusOK, res)
+	res, err := orderService.GetTempOrdersByShopID(shopID, opts)
+	if err != nil {
+		logger.WithError(err).Error("get_temp_orders_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_temp_orders")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
 }
 
 func validateCreateOrderItem(inp CreateOrderItemRequest) (bool, error) {

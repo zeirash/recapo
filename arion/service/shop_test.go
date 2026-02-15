@@ -85,7 +85,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 
 				return shopMock, productMock
 			},
-			want:    nil,
+			want:    []response.ProductData{},
 			wantErr: false,
 		},
 		{

@@ -25,7 +25,7 @@ type (
 
 		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
 		// GetOrderTempByID(id int, shopID ...int) (*response.OrderTempData, error)
-		// GetOrderTempsByShopID(shopID int, opts model.OrderTempFilterOptions) ([]response.OrderTempData, error)
+		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error)
 		// UpdateOrderTempByID(input UpdateOrderTempInput) (response.OrderTempData, error)
 		// DeleteOrderTempByID(id int) error
 
@@ -137,7 +137,7 @@ func (o *oservice) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) 
 		return []response.OrderData{}, err
 	}
 
-	var ordersData []response.OrderData
+	ordersData := []response.OrderData{}
 	for _, order := range orders {
 		res := response.OrderData{
 			ID:           order.ID,
@@ -397,4 +397,32 @@ func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken strin
 		res.UpdatedAt = &tempOrder.UpdatedAt.Time
 	}
 	return res, nil
+}
+
+func (o *oservice) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error) {
+	tempOrders, err := orderStore.GetTempOrdersByShopID(shopID, opts)
+	if err != nil {
+		return []response.TempOrderData{}, err
+	}
+
+	tempOrdersData := []response.TempOrderData{}
+	for _, tempOrder := range tempOrders {
+		res := response.TempOrderData{
+			ID:             tempOrder.ID,
+			CustomerName:   tempOrder.CustomerName,
+			CustomerPhone:  tempOrder.CustomerPhone,
+			TotalPrice:     tempOrder.TotalPrice,
+			Status:         tempOrder.Status,
+			CreatedAt:      tempOrder.CreatedAt,
+		}
+
+		if tempOrder.UpdatedAt.Valid {
+			t := tempOrder.UpdatedAt.Time
+			res.UpdatedAt = &t
+		}
+
+		tempOrdersData = append(tempOrdersData, res)
+	}
+
+	return tempOrdersData, nil
 }

@@ -306,7 +306,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 					Return([]model.Customer{}, nil)
 				return mock
 			},
-			wantResult: nil,
+			wantResult: []response.CustomerData{},
 			wantErr:    false,
 		},
 		{

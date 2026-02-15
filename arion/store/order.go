@@ -22,7 +22,7 @@ type (
 		CreateTempOrder(tx database.Tx, customerName, customerPhone string, shopID int) (*model.TempOrder, error)
 		UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, totalPrice int) error
 		// GetOrderTempByID(id int, shopID ...int) (*model.OrderTemp, error)
-		// GetOrderTempsByShopID(shopID int, opts model.OrderTempFilterOptions) ([]model.OrderTemp, error)
+		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error)
 		// UpdateOrderTempByID(id int, input UpdateOrderTempInput) (*model.OrderTemp, error)
 		// DeleteOrderTempByID(tx database.Tx, id int) error
 	}
@@ -85,7 +85,7 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 	argNum := 2
 
 	if opts.SearchQuery != nil && strings.TrimSpace(*opts.SearchQuery) != "" {
-		q += fmt.Sprintf(" AND c.name ILIKE $%d", argNum)
+		q += fmt.Sprintf(" AND (c.name ILIKE $%d OR c.phone ILIKE $%d)", argNum, argNum)
 		args = append(args, "%"+strings.TrimSpace(*opts.SearchQuery)+"%")
 		argNum++
 	}
@@ -236,4 +236,48 @@ func (o *order) UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, total
 		return err
 	}
 	return nil
+}
+
+func (o *order) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error) {
+	q := `
+		SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at
+		FROM temp_orders
+		WHERE shop_id = $1
+	`
+	args := []interface{}{shopID}
+	argNum := 2
+
+	if opts.SearchQuery != nil && strings.TrimSpace(*opts.SearchQuery) != "" {
+		q += fmt.Sprintf(" AND (customer_name ILIKE $%d OR customer_phone ILIKE $%d)", argNum, argNum)
+		args = append(args, "%"+strings.TrimSpace(*opts.SearchQuery)+"%")
+		argNum++
+	}
+	if opts.DateFrom != nil {
+		q += fmt.Sprintf(" AND created_at >= $%d", argNum)
+		args = append(args, *opts.DateFrom)
+		argNum++
+	}
+	if opts.DateTo != nil {
+		q += fmt.Sprintf(" AND created_at < $%d", argNum)
+		args = append(args, *opts.DateTo)
+		argNum++
+	}
+
+	rows, err := o.db.Query(q, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tempOrders := []model.TempOrder{}
+	for rows.Next() {
+		var tempOrder model.TempOrder
+		err := rows.Scan(&tempOrder.ID, &tempOrder.ShopID, &tempOrder.CustomerName, &tempOrder.CustomerPhone, &tempOrder.TotalPrice, &tempOrder.Status, &tempOrder.CreatedAt, &tempOrder.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		tempOrders = append(tempOrders, tempOrder)
+	}
+
+	return tempOrders, nil
 }

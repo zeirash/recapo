@@ -1073,7 +1073,7 @@ func Test_uservice_GetUsers(t *testing.T) {
 					Return([]model.User{}, nil)
 				return mock
 			},
-			wantResult: nil,
+			wantResult: []response.UserData{},
 			wantErr:    false,
 		},
 		{
