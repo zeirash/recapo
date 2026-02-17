@@ -275,26 +275,31 @@ func Test_order_CreateOrder(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
 	strPtr := func(s string) *string { return &s }
+	intPtr := func(i int) *int { return &i }
 
 	type input struct {
-		customerID int
-		shopID     int
-		notes      *string
+		customerID  int
+		shopID      int
+		notes       *string
+		totalPrice  *int
 	}
 
 	tests := []struct {
 		name       string
 		input      input
+		useTx      bool // when true, pass tx from db.Begin() (mock must ExpectBegin)
 		mockSetup  func(mock sqlmock.Sqlmock)
 		wantResult *model.Order
 		wantErr    bool
 	}{
 		{
-			name: "successfully create order",
+			name:  "successfully create order",
+			useTx: false,
 			input: input{
 				customerID: 1,
 				shopID:     10,
 				notes:      strPtr("test notes"),
+				totalPrice: nil,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "total_price", "status", "customer_name", "shop_id", "notes", "created_at"}).
@@ -315,18 +320,47 @@ func Test_order_CreateOrder(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "create order returns error on database failure",
+			name:  "create order returns error on database failure",
+			useTx: false,
 			input: input{
 				customerID: 1,
 				shopID:     10,
+				totalPrice: nil,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, customer_id, shop_id, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5\)\s+RETURNING id, total_price, status, customer_id, shop_id, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, c.name as customer_name, i.shop_id, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
-					WithArgs(0, constant.OrderStatusCreated, 1, 10, sqlmock.AnyArg()).
+				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, customer_id, shop_id, notes, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, COALESCE\(\$5, ''\), \$6\)\s+RETURNING id, total_price, status, customer_id, shop_id, notes, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, c.name as customer_name, i.shop_id, i.notes, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
+					WithArgs(0, constant.OrderStatusCreated, 1, 10, (*string)(nil), sqlmock.AnyArg()).
 					WillReturnError(errors.New("database error"))
 			},
 			wantResult: nil,
 			wantErr:    true,
+		},
+		{
+			name:  "successfully create order with totalPrice",
+			useTx: false,
+			input: input{
+				customerID: 1,
+				shopID:     10,
+				notes:      nil,
+				totalPrice: intPtr(5000),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "total_price", "status", "customer_name", "shop_id", "notes", "created_at"}).
+					AddRow(1, 5000, constant.OrderStatusCreated, "John Doe", 10, "", fixedTime)
+				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, customer_id, shop_id, notes, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, COALESCE\(\$5, ''\), \$6\)\s+RETURNING id, total_price, status, customer_id, shop_id, notes, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, c.name as customer_name, i.shop_id, i.notes, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
+					WithArgs(5000, constant.OrderStatusCreated, 1, 10, (*string)(nil), sqlmock.AnyArg()).
+					WillReturnRows(rows)
+			},
+			wantResult: &model.Order{
+				ID:           1,
+				ShopID:       10,
+				CustomerName: "John Doe",
+				TotalPrice:   5000,
+				Status:       constant.OrderStatusCreated,
+				Notes:        "",
+				CreatedAt:    fixedTime,
+			},
+			wantErr: false,
 		},
 	}
 
@@ -341,7 +375,18 @@ func Test_order_CreateOrder(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.CreateOrder(tt.input.customerID, tt.input.shopID, tt.input.notes)
+			var got *model.Order
+			var gotErr error
+			if tt.useTx {
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf("failed to begin tx: %v", err)
+				}
+				defer tx.Rollback()
+				got, gotErr = store.CreateOrder(tx, tt.input.customerID, tt.input.shopID, tt.input.notes, tt.input.totalPrice)
+			} else {
+				got, gotErr = store.CreateOrder(nil, tt.input.customerID, tt.input.shopID, tt.input.notes, tt.input.totalPrice)
+			}
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -492,7 +537,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.UpdateOrder(tt.id, tt.input)
+			got, gotErr := store.UpdateOrder(nil, tt.id, tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -958,51 +1003,125 @@ func Test_order_GetTempOrderByID(t *testing.T) {
 	}
 }
 
-func Test_order_HasActiveOrdersByCustomerID(t *testing.T) {
+func Test_order_GetActiveOrderByCustomerID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
 	tests := []struct {
 		name       string
 		customerID int
 		shopID     int
 		mockSetup  func(mock sqlmock.Sqlmock)
-		want       bool
+		wantResult *model.Order
 		wantErr    bool
 	}{
 		{
-			name:       "returns true when customer has active order",
-			customerID: 10,
-			shopID:     5,
+			name:       "returns active order when customer has one",
+			customerID: 1,
+			shopID:     10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"exists"}).AddRow(true)
-				mock.ExpectQuery(`SELECT EXISTS \(\s*SELECT 1 FROM orders\s+WHERE customer_id = \$1 AND shop_id = \$2 AND status IN \(\$3, \$4\)\s*\)`).
-					WithArgs(10, 5, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
+					AddRow(5, 10, "John Doe", 3000, constant.OrderStatusInProgress, "notes", fixedTime, nil)
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.customer_id = \$1 AND o.shop_id = \$2 AND o.status IN \(\$3, \$4\)\s+ORDER BY o.created_at DESC\s+LIMIT 1`).
+					WithArgs(1, 10, constant.OrderStatusCreated, constant.OrderStatusInProgress).
 					WillReturnRows(rows)
 			},
-			want:    true,
+			wantResult: &model.Order{
+				ID:           5,
+				ShopID:       10,
+				CustomerName: "John Doe",
+				TotalPrice:   3000,
+				Status:       constant.OrderStatusInProgress,
+				Notes:        "notes",
+				CreatedAt:    fixedTime,
+			},
 			wantErr: false,
 		},
 		{
-			name:       "returns false when customer has no active order",
+			name:       "returns nil nil when customer has no active order",
 			customerID: 99,
-			shopID:     5,
+			shopID:     10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"exists"}).AddRow(false)
-				mock.ExpectQuery(`SELECT EXISTS \(\s*SELECT 1 FROM orders\s+WHERE customer_id = \$1 AND shop_id = \$2 AND status IN \(\$3, \$4\)\s*\)`).
-					WithArgs(99, 5, constant.OrderStatusCreated, constant.OrderStatusInProgress).
-					WillReturnRows(rows)
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.customer_id = \$1 AND o.shop_id = \$2 AND o.status IN \(\$3, \$4\)\s+ORDER BY o.created_at DESC\s+LIMIT 1`).
+					WithArgs(99, 10, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+					WillReturnError(sql.ErrNoRows)
 			},
-			want:    false,
-			wantErr: false,
+			wantResult: nil,
+			wantErr:    false,
 		},
 		{
 			name:       "returns error on database failure",
-			customerID: 10,
-			shopID:     5,
+			customerID: 1,
+			shopID:     10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT EXISTS \(\s*SELECT 1 FROM orders\s+WHERE customer_id = \$1 AND shop_id = \$2 AND status IN \(\$3, \$4\)\s*\)`).
-					WithArgs(10, 5, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.customer_id = \$1 AND o.shop_id = \$2 AND o.status IN \(\$3, \$4\)\s+ORDER BY o.created_at DESC\s+LIMIT 1`).
+					WithArgs(1, 10, constant.OrderStatusCreated, constant.OrderStatusInProgress).
 					WillReturnError(errors.New("database error"))
 			},
-			want:    false,
+			wantResult: nil,
+			wantErr:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewOrderStoreWithDB(db)
+
+			got, gotErr := store.GetActiveOrderByCustomerID(tt.customerID, tt.shopID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetActiveOrderByCustomerID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetActiveOrderByCustomerID() succeeded unexpectedly")
+			}
+
+			if !reflect.DeepEqual(got, tt.wantResult) {
+				t.Errorf("GetActiveOrderByCustomerID() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func Test_order_UpdateTempOrderStatus(t *testing.T) {
+	tests := []struct {
+		name        string
+		tempOrderID int
+		status      string
+		mockSetup   func(mock sqlmock.Sqlmock)
+		wantErr     bool
+	}{
+		{
+			name:        "successfully update temp order status",
+			tempOrderID: 1,
+			status:      "created",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(`UPDATE temp_orders\s+SET status = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+					WithArgs("created", 1).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:        "update temp order status returns error on database failure",
+			tempOrderID: 1,
+			status:      "created",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(`UPDATE temp_orders\s+SET status = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+					WithArgs("created", 1).
+					WillReturnError(errors.New("database error"))
+			},
 			wantErr: true,
 		},
 	}
@@ -1017,19 +1136,22 @@ func Test_order_HasActiveOrdersByCustomerID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.HasActiveOrdersByCustomerID(tt.customerID, tt.shopID)
+			tx, err := db.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin tx: %v", err)
+			}
+			defer tx.Rollback()
+
+			gotErr := store.UpdateTempOrderStatus(tx, tt.tempOrderID, tt.status)
 
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("HasActiveOrdersByCustomerID() error = %v, wantErr %v", gotErr, tt.wantErr)
+					t.Errorf("UpdateTempOrderStatus() error = %v, wantErr %v", gotErr, tt.wantErr)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("HasActiveOrdersByCustomerID() succeeded unexpectedly")
-			}
-			if got != tt.want {
-				t.Errorf("HasActiveOrdersByCustomerID() = %v, want %v", got, tt.want)
+				t.Fatal("UpdateTempOrderStatus() succeeded unexpectedly")
 			}
 		})
 	}

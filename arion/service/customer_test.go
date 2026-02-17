@@ -623,86 +623,6 @@ func Test_cservice_DeleteCustomerByID(t *testing.T) {
 	}
 }
 
-func Test_cservice_HasActiveOrders(t *testing.T) {
-	tests := []struct {
-		name       string
-		customerID int
-		shopID     int
-		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockOrderStore
-		want       response.CustomerHasActiveOrdersData
-		wantErr    bool
-	}{
-		{
-			name:       "returns has_active_orders true when customer has active order",
-			customerID: 10,
-			shopID:     5,
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
-				mock := mock_store.NewMockOrderStore(ctrl)
-				mock.EXPECT().
-					HasActiveOrdersByCustomerID(10, 5).
-					Return(true, nil)
-				return mock
-			},
-			want:    response.CustomerHasActiveOrdersData{HasActiveOrders: true},
-			wantErr: false,
-		},
-		{
-			name:       "returns has_active_orders false when customer has no active order",
-			customerID: 99,
-			shopID:     5,
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
-				mock := mock_store.NewMockOrderStore(ctrl)
-				mock.EXPECT().
-					HasActiveOrdersByCustomerID(99, 5).
-					Return(false, nil)
-				return mock
-			},
-			want:    response.CustomerHasActiveOrdersData{HasActiveOrders: false},
-			wantErr: false,
-		},
-		{
-			name:       "returns error when store fails",
-			customerID: 10,
-			shopID:     5,
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
-				mock := mock_store.NewMockOrderStore(ctrl)
-				mock.EXPECT().
-					HasActiveOrdersByCustomerID(10, 5).
-					Return(false, errors.New("database error"))
-				return mock
-			},
-			want:    response.CustomerHasActiveOrdersData{},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			oldStore := orderStore
-			defer func() { orderStore = oldStore }()
-			orderStore = tt.mockSetup(ctrl)
-
-			var c cservice
-			got, gotErr := c.HasActiveOrders(tt.customerID, tt.shopID)
-
-			if gotErr != nil {
-				if !tt.wantErr {
-					t.Errorf("HasActiveOrders() error = %v, wantErr %v", gotErr, tt.wantErr)
-				}
-				return
-			}
-			if tt.wantErr {
-				t.Fatal("HasActiveOrders() succeeded unexpectedly")
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("HasActiveOrders() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
@@ -725,10 +645,10 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 				ord := mock_store.NewMockOrderStore(ctrl)
 				cust.EXPECT().GetCustomerByPhone("08123456789", 1).
 					Return(&model.Customer{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "", CreatedAt: fixedTime}, nil)
-				ord.EXPECT().HasActiveOrdersByCustomerID(1, 1).Return(true, nil)
+				ord.EXPECT().GetActiveOrderByCustomerID(1, 1).Return(&model.Order{ID: 1}, nil)
 				return cust, ord
 			},
-			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 1, HasActiveOrders: true},
+			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 1, ActiveOrderID: 1},
 			wantErr: false,
 		},
 		{
@@ -741,10 +661,10 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 				ord := mock_store.NewMockOrderStore(ctrl)
 				cust.EXPECT().GetCustomerByPhone("08987654321", 1).
 					Return(&model.Customer{ID: 2, Name: "Jane Doe", Phone: "08987654321", Address: "", CreatedAt: fixedTime}, nil)
-				ord.EXPECT().HasActiveOrdersByCustomerID(2, 1).Return(false, nil)
+				ord.EXPECT().GetActiveOrderByCustomerID(2, 1).Return(nil, nil)
 				return cust, ord
 			},
-			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 2, HasActiveOrders: false},
+			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 2, ActiveOrderID: 0},
 			wantErr: false,
 		},
 		{
@@ -759,10 +679,10 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 				cust.EXPECT().CreateCustomer(gomock.Eq(store.CreateCustomerInput{
 					Name: "New User", Phone: "08000000000", Address: nil, ShopID: 1,
 				})).Return(&model.Customer{ID: 3, Name: "New User", Phone: "08000000000", Address: "", CreatedAt: fixedTime}, nil)
-				ord.EXPECT().HasActiveOrdersByCustomerID(3, 1).Return(false, nil)
+				ord.EXPECT().GetActiveOrderByCustomerID(3, 1).Return(nil, nil)
 				return cust, ord
 			},
-			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 3, HasActiveOrders: false},
+			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 3, ActiveOrderID: 0},
 			wantErr: false,
 		},
 		{
@@ -797,7 +717,7 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:      "HasActiveOrdersByCustomerID returns error",
+			name:      "GetActiveOrderByCustomerID returns error",
 			phone:     "08123456789",
 			nameParam: "John Doe",
 			shopID:    1,
@@ -806,7 +726,7 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 				ord := mock_store.NewMockOrderStore(ctrl)
 				cust.EXPECT().GetCustomerByPhone("08123456789", 1).
 					Return(&model.Customer{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "", CreatedAt: fixedTime}, nil)
-				ord.EXPECT().HasActiveOrdersByCustomerID(1, 1).Return(false, errors.New("database error"))
+				ord.EXPECT().GetActiveOrderByCustomerID(1, 1).Return(nil, errors.New("database error"))
 				return cust, ord
 			},
 			want:    response.CustomerCheckActiveOrderByPhone{},

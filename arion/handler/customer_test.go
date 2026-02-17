@@ -570,37 +570,37 @@ func TestCustomerCheckActiveOrderHandler(t *testing.T) {
 		mockSetup      func()
 		wantStatus     int
 		wantSuccess    bool
-		wantCustomerID *int
-		wantHasActive  *bool
+		wantCustomerID   *int
+		wantActiveOrderID *int
 		wantErrMessage string
 	}{
 		{
-			name:   "returns customer_id and has_active_orders true when customer has active order",
+			name:   "returns customer_id and active_order_id when customer has active order",
 			body:   map[string]string{"phone": "08123456789", "name": "John"},
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
 					CheckActiveOrderByPhone("08123456789", "John", 1).
-					Return(response.CustomerCheckActiveOrderByPhone{CustomerID: 1, HasActiveOrders: true}, nil)
+					Return(response.CustomerCheckActiveOrderByPhone{CustomerID: 1, ActiveOrderID: 1}, nil)
 			},
-			wantStatus:     http.StatusOK,
-			wantSuccess:    true,
-			wantCustomerID: intPtr(1),
-			wantHasActive:  ptrBool(true),
+			wantStatus:        http.StatusOK,
+			wantSuccess:       true,
+			wantCustomerID:    intPtr(1),
+			wantActiveOrderID: intPtr(1),
 		},
 		{
-			name:   "returns customer_id and has_active_orders false when customer has no active order",
+			name:   "returns customer_id and active_order_id 0 when customer has no active order",
 			body:   map[string]interface{}{"phone": "08987654321", "name": "Jane", "address": ""},
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
 					CheckActiveOrderByPhone("08987654321", "Jane", 1).
-					Return(response.CustomerCheckActiveOrderByPhone{CustomerID: 5, HasActiveOrders: false}, nil)
+					Return(response.CustomerCheckActiveOrderByPhone{CustomerID: 5, ActiveOrderID: 0}, nil)
 			},
-			wantStatus:     http.StatusOK,
-			wantSuccess:    true,
-			wantCustomerID: intPtr(5),
-			wantHasActive:  ptrBool(false),
+			wantStatus:        http.StatusOK,
+			wantSuccess:       true,
+			wantCustomerID:    intPtr(5),
+			wantActiveOrderID: intPtr(0),
 		},
 		{
 			name:       "returns 400 when phone missing",
@@ -667,7 +667,7 @@ func TestCustomerCheckActiveOrderHandler(t *testing.T) {
 			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
 				t.Errorf("CustomerCheckActiveOrderHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
 			}
-			if tt.wantCustomerID != nil || tt.wantHasActive != nil {
+			if tt.wantCustomerID != nil || tt.wantActiveOrderID != nil {
 				dataMap, ok := resp.Data.(map[string]interface{})
 				if !ok {
 					t.Fatalf("CustomerCheckActiveOrderHandler() data = %T, want object", resp.Data)
@@ -681,13 +681,13 @@ func TestCustomerCheckActiveOrderHandler(t *testing.T) {
 						t.Errorf("CustomerCheckActiveOrderHandler() customer_id = %v, want %v", int(cid), *tt.wantCustomerID)
 					}
 				}
-				if tt.wantHasActive != nil {
-					hasActive, ok := dataMap["has_active_orders"].(bool)
+				if tt.wantActiveOrderID != nil {
+					activeOrderID, ok := dataMap["active_order_id"].(float64)
 					if !ok {
-						t.Fatalf("CustomerCheckActiveOrderHandler() data.has_active_orders = %T, want bool", dataMap["has_active_orders"])
+						t.Fatalf("CustomerCheckActiveOrderHandler() data.active_order_id = %T, want number", dataMap["active_order_id"])
 					}
-					if hasActive != *tt.wantHasActive {
-						t.Errorf("CustomerCheckActiveOrderHandler() has_active_orders = %v, want %v", hasActive, *tt.wantHasActive)
+					if int(activeOrderID) != *tt.wantActiveOrderID {
+						t.Errorf("CustomerCheckActiveOrderHandler() active_order_id = %v, want %v", int(activeOrderID), *tt.wantActiveOrderID)
 					}
 				}
 			}

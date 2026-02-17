@@ -14,10 +14,11 @@ type (
 	OrderItemStore interface {
 		GetOrderItemByID(id int) (*model.OrderItem, error)
 		GetOrderItemsByOrderID(orderID int) ([]model.OrderItem, error)
-		CreateOrderItem(orderID, productID, qty int) (*model.OrderItem, error)
-		UpdateOrderItemByID(id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error)
+		CreateOrderItem(tx database.Tx, orderID, productID, qty int) (*model.OrderItem, error)
+		UpdateOrderItemByID(tx database.Tx, id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error)
 		DeleteOrderItemByID(id, orderID int) error
 		DeleteOrderItemsByOrderID(tx database.Tx, orderID int) error
+		GetOrderItemByProductID(productID int, orderID int) (*model.OrderItem, error)
 
 		CreateTempOrderItem(tx database.Tx, tempOrderID, productID, qty int) (*model.TempOrderItem, error)
 		GetTempOrderItemsByTempOrderID(tempOrderID int) ([]model.TempOrderItem, error)
@@ -90,7 +91,7 @@ func (o *orderitem) GetOrderItemsByOrderID(orderID int) ([]model.OrderItem, erro
 	return orderItems, nil
 }
 
-func (o *orderitem) CreateOrderItem(orderID, productID, qty int) (*model.OrderItem, error) {
+func (o *orderitem) CreateOrderItem(tx database.Tx, orderID, productID, qty int) (*model.OrderItem, error) {
 	now := time.Now()
 	var orderItem model.OrderItem
 
@@ -105,14 +106,17 @@ func (o *orderitem) CreateOrderItem(orderID, productID, qty int) (*model.OrderIt
 		INNER JOIN products p ON i.product_id = p.id
 	`
 
-	err := o.db.QueryRow(q, orderID, productID, qty, now).Scan(
-		&orderItem.ID,
-		&orderItem.OrderID,
-		&orderItem.ProductName,
-		&orderItem.Price,
-		&orderItem.Qty,
-		&orderItem.CreatedAt,
-	)
+	args := []interface{}{orderID, productID, qty, now}
+	var err error
+	if tx != nil {
+		err = tx.QueryRow(q, args...).Scan(
+			&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt,
+		)
+	} else {
+		err = o.db.QueryRow(q, args...).Scan(
+			&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt,
+		)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +124,7 @@ func (o *orderitem) CreateOrderItem(orderID, productID, qty int) (*model.OrderIt
 	return &orderItem, nil
 }
 
-func (o *orderitem) UpdateOrderItemByID(id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error) {
+func (o *orderitem) UpdateOrderItemByID(tx database.Tx, id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error) {
 	set := []string{}
 	var orderItem model.OrderItem
 
@@ -150,7 +154,12 @@ func (o *orderitem) UpdateOrderItemByID(id, orderID int, input UpdateOrderItemIn
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := o.db.QueryRow(q, id, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+	var err error
+	if tx != nil {
+		err = tx.QueryRow(q, id, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+	} else {
+		err = o.db.QueryRow(q, id, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +220,7 @@ func (o *orderitem) CreateTempOrderItem(tx database.Tx, tempOrderID, productID, 
 
 func (o *orderitem) GetTempOrderItemsByTempOrderID(tempOrderID int) ([]model.TempOrderItem, error) {
 	q := `
-		SELECT ti.id, ti.temp_order_id, p.name as product_name, p.price as price, ti.qty, ti.created_at
+		SELECT ti.id, ti.temp_order_id, ti.product_id, p.name as product_name, p.price as price, ti.qty, ti.created_at
 		FROM temp_order_items ti
 		INNER JOIN products p ON ti.product_id = p.id
 		WHERE ti.temp_order_id = $1
@@ -226,7 +235,7 @@ func (o *orderitem) GetTempOrderItemsByTempOrderID(tempOrderID int) ([]model.Tem
 	tempOrderItems := []model.TempOrderItem{}
 	for rows.Next() {
 		var tempOrderItem model.TempOrderItem
-		err := rows.Scan(&tempOrderItem.ID, &tempOrderItem.TempOrderID, &tempOrderItem.ProductName, &tempOrderItem.Price, &tempOrderItem.Qty, &tempOrderItem.CreatedAt)
+		err := rows.Scan(&tempOrderItem.ID, &tempOrderItem.TempOrderID, &tempOrderItem.ProductID, &tempOrderItem.ProductName, &tempOrderItem.Price, &tempOrderItem.Qty, &tempOrderItem.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -234,4 +243,24 @@ func (o *orderitem) GetTempOrderItemsByTempOrderID(tempOrderID int) ([]model.Tem
 	}
 
 	return tempOrderItems, nil
+}
+
+func (o *orderitem) GetOrderItemByProductID(productID int, orderID int) (*model.OrderItem, error) {
+	q := `
+		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at
+		FROM order_items oi
+		INNER JOIN products p ON oi.product_id = p.id
+		WHERE oi.product_id = $1 AND oi.order_id = $2
+	`
+
+	var orderItem model.OrderItem
+	err := o.db.QueryRow(q, productID, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &orderItem, nil
 }

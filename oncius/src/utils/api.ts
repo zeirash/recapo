@@ -299,6 +299,16 @@ export const api = {
     })
   },
 
+  checkActiveOrder: (data: { phone: string; name: string }) => {
+    return apiRequest<ApiResponse<{ customer_id: number; active_order_id: number }>>(
+      '/customers/check_active_order',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    )
+  },
+
   // Orders
   getOrders: (opts?: { search?: string; date_from?: string; date_to?: string }) => {
     const params = new URLSearchParams()
@@ -333,6 +343,17 @@ export const api = {
   deleteOrder: (id: number | string) => {
     return apiRequest<ApiResponse>(`/orders/${id}`, {
       method: 'DELETE',
+    })
+  },
+
+  mergeTempOrder: (data: {
+    temp_order_id: number
+    customer_id: number
+    active_order_id?: number
+  }) => {
+    return apiRequest<ApiResponse<any>>('/temp_orders/merge', {
+      method: 'POST',
+      body: JSON.stringify(data),
     })
   },
 

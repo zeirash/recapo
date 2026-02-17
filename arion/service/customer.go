@@ -15,7 +15,6 @@ type (
 		GetCustomersByShopID(shopID int, searchQuery *string) ([]response.CustomerData, error)
 		UpdateCustomer(input UpdateCustomerInput) (response.CustomerData, error)
 		DeleteCustomerByID(id int) error
-		HasActiveOrders(customerID int, shopID int) (response.CustomerHasActiveOrdersData, error)
 		CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error)
 	}
 
@@ -158,14 +157,6 @@ func (c *cservice) DeleteCustomerByID(id int) error {
 	return nil
 }
 
-func (c *cservice) HasActiveOrders(customerID int, shopID int) (response.CustomerHasActiveOrdersData, error) {
-	hasActiveOrders, err := orderStore.HasActiveOrdersByCustomerID(customerID, shopID)
-	if err != nil {
-		return response.CustomerHasActiveOrdersData{}, err
-	}
-	return response.CustomerHasActiveOrdersData{HasActiveOrders: hasActiveOrders}, nil
-}
-
 func (c *cservice) CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error) {
 	customer, err := customerStore.GetCustomerByPhone(phone, shopID)
 	if err != nil {
@@ -174,22 +165,27 @@ func (c *cservice) CheckActiveOrderByPhone(phone, name string, shopID int) (resp
 
 	if customer == nil {
 		customer, err = customerStore.CreateCustomer(store.CreateCustomerInput{
-			Name:    name,
-			Phone:   phone,
-			ShopID:  shopID,
+			Name:   name,
+			Phone:  phone,
+			ShopID: shopID,
 		})
 		if err != nil {
 			return response.CustomerCheckActiveOrderByPhone{}, err
 		}
 	}
 
-	hasActiveOrders, err := orderStore.HasActiveOrdersByCustomerID(customer.ID, shopID)
+	activeOrderID := 0
+	activeOrder, err := orderStore.GetActiveOrderByCustomerID(customer.ID, shopID)
 	if err != nil {
 		return response.CustomerCheckActiveOrderByPhone{}, err
 	}
 
+	if activeOrder != nil {
+		activeOrderID = activeOrder.ID
+	}
+
 	return response.CustomerCheckActiveOrderByPhone{
-		CustomerID:      customer.ID,
-		HasActiveOrders: hasActiveOrders,
+		CustomerID:    customer.ID,
+		ActiveOrderID: activeOrderID,
 	}, nil
 }

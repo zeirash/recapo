@@ -39,10 +39,10 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					HasActiveOrdersByCustomerID(1, 1).
-					Return(false, nil)
+					GetActiveOrderByCustomerID(1, 1).
+					Return(nil, nil)
 				mock.EXPECT().
-					CreateOrder(1, 1, nil).
+					CreateOrder(nil, 1, 1, nil, nil).
 					Return(&model.Order{
 						ID:           1,
 						CustomerName: "John Doe",
@@ -69,8 +69,8 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					HasActiveOrdersByCustomerID(1, 1).
-					Return(true, nil)
+					GetActiveOrderByCustomerID(1, 1).
+					Return(&model.Order{ID: 1}, nil)
 				return mock
 			},
 			wantResult: response.OrderData{},
@@ -78,15 +78,15 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			wantErrMsg: "customer already has an active order",
 		},
 		{
-			name:       "create order returns error when HasActiveOrdersByCustomerID fails",
+			name:       "create order returns error when GetActiveOrderByCustomerID fails",
 			customerID: 1,
 			shopID:     1,
 			notes:      nil,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					HasActiveOrdersByCustomerID(1, 1).
-					Return(false, errors.New("database error"))
+					GetActiveOrderByCustomerID(1, 1).
+					Return(nil, errors.New("database error"))
 				return mock
 			},
 			wantResult: response.OrderData{},
@@ -100,10 +100,10 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderStore {
 				mock := mock_store.NewMockOrderStore(ctrl)
 				mock.EXPECT().
-					HasActiveOrdersByCustomerID(1, 1).
-					Return(false, nil)
+					GetActiveOrderByCustomerID(1, 1).
+					Return(nil, nil)
 				mock.EXPECT().
-					CreateOrder(1, 1, nil).
+					CreateOrder(nil, 1, 1, nil, nil).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -401,7 +401,7 @@ func Test_oservice_GetOrdersByShopID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "get orders by shop ID with date_from and date_to returns filtered orders",
+			name:   "get orders by shop ID with date_from and date_to returns filtered orders",
 			shopID: 1,
 			opts: model.OrderFilterOptions{
 				DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
@@ -479,7 +479,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 					GetOrderByID(1).
 					Return(&model.Order{ID: 1, CustomerName: "John Doe", Status: constant.OrderStatusCreated}, nil)
 				mock.EXPECT().
-					UpdateOrder(1, store.UpdateOrderInput{Status: strPtr(constant.OrderStatusDone)}).
+					UpdateOrder(nil, 1, store.UpdateOrderInput{Status: strPtr(constant.OrderStatusDone)}).
 					Return(&model.Order{
 						ID:           1,
 						CustomerName: "John Doe",
@@ -513,7 +513,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 					GetOrderByID(1).
 					Return(&model.Order{ID: 1, CustomerName: "John Doe", Status: constant.OrderStatusCreated}, nil)
 				mock.EXPECT().
-					UpdateOrder(1, store.UpdateOrderInput{TotalPrice: intPtr(500), Status: strPtr(constant.OrderStatusDone)}).
+					UpdateOrder(nil, 1, store.UpdateOrderInput{TotalPrice: intPtr(500), Status: strPtr(constant.OrderStatusDone)}).
 					Return(&model.Order{
 						ID:           1,
 						CustomerName: "Jane Doe",
@@ -578,7 +578,7 @@ func Test_oservice_UpdateOrderByID(t *testing.T) {
 					GetOrderByID(1).
 					Return(&model.Order{ID: 1, CustomerName: "John Doe"}, nil)
 				mock.EXPECT().
-					UpdateOrder(1, store.UpdateOrderInput{Status: strPtr(constant.OrderStatusDone)}).
+					UpdateOrder(nil, 1, store.UpdateOrderInput{Status: strPtr(constant.OrderStatusDone)}).
 					Return(nil, errors.New("update error"))
 				return mock
 			},
@@ -787,7 +787,7 @@ func Test_oservice_CreateOrderItem(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderItemStore {
 				mock := mock_store.NewMockOrderItemStore(ctrl)
 				mock.EXPECT().
-					CreateOrderItem(1, 10, 2).
+					CreateOrderItem(nil, 1, 10, 2).
 					Return(&model.OrderItem{
 						ID:          1,
 						OrderID:     1,
@@ -816,7 +816,7 @@ func Test_oservice_CreateOrderItem(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderItemStore {
 				mock := mock_store.NewMockOrderItemStore(ctrl)
 				mock.EXPECT().
-					CreateOrderItem(1, 10, 2).
+					CreateOrderItem(nil, 1, 10, 2).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -880,7 +880,7 @@ func Test_oservice_UpdateOrderItemByID(t *testing.T) {
 					GetOrderItemByID(1).
 					Return(&model.OrderItem{ID: 1, OrderID: 1, ProductName: "Product 1", Qty: 2}, nil)
 				mock.EXPECT().
-					UpdateOrderItemByID(1, 1, store.UpdateOrderItemInput{Qty: intPtr(5)}).
+					UpdateOrderItemByID(nil, 1, 1, store.UpdateOrderItemInput{Qty: intPtr(5)}).
 					Return(&model.OrderItem{
 						ID:          1,
 						OrderID:     1,
@@ -917,7 +917,7 @@ func Test_oservice_UpdateOrderItemByID(t *testing.T) {
 					GetOrderItemByID(1).
 					Return(&model.OrderItem{ID: 1, OrderID: 1, ProductName: "Product 1", Qty: 2}, nil)
 				mock.EXPECT().
-					UpdateOrderItemByID(1, 1, store.UpdateOrderItemInput{ProductID: intPtr(20), Qty: intPtr(3)}).
+					UpdateOrderItemByID(nil, 1, 1, store.UpdateOrderItemInput{ProductID: intPtr(20), Qty: intPtr(3)}).
 					Return(&model.OrderItem{
 						ID:          1,
 						OrderID:     1,
@@ -987,7 +987,7 @@ func Test_oservice_UpdateOrderItemByID(t *testing.T) {
 					GetOrderItemByID(1).
 					Return(&model.OrderItem{ID: 1, OrderID: 1}, nil)
 				mock.EXPECT().
-					UpdateOrderItemByID(1, 1, store.UpdateOrderItemInput{Qty: intPtr(5)}).
+					UpdateOrderItemByID(nil, 1, 1, store.UpdateOrderItemInput{Qty: intPtr(5)}).
 					Return(nil, errors.New("update error"))
 				return mock
 			},
@@ -1323,14 +1323,14 @@ func Test_oservice_CreateTempOrder(t *testing.T) {
 				return shopMock, orderMock, nil, mockDB
 			},
 			wantResult: response.TempOrderData{
-				ID:            1,
-				CustomerName:  "Jane Doe",
-				CustomerPhone: "+62812345678",
-				TotalPrice:    0,
-				Status:        "pending",
+				ID:             1,
+				CustomerName:   "Jane Doe",
+				CustomerPhone:  "+62812345678",
+				TotalPrice:     0,
+				Status:         "pending",
 				TempOrderItems: []response.TempOrderItemData{},
-				CreatedAt:     fixedTime,
-				UpdatedAt:     &updatedTime,
+				CreatedAt:      fixedTime,
+				UpdatedAt:      &updatedTime,
 			},
 			wantErr: false,
 		},
@@ -1698,8 +1698,8 @@ func Test_oservice_GetTempOrderByID(t *testing.T) {
 					{ID: 1, TempOrderID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
 					{ID: 2, TempOrderID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
 				},
-				CreatedAt:  fixedTime,
-				UpdatedAt:  nil,
+				CreatedAt: fixedTime,
+				UpdatedAt: nil,
 			},
 			wantErr: false,
 		},
@@ -1791,14 +1791,14 @@ func Test_oservice_GetTempOrderByID(t *testing.T) {
 				return mockOrder, mockOrderItem
 			},
 			wantResult: &response.TempOrderData{
-				ID:            1,
-				CustomerName:  "Jane Doe",
-				CustomerPhone: "+62812345678",
-				TotalPrice:    2500,
-				Status:        "pending",
+				ID:             1,
+				CustomerName:   "Jane Doe",
+				CustomerPhone:  "+62812345678",
+				TotalPrice:     2500,
+				Status:         "pending",
 				TempOrderItems: []response.TempOrderItemData{},
-				CreatedAt:     fixedTime,
-				UpdatedAt:     &updatedTime,
+				CreatedAt:      fixedTime,
+				UpdatedAt:      &updatedTime,
 			},
 			wantErr: false,
 		},
@@ -1831,6 +1831,833 @@ func Test_oservice_GetTempOrderByID(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tt.wantResult) {
 				t.Errorf("GetTempOrderByID() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func Test_oservice_createOrderFromTempOrder(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name        string
+		tempOrderID int
+		customerID  int
+		shopID      int
+		mockSetup   func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB)
+		want        *response.OrderData
+		wantErr     bool
+	}{
+		{
+			name:        "successfully create order from temp order with items",
+			tempOrderID: 10,
+			customerID:  5,
+			shopID:      1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID:            10,
+						ShopID:        1,
+						CustomerName:  "Jane Doe",
+						CustomerPhone: "+62812345678",
+						TotalPrice:    2500,
+						Status:        "pending",
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					CreateOrder(gomock.Any(), 5, 1, nil, gomock.Any()).
+					Return(&model.Order{
+						ID:           1,
+						CustomerName: "John Doe",
+						TotalPrice:   0,
+						Status:       constant.OrderStatusCreated,
+						CreatedAt:    fixedTime,
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 10, constant.TempOrderStatusAccepted).
+					Return(nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{
+						{ID: 1, TempOrderID: 10, ProductID: 10, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+						{ID: 2, TempOrderID: 10, ProductID: 20, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					CreateOrderItem(gomock.Any(), 1, 10, 2).
+					Return(&model.OrderItem{ID: 1, OrderID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime}, nil)
+				orderItemMock.EXPECT().
+					CreateOrderItem(gomock.Any(), 1, 20, 1).
+					Return(&model.OrderItem{ID: 2, OrderID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want: &response.OrderData{
+				ID:           1,
+				CustomerName: "John Doe",
+				TotalPrice:   0,
+				Status:       constant.OrderStatusCreated,
+				OrderItems: []response.OrderItemData{
+					{ID: 1, OrderID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					{ID: 2, OrderID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:        "successfully create order from temp order with no items",
+			tempOrderID: 20,
+			customerID:  3,
+			shopID:      2,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(20, 2).
+					Return(&model.TempOrder{
+						ID:            20,
+						ShopID:        2,
+						CustomerName:  "Alice",
+						CustomerPhone: "+62811111111",
+						TotalPrice:    0,
+						Status:        "pending",
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					CreateOrder(gomock.Any(), 3, 2, nil, gomock.Any()).
+					Return(&model.Order{
+						ID:           2,
+						CustomerName: "Alice",
+						TotalPrice:   0,
+						Status:       constant.OrderStatusCreated,
+						CreatedAt:    fixedTime,
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 20, constant.TempOrderStatusAccepted).
+					Return(nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(20).
+					Return([]model.TempOrderItem{}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want: &response.OrderData{
+				ID:           2,
+				CustomerName: "Alice",
+				TotalPrice:   0,
+				Status:       constant.OrderStatusCreated,
+				OrderItems:   []response.OrderItemData{},
+				CreatedAt:    fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:        "returns error when GetTempOrderByID fails",
+			tempOrderID: 10,
+			customerID:  5,
+			shopID:      1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(nil, errors.New("database error"))
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				return orderMock, orderItemMock, nil
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:        "returns error when temp order not found",
+			tempOrderID: 999,
+			customerID:  5,
+			shopID:      1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(999, 1).
+					Return(nil, nil)
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				return orderMock, orderItemMock, nil
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:        "returns error when CreateOrder fails",
+			tempOrderID: 10,
+			customerID:  5,
+			shopID:      1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					CreateOrder(gomock.Any(), 5, 1, nil, gomock.Any()).
+					Return(nil, errors.New("create order failed"))
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:        "returns error when CreateOrderItem fails",
+			tempOrderID: 10,
+			customerID:  5,
+			shopID:      1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					CreateOrder(gomock.Any(), 5, 1, nil, gomock.Any()).
+					Return(&model.Order{ID: 1, CustomerName: "John", TotalPrice: 0, Status: constant.OrderStatusCreated, CreatedAt: fixedTime}, nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{
+						{ID: 1, TempOrderID: 10, ProductID: 10, ProductName: "A", Price: 100, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					CreateOrderItem(gomock.Any(), 1, 10, 1).
+					Return(nil, errors.New("create order item failed"))
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:        "returns error when UpdateTempOrderStatus fails",
+			tempOrderID: 10,
+			customerID:  5,
+			shopID:      1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					CreateOrder(gomock.Any(), 5, 1, nil, gomock.Any()).
+					Return(&model.Order{ID: 1, CustomerName: "John", TotalPrice: 0, Status: constant.OrderStatusCreated, CreatedAt: fixedTime}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 10, constant.TempOrderStatusAccepted).
+					Return(errors.New("update status failed"))
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			orderMock, orderItemMock, mockDB := tt.mockSetup(ctrl)
+			oldOrderStore := orderStore
+			oldOrderItemStore := orderItemStore
+			oldDBGetter := dbGetter
+			defer func() {
+				orderStore = oldOrderStore
+				orderItemStore = oldOrderItemStore
+				dbGetter = oldDBGetter
+			}()
+			orderStore = orderMock
+			orderItemStore = orderItemMock
+			if mockDB != nil {
+				dbGetter = func() database.DB { return mockDB }
+			}
+
+			var o oservice
+			got, gotErr := o.createOrderFromTempOrder(tt.tempOrderID, tt.customerID, tt.shopID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("createOrderFromTempOrder() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("createOrderFromTempOrder() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("createOrderFromTempOrder() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_oservice_resolveActiveOrderConflict(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name          string
+		tempOrderID   int
+		shopID        int
+		activeOrderID int
+		mockSetup     func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB)
+		want          *response.OrderData
+		wantErr       bool
+	}{
+		{
+			name:          "successfully merges temp order items into active order (new item)",
+			tempOrderID:   10,
+			shopID:        1,
+			activeOrderID: 7,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					GetOrderByID(7, 1).
+					Return(&model.Order{
+						ID: 7, ShopID: 1, CustomerName: "John Doe", TotalPrice: 0, Status: constant.OrderStatusInProgress, CreatedAt: fixedTime,
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 10, constant.TempOrderStatusAccepted).
+					Return(nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{
+						{ID: 1, TempOrderID: 10, ProductID: 20, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemByProductID(20, 7).
+					Return(nil, nil)
+				orderItemMock.EXPECT().
+					CreateOrderItem(gomock.Any(), 7, 20, 1).
+					Return(&model.OrderItem{ID: 2, OrderID: 7, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+						{ID: 2, OrderID: 7, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want: &response.OrderData{
+				ID:           7,
+				CustomerName: "John Doe",
+				TotalPrice:   2500, // 1000*2 + 500*1
+				Status:       constant.OrderStatusInProgress,
+				OrderItems: []response.OrderItemData{
+					{ID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					{ID: 2, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:          "successfully merges temp order item that exists in active order (update qty)",
+			tempOrderID:   10,
+			shopID:        1,
+			activeOrderID: 7,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					GetOrderByID(7, 1).
+					Return(&model.Order{
+						ID: 7, ShopID: 1, CustomerName: "John Doe", TotalPrice: 0, Status: constant.OrderStatusInProgress, CreatedAt: fixedTime,
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 10, constant.TempOrderStatusAccepted).
+					Return(nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{
+						{ID: 1, TempOrderID: 10, ProductID: 10, ProductName: "Product A", Price: 1000, Qty: 3, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemByProductID(10, 7).
+					Return(&model.OrderItem{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime}, nil)
+				// Use gomock.Any() for input: actual call uses &qty (local var); pointer comparison would fail with intPtr(5)
+				orderItemMock.EXPECT().
+					UpdateOrderItemByID(gomock.Any(), 1, 7, gomock.Any()).
+					Return(&model.OrderItem{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 5, CreatedAt: fixedTime}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 5, CreatedAt: fixedTime},
+					}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want: &response.OrderData{
+				ID:           7,
+				CustomerName: "John Doe",
+				TotalPrice:   5000, // 1000*5
+				Status:       constant.OrderStatusInProgress,
+				OrderItems: []response.OrderItemData{
+					{ID: 1, ProductName: "Product A", Price: 1000, Qty: 5, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:          "successfully merges temp order with some items existing and some new",
+			tempOrderID:   10,
+			shopID:        1,
+			activeOrderID: 7,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					GetOrderByID(7, 1).
+					Return(&model.Order{
+						ID: 7, ShopID: 1, CustomerName: "John Doe", TotalPrice: 0, Status: constant.OrderStatusInProgress, CreatedAt: fixedTime,
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 10, constant.TempOrderStatusAccepted).
+					Return(nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				// Temp order has Product A (10) qty 3, Product B (20) qty 1
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{
+						{ID: 1, TempOrderID: 10, ProductID: 10, ProductName: "Product A", Price: 1000, Qty: 3, CreatedAt: fixedTime},
+						{ID: 2, TempOrderID: 10, ProductID: 20, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					}, nil)
+				// First temp item: Product A exists -> update qty 2+3=5 (use gomock.Any() for input to avoid pointer comparison failure)
+				orderItemMock.EXPECT().
+					GetOrderItemByProductID(10, 7).
+					Return(&model.OrderItem{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime}, nil)
+				orderItemMock.EXPECT().
+					UpdateOrderItemByID(gomock.Any(), 1, 7, gomock.Any()).
+					Return(&model.OrderItem{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 5, CreatedAt: fixedTime}, nil)
+				// Second temp item: Product B does not exist -> create
+				orderItemMock.EXPECT().
+					GetOrderItemByProductID(20, 7).
+					Return(nil, nil)
+				orderItemMock.EXPECT().
+					CreateOrderItem(gomock.Any(), 7, 20, 1).
+					Return(&model.OrderItem{ID: 2, OrderID: 7, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 5, CreatedAt: fixedTime},
+						{ID: 2, OrderID: 7, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want: &response.OrderData{
+				ID:           7,
+				CustomerName: "John Doe",
+				TotalPrice:   5500, // 1000*5 + 500*1
+				Status:       constant.OrderStatusInProgress,
+				OrderItems: []response.OrderItemData{
+					{ID: 1, ProductName: "Product A", Price: 1000, Qty: 5, CreatedAt: fixedTime},
+					{ID: 2, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:          "returns error when temp order not found",
+			tempOrderID:   999,
+			shopID:        1,
+			activeOrderID: 7,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(999, 1).
+					Return(nil, errors.New("temp order not found"))
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				return orderMock, orderItemMock, nil
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:          "returns error when active order not found",
+			tempOrderID:   10,
+			shopID:        1,
+			activeOrderID: 99,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					GetOrderByID(99, 1).
+					Return(nil, errors.New("active order not found"))
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{}, nil)
+				return orderMock, orderItemMock, nil
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:          "returns error when GetTempOrderByID fails",
+			tempOrderID:   10,
+			shopID:        1,
+			activeOrderID: 7,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(nil, errors.New("database error"))
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				return orderMock, orderItemMock, nil
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:          "returns error when UpdateTempOrderStatus fails",
+			tempOrderID:   10,
+			shopID:        1,
+			activeOrderID: 7,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					GetOrderByID(7, 1).
+					Return(&model.Order{
+						ID: 7, ShopID: 1, CustomerName: "John", TotalPrice: 0, Status: constant.OrderStatusInProgress, CreatedAt: fixedTime,
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 10, constant.TempOrderStatusAccepted).
+					Return(errors.New("update status failed"))
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			orderMock, orderItemMock, mockDB := tt.mockSetup(ctrl)
+			oldOrderStore := orderStore
+			oldOrderItemStore := orderItemStore
+			oldDBGetter := dbGetter
+			defer func() {
+				orderStore = oldOrderStore
+				orderItemStore = oldOrderItemStore
+				dbGetter = oldDBGetter
+			}()
+			orderStore = orderMock
+			orderItemStore = orderItemMock
+			if mockDB != nil {
+				dbGetter = func() database.DB { return mockDB }
+			}
+
+			var o oservice
+			got, gotErr := o.resolveActiveOrderConflict(tt.tempOrderID, tt.shopID, tt.activeOrderID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("resolveActiveOrderConflict() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("resolveActiveOrderConflict() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("resolveActiveOrderConflict() = %+v, want %+v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_oservice_MergeTempOrder(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name          string
+		tempOrderID   int
+		customerID    int
+		shopID        int
+		activeOrderID *int
+		mockSetup     func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB)
+		want          *response.OrderData
+		wantErr       bool
+	}{
+		{
+			name:          "success when activeOrderID does not exist (creates new order from temp order)",
+			tempOrderID:   10,
+			customerID:    5,
+			shopID:        1,
+			activeOrderID: nil,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					CreateOrder(gomock.Any(), 5, 1, nil, gomock.Any()).
+					Return(&model.Order{
+						ID: 1, CustomerName: "John Doe", TotalPrice: 0, Status: constant.OrderStatusCreated, CreatedAt: fixedTime,
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 10, constant.TempOrderStatusAccepted).
+					Return(nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{
+						{ID: 1, TempOrderID: 10, ProductID: 10, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					CreateOrderItem(gomock.Any(), 1, 10, 2).
+					Return(&model.OrderItem{ID: 1, OrderID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want: &response.OrderData{
+				ID: 1, CustomerName: "John Doe", TotalPrice: 0, Status: constant.OrderStatusCreated,
+				OrderItems: []response.OrderItemData{
+					{ID: 1, OrderID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:          "success when activeOrderID exists (merges temp order into active order)",
+			tempOrderID:   10,
+			customerID:    5,
+			shopID:        1,
+			activeOrderID: func() *int { n := 7; return &n }(),
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore, *mock_database.MockDB) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					GetOrderByID(7, 1).
+					Return(&model.Order{
+						ID: 7, ShopID: 1, CustomerName: "John Doe", TotalPrice: 0, Status: constant.OrderStatusInProgress, CreatedAt: fixedTime,
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(gomock.Any(), 10, constant.TempOrderStatusAccepted).
+					Return(nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{
+						{ID: 1, TempOrderID: 10, ProductID: 20, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemByProductID(20, 7).
+					Return(nil, nil)
+				orderItemMock.EXPECT().
+					CreateOrderItem(gomock.Any(), 7, 20, 1).
+					Return(&model.OrderItem{ID: 2, OrderID: 7, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime}, nil)
+				orderItemMock.EXPECT().
+					GetOrderItemsByOrderID(7).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 7, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+						{ID: 2, OrderID: 7, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+
+				return orderMock, orderItemMock, mockDB
+			},
+			want: &response.OrderData{
+				ID: 7, CustomerName: "John Doe", TotalPrice: 2500, Status: constant.OrderStatusInProgress,
+				OrderItems: []response.OrderItemData{
+					{ID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					{ID: 2, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			orderMock, orderItemMock, mockDB := tt.mockSetup(ctrl)
+			oldOrderStore := orderStore
+			oldOrderItemStore := orderItemStore
+			oldDBGetter := dbGetter
+			defer func() {
+				orderStore = oldOrderStore
+				orderItemStore = oldOrderItemStore
+				dbGetter = oldDBGetter
+			}()
+			orderStore = orderMock
+			orderItemStore = orderItemMock
+			if mockDB != nil {
+				dbGetter = func() database.DB { return mockDB }
+			}
+
+			var o oservice
+			got, gotErr := o.MergeTempOrder(tt.tempOrderID, tt.customerID, tt.shopID, tt.activeOrderID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("MergeTempOrder() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("MergeTempOrder() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MergeTempOrder() = %+v, want %+v", got, tt.want)
 			}
 		})
 	}

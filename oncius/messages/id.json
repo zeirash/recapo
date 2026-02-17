@@ -179,7 +179,9 @@
     "in_progress": "Diproses",
     "in_delivery": "Dalam Pengiriman",
     "done": "Selesai",
-    "cancelled": "Dibatalkan"
+    "cancelled": "Dibatalkan",
+    "accepted": "Diterima",
+    "rejected": "Ditolak"
   },
   "tempOrders": {
     "title": "Pesanan Sementara",
@@ -189,7 +191,13 @@
     "orderNumber": "Pesanan sementara #{id}",
     "phone": "Telepon",
     "fetchFailed": "Gagal memuat pesanan sementara",
-    "fetchDetailsFailed": "Gagal memuat detail pesanan sementara"
+    "fetchDetailsFailed": "Gagal memuat detail pesanan sementara",
+    "accept": "Terima",
+    "reject": "Tolak",
+    "accepting": "Memeriksa…",
+    "acceptSuccess": "Pesanan sementara berhasil diterima.",
+    "acceptError": "Gagal memeriksa pesanan aktif",
+    "confirmMerge": "Konfirmasi"
   },
   "dashboard": {
     "loginRequired": "Silakan masuk untuk mengakses dasbor.",

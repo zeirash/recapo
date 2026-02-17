@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -1111,6 +1112,325 @@ func TestGetOrderItemsHandler(t *testing.T) {
 			}
 			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
 				t.Errorf("GetOrderItemsHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+		})
+	}
+}
+
+func TestMergeTempOrderHandler(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	tests := []struct {
+		name           string
+		body           interface{}
+		shopID         int
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantOrder      *response.OrderData
+		wantErrMessage string
+	}{
+		{
+			name: "successfully merge temp order (create new order)",
+			body: map[string]interface{}{
+				"temp_order_id": 10,
+				"customer_id":  5,
+			},
+			shopID: 1,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					MergeTempOrder(10, 5, 1, (*int)(nil)).
+					Return(&response.OrderData{
+						ID:           1,
+						CustomerName: "John Doe",
+						TotalPrice:   3000,
+						Status:       "created",
+						CreatedAt:    fixedTime,
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantOrder: &response.OrderData{
+				ID:           1,
+				CustomerName: "John Doe",
+				TotalPrice:   3000,
+				Status:       "created",
+				CreatedAt:    fixedTime,
+			},
+		},
+		{
+			name: "successfully merge temp order into active order",
+			body: map[string]interface{}{
+				"temp_order_id":   10,
+				"customer_id":    5,
+				"active_order_id": 7,
+			},
+			shopID: 1,
+			mockSetup: func() {
+				activeOrderID := 7
+				mockOrderService.EXPECT().
+					MergeTempOrder(10, 5, 1, &activeOrderID).
+					Return(&response.OrderData{
+						ID:           7,
+						CustomerName: "John Doe",
+						TotalPrice:   5000,
+						Status:       "in_progress",
+						CreatedAt:    fixedTime,
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantOrder: &response.OrderData{
+				ID:           7,
+				CustomerName: "John Doe",
+				TotalPrice:   5000,
+				Status:       "in_progress",
+				CreatedAt:    fixedTime,
+			},
+		},
+		{
+			name: "merge temp order returns 400 on invalid JSON",
+			body: "invalid json",
+			shopID: 1,
+			mockSetup: func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name: "merge temp order returns 400 when temp_order_id is missing",
+			body: map[string]interface{}{
+				"temp_order_id": 0,
+				"customer_id":  5,
+			},
+			shopID:         1,
+			mockSetup:      func() {},
+			wantStatus:     http.StatusBadRequest,
+			wantSuccess:    false,
+			wantErrMessage: "temp_order_id is required",
+		},
+		{
+			name: "merge temp order returns 400 when customer_id is missing",
+			body: map[string]interface{}{
+				"temp_order_id": 10,
+				"customer_id":  0,
+			},
+			shopID:         1,
+			mockSetup:      func() {},
+			wantStatus:     http.StatusBadRequest,
+			wantSuccess:    false,
+			wantErrMessage: "customer_id is required",
+		},
+		{
+			name: "merge temp order returns 404 when order not found",
+			body: map[string]interface{}{
+				"temp_order_id": 10,
+				"customer_id":  5,
+			},
+			shopID: 1,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					MergeTempOrder(10, 5, 1, (*int)(nil)).
+					Return(nil, errors.New("order not found"))
+			},
+			wantStatus:     http.StatusNotFound,
+			wantSuccess:    false,
+			wantErrMessage: "order not found",
+		},
+		{
+			name: "merge temp order returns 500 on service failure",
+			body: map[string]interface{}{
+				"temp_order_id": 10,
+				"customer_id":  5,
+			},
+			shopID: 1,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					MergeTempOrder(10, 5, 1, (*int)(nil)).
+					Return(nil, errors.New("database error"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "database error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			var bodyBytes []byte
+			switch b := tt.body.(type) {
+			case string:
+				bodyBytes = []byte(b)
+			default:
+				bodyBytes, _ = json.Marshal(b)
+			}
+
+			req := newRequestWithShopID("POST", "/temp_orders/merge", bodyBytes, tt.shopID)
+			rec := httptest.NewRecorder()
+
+			handler.MergeTempOrderHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("MergeTempOrderHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("MergeTempOrderHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("MergeTempOrderHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+			if tt.wantOrder != nil {
+				dataBytes, err := json.Marshal(resp.Data)
+				if err != nil {
+					t.Fatalf("MergeTempOrderHandler() marshal data: %v", err)
+				}
+				var actual response.OrderData
+				if err := json.Unmarshal(dataBytes, &actual); err != nil {
+					t.Fatalf("MergeTempOrderHandler() unmarshal data: %v", err)
+				}
+				if !reflect.DeepEqual(actual, *tt.wantOrder) {
+					t.Errorf("MergeTempOrderHandler() data = %+v, want %+v", actual, *tt.wantOrder)
+				}
+			}
+		})
+	}
+}
+
+func TestGetTempOrderHandler(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	tests := []struct {
+		name           string
+		shopID         int
+		pathVars       map[string]string
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantTempOrder  *response.TempOrderData
+		wantErrMessage string
+	}{
+		{
+			name:     "successfully get temp order",
+			shopID:   1,
+			pathVars: map[string]string{"temp_order_id": "10"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(&response.TempOrderData{
+						ID:            10,
+						CustomerName:  "Jane",
+						CustomerPhone: "+62812345678",
+						TotalPrice:    2500,
+						Status:        "pending",
+						TempOrderItems: []response.TempOrderItemData{
+							{ID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+							{ID: 2, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+						},
+						CreatedAt: fixedTime,
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantTempOrder: &response.TempOrderData{
+				ID:            10,
+				CustomerName:  "Jane",
+				CustomerPhone: "+62812345678",
+				TotalPrice:    2500,
+				Status:        "pending",
+				TempOrderItems: []response.TempOrderItemData{
+					{ID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					{ID: 2, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+		},
+		{
+			name:     "get temp order returns 404 when not found",
+			shopID:   1,
+			pathVars: map[string]string{"temp_order_id": "999"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetTempOrderByID(999, 1).
+					Return(nil, errors.New("temp order not found"))
+			},
+			wantStatus:     http.StatusNotFound,
+			wantSuccess:    false,
+			wantErrMessage: "temp order not found",
+		},
+		{
+			name:     "get temp order returns 500 on service failure",
+			shopID:   1,
+			pathVars: map[string]string{"temp_order_id": "10"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetTempOrderByID(10, 1).
+					Return(nil, errors.New("database error"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "database error",
+		},
+		{
+			name:           "get temp order returns 400 on missing temp_order_id",
+			shopID:         1,
+			pathVars:       map[string]string{},
+			mockSetup:      func() {},
+			wantStatus:     http.StatusBadRequest,
+			wantSuccess:    false,
+			wantErrMessage: "temp_order_id is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := newRequestWithShopID("GET", "/temp_orders/10", nil, tt.shopID)
+			req = newRequestWithPathVars(req, tt.pathVars)
+			rec := httptest.NewRecorder()
+
+			handler.GetTempOrderHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("GetTempOrderHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("GetTempOrderHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("GetTempOrderHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+			if tt.wantTempOrder != nil {
+				dataBytes, err := json.Marshal(resp.Data)
+				if err != nil {
+					t.Fatalf("GetTempOrderHandler() marshal data: %v", err)
+				}
+				var actual response.TempOrderData
+				if err := json.Unmarshal(dataBytes, &actual); err != nil {
+					t.Fatalf("GetTempOrderHandler() unmarshal data: %v", err)
+				}
+				if !reflect.DeepEqual(actual, *tt.wantTempOrder) {
+					t.Errorf("GetTempOrderHandler() data = %+v, want %+v", actual, *tt.wantTempOrder)
+				}
 			}
 		})
 	}

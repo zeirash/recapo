@@ -29,14 +29,10 @@ type (
 		UpdatedAt *time.Time `json:"updated_at"`
 	}
 
-	CustomerHasActiveOrdersData struct {
-		HasActiveOrders bool `json:"has_active_orders"`
-	}
-
 	// CustomerCheckActiveOrderByPhone is the response when checking active order by phone (get-or-create customer).
 	CustomerCheckActiveOrderByPhone struct {
 		CustomerID      int  `json:"customer_id"`
-		HasActiveOrders bool `json:"has_active_orders"`
+		ActiveOrderID   int  `json:"active_order_id"`
 	}
 
 	ProductData struct {
@@ -84,6 +80,7 @@ type (
 	TempOrderItemData struct {
 		ID          int        `json:"id"`
 		TempOrderID int        `json:"temp_order_id,omitempty"`
+		ProductID   int        `json:"product_id,omitempty"`
 		ProductName string     `json:"product_name"`
 		Price       int        `json:"price"`
 		Qty         int        `json:"qty"`

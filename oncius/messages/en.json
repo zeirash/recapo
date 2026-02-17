@@ -179,7 +179,9 @@
     "in_progress": "In Progress",
     "in_delivery": "In Delivery",
     "done": "Done",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "accepted": "Accepted",
+    "rejected": "Rejected"
   },
   "tempOrders": {
     "title": "Temp Orders",
@@ -189,7 +191,13 @@
     "orderNumber": "Temp order #{id}",
     "phone": "Phone",
     "fetchFailed": "Failed to fetch temp orders",
-    "fetchDetailsFailed": "Failed to fetch temp order details"
+    "fetchDetailsFailed": "Failed to fetch temp order details",
+    "accept": "Accept",
+    "reject": "Reject",
+    "accepting": "Checking…",
+    "acceptSuccess": "Temp order accepted successfully.",
+    "acceptError": "Failed to check active order",
+    "confirmMerge": "Confirm"
   },
   "dashboard": {
     "loginRequired": "Please log in to access the dashboard.",

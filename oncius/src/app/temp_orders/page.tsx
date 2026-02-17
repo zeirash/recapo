@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from 'react-query'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Card, Container, Flex, Heading, Text } from 'theme-ui'
+import { Box, Button, Card, Container, Flex, Heading, Text } from 'theme-ui'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import { api } from '@/utils/api'
@@ -29,10 +29,8 @@ type TempOrder = {
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   pending: { bg: '#FFF3E0', color: '#E65100' },
-  created: { bg: '#E3F2FD', color: '#1565C0' },
-  in_progress: { bg: '#F3E5F5', color: '#7B1FA2' },
-  done: { bg: '#E8F5E9', color: '#2E7D32' },
-  cancelled: { bg: '#FFEBEE', color: '#C62828' },
+  accepted: { bg: '#E8F5E9', color: '#2E7D32' },
+  rejected: { bg: '#FFEBEE', color: '#C62828' },
 }
 
 export default function TempOrdersPage() {
@@ -41,9 +39,15 @@ export default function TempOrdersPage() {
   const tTemp = useTranslations('tempOrders')
   const tErrors = useTranslations('errors')
   const toStatus = useTranslations('orderStatus')
+  const queryClient = useQueryClient()
   const [selectedTempOrderId, setSelectedTempOrderId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [acceptLoading, setAcceptLoading] = useState(false)
+  const [acceptError, setAcceptError] = useState<string | null>(null)
+  const [acceptSuccess, setAcceptSuccess] = useState(false)
+  const [showActiveOrderConflictDialog, setShowActiveOrderConflictDialog] = useState(false)
+  const [conflictData, setConflictData] = useState<{ customerId: number; activeOrderId: number } | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
@@ -77,6 +81,13 @@ export default function TempOrdersPage() {
     }
   }, [tempOrdersRes, selectedTempOrderId])
 
+  useEffect(() => {
+    setAcceptError(null)
+    setAcceptSuccess(false)
+    setShowActiveOrderConflictDialog(false)
+    setConflictData(null)
+  }, [selectedTempOrderId])
+
   const selectedTempOrder: TempOrder | null = useMemo(() => {
     if (!selectedTempOrderDetails) {
       if (!tempOrdersRes) return null
@@ -102,6 +113,82 @@ export default function TempOrdersPage() {
   function getStatusStyle(status: string) {
     return statusColors[status] || { bg: '#F5F5F5', color: '#616161' }
   }
+
+  const handleAccept = useCallback(async () => {
+    if (!selectedTempOrder) return
+    setAcceptError(null)
+    setAcceptSuccess(false)
+    setAcceptLoading(true)
+    try {
+      const res = await api.checkActiveOrder({
+        phone: selectedTempOrder.customer_phone,
+        name: selectedTempOrder.customer_name,
+      })
+      if (!res.success) {
+        setAcceptError(res.message || tTemp('acceptError'))
+        return
+      }
+      const customerId = res.data!.customer_id
+      const activeOrderId = res.data!.active_order_id ?? 0
+      const hasActiveOrders = activeOrderId > 0
+
+      if (hasActiveOrders) {
+        setConflictData({ customerId, activeOrderId })
+        setShowActiveOrderConflictDialog(true)
+        return
+      }
+
+      const mergeRes = await api.mergeTempOrder({
+        temp_order_id: selectedTempOrder.id,
+        customer_id: customerId,
+      })
+      if (mergeRes.success) {
+        setAcceptSuccess(true)
+        await Promise.all([
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch]),
+          queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
+        ])
+      } else {
+        setAcceptError(mergeRes.message || tTemp('acceptError'))
+      }
+    } catch (e: unknown) {
+      setAcceptError((e as Error)?.message || tTemp('acceptError'))
+    } finally {
+      setAcceptLoading(false)
+    }
+  }, [selectedTempOrder, tTemp, queryClient, debouncedSearch])
+
+  const handleConfirmMergeIntoActiveOrder = useCallback(async () => {
+    if (!selectedTempOrder || !conflictData) return
+    setAcceptError(null)
+    setAcceptLoading(true)
+    try {
+      const mergeRes = await api.mergeTempOrder({
+        temp_order_id: selectedTempOrder.id,
+        customer_id: conflictData.customerId,
+        active_order_id: conflictData.activeOrderId,
+      })
+      if (mergeRes.success) {
+        setAcceptSuccess(true)
+        setShowActiveOrderConflictDialog(false)
+        setConflictData(null)
+        await Promise.all([
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch]),
+          queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
+        ])
+      } else {
+        setAcceptError(mergeRes.message || tTemp('acceptError'))
+      }
+    } catch (e: unknown) {
+      setAcceptError((e as Error)?.message || tTemp('acceptError'))
+    } finally {
+      setAcceptLoading(false)
+    }
+  }, [selectedTempOrder, conflictData, tTemp, queryClient, debouncedSearch])
+
+  const handleReject = useCallback(() => {
+    // TODO: wire reject endpoint
+  }, [])
 
   return (
     <Layout>
@@ -197,7 +284,7 @@ export default function TempOrdersPage() {
               <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bg: 'background.secondary' }}>
                 {selectedTempOrder ? (
                   <Box sx={{ maxWidth: 880, mx: 'auto', p: [4, 5] }}>
-                    <Flex sx={{ alignItems: 'center', gap: 3, mb: 3 }}>
+                    <Flex sx={{ alignItems: 'center', gap: 3, mb: 3, flexWrap: 'wrap' }}>
                       <Heading as="h2" sx={{ fontSize: 3 }}>
                         {tTemp('orderNumber', { id: selectedTempOrder.id })}
                       </Heading>
@@ -215,7 +302,48 @@ export default function TempOrdersPage() {
                       >
                         {toStatus(selectedTempOrder.status) || selectedTempOrder.status}
                       </Box>
+                      <Flex sx={{ ml: 'auto', gap: 2 }}>
+                        <Button
+                          onClick={handleAccept}
+                          disabled={acceptLoading || selectedTempOrder.status !== 'pending'}
+                          sx={{
+                            bg: 'primary',
+                            color: 'white',
+                            '&:disabled': { opacity: 0.7 },
+                          }}
+                        >
+                          {acceptLoading ? tTemp('accepting') : tTemp('accept')}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={handleReject}
+                          disabled={selectedTempOrder.status !== 'pending'}
+                          sx={{
+                            bg: 'background.secondary',
+                            color: 'text',
+                            border: '1px solid',
+                            borderColor: 'border',
+                            '&:disabled': { opacity: 0.7 },
+                          }}
+                        >
+                          {tTemp('reject')}
+                        </Button>
+                      </Flex>
                     </Flex>
+                    {(acceptError || acceptSuccess) && (
+                      <Box
+                        sx={{
+                          mb: 3,
+                          p: 2,
+                          borderRadius: 'medium',
+                          bg: acceptError ? '#FFEBEE' : '#E8F5E9',
+                          color: acceptError ? '#C62828' : '#2E7D32',
+                          fontSize: 1,
+                        }}
+                      >
+                        {acceptError || tTemp('acceptSuccess')}
+                      </Box>
+                    )}
 
                     {/* Temp order info card */}
                     <Card
@@ -461,6 +589,42 @@ export default function TempOrdersPage() {
           )}
         </Flex>
       </Container>
+
+      {/* Active order conflict dialog */}
+      {showActiveOrderConflictDialog && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            bg: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 3,
+            zIndex: 1000,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowActiveOrderConflictDialog(false)
+          }}
+        >
+          <Card sx={{ width: ['100%', '540px'], p: 4 }} onClick={(e) => e.stopPropagation()}>
+            <Heading as="h3" sx={{ mb: 2 }}>
+              {to('duplicateOrderTitle')}
+            </Heading>
+            <Text sx={{ mb: 4, color: 'text.secondary', display: 'block' }}>
+              {to('duplicateOrderMessageInline')}
+            </Text>
+            <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
+              <Button type="button" onClick={() => setShowActiveOrderConflictDialog(false)}>
+                {t('cancel')}
+              </Button>
+              <Button type="button" onClick={handleConfirmMergeIntoActiveOrder} disabled={acceptLoading}>
+                {acceptLoading ? tTemp('accepting') : tTemp('confirmMerge')}
+              </Button>
+            </Flex>
+          </Card>
+        </Box>
+      )}
     </Layout>
   )
 }

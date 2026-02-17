@@ -192,6 +192,8 @@ func Test_orderitem_GetOrderItemsByOrderID(t *testing.T) {
 }
 
 func Test_orderitem_CreateOrderItem(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
 	type input struct {
 		orderID   int
 		productID int
@@ -201,19 +203,20 @@ func Test_orderitem_CreateOrderItem(t *testing.T) {
 	tests := []struct {
 		name       string
 		input      input
+		useTx      bool
 		mockSetup  func(mock sqlmock.Sqlmock)
 		wantResult *model.OrderItem
 		wantErr    bool
 	}{
 		{
-			name: "successfully create order item",
+			name:  "successfully create order item",
+			useTx: false,
 			input: input{
 				orderID:   10,
 				productID: 5,
 				qty:       2,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 				rows := sqlmock.NewRows([]string{"id", "order_id", "product_name", "price", "qty", "created_at"}).
 					AddRow(1, 10, "Product A", 1000, 2, fixedTime)
 				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO order_items \(order_id, product_id, qty, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, order_id, product_id, qty, created_at\s+\)\s+SELECT i.id, i.order_id, p.name as product_name, p.price as price, i.qty, i.created_at\s+FROM inserted i\s+INNER JOIN products p ON i.product_id = p.id`).
@@ -230,7 +233,33 @@ func Test_orderitem_CreateOrderItem(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "create order item returns error on database failure",
+			name:  "successfully create order item with tx (e.g. from MergeTempOrder)",
+			useTx: true,
+			input: input{
+				orderID:   1,
+				productID: 10,
+				qty:       1,
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				rows := sqlmock.NewRows([]string{"id", "order_id", "product_name", "price", "qty", "created_at"}).
+					AddRow(2, 1, "Product B", 500, 1, fixedTime)
+				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO order_items \(order_id, product_id, qty, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4\)\s+RETURNING id, order_id, product_id, qty, created_at\s+\)\s+SELECT i.id, i.order_id, p.name as product_name, p.price as price, i.qty, i.created_at\s+FROM inserted i\s+INNER JOIN products p ON i.product_id = p.id`).
+					WithArgs(1, 10, 1, sqlmock.AnyArg()).
+					WillReturnRows(rows)
+			},
+			wantResult: &model.OrderItem{
+				ID:          2,
+				OrderID:     1,
+				ProductName: "Product B",
+				Price:       500,
+				Qty:         1,
+			},
+			wantErr: false,
+		},
+		{
+			name:  "create order item returns error on database failure",
+			useTx: false,
 			input: input{
 				orderID:   10,
 				productID: 5,
@@ -257,7 +286,18 @@ func Test_orderitem_CreateOrderItem(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderItemStoreWithDB(db)
 
-			got, gotErr := store.CreateOrderItem(tt.input.orderID, tt.input.productID, tt.input.qty)
+			var got *model.OrderItem
+			var gotErr error
+			if tt.useTx {
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf("failed to begin tx: %v", err)
+				}
+				defer tx.Rollback()
+				got, gotErr = store.CreateOrderItem(tx, tt.input.orderID, tt.input.productID, tt.input.qty)
+			} else {
+				got, gotErr = store.CreateOrderItem(nil, tt.input.orderID, tt.input.productID, tt.input.qty)
+			}
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -386,7 +426,7 @@ func Test_orderitem_UpdateOrderItemByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderItemStoreWithDB(db)
 
-			got, gotErr := store.UpdateOrderItemByID(tt.id, tt.orderID, tt.input)
+			got, gotErr := store.UpdateOrderItemByID(nil, tt.id, tt.orderID, tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -637,16 +677,16 @@ func Test_orderitem_GetTempOrderItemsByTempOrderID(t *testing.T) {
 			name:        "get temp order items by temp order ID returns multiple items",
 			tempOrderID: 1,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "temp_order_id", "product_name", "price", "qty", "created_at"}).
-					AddRow(1, 1, "Product A", 1000, 2, fixedTime).
-					AddRow(2, 1, "Product B", 500, 1, fixedTime)
-				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "temp_order_id", "product_id", "product_name", "price", "qty", "created_at"}).
+					AddRow(1, 1, 10, "Product A", 1000, 2, fixedTime).
+					AddRow(2, 1, 20, "Product B", 500, 1, fixedTime)
+				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, ti.product_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
 			wantResult: []model.TempOrderItem{
-				{ID: 1, TempOrderID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
-				{ID: 2, TempOrderID: 1, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
+				{ID: 1, TempOrderID: 1, ProductID: 10, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+				{ID: 2, TempOrderID: 1, ProductID: 20, ProductName: "Product B", Price: 500, Qty: 1, CreatedAt: fixedTime},
 			},
 			wantErr: false,
 		},
@@ -654,8 +694,8 @@ func Test_orderitem_GetTempOrderItemsByTempOrderID(t *testing.T) {
 			name:        "get temp order items returns empty slice when none exist",
 			tempOrderID: 99,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "temp_order_id", "product_name", "price", "qty", "created_at"})
-				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "temp_order_id", "product_id", "product_name", "price", "qty", "created_at"})
+				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, ti.product_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
 					WithArgs(99).
 					WillReturnRows(rows)
 			},
@@ -666,7 +706,7 @@ func Test_orderitem_GetTempOrderItemsByTempOrderID(t *testing.T) {
 			name:        "get temp order items returns error on database failure",
 			tempOrderID: 1,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
+				mock.ExpectQuery(`SELECT ti.id, ti.temp_order_id, ti.product_id, p.name as product_name, p.price as price, ti.qty, ti.created_at\s+FROM temp_order_items ti\s+INNER JOIN products p ON ti.product_id = p.id\s+WHERE ti.temp_order_id = \$1`).
 					WithArgs(1).
 					WillReturnError(errors.New("database error"))
 			},
@@ -700,6 +740,92 @@ func Test_orderitem_GetTempOrderItemsByTempOrderID(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tt.wantResult) {
 				t.Errorf("GetTempOrderItemsByTempOrderID() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func Test_orderitem_GetOrderItemByProductID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name       string
+		productID  int
+		orderID    int
+		mockSetup  func(mock sqlmock.Sqlmock)
+		wantResult *model.OrderItem
+		wantErr    bool
+	}{
+		{
+			name:      "returns order item when found by product_id and order_id",
+			productID: 5,
+			orderID:   10,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "order_id", "product_name", "price", "qty", "created_at", "updated_at"}).
+					AddRow(1, 10, "Product A", 1000, 3, fixedTime, nil)
+				mock.ExpectQuery(`SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at\s+FROM order_items oi\s+INNER JOIN products p ON oi.product_id = p.id\s+WHERE oi.product_id = \$1 AND oi.order_id = \$2`).
+					WithArgs(5, 10).
+					WillReturnRows(rows)
+			},
+			wantResult: &model.OrderItem{
+				ID:          1,
+				OrderID:     10,
+				ProductName: "Product A",
+				Price:       1000,
+				Qty:         3,
+				CreatedAt:   fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:      "returns nil nil when no order item matches",
+			productID: 99,
+			orderID:   10,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at\s+FROM order_items oi\s+INNER JOIN products p ON oi.product_id = p.id\s+WHERE oi.product_id = \$1 AND oi.order_id = \$2`).
+					WithArgs(99, 10).
+					WillReturnError(sql.ErrNoRows)
+			},
+			wantResult: nil,
+			wantErr:    false,
+		},
+		{
+			name:      "returns error on database failure",
+			productID: 5,
+			orderID:   10,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at\s+FROM order_items oi\s+INNER JOIN products p ON oi.product_id = p.id\s+WHERE oi.product_id = \$1 AND oi.order_id = \$2`).
+					WithArgs(5, 10).
+					WillReturnError(errors.New("database error"))
+			},
+			wantResult: nil,
+			wantErr:    true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewOrderItemStoreWithDB(db)
+
+			got, gotErr := store.GetOrderItemByProductID(tt.productID, tt.orderID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetOrderItemByProductID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetOrderItemByProductID() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.wantResult) {
+				t.Errorf("GetOrderItemByProductID() = %v, want %v", got, tt.wantResult)
 			}
 		})
 	}

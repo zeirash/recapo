@@ -119,6 +119,7 @@ type (
 	TempOrderItem struct {
 		ID          int          `db:"id"`
 		TempOrderID int          `db:"temp_order_id"`
+		ProductID   int          `db:"product_id"`
 		ProductName string       `db:"product_name"`
 		Price       int          `db:"price"`
 		Qty         int          `db:"qty"`

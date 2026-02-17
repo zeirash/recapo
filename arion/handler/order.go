@@ -38,8 +38,9 @@ type (
 	}
 
 	MergeOrderRequest struct {
-		TempOrderID int `json:"temp_order_id"`
-		CustomerID  int `json:"customer_id"`
+		TempOrderID   int  `json:"temp_order_id"`
+		CustomerID    int  `json:"customer_id"`
+		ActiveOrderID *int `json:"active_order_id"`
 	}
 )
 
@@ -268,7 +269,7 @@ func MergeTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := orderService.MergeTempOrder(inp.TempOrderID, inp.CustomerID, shopID)
+	res, err := orderService.MergeTempOrder(inp.TempOrderID, inp.CustomerID, shopID, inp.ActiveOrderID)
 	if err != nil {
 		if err.Error() == "order not found" {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")

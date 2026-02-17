@@ -89,7 +89,7 @@ func NewRouter() *mux.Router {
 	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteOrderItemHandler))).Methods("DELETE")
 	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderItemHandler))).Methods("GET")
 
-	// For Order Temp
+	// For Temp Order
 	r.Handle("/temp_orders", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrdersHandler))).Methods("GET")
 	r.Handle("/temp_orders/{temp_order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrderHandler))).Methods("GET")
 	r.Handle("/temp_orders/merge", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.MergeTempOrderHandler))).Methods("POST")

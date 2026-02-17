@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/zeirash/recapo/arion/common/config"
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
@@ -23,7 +24,7 @@ type (
 		GetOrderItemByID(orderItemID, orderID int) (response.OrderItemData, error)
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
 
-		MergeTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error)
+		MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error)
 
 		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
 		GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error)
@@ -67,15 +68,15 @@ func NewOrderService() OrderService {
 }
 
 func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (response.OrderData, error) {
-	existing, err := orderStore.HasActiveOrdersByCustomerID(customerID, shopID)
+	activeOrder, err := orderStore.GetActiveOrderByCustomerID(customerID, shopID)
 	if err != nil {
 		return response.OrderData{}, err
 	}
-	if existing {
+	if activeOrder != nil {
 		return response.OrderData{}, errors.New("customer already has an active order")
 	}
 
-	order, err := orderStore.CreateOrder(customerID, shopID, notes)
+	order, err := orderStore.CreateOrder(nil, customerID, shopID, notes, nil)
 	if err != nil {
 		return response.OrderData{}, err
 	}
@@ -180,7 +181,7 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 		Notes:      input.Notes,
 	}
 
-	orderData, err := orderStore.UpdateOrder(input.ID, updateData)
+	orderData, err := orderStore.UpdateOrder(nil, input.ID, updateData)
 	if err != nil {
 		return response.OrderData{}, err
 	}
@@ -224,7 +225,7 @@ func (o *oservice) DeleteOrderByID(id int) error {
 }
 
 func (o *oservice) CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error) {
-	orderItem, err := orderItemStore.CreateOrderItem(orderID, productID, qty)
+	orderItem, err := orderItemStore.CreateOrderItem(nil, orderID, productID, qty)
 	if err != nil {
 		return response.OrderItemData{}, err
 	}
@@ -256,7 +257,7 @@ func (o *oservice) UpdateOrderItemByID(input UpdateOrderItemInput) (response.Ord
 		Qty:       input.Qty,
 	}
 
-	orderItemData, err := orderItemStore.UpdateOrderItemByID(input.OrderItemID, input.OrderID, updateData)
+	orderItemData, err := orderItemStore.UpdateOrderItemByID(nil, input.OrderItemID, input.OrderID, updateData)
 	if err != nil {
 		return response.OrderItemData{}, err
 	}
@@ -336,35 +337,6 @@ func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData
 	}
 
 	return orderItemsData, nil
-}
-
-func (o *oservice) MergeTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error) {
-	// activeOrder, err := orderStore.GetActiveOrderByCustomerID(customerID, shopID)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// // if no active order, create new order
-	// if activeOrder == nil {
-
-	// } else {
-	// 	// get temp order items
-
-	// 	// merge temp order items to active order and update total price
-	// }
-	// trimmed := strings.TrimSpace(notesToAppend)
-	// if trimmed != "" {
-	// 	var newNotes string
-	// 	if strings.TrimSpace(order.Notes) != "" {
-	// 		newNotes = order.Notes + "\n" + trimmed
-	// 	} else {
-	// 		newNotes = trimmed
-	// 	}
-	// 	_, err = orderStore.UpdateOrder(orderID, store.UpdateOrderInput{Notes: &newNotes})
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-	return &response.OrderData{}, nil
 }
 
 func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error) {
@@ -453,6 +425,7 @@ func (o *oservice) GetTempOrderByID(id int, shopID ...int) (*response.TempOrderD
 		tempOrderItemsData = append(tempOrderItemsData, response.TempOrderItemData{
 			ID:          tempOrderItem.ID,
 			TempOrderID: tempOrderItem.TempOrderID,
+			ProductID:   tempOrderItem.ProductID,
 			ProductName: tempOrderItem.ProductName,
 			Price:       tempOrderItem.Price,
 			Qty:         tempOrderItem.Qty,
@@ -504,4 +477,142 @@ func (o *oservice) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptio
 	}
 
 	return tempOrdersData, nil
+}
+
+func (o *oservice) MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error) {
+	if activeOrderID == nil {
+		return o.createOrderFromTempOrder(tempOrderID, customerID, shopID)
+	}
+
+	return o.resolveActiveOrderConflict(tempOrderID, shopID, *activeOrderID)
+}
+
+
+func (o *oservice) createOrderFromTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error) {
+	tempOrder, err := o.GetTempOrderByID(tempOrderID, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	db := dbGetter()
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	order, err := orderStore.CreateOrder(tx, customerID, shopID, nil, &tempOrder.TotalPrice)
+	if err != nil {
+		return nil, err
+	}
+
+	orderItems := []response.OrderItemData{}
+	for _, tempOrderItem := range tempOrder.TempOrderItems {
+		orderItem, err := orderItemStore.CreateOrderItem(tx, order.ID, tempOrderItem.ProductID, tempOrderItem.Qty)
+		if err != nil {
+			return nil, err
+		}
+		orderItems = append(orderItems, response.OrderItemData{
+			ID:          orderItem.ID,
+			OrderID:     orderItem.OrderID,
+			ProductName: orderItem.ProductName,
+			Price:       orderItem.Price,
+			Qty:         orderItem.Qty,
+			CreatedAt:   orderItem.CreatedAt,
+		})
+	}
+
+	err = orderStore.UpdateTempOrderStatus(tx, tempOrder.ID, constant.TempOrderStatusAccepted)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.OrderData{
+		ID:           order.ID,
+		CustomerName: order.CustomerName,
+		TotalPrice:   order.TotalPrice,
+		Status:       order.Status,
+		Notes:        order.Notes,
+		OrderItems:   orderItems,
+		CreatedAt:    order.CreatedAt,
+	}, nil
+}
+
+func (o *oservice) resolveActiveOrderConflict(tempOrderID, shopID, activeOrderID int) (*response.OrderData, error) {
+	tempOrder, err := o.GetTempOrderByID(tempOrderID, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: try to make merge logic more efficient
+	activeOrder, err := o.GetOrderByID(activeOrderID, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	db := dbGetter()
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	for _, tempOrderItem := range tempOrder.TempOrderItems {
+		// check if order item in temp order already exists in active order
+		existsOrderItem, err := orderItemStore.GetOrderItemByProductID(tempOrderItem.ProductID, activeOrder.ID)
+		if err != nil {
+			return nil, err
+		}
+		if existsOrderItem != nil {
+			// update order item quantity
+			qty := existsOrderItem.Qty + tempOrderItem.Qty
+			_, err := orderItemStore.UpdateOrderItemByID(tx, existsOrderItem.ID, activeOrder.ID, store.UpdateOrderItemInput{
+				Qty: &qty,
+			})
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			// create order item
+			_, err := orderItemStore.CreateOrderItem(tx, activeOrder.ID, tempOrderItem.ProductID, tempOrderItem.Qty)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	err = orderStore.UpdateTempOrderStatus(tx, tempOrder.ID, constant.TempOrderStatusAccepted)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	orderItems, err := o.GetOrderItemsByOrderID(activeOrder.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var totalPrice int
+	for _, orderItem := range orderItems {
+		totalPrice += orderItem.Price * orderItem.Qty
+	}
+
+	return &response.OrderData{
+		ID:           activeOrder.ID,
+		CustomerName: activeOrder.CustomerName,
+		TotalPrice:   totalPrice,
+		Status:       activeOrder.Status,
+		Notes:        activeOrder.Notes,
+		OrderItems:   orderItems,
+		CreatedAt:    activeOrder.CreatedAt,
+	}, nil
 }
