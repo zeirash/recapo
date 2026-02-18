@@ -46,6 +46,9 @@ export default function TempOrdersPage() {
   const [acceptLoading, setAcceptLoading] = useState(false)
   const [acceptError, setAcceptError] = useState<string | null>(null)
   const [acceptSuccess, setAcceptSuccess] = useState(false)
+  const [rejectLoading, setRejectLoading] = useState(false)
+  const [rejectSuccess, setRejectSuccess] = useState(false)
+  const [rejectError, setRejectError] = useState<string | null>(null)
   const [showActiveOrderConflictDialog, setShowActiveOrderConflictDialog] = useState(false)
   const [conflictData, setConflictData] = useState<{ customerId: number; activeOrderId: number } | null>(null)
 
@@ -84,6 +87,8 @@ export default function TempOrdersPage() {
   useEffect(() => {
     setAcceptError(null)
     setAcceptSuccess(false)
+    setRejectSuccess(false)
+    setRejectError(null)
     setShowActiveOrderConflictDialog(false)
     setConflictData(null)
   }, [selectedTempOrderId])
@@ -186,9 +191,30 @@ export default function TempOrdersPage() {
     }
   }, [selectedTempOrder, conflictData, tTemp, queryClient, debouncedSearch])
 
-  const handleReject = useCallback(() => {
-    // TODO: wire reject endpoint
-  }, [])
+  const handleReject = useCallback(async () => {
+    if (!selectedTempOrder) return
+    setRejectError(null)
+    setRejectSuccess(false)
+    setAcceptError(null)
+    setAcceptSuccess(false)
+    setRejectLoading(true)
+    try {
+      const res = await api.rejectTempOrder(selectedTempOrder.id)
+      if (res.success) {
+        setRejectSuccess(true)
+        await Promise.all([
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch]),
+          queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
+        ])
+      } else {
+        setRejectError(res.message || tTemp('rejectError'))
+      }
+    } catch (e: unknown) {
+      setRejectError((e as Error)?.message || tTemp('rejectError'))
+    } finally {
+      setRejectLoading(false)
+    }
+  }, [selectedTempOrder, tTemp, queryClient, debouncedSearch])
 
   return (
     <Layout>
@@ -304,44 +330,45 @@ export default function TempOrdersPage() {
                       </Box>
                       <Flex sx={{ ml: 'auto', gap: 2 }}>
                         <Button
+                          variant={selectedTempOrder.status === 'rejected' ? 'secondary' : 'primary'}
                           onClick={handleAccept}
-                          disabled={acceptLoading || selectedTempOrder.status !== 'pending'}
+                          disabled={acceptLoading || rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
-                            bg: 'primary',
-                            color: 'white',
+                            ...(selectedTempOrder.status === 'rejected'
+                              ? { bg: 'background.secondary', color: 'text', border: '1px solid', borderColor: 'border' }
+                              : { bg: 'primary', color: 'white' }),
                             '&:disabled': { opacity: 0.7 },
                           }}
                         >
                           {acceptLoading ? tTemp('accepting') : tTemp('accept')}
                         </Button>
                         <Button
-                          variant="secondary"
+                          variant={selectedTempOrder.status === 'rejected' ? 'primary' : 'secondary'}
                           onClick={handleReject}
-                          disabled={selectedTempOrder.status !== 'pending'}
+                          disabled={rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
-                            bg: 'background.secondary',
-                            color: 'text',
-                            border: '1px solid',
-                            borderColor: 'border',
+                            ...(selectedTempOrder.status === 'rejected'
+                              ? { bg: 'primary', color: 'white', border: 'none' }
+                              : { bg: 'background.secondary', color: 'text', border: '1px solid', borderColor: 'border' }),
                             '&:disabled': { opacity: 0.7 },
                           }}
                         >
-                          {tTemp('reject')}
+                          {rejectLoading ? tTemp('rejecting') : tTemp('reject')}
                         </Button>
                       </Flex>
                     </Flex>
-                    {(acceptError || acceptSuccess) && (
+                    {(acceptError || acceptSuccess || rejectError || rejectSuccess) && (
                       <Box
                         sx={{
                           mb: 3,
                           p: 2,
                           borderRadius: 'medium',
-                          bg: acceptError ? '#FFEBEE' : '#E8F5E9',
-                          color: acceptError ? '#C62828' : '#2E7D32',
+                          bg: acceptError || rejectError ? '#FFEBEE' : '#E8F5E9',
+                          color: acceptError || rejectError ? '#C62828' : '#2E7D32',
                           fontSize: 1,
                         }}
                       >
-                        {acceptError || tTemp('acceptSuccess')}
+                        {acceptError || rejectError || (acceptSuccess ? tTemp('acceptSuccess') : '') || (rejectSuccess ? tTemp('rejectSuccess') : '')}
                       </Box>
                     )}
 

@@ -1129,7 +1129,7 @@ func Test_oservice_GetOrderItemByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "get order item by ID not found returns nil result",
+			name:        "get order item by ID returns error when not found",
 			orderItemID: 999,
 			orderID:     1,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderItemStore {
@@ -1140,7 +1140,7 @@ func Test_oservice_GetOrderItemByID(t *testing.T) {
 				return mock
 			},
 			wantResult: response.OrderItemData{},
-			wantErr:    false,
+			wantErr:    true,
 		},
 		{
 			name:        "get order item by ID returns error on store failure",
@@ -1179,9 +1179,11 @@ func Test_oservice_GetOrderItemByID(t *testing.T) {
 			if tt.wantErr {
 				t.Fatal("GetOrderItemByID() succeeded unexpectedly")
 			}
-
-			if !reflect.DeepEqual(got, tt.wantResult) {
-				t.Errorf("GetOrderItemByID() = %v, want %v", got, tt.wantResult)
+			if got == nil {
+				t.Fatal("GetOrderItemByID() returned nil result")
+			}
+			if !reflect.DeepEqual(*got, tt.wantResult) {
+				t.Errorf("GetOrderItemByID() = %v, want %v", *got, tt.wantResult)
 			}
 		})
 	}
@@ -2658,6 +2660,154 @@ func Test_oservice_MergeTempOrder(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("MergeTempOrder() = %+v, want %+v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_oservice_RejectTempOrderByID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name       string
+		id         int
+		mockSetup  func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore)
+		want       response.TempOrderData
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name: "successfully reject temp order by ID",
+			id:   10,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10).
+					Return(&model.TempOrder{
+						ID:            10,
+						ShopID:        1,
+						CustomerName:  "Jane",
+						CustomerPhone: "+62812345678",
+						TotalPrice:    2500,
+						Status:        "pending",
+						CreatedAt:     fixedTime,
+						UpdatedAt:     sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(nil, 10, constant.TempOrderStatusRejected).
+					Return(nil)
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{
+						{ID: 1, TempOrderID: 10, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+					}, nil)
+
+				return orderMock, orderItemMock
+			},
+			want: response.TempOrderData{
+				ID:            10,
+				CustomerName:  "Jane",
+				CustomerPhone: "+62812345678",
+				TotalPrice:    2500,
+				Status:        constant.TempOrderStatusRejected,
+				TempOrderItems: []response.TempOrderItemData{
+					{ID: 1, TempOrderID: 10, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name: "returns error when GetTempOrderByID fails",
+			id:   10,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10).
+					Return(nil, errors.New("database error"))
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				return orderMock, orderItemMock
+			},
+			want:    response.TempOrderData{},
+			wantErr: true,
+			wantErrMsg: "database error",
+		},
+		{
+			name: "returns error when temp order not found",
+			id:   999,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(999).
+					Return(nil, nil)
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				return orderMock, orderItemMock
+			},
+			want:       response.TempOrderData{},
+			wantErr:    true,
+			wantErrMsg: "temp order not found",
+		},
+		{
+			name: "returns error when UpdateTempOrderStatus fails",
+			id:   10,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
+				orderMock := mock_store.NewMockOrderStore(ctrl)
+				orderMock.EXPECT().
+					GetTempOrderByID(10).
+					Return(&model.TempOrder{
+						ID: 10, ShopID: 1, CustomerName: "Jane", CustomerPhone: "+62", TotalPrice: 0, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{},
+					}, nil)
+				orderMock.EXPECT().
+					UpdateTempOrderStatus(nil, 10, constant.TempOrderStatusRejected).
+					Return(errors.New("update status failed"))
+
+				orderItemMock := mock_store.NewMockOrderItemStore(ctrl)
+				orderItemMock.EXPECT().
+					GetTempOrderItemsByTempOrderID(10).
+					Return([]model.TempOrderItem{}, nil)
+
+				return orderMock, orderItemMock
+			},
+			want:       response.TempOrderData{},
+			wantErr:    true,
+			wantErrMsg: "update status failed",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldOrderStore := orderStore
+			oldOrderItemStore := orderItemStore
+			defer func() {
+				orderStore = oldOrderStore
+				orderItemStore = oldOrderItemStore
+			}()
+			orderMock, orderItemMock := tt.mockSetup(ctrl)
+			orderStore = orderMock
+			orderItemStore = orderItemMock
+
+			var o oservice
+			got, gotErr := o.RejectTempOrderByID(tt.id)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("RejectTempOrderByID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				if tt.wantErrMsg != "" && gotErr.Error() != tt.wantErrMsg {
+					t.Errorf("RejectTempOrderByID() error = %v, want message %q", gotErr, tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("RejectTempOrderByID() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("RejectTempOrderByID() = %+v, want %+v", got, tt.want)
 			}
 		})
 	}

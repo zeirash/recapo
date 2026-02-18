@@ -197,6 +197,9 @@
     "accepting": "Memeriksa…",
     "acceptSuccess": "Pesanan sementara berhasil diterima.",
     "acceptError": "Gagal memeriksa pesanan aktif",
+    "rejectSuccess": "Pesanan sementara ditolak.",
+    "rejectError": "Gagal menolak pesanan sementara",
+    "rejecting": "Menolak…",
     "confirmMerge": "Konfirmasi"
   },
   "dashboard": {

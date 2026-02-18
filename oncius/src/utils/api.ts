@@ -400,6 +400,12 @@ export const api = {
     return apiRequest<ApiResponse<any>>(`/temp_orders/${id}`)
   },
 
+  rejectTempOrder: (tempOrderId: number | string) => {
+    return apiRequest<ApiResponse<any>>(`/temp_orders/${tempOrderId}/reject`, {
+      method: 'PATCH',
+    })
+  },
+
   // Health check
   health: () => {
     return apiRequest<ApiResponse>('/health')

@@ -354,7 +354,12 @@ func (o *order) UpdateTempOrderStatus(tx database.Tx, tempOrderID int, status st
 		SET status = $1, updated_at = now()
 		WHERE id = $2
 	`
-	_, err := tx.Exec(q, status, tempOrderID)
+	var err error
+	if tx != nil {
+		_, err = tx.Exec(q, status, tempOrderID)
+	} else {
+		_, err = o.db.Exec(q, status, tempOrderID)
+	}
 	if err != nil {
 		return err
 	}

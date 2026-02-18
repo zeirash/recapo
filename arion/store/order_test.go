@@ -1095,13 +1095,15 @@ func Test_order_GetActiveOrderByCustomerID(t *testing.T) {
 func Test_order_UpdateTempOrderStatus(t *testing.T) {
 	tests := []struct {
 		name        string
+		useTx       bool
 		tempOrderID int
 		status      string
 		mockSetup   func(mock sqlmock.Sqlmock)
 		wantErr     bool
 	}{
 		{
-			name:        "successfully update temp order status",
+			name:        "successfully update temp order status with tx",
+			useTx:       true,
 			tempOrderID: 1,
 			status:      "created",
 			mockSetup: func(mock sqlmock.Sqlmock) {
@@ -1113,13 +1115,38 @@ func Test_order_UpdateTempOrderStatus(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:        "successfully update temp order status with nil tx (uses db)",
+			useTx:       false,
+			tempOrderID: 10,
+			status:      "rejected",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE temp_orders\s+SET status = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+					WithArgs("rejected", 10).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
 			name:        "update temp order status returns error on database failure",
+			useTx:       true,
 			tempOrderID: 1,
 			status:      "created",
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectBegin()
 				mock.ExpectExec(`UPDATE temp_orders\s+SET status = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
 					WithArgs("created", 1).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+		{
+			name:        "update temp order status with nil tx returns error on database failure",
+			useTx:       false,
+			tempOrderID: 5,
+			status:      "accepted",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE temp_orders\s+SET status = \$1, updated_at = now\(\)\s+WHERE id = \$2`).
+					WithArgs("accepted", 5).
 					WillReturnError(errors.New("database error"))
 			},
 			wantErr: true,
@@ -1136,13 +1163,17 @@ func Test_order_UpdateTempOrderStatus(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			tx, err := db.Begin()
-			if err != nil {
-				t.Fatalf("failed to begin tx: %v", err)
+			var gotErr error
+			if tt.useTx {
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf("failed to begin tx: %v", err)
+				}
+				defer tx.Rollback()
+				gotErr = store.UpdateTempOrderStatus(tx, tt.tempOrderID, tt.status)
+			} else {
+				gotErr = store.UpdateTempOrderStatus(nil, tt.tempOrderID, tt.status)
 			}
-			defer tx.Rollback()
-
-			gotErr := store.UpdateTempOrderStatus(tx, tt.tempOrderID, tt.status)
 
 			if gotErr != nil {
 				if !tt.wantErr {

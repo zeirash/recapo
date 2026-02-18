@@ -93,6 +93,7 @@ func NewRouter() *mux.Router {
 	r.Handle("/temp_orders", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrdersHandler))).Methods("GET")
 	r.Handle("/temp_orders/{temp_order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrderHandler))).Methods("GET")
 	r.Handle("/temp_orders/merge", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.MergeTempOrderHandler))).Methods("POST")
+	r.Handle("/temp_orders/{temp_order_id}/reject", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.RejectTempOrderHandler))).Methods("PATCH")
 
 	// For System
 	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")

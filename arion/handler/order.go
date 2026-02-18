@@ -254,6 +254,21 @@ func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, "OK")
 }
 
+// MergeTempOrderHandler godoc
+//
+//	@Summary		Merge temp order
+//	@Description	Accept a temp order by merging it into a new order or into an existing active order. Requires temp_order_id and customer_id; active_order_id is optional. When omitted, a new order is created from the temp order. When provided, temp order items are merged into that order.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		MergeOrderRequest	true	"temp_order_id, customer_id required; active_order_id optional"
+//	@Success		200		{object}	response.OrderData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON or validation)"
+//	@Failure		404	{object}	ErrorApiResponse	"Temp order or order not found"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/temp_orders/merge [post]
 func MergeTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
@@ -283,6 +298,21 @@ func MergeTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// CreateOrderItemHandler godoc
+//
+//	@Summary		Create order item
+//	@Description	Add an item to an order. Requires order_id (path), product_id and qty (body).
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path		int						true	"Order ID"
+//	@Param			body		body		CreateOrderItemRequest	true	"product_id, qty"
+//	@Success		200			{object}	response.OrderItemData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON, order_id, or validation)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/item [post]
 func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
@@ -575,6 +605,40 @@ func GetTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		logger.WithError(err).Error("get_temp_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_temp_order")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
+// RejectTempOrderHandler godoc
+//
+//	@Summary		Reject temp order
+//	@Description	Reject a temp order by ID. Sets the temp order status to rejected.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			temp_order_id	path		int	true	"Temp order ID"
+//	@Success		200				{object}	response.TempOrderData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid or missing temp_order_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/temp_orders/{temp_order_id}/reject [patch]
+func RejectTempOrderHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	if valid, err := validateTempOrderID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	tempOrderIDInt, _ := strconv.Atoi(params["temp_order_id"])
+	tempOrderID := tempOrderIDInt
+
+	res, err := orderService.RejectTempOrderByID(tempOrderID)
+	if err != nil {
+		logger.WithError(err).Error("reject_temp_order_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "reject_temp_order")
 		return
 	}
 

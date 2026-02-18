@@ -197,6 +197,9 @@
     "accepting": "Checking…",
     "acceptSuccess": "Temp order accepted successfully.",
     "acceptError": "Failed to check active order",
+    "rejectSuccess": "Temp order rejected.",
+    "rejectError": "Failed to reject temp order",
+    "rejecting": "Rejecting…",
     "confirmMerge": "Confirm"
   },
   "dashboard": {

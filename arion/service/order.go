@@ -21,7 +21,7 @@ type (
 		CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error)
 		UpdateOrderItemByID(input UpdateOrderItemInput) (response.OrderItemData, error)
 		DeleteOrderItemByID(orderItemID, orderID int) error
-		GetOrderItemByID(orderItemID, orderID int) (response.OrderItemData, error)
+		GetOrderItemByID(orderItemID, orderID int) (*response.OrderItemData, error)
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
 
 		MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error)
@@ -29,6 +29,7 @@ type (
 		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
 		GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error)
 		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error)
+		RejectTempOrderByID(id int) (response.TempOrderData, error)
 	}
 
 	oservice struct{}
@@ -287,14 +288,14 @@ func (o *oservice) DeleteOrderItemByID(orderItemID, orderID int) error {
 	return nil
 }
 
-func (o *oservice) GetOrderItemByID(orderItemID, orderID int) (response.OrderItemData, error) {
+func (o *oservice) GetOrderItemByID(orderItemID, orderID int) (*response.OrderItemData, error) {
 	orderItem, err := orderItemStore.GetOrderItemByID(orderItemID)
 	if err != nil {
-		return response.OrderItemData{}, err
+		return nil, err
 	}
 
 	if orderItem == nil {
-		return response.OrderItemData{}, nil
+		return nil, errors.New("order item not found")
 	}
 
 	res := response.OrderItemData{
@@ -307,10 +308,11 @@ func (o *oservice) GetOrderItemByID(orderItemID, orderID int) (response.OrderIte
 	}
 
 	if orderItem.UpdatedAt.Valid {
-		res.UpdatedAt = &orderItem.UpdatedAt.Time
+		t := orderItem.UpdatedAt.Time
+		res.UpdatedAt = &t
 	}
 
-	return res, nil
+	return &res, nil
 }
 
 func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error) {
@@ -330,7 +332,8 @@ func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData
 		}
 
 		if orderItem.UpdatedAt.Valid {
-			res.UpdatedAt = &orderItem.UpdatedAt.Time
+			t := orderItem.UpdatedAt.Time
+			res.UpdatedAt = &t
 		}
 
 		orderItemsData = append(orderItemsData, res)
@@ -487,6 +490,21 @@ func (o *oservice) MergeTempOrder(tempOrderID, customerID, shopID int, activeOrd
 	return o.resolveActiveOrderConflict(tempOrderID, shopID, *activeOrderID)
 }
 
+func (o *oservice) RejectTempOrderByID(id int) (response.TempOrderData, error) {
+	tempOrder, err := o.GetTempOrderByID(id)
+	if err != nil {
+		return response.TempOrderData{}, err
+	}
+
+	err = orderStore.UpdateTempOrderStatus(nil, id, constant.TempOrderStatusRejected)
+	if err != nil {
+		return response.TempOrderData{}, err
+	}
+
+	tempOrder.Status = constant.TempOrderStatusRejected
+
+	return *tempOrder, nil
+}
 
 func (o *oservice) createOrderFromTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error) {
 	tempOrder, err := o.GetTempOrderByID(tempOrderID, shopID)

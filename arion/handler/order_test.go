@@ -936,6 +936,8 @@ func TestDeleteOrderItemHandler(t *testing.T) {
 }
 
 func TestGetOrderItemHandler(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -956,13 +958,13 @@ func TestGetOrderItemHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetOrderItemByID(1, 1).
-					Return(response.OrderItemData{
+					Return(&response.OrderItemData{
 						ID:          1,
 						OrderID:     1,
 						ProductName: "Product A",
 						Price:       5000,
 						Qty:         2,
-						CreatedAt:   time.Now(),
+						CreatedAt:   fixedTime,
 					}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -974,7 +976,7 @@ func TestGetOrderItemHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetOrderItemByID(999, 1).
-					Return(response.OrderItemData{}, errors.New("order item not found"))
+					Return(nil, errors.New("order item not found"))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
@@ -1430,6 +1432,121 @@ func TestGetTempOrderHandler(t *testing.T) {
 				}
 				if !reflect.DeepEqual(actual, *tt.wantTempOrder) {
 					t.Errorf("GetTempOrderHandler() data = %+v, want %+v", actual, *tt.wantTempOrder)
+				}
+			}
+		})
+	}
+}
+
+func TestRejectTempOrderHandler(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	tests := []struct {
+		name           string
+		shopID         int
+		pathVars       map[string]string
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantTempOrder  *response.TempOrderData
+		wantErrMessage string
+	}{
+		{
+			name:     "successfully reject temp order",
+			shopID:   1,
+			pathVars: map[string]string{"temp_order_id": "10"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					RejectTempOrderByID(10).
+					Return(response.TempOrderData{
+						ID:            10,
+						CustomerName:  "Jane",
+						CustomerPhone: "+62812345678",
+						TotalPrice:    2500,
+						Status:        "rejected",
+						TempOrderItems: []response.TempOrderItemData{
+							{ID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+						},
+						CreatedAt: fixedTime,
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantTempOrder: &response.TempOrderData{
+				ID:            10,
+				CustomerName:  "Jane",
+				CustomerPhone: "+62812345678",
+				TotalPrice:    2500,
+				Status:        "rejected",
+				TempOrderItems: []response.TempOrderItemData{
+					{ID: 1, ProductName: "Product A", Price: 1000, Qty: 2, CreatedAt: fixedTime},
+				},
+				CreatedAt: fixedTime,
+			},
+		},
+		{
+			name:     "reject temp order returns 500 on service failure",
+			shopID:   1,
+			pathVars: map[string]string{"temp_order_id": "10"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					RejectTempOrderByID(10).
+					Return(response.TempOrderData{}, errors.New("temp order not found"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "temp order not found",
+		},
+		{
+			name:           "reject temp order returns 400 on missing temp_order_id",
+			shopID:         1,
+			pathVars:       map[string]string{},
+			mockSetup:      func() {},
+			wantStatus:     http.StatusBadRequest,
+			wantSuccess:    false,
+			wantErrMessage: "temp_order_id is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := newRequestWithShopID("PATCH", "/temp_orders/10/reject", nil, tt.shopID)
+			req = newRequestWithPathVars(req, tt.pathVars)
+			rec := httptest.NewRecorder()
+
+			handler.RejectTempOrderHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("RejectTempOrderHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("RejectTempOrderHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("RejectTempOrderHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+			if tt.wantTempOrder != nil {
+				dataBytes, err := json.Marshal(resp.Data)
+				if err != nil {
+					t.Fatalf("RejectTempOrderHandler() marshal data: %v", err)
+				}
+				var actual response.TempOrderData
+				if err := json.Unmarshal(dataBytes, &actual); err != nil {
+					t.Fatalf("RejectTempOrderHandler() unmarshal data: %v", err)
+				}
+				if !reflect.DeepEqual(actual, *tt.wantTempOrder) {
+					t.Errorf("RejectTempOrderHandler() data = %+v, want %+v", actual, *tt.wantTempOrder)
 				}
 			}
 		})
