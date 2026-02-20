@@ -406,6 +406,11 @@ export const api = {
     })
   },
 
+  // Purchase list
+  getPurchaseListProducts: () => {
+    return apiRequest<ApiResponse<any[]>>('/products/purchase_list')
+  },
+
   // Health check
   health: () => {
     return apiRequest<ApiResponse>('/health')

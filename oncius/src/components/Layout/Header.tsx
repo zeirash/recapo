@@ -18,6 +18,7 @@ const Header = () => {
     { href: '/dashboard', label: t('dashboard') },
     { href: '/products', label: t('products') },
     { href: '/orders', label: t('orders') },
+    { href: '/purchase', label: t('purchase') },
     { href: '/customers', label: t('customers') },
   ]
 

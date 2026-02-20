@@ -25,6 +25,7 @@
     "products": "Products",
     "orders": "Orders",
     "tempOrders": "Temp Orders",
+    "purchase": "Purchase",
     "customers": "Customers",
     "login": "Login",
     "register": "Register",
@@ -239,5 +240,12 @@
     "total": "Total",
     "orderSuccess": "Order submitted successfully",
     "orderFailed": "Failed to submit order"
+  },
+  "purchase": {
+    "title": "Purchase List",
+    "description": "Products that need to be purchased for active orders",
+    "note": "Note: Quantities shown are based on order items from orders with status 'Created' or 'In Progress'.",
+    "fetchFailed": "Failed to load purchase list",
+    "empty": "No products need to be purchased at this time"
   }
 }

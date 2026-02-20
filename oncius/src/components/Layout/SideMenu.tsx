@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Box, Flex, Text, Button } from 'theme-ui'
 import { useRouter, usePathname } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
 
@@ -13,6 +13,7 @@ interface SideMenuProps {
 }
 
 const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
+  const t = useTranslations('nav')
   const { user, logout } = useAuth()
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const router = useRouter()
@@ -21,11 +22,12 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const changeLocale = useChangeLocale()
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '🏠', path: '/dashboard' },
-    { id: 'products', label: 'Products', icon: '🛍️', path: '/products' },
-    { id: 'orders', label: 'Orders', icon: '📦', path: '/orders' },
-    { id: 'temp_orders', label: 'Temp Orders', icon: '📋', path: '/temp_orders' },
-    { id: 'customers', label: 'Customers', icon: '👥', path: '/customers' },
+    { id: 'dashboard', label: t('dashboard'), icon: '🏠', path: '/dashboard' },
+    { id: 'products', label: t('products'), icon: '🛍️', path: '/products' },
+    { id: 'orders', label: t('orders'), icon: '📦', path: '/orders' },
+    { id: 'temp_orders', label: t('tempOrders'), icon: '📋', path: '/temp_orders' },
+    { id: 'purchase', label: t('purchase'), icon: '🛒', path: '/purchase' },
+    { id: 'customers', label: t('customers'), icon: '👥', path: '/customers' },
   ]
 
   const handleMenuClick = (item: typeof menuItems[0]) => {

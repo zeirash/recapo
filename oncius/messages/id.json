@@ -25,6 +25,7 @@
     "products": "Produk",
     "orders": "Pesanan",
     "tempOrders": "Pesanan Sementara",
+    "purchase": "Pembelian",
     "customers": "Pelanggan",
     "login": "Masuk",
     "register": "Daftar",
@@ -239,5 +240,12 @@
     "total": "Total",
     "orderSuccess": "Pesanan berhasil dikirim",
     "orderFailed": "Gagal mengirim pesanan"
+  },
+  "purchase": {
+    "title": "Daftar Pembelian",
+    "description": "Produk yang perlu dibeli untuk pesanan aktif",
+    "note": "Catatan: Jumlah yang ditampilkan berdasarkan item pesanan dari pesanan dengan status 'Dibuat' atau 'Diproses'.",
+    "fetchFailed": "Gagal memuat daftar pembelian",
+    "empty": "Tidak ada produk yang perlu dibeli saat ini"
   }
 }
