@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/service"
@@ -544,6 +545,10 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
 	opts := model.OrderFilterOptions{}
+	status := constant.TempOrderStatusPending // default status filter is pending
+	if s := r.URL.Query().Get("status"); s != "" {
+		status = s
+	}
 	if q := r.URL.Query().Get("search"); q != "" {
 		opts.SearchQuery = &q
 	}
@@ -558,6 +563,7 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 			opts.DateTo = &endOfDay
 		}
 	}
+	opts.Status = &status
 
 	res, err := orderService.GetTempOrdersByShopID(shopID, opts)
 	if err != nil {

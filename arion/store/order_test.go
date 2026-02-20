@@ -858,6 +858,22 @@ func Test_order_GetTempOrdersByShopID(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:   "get temp orders with status filter",
+			shopID: 5,
+			opts: model.OrderFilterOptions{Status: strPtr("pending")},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "customer_phone", "total_price", "status", "created_at", "updated_at"}).
+					AddRow(1, 5, "Jane Doe", "+62812345678", 2500, "pending", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+AND status = \$2`).
+					WithArgs(5, "pending").
+					WillReturnRows(rows)
+			},
+			wantResult: []model.TempOrder{
+				{ID: 1, ShopID: 5, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{}},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

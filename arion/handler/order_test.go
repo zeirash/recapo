@@ -111,6 +111,21 @@ func TestCreateOrderHandler(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
+		{
+			name: "create order returns error customer already has an active order",
+			body: map[string]interface{}{
+				"customer_id": 1,
+			},
+			shopID: 1,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					CreateOrder(1, 1, nil).
+					Return(response.OrderData{}, errors.New("customer already has an active order"))
+			},
+			wantStatus:     http.StatusConflict,
+			wantSuccess:    false,
+			wantErrMessage: "customer already has an active order",
+		},
 	}
 
 	for _, tt := range tests {
@@ -1547,6 +1562,251 @@ func TestRejectTempOrderHandler(t *testing.T) {
 				}
 				if !reflect.DeepEqual(actual, *tt.wantTempOrder) {
 					t.Errorf("RejectTempOrderHandler() data = %+v, want %+v", actual, *tt.wantTempOrder)
+				}
+			}
+		})
+	}
+}
+
+func TestGetTempOrdersHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	type queryOpts struct {
+		status   string
+		search   string
+		dateFrom string
+		dateTo   string
+	}
+
+	tests := []struct {
+		name           string
+		shopID         int
+		opts           queryOpts
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantCount      int
+		wantErrMessage string
+	}{
+		{
+			name:   "successfully get temp orders with default status",
+			shopID: 1,
+			mockSetup: func() {
+				status := "pending"
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					Return([]response.TempOrderData{
+						{
+							ID:            1,
+							CustomerName:  "John Doe",
+							CustomerPhone: "123456789",
+							TotalPrice:    10000,
+							Status:        "pending",
+							CreatedAt:     time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
+		},
+		{
+			name:   "successfully get temp orders with custom status",
+			shopID: 1,
+			opts:   queryOpts{status: "accepted"},
+			mockSetup: func() {
+				status := "accepted"
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					Return([]response.TempOrderData{
+						{
+							ID:            2,
+							CustomerName:  "Jane Doe",
+							CustomerPhone: "987654321",
+							TotalPrice:    20000,
+							Status:        "accepted",
+							CreatedAt:     time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
+		},
+		{
+			name:   "successfully get temp orders returns empty list",
+			shopID: 1,
+			mockSetup: func() {
+				status := "pending"
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					Return([]response.TempOrderData{}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   0,
+		},
+		{
+			name:   "get temp orders with search query passes search to service",
+			shopID: 1,
+			opts:   queryOpts{search: "john"},
+			mockSetup: func() {
+				status := "pending"
+				q := "john"
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q, Status: &status}).
+					Return([]response.TempOrderData{
+						{
+							ID:            1,
+							CustomerName:  "John Doe",
+							CustomerPhone: "123456789",
+							TotalPrice:    10000,
+							Status:        "pending",
+							CreatedAt:     time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
+		},
+		{
+			name:   "get temp orders with date_from passes filter to service",
+			shopID: 1,
+			opts:   queryOpts{dateFrom: "2024-01-01"},
+			mockSetup: func() {
+				status := "pending"
+				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &df, Status: &status}).
+					Return([]response.TempOrderData{
+						{
+							ID:            1,
+							CustomerName:  "John Doe",
+							CustomerPhone: "123456789",
+							TotalPrice:    10000,
+							Status:        "pending",
+							CreatedAt:     time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
+		},
+		{
+			name:   "get temp orders with date_to passes filter to service",
+			shopID: 1,
+			opts:   queryOpts{dateTo: "2024-01-31"},
+			mockSetup: func() {
+				status := "pending"
+				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC) // handler adds 24h for inclusive end of day
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{DateTo: &dt, Status: &status}).
+					Return([]response.TempOrderData{
+						{
+							ID:            1,
+							CustomerName:  "John Doe",
+							CustomerPhone: "123456789",
+							TotalPrice:    10000,
+							Status:        "pending",
+							CreatedAt:     time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
+		},
+		{
+			name:   "get temp orders with all filters passes all to service",
+			shopID: 1,
+			opts:   queryOpts{status: "accepted", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31"},
+			mockSetup: func() {
+				status := "accepted"
+				q := "john"
+				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q, DateFrom: &df, DateTo: &dt, Status: &status}).
+					Return([]response.TempOrderData{
+						{
+							ID:            1,
+							CustomerName:  "John Doe",
+							CustomerPhone: "123456789",
+							TotalPrice:    10000,
+							Status:        "accepted",
+							CreatedAt:     time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
+		},
+		{
+			name:   "get temp orders returns error on service failure",
+			shopID: 1,
+			mockSetup: func() {
+				status := "pending"
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					Return(nil, errors.New("database error"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "database error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			path := "/temp_orders"
+			var params []string
+			if tt.opts.status != "" {
+				params = append(params, "status="+tt.opts.status)
+			}
+			if tt.opts.search != "" {
+				params = append(params, "search="+tt.opts.search)
+			}
+			if tt.opts.dateFrom != "" {
+				params = append(params, "date_from="+tt.opts.dateFrom)
+			}
+			if tt.opts.dateTo != "" {
+				params = append(params, "date_to="+tt.opts.dateTo)
+			}
+			if len(params) > 0 {
+				path += "?" + strings.Join(params, "&")
+			}
+			req := newRequestWithShopID("GET", path, nil, tt.shopID)
+			rec := httptest.NewRecorder()
+
+			handler.GetTempOrdersHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("GetTempOrdersHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("GetTempOrdersHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("GetTempOrdersHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+			if tt.wantCount >= 0 {
+				orders, ok := resp.Data.([]interface{})
+				if !ok && tt.wantCount > 0 {
+					t.Errorf("GetTempOrdersHandler() data = %T, want array", resp.Data)
+				} else if ok && len(orders) != tt.wantCount {
+					t.Errorf("GetTempOrdersHandler() data count = %v, want %v", len(orders), tt.wantCount)
 				}
 			}
 		})
