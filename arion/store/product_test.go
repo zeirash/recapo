@@ -9,6 +9,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/lib/pq"
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/model"
 )
 
@@ -613,6 +614,83 @@ func Test_product_DeleteProductByID(t *testing.T) {
 			}
 			if tt.wantErr {
 				t.Fatal("DeleteProductByID() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
+func Test_product_GetProductsListByActiveOrders(t *testing.T) {
+	tests := []struct {
+		name      string
+		shopID    int
+		mockSetup func(mock sqlmock.Sqlmock)
+		want      []model.PurchaseProduct
+		wantErr   bool
+	}{
+		{
+			name:   "returns aggregated products from active orders",
+			shopID: 10,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"name", "price", "qty"}).
+					AddRow("Product A", 1000, 5).
+					AddRow("Product B", 2000, 3)
+				mock.ExpectQuery(`SELECT p\.name, p\.price, COALESCE\(SUM\(oi\.qty\), 0\)::int AS qty\s+FROM products p\s+INNER JOIN order_items oi ON p\.id = oi\.product_id\s+INNER JOIN orders o ON oi\.order_id = o\.id\s+WHERE o\.shop_id = \$1 AND o\.status IN \(\$2, \$3\)\s+GROUP BY p\.id, p\.name, p\.price`).
+					WithArgs(10, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+					WillReturnRows(rows)
+			},
+			want: []model.PurchaseProduct{
+				{ProductName: "Product A", Price: 1000, Qty: 5},
+				{ProductName: "Product B", Price: 2000, Qty: 3},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "returns empty list when no active order products",
+			shopID: 20,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"name", "price", "qty"})
+				mock.ExpectQuery(`SELECT p\.name, p\.price, COALESCE\(SUM\(oi\.qty\), 0\)::int AS qty\s+FROM products p\s+INNER JOIN order_items oi ON p\.id = oi\.product_id\s+INNER JOIN orders o ON oi\.order_id = o\.id\s+WHERE o\.shop_id = \$1 AND o\.status IN \(\$2, \$3\)\s+GROUP BY p\.id, p\.name, p\.price`).
+					WithArgs(20, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+					WillReturnRows(rows)
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name:   "returns error on database failure",
+			shopID: 10,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT p\.name, p\.price, COALESCE\(SUM\(oi\.qty\), 0\)::int AS qty\s+FROM products p\s+INNER JOIN order_items oi ON p\.id = oi\.product_id\s+INNER JOIN orders o ON oi\.order_id = o\.id\s+WHERE o\.shop_id = \$1 AND o\.status IN \(\$2, \$3\)\s+GROUP BY p\.id, p\.name, p\.price`).
+					WithArgs(10, constant.OrderStatusCreated, constant.OrderStatusInProgress).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewProductStoreWithDB(db)
+
+			got, gotErr := store.GetProductsListByActiveOrders(tt.shopID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetProductsListByActiveOrders() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetProductsListByActiveOrders() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetProductsListByActiveOrders() = %v, want %v", got, tt.want)
 			}
 		})
 	}

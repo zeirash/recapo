@@ -99,6 +99,21 @@ func (mr *MockProductServiceMockRecorder) GetProductsByShopID(shopID, searchQuer
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByShopID", reflect.TypeOf((*MockProductService)(nil).GetProductsByShopID), shopID, searchQuery)
 }
 
+// GetPurchaseListProducts mocks base method.
+func (m *MockProductService) GetPurchaseListProducts(shopID int) ([]response.PurchaseListProductData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPurchaseListProducts", shopID)
+	ret0, _ := ret[0].([]response.PurchaseListProductData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPurchaseListProducts indicates an expected call of GetPurchaseListProducts.
+func (mr *MockProductServiceMockRecorder) GetPurchaseListProducts(shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPurchaseListProducts", reflect.TypeOf((*MockProductService)(nil).GetPurchaseListProducts), shopID)
+}
+
 // UpdateProduct mocks base method.
 func (m *MockProductService) UpdateProduct(input service.UpdateProductInput) (response.ProductData, error) {
 	m.ctrl.T.Helper()

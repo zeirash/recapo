@@ -545,3 +545,95 @@ func TestDeleteProductHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestPurchaseListProductHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetProductService()
+	defer handler.SetProductService(oldService)
+
+	mockProductService := mock_service.NewMockProductService(ctrl)
+	handler.SetProductService(mockProductService)
+
+	tests := []struct {
+		name           string
+		shopID         int
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantCount      int
+		wantErrMessage string
+	}{
+		{
+			name:   "returns purchase list products",
+			shopID: 10,
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					GetPurchaseListProducts(10).
+					Return([]response.PurchaseListProductData{
+						{ProductName: "Product A", Price: 1000, Qty: 5},
+						{ProductName: "Product B", Price: 2000, Qty: 3},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   2,
+		},
+		{
+			name:   "returns empty list when no active order products",
+			shopID: 20,
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					GetPurchaseListProducts(20).
+					Return([]response.PurchaseListProductData{}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   0,
+		},
+		{
+			name:   "returns 500 on service error",
+			shopID: 10,
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					GetPurchaseListProducts(10).
+					Return(nil, errors.New("database error"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "database error",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := newRequestWithShopID("GET", "/products/purchase_list", nil, tt.shopID)
+			rec := httptest.NewRecorder()
+
+			handler.PurchaseListProductHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("PurchaseListProductHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("PurchaseListProductHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("PurchaseListProductHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+			if tt.wantCount >= 0 {
+				products, ok := resp.Data.([]interface{})
+				if !ok && tt.wantCount > 0 {
+					t.Errorf("PurchaseListProductHandler() data = %T, want array", resp.Data)
+				} else if ok && len(products) != tt.wantCount {
+					t.Errorf("PurchaseListProductHandler() data count = %v, want %v", len(products), tt.wantCount)
+				}
+			}
+		})
+	}
+}

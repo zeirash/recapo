@@ -75,6 +75,12 @@ type (
 		UpdatedAt     sql.NullTime `db:"updated_at"`
 	}
 
+	PurchaseProduct struct {
+		ProductName string `db:"name"`
+		Price       int    `db:"price"`
+		Qty         int    `db:"qty"`
+	}
+
 	/******************** Order **********************/
 	// OrderFilterOptions holds optional filters for listing orders.
 	// Used by handler and service; store consumes it. Add fields as needed (e.g. Status, CustomerID).

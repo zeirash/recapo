@@ -86,4 +86,10 @@ type (
 		Qty         int        `json:"qty"`
 		CreatedAt   time.Time  `json:"created_at"`
 	}
+
+	PurchaseListProductData struct {
+		ProductName string `json:"product_name"`
+		Price       int    `json:"price"`
+		Qty         int    `json:"qty"`
+	}
 )

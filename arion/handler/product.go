@@ -222,6 +222,32 @@ func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, "OK")
 }
 
+// PurchaseListProductHandler godoc
+//
+//	@Summary		List purchase list products
+//	@Description	Get all products that needs to be purchased (for the shop that have active orders).
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			product
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200		{array}	response.PurchaseListProductData
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/products/purchase_list [get]
+func PurchaseListProductHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+
+	res, err := productService.GetPurchaseListProducts(shopID)
+	if err != nil {
+		logger.WithError(err).Error("get_purchase_list_products_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_purchase_list_products")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
 func validateCreateProduct(inp CreateProductRequest) (bool, error) {
 	if inp.Name == "" {
 		return false, errors.New("name is required")

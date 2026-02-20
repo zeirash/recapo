@@ -70,9 +70,10 @@ func NewRouter() *mux.Router {
 	// For Shop
 	r.Handle("/shop/share_token", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetShopShareTokenHandler))).Methods("GET")
 
-	// For Product
+	// For Product (register literal paths before /products/{product_id} so they match first)
 	r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateProductHandler))).Methods("POST")
 	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")
+	r.Handle("/products/purchase_list", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.PurchaseListProductHandler))).Methods("GET")
 	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateProductHandler))).Methods("PATCH")
 	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteProductHandler))).Methods("DELETE")
 	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductHandler))).Methods("GET")
@@ -91,8 +92,8 @@ func NewRouter() *mux.Router {
 
 	// For Temp Order
 	r.Handle("/temp_orders", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrdersHandler))).Methods("GET")
-	r.Handle("/temp_orders/{temp_order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrderHandler))).Methods("GET")
 	r.Handle("/temp_orders/merge", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.MergeTempOrderHandler))).Methods("POST")
+	r.Handle("/temp_orders/{temp_order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrderHandler))).Methods("GET")
 	r.Handle("/temp_orders/{temp_order_id}/reject", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.RejectTempOrderHandler))).Methods("PATCH")
 
 	// For System

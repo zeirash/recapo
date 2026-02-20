@@ -15,6 +15,7 @@ type (
 		GetProductsByShopID(shopID int, searchQuery *string) ([]response.ProductData, error)
 		UpdateProduct(input UpdateProductInput) (response.ProductData, error)
 		DeleteProductByID(id int) error
+		GetPurchaseListProducts(shopID int) ([]response.PurchaseListProductData, error)
 	}
 
 	pservice struct{}
@@ -149,4 +150,22 @@ func (p *pservice) DeleteProductByID(id int) error {
 	}
 
 	return nil
+}
+
+func (p *pservice) GetPurchaseListProducts(shopID int) ([]response.PurchaseListProductData, error) {
+	products, err := productStore.GetProductsListByActiveOrders(shopID)
+	if err != nil {
+		return []response.PurchaseListProductData{}, err
+	}
+
+	productsData := []response.PurchaseListProductData{}
+	for _, product := range products {
+		productsData = append(productsData, response.PurchaseListProductData{
+			ProductName: product.ProductName,
+			Price:       product.Price,
+			Qty:         product.Qty,
+		})
+	}
+
+	return productsData, nil
 }

@@ -596,3 +596,84 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 		})
 	}
 }
+
+func Test_pservice_GetPurchaseListProducts(t *testing.T) {
+	tests := []struct {
+		name      string
+		shopID    int
+		mockSetup func(ctrl *gomock.Controller) *mock_store.MockProductStore
+		want      []response.PurchaseListProductData
+		wantErr   bool
+	}{
+		{
+			name:   "returns purchase list products from store",
+			shopID: 10,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
+				mock := mock_store.NewMockProductStore(ctrl)
+				mock.EXPECT().
+					GetProductsListByActiveOrders(10).
+					Return([]model.PurchaseProduct{
+						{ProductName: "Product A", Price: 1000, Qty: 5},
+						{ProductName: "Product B", Price: 2000, Qty: 3},
+					}, nil)
+				return mock
+			},
+			want: []response.PurchaseListProductData{
+				{ProductName: "Product A", Price: 1000, Qty: 5},
+				{ProductName: "Product B", Price: 2000, Qty: 3},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "returns empty list when store returns no products",
+			shopID: 20,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
+				mock := mock_store.NewMockProductStore(ctrl)
+				mock.EXPECT().
+					GetProductsListByActiveOrders(20).
+					Return([]model.PurchaseProduct{}, nil)
+				return mock
+			},
+			want:    []response.PurchaseListProductData{},
+			wantErr: false,
+		},
+		{
+			name:   "returns error when store fails",
+			shopID: 10,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
+				mock := mock_store.NewMockProductStore(ctrl)
+				mock.EXPECT().
+					GetProductsListByActiveOrders(10).
+					Return(nil, errors.New("database error"))
+				return mock
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldStore := productStore
+			defer func() { productStore = oldStore }()
+			productStore = tt.mockSetup(ctrl)
+
+			var p pservice
+			got, gotErr := p.GetPurchaseListProducts(tt.shopID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetPurchaseListProducts() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetPurchaseListProducts() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetPurchaseListProducts() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
 )
@@ -21,6 +22,7 @@ type (
 		CreateProduct(name string, description *string, price int, shopID int, originalPrice *int) (*model.Product, error)
 		UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error)
 		DeleteProductByID(productID int) error
+		GetProductsListByActiveOrders(shopID int) ([]model.PurchaseProduct, error)
 	}
 
 	product struct {
@@ -196,6 +198,36 @@ func (p *product) DeleteProductByID(productID int) error {
 	}
 
 	return nil
+}
+
+func (p *product) GetProductsListByActiveOrders(shopID int) ([]model.PurchaseProduct, error) {
+	q := `
+		SELECT p.name, p.price, COALESCE(SUM(oi.qty), 0)::int AS qty
+		FROM products p
+		INNER JOIN order_items oi ON p.id = oi.product_id
+		INNER JOIN orders o ON oi.order_id = o.id
+		WHERE o.shop_id = $1 AND o.status IN ($2, $3)
+		GROUP BY p.id, p.name, p.price
+	`
+	rows, err := p.db.Query(q, shopID, constant.OrderStatusCreated, constant.OrderStatusInProgress)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []model.PurchaseProduct
+	for rows.Next() {
+		var pp model.PurchaseProduct
+		if err := rows.Scan(&pp.ProductName, &pp.Price, &pp.Qty); err != nil {
+			return nil, err
+		}
+		list = append(list, pp)
+	}
+
+	return list, nil
 }
 
 // isProductUniqueViolation checks if the error is a PostgreSQL unique constraint violation
