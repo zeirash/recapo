@@ -214,6 +214,29 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:   "get orders by shop ID with status filter",
+			shopID: 10,
+			opts:   model.OrderFilterOptions{Status: strPtr("in_progress")},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
+					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil)
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND o.status = \$2`).
+					WithArgs(10, "in_progress").
+					WillReturnRows(rows)
+			},
+			wantResult: []model.Order{
+				{
+					ID:           1,
+					ShopID:       10,
+					CustomerName: "John Doe",
+					TotalPrice:   5000,
+					Status:       "in_progress",
+					CreatedAt:    fixedTime,
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name:   "get orders by shop ID with date range filters by created_at",
 			shopID: 10,
 			opts: model.OrderFilterOptions{

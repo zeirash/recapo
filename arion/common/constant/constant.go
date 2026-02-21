@@ -9,13 +9,14 @@ const (
 
 // Order status constants
 const (
+	FilterStatusAll       = "all"
+
 	OrderStatusCreated    = "created"
 	OrderStatusInProgress = "in_progress"
 	OrderStatusInDelivery = "in_delivery"
 	OrderStatusDone       = "done"
 	OrderStatusCancelled  = "cancelled"
 
-	TempOrderStatusAll       = "all"
 	TempOrderStatusPending   = "pending"
 	TempOrderStatusAccepted  = "accepted"
 	TempOrderStatusRejected  = "rejected"

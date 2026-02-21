@@ -269,6 +269,7 @@ func TestGetOrdersHandler(t *testing.T) {
 		search   string
 		dateFrom string
 		dateTo   string
+		status   string
 	}
 
 	tests := []struct {
@@ -281,8 +282,9 @@ func TestGetOrdersHandler(t *testing.T) {
 		wantErrMessage string
 	}{
 		{
-			name:   "successfully get orders",
+			name:   "successfully get orders with all filters status",
 			shopID: 1,
+			opts:   queryOpts{status: "all"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetOrdersByShopID(1, model.OrderFilterOptions{}).
@@ -389,6 +391,21 @@ func TestGetOrdersHandler(t *testing.T) {
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
+		{
+			name:   "get orders with status filter passes to service",
+			shopID: 1,
+			opts:   queryOpts{status: "created"},
+			mockSetup: func() {
+				status := "created"
+				mockOrderService.EXPECT().
+					GetOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					Return([]response.OrderData{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -405,6 +422,9 @@ func TestGetOrdersHandler(t *testing.T) {
 			}
 			if tt.opts.dateTo != "" {
 				params = append(params, "date_to="+tt.opts.dateTo)
+			}
+			if tt.opts.status != "" {
+				params = append(params, "status="+tt.opts.status)
 			}
 			if len(params) > 0 {
 				path += "?" + strings.Join(params, "&")
@@ -1593,7 +1613,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		wantErrMessage string
 	}{
 		{
-			name:   "successfully get temp orders with no status",
+			name:   "successfully get temp orders with all filters status",
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
@@ -1718,7 +1738,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			wantCount:   1,
 		},
 		{
-			name:   "get temp orders with all filters passes all to service",
+			name:   "get temp orders with rejected status filter passes to service",
 			shopID: 1,
 			opts:   queryOpts{status: "rejected", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31"},
 			mockSetup: func() {

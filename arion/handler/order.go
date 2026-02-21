@@ -150,6 +150,9 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
 	opts := model.OrderFilterOptions{}
+	if s := r.URL.Query().Get("status"); s != "" && s != constant.FilterStatusAll {
+		opts.Status = &s
+	}
 	if q := r.URL.Query().Get("search"); q != "" {
 		opts.SearchQuery = &q
 	}
@@ -545,7 +548,7 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
 	opts := model.OrderFilterOptions{}
-	if s := r.URL.Query().Get("status"); s != "" && s != constant.TempOrderStatusAll {
+	if s := r.URL.Query().Get("status"); s != "" && s != constant.FilterStatusAll {
 		opts.Status = &s
 	}
 	if q := r.URL.Query().Get("search"); q != "" {

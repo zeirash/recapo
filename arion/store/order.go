@@ -99,6 +99,11 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 		args = append(args, *opts.DateTo)
 		argNum++
 	}
+	if opts.Status != nil {
+		q += fmt.Sprintf(" AND o.status = $%d", argNum)
+		args = append(args, *opts.Status)
+		argNum++
+	}
 
 	rows, err := o.db.Query(q, args...)
 	if err != nil {
