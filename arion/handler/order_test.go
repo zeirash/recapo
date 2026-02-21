@@ -1593,12 +1593,11 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		wantErrMessage string
 	}{
 		{
-			name:   "successfully get temp orders with default status",
+			name:   "successfully get temp orders with no status",
 			shopID: 1,
 			mockSetup: func() {
-				status := "pending"
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1641,9 +1640,8 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			name:   "successfully get temp orders returns empty list",
 			shopID: 1,
 			mockSetup: func() {
-				status := "pending"
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return([]response.TempOrderData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -1654,11 +1652,10 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			name:   "get temp orders with search query passes search to service",
 			shopID: 1,
 			opts:   queryOpts{search: "john"},
-			mockSetup: func() {
-				status := "pending"
+				mockSetup: func() {
 				q := "john"
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q, Status: &status}).
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1679,10 +1676,9 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			shopID: 1,
 			opts:   queryOpts{dateFrom: "2024-01-01"},
 			mockSetup: func() {
-				status := "pending"
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &df, Status: &status}).
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &df}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1703,10 +1699,9 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			shopID: 1,
 			opts:   queryOpts{dateTo: "2024-01-31"},
 			mockSetup: func() {
-				status := "pending"
 				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC) // handler adds 24h for inclusive end of day
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{DateTo: &dt, Status: &status}).
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{DateTo: &dt}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1725,9 +1720,9 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		{
 			name:   "get temp orders with all filters passes all to service",
 			shopID: 1,
-			opts:   queryOpts{status: "accepted", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31"},
+			opts:   queryOpts{status: "rejected", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31"},
 			mockSetup: func() {
-				status := "accepted"
+				status := "rejected"
 				q := "john"
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
@@ -1739,7 +1734,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 							CustomerName:  "John Doe",
 							CustomerPhone: "123456789",
 							TotalPrice:    10000,
-							Status:        "accepted",
+							Status:        "rejected",
 							CreatedAt:     time.Now(),
 						},
 					}, nil)
@@ -1752,9 +1747,8 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			name:   "get temp orders returns error on service failure",
 			shopID: 1,
 			mockSetup: func() {
-				status := "pending"
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{}).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
