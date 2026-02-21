@@ -187,6 +187,10 @@
   "tempOrders": {
     "title": "Pesanan Sementara",
     "searchPlaceholder": "Cari pesanan sementara",
+    "filterAll": "Semua",
+    "filterPending": "Pending",
+    "filterAccepted": "Diterima",
+    "filterRejected": "Ditolak",
     "noOrders": "Tidak ada pesanan sementara",
     "selectOrder": "Pilih pesanan sementara untuk melihat detail",
     "orderNumber": "Pesanan sementara #{id}",

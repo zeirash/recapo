@@ -43,6 +43,7 @@ export default function TempOrdersPage() {
   const [selectedTempOrderId, setSelectedTempOrderId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('pending')
   const [acceptLoading, setAcceptLoading] = useState(false)
   const [acceptError, setAcceptError] = useState<string | null>(null)
   const [acceptSuccess, setAcceptSuccess] = useState(false)
@@ -58,9 +59,11 @@ export default function TempOrdersPage() {
   }, [searchInput])
 
   const { data: tempOrdersRes, isLoading, isError, error } = useQuery(
-    ['temp_orders', debouncedSearch],
+    ['temp_orders', debouncedSearch, statusFilter],
     async () => {
-      const res = await api.getTempOrders(debouncedSearch ? { search: debouncedSearch } : undefined)
+      const opts: { search?: string; status: string } = { status: statusFilter }
+      if (debouncedSearch) opts.search = debouncedSearch
+      const res = await api.getTempOrders(opts)
       if (!res.success) throw new Error(res.message || tTemp('fetchFailed'))
       return res.data as TempOrder[]
     },
@@ -150,7 +153,7 @@ export default function TempOrdersPage() {
       if (mergeRes.success) {
         setAcceptSuccess(true)
         await Promise.all([
-          queryClient.invalidateQueries(['temp_orders', debouncedSearch]),
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter]),
           queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
         ])
       } else {
@@ -161,7 +164,7 @@ export default function TempOrdersPage() {
     } finally {
       setAcceptLoading(false)
     }
-  }, [selectedTempOrder, tTemp, queryClient, debouncedSearch])
+  }, [selectedTempOrder, tTemp, queryClient, debouncedSearch, statusFilter])
 
   const handleConfirmMergeIntoActiveOrder = useCallback(async () => {
     if (!selectedTempOrder || !conflictData) return
@@ -178,7 +181,7 @@ export default function TempOrdersPage() {
         setShowActiveOrderConflictDialog(false)
         setConflictData(null)
         await Promise.all([
-          queryClient.invalidateQueries(['temp_orders', debouncedSearch]),
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter]),
           queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
         ])
       } else {
@@ -189,7 +192,7 @@ export default function TempOrdersPage() {
     } finally {
       setAcceptLoading(false)
     }
-  }, [selectedTempOrder, conflictData, tTemp, queryClient, debouncedSearch])
+  }, [selectedTempOrder, conflictData, tTemp, queryClient, debouncedSearch, statusFilter])
 
   const handleReject = useCallback(async () => {
     if (!selectedTempOrder) return
@@ -203,7 +206,7 @@ export default function TempOrdersPage() {
       if (res.success) {
         setRejectSuccess(true)
         await Promise.all([
-          queryClient.invalidateQueries(['temp_orders', debouncedSearch]),
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter]),
           queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
         ])
       } else {
@@ -214,7 +217,7 @@ export default function TempOrdersPage() {
     } finally {
       setRejectLoading(false)
     }
-  }, [selectedTempOrder, tTemp, queryClient, debouncedSearch])
+  }, [selectedTempOrder, tTemp, queryClient, debouncedSearch, statusFilter])
 
   return (
     <Layout>
@@ -247,6 +250,27 @@ export default function TempOrdersPage() {
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder={tTemp('searchPlaceholder')}
                   />
+                  <Box sx={{ mt: 3 }}>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                      style={{
+                        width: '100px',
+                        padding: '6px 10px',
+                        fontSize: 12,
+                        borderRadius: 6,
+                        border: '1px solid var(--theme-ui-colors-border, #e0e0e0)',
+                        backgroundColor: 'white',
+                        color: 'var(--theme-ui-colors-text, #333)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="all">{tTemp('filterAll')}</option>
+                      <option value="pending">{tTemp('filterPending')}</option>
+                      <option value="accepted">{tTemp('filterAccepted')}</option>
+                      <option value="rejected">{tTemp('filterRejected')}</option>
+                    </select>
+                  </Box>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                   {(tempOrdersRes || []).map((o) => {

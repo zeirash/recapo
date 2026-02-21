@@ -29,8 +29,8 @@ type (
 	}
 
 	CreateOrderItemRequest struct {
-		ProductID  int `json:"product_id"`
-		Qty        int `json:"qty"`
+		ProductID int `json:"product_id"`
+		Qty       int `json:"qty"`
 	}
 
 	UpdateOrderItemRequest struct {
@@ -545,9 +545,8 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
 	opts := model.OrderFilterOptions{}
-	status := constant.TempOrderStatusPending // default status filter is pending
-	if s := r.URL.Query().Get("status"); s != "" {
-		status = s
+	if s := r.URL.Query().Get("status"); s != "" && s != constant.TempOrderStatusAll {
+		opts.Status = &s
 	}
 	if q := r.URL.Query().Get("search"); q != "" {
 		opts.SearchQuery = &q
@@ -563,7 +562,6 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 			opts.DateTo = &endOfDay
 		}
 	}
-	opts.Status = &status
 
 	res, err := orderService.GetTempOrdersByShopID(shopID, opts)
 	if err != nil {

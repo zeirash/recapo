@@ -187,6 +187,10 @@
   "tempOrders": {
     "title": "Temp Orders",
     "searchPlaceholder": "Search temp orders",
+    "filterAll": "All",
+    "filterPending": "Pending",
+    "filterAccepted": "Accepted",
+    "filterRejected": "Rejected",
     "noOrders": "No temp orders",
     "selectOrder": "Select a temp order to view details",
     "orderNumber": "Temp order #{id}",
