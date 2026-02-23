@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
+
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
@@ -99,9 +101,9 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 		args = append(args, *opts.DateTo)
 		argNum++
 	}
-	if opts.Status != nil {
-		q += fmt.Sprintf(" AND o.status = $%d", argNum)
-		args = append(args, *opts.Status)
+	if len(opts.Status) > 0 {
+		q += fmt.Sprintf(" AND o.status = ANY($%d)", argNum)
+		args = append(args, pq.Array(opts.Status))
 		argNum++
 	}
 
@@ -333,9 +335,9 @@ func (o *order) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions)
 		args = append(args, *opts.DateTo)
 		argNum++
 	}
-	if opts.Status != nil {
-		q += fmt.Sprintf(" AND status = $%d", argNum)
-		args = append(args, *opts.Status)
+	if len(opts.Status) > 0 {
+		q += fmt.Sprintf(" AND status = ANY($%d)", argNum)
+		args = append(args, pq.Array(opts.Status))
 		argNum++
 	}
 

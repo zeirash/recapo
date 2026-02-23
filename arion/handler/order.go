@@ -151,7 +151,8 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	opts := model.OrderFilterOptions{}
 	if s := r.URL.Query().Get("status"); s != "" && s != constant.FilterStatusAll {
-		opts.Status = &s
+		statuses := strings.Split(s, ",")
+		opts.Status = statuses
 	}
 	if q := r.URL.Query().Get("search"); q != "" {
 		opts.SearchQuery = &q
@@ -549,7 +550,8 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	opts := model.OrderFilterOptions{}
 	if s := r.URL.Query().Get("status"); s != "" && s != constant.FilterStatusAll {
-		opts.Status = &s
+		statuses := strings.Split(s, ",")
+		opts.Status = statuses
 	}
 	if q := r.URL.Query().Get("search"); q != "" {
 		opts.SearchQuery = &q

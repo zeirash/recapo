@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/lib/pq"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/model"
 )
@@ -216,12 +217,12 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 		{
 			name:   "get orders by shop ID with status filter",
 			shopID: 10,
-			opts:   model.OrderFilterOptions{Status: strPtr("in_progress")},
+			opts:   model.OrderFilterOptions{Status: []string{"in_progress", "done"}},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
 					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil)
-				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND o.status = \$2`).
-					WithArgs(10, "in_progress").
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND o.status = ANY\(\$2\)`).
+					WithArgs(10, pq.Array([]string{"in_progress", "done"}),).
 					WillReturnRows(rows)
 			},
 			wantResult: []model.Order{
@@ -884,12 +885,12 @@ func Test_order_GetTempOrdersByShopID(t *testing.T) {
 		{
 			name:   "get temp orders with status filter",
 			shopID: 5,
-			opts: model.OrderFilterOptions{Status: strPtr("pending")},
+			opts: model.OrderFilterOptions{Status: []string{"pending"}},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "customer_phone", "total_price", "status", "created_at", "updated_at"}).
 					AddRow(1, 5, "Jane Doe", "+62812345678", 2500, "pending", fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+AND status = \$2`).
-					WithArgs(5, "pending").
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+AND status = ANY\(\$2\)`).
+					WithArgs(5, pq.Array([]string{"pending"})).
 					WillReturnRows(rows)
 			},
 			wantResult: []model.TempOrder{

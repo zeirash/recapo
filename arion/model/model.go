@@ -88,7 +88,7 @@ type (
 		SearchQuery *string
 		DateFrom    *time.Time
 		DateTo      *time.Time
-		Status      *string
+		Status      []string
 	}
 
 	Order struct {

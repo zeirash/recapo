@@ -396,9 +396,8 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			opts:   queryOpts{status: "created"},
 			mockSetup: func() {
-				status := "created"
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					GetOrdersByShopID(1, model.OrderFilterOptions{Status: []string{"created"}}).
 					Return([]response.OrderData{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
 					}, nil)
@@ -1634,13 +1633,12 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			wantCount:   1,
 		},
 		{
-			name:   "successfully get temp orders with custom status",
+			name:   "successfully get temp orders with multiple statuses",
 			shopID: 1,
-			opts:   queryOpts{status: "accepted"},
+			opts:   queryOpts{status: "accepted,rejected"},
 			mockSetup: func() {
-				status := "accepted"
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: &status}).
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: []string{"accepted", "rejected"}}).
 					Return([]response.TempOrderData{
 						{
 							ID:            2,
@@ -1742,12 +1740,11 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			shopID: 1,
 			opts:   queryOpts{status: "rejected", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31"},
 			mockSetup: func() {
-				status := "rejected"
 				q := "john"
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q, DateFrom: &df, DateTo: &dt, Status: &status}).
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q, DateFrom: &df, DateTo: &dt, Status: []string{"rejected"}}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
