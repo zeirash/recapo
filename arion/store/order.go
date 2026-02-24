@@ -106,6 +106,12 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 		args = append(args, pq.Array(opts.Status))
 		argNum++
 	}
+	if opts.Sort != nil {
+		sort := strings.Split(*opts.Sort, ",")
+		if len(sort) == 2 {
+			q += fmt.Sprintf(" ORDER BY %s %s", sort[0], sort[1])
+		}
+	}
 
 	rows, err := o.db.Query(q, args...)
 	if err != nil {
@@ -339,6 +345,12 @@ func (o *order) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions)
 		q += fmt.Sprintf(" AND status = ANY($%d)", argNum)
 		args = append(args, pq.Array(opts.Status))
 		argNum++
+	}
+	if opts.Sort != nil {
+		sort := strings.Split(*opts.Sort, ",")
+		if len(sort) == 2 {
+			q += fmt.Sprintf(" ORDER BY %s %s", sort[0], sort[1])
+		}
 	}
 
 	rows, err := o.db.Query(q, args...)

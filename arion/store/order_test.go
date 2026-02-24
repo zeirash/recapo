@@ -263,6 +263,31 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:   "get orders by shop ID with sort order",
+			shopID: 10,
+			opts: model.OrderFilterOptions{
+				Sort: strPtr("created_at,desc"),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "total_price", "status", "notes", "created_at", "updated_at"}).
+					AddRow(1, 10, "John Doe", 5000, "in_progress", "", fixedTime, nil)
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+ORDER BY created_at desc`).
+					WithArgs(10).
+					WillReturnRows(rows)
+			},
+			wantResult: []model.Order{
+				{
+					ID:           1,
+					ShopID:       10,
+					CustomerName: "John Doe",
+					TotalPrice:   5000,
+					Status:       "in_progress",
+					CreatedAt:    fixedTime,
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -891,6 +916,22 @@ func Test_order_GetTempOrdersByShopID(t *testing.T) {
 					AddRow(1, 5, "Jane Doe", "+62812345678", 2500, "pending", fixedTime, nil)
 				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+AND status = ANY\(\$2\)`).
 					WithArgs(5, pq.Array([]string{"pending"})).
+					WillReturnRows(rows)
+			},
+			wantResult: []model.TempOrder{
+				{ID: 1, ShopID: 5, CustomerName: "Jane Doe", CustomerPhone: "+62812345678", TotalPrice: 2500, Status: "pending", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{}},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "get temp orders with sort order",
+			shopID: 5,
+			opts: model.OrderFilterOptions{Sort: strPtr("created_at,desc")},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "customer_phone", "total_price", "status", "created_at", "updated_at"}).
+					AddRow(1, 5, "Jane Doe", "+62812345678", 2500, "pending", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+ORDER BY created_at desc`).
+					WithArgs(5).
 					WillReturnRows(rows)
 			},
 			wantResult: []model.TempOrder{

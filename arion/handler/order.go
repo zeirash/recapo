@@ -142,6 +142,8 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Param			search		query		string	false	"Search query"
 //	@Param			date_from	query		string	false	"Filter orders from date (YYYY-MM-DD)"
 //	@Param			date_to		query		string	false	"Filter orders to date (YYYY-MM-DD)"
+//	@Param			status		query		string	false	"Filter by status (e.g. pending,accepted,rejected)"
+//	@Param			sort		  query		string	false	"Sort by column and order (e.g. created_at,desc)"
 //	@Success		200		{array}		response.OrderData
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders [get]
@@ -167,6 +169,9 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 			endOfDay := t.Add(24 * time.Hour)
 			opts.DateTo = &endOfDay
 		}
+	}
+	if sort := r.URL.Query().Get("sort"); sort != "" {
+		opts.Sort = &sort
 	}
 
 	res, err := orderService.GetOrdersByShopID(shopID, opts)
@@ -541,6 +546,8 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 //	@Param			search		query		string	false	"Search by customer name or phone"
 //	@Param			date_from	query		string	false	"Filter from date (YYYY-MM-DD)"
 //	@Param			date_to		query		string	false	"Filter to date (YYYY-MM-DD)"
+//	@Param			status		query		string	false	"Filter by status (e.g. created,in_progress,in_delivery,done,cancelled)"
+//	@Param			sort		  query		string	false	"Sort by column and order (e.g. created_at,desc)"
 //	@Success		200			{array}		response.TempOrderData
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/temp_orders [get]
@@ -566,6 +573,9 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 			endOfDay := t.Add(24 * time.Hour)
 			opts.DateTo = &endOfDay
 		}
+	}
+	if sort := r.URL.Query().Get("sort"); sort != "" {
+		opts.Sort = &sort
 	}
 
 	res, err := orderService.GetTempOrdersByShopID(shopID, opts)

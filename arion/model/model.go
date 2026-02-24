@@ -89,6 +89,7 @@ type (
 		DateFrom    *time.Time
 		DateTo      *time.Time
 		Status      []string
+		Sort        *string // value: column,order. E.g. created_at,desc
 	}
 
 	Order struct {

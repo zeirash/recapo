@@ -270,6 +270,7 @@ func TestGetOrdersHandler(t *testing.T) {
 		dateFrom string
 		dateTo   string
 		status   string
+		sort     string
 	}
 
 	tests := []struct {
@@ -405,6 +406,27 @@ func TestGetOrdersHandler(t *testing.T) {
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
+		{
+			name:   "get orders with sort order",
+			shopID: 1,
+			opts:   queryOpts{sort: "created_at,desc"},
+			mockSetup: func() {
+				sort := "created_at,desc"
+				mockOrderService.EXPECT().
+					GetOrdersByShopID(1, model.OrderFilterOptions{Sort: &sort}).
+					Return([]response.OrderData{
+						{
+							ID:           1,
+							CustomerName: "John Doe",
+							TotalPrice:   10000,
+							Status:       "created",
+							CreatedAt:    time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -424,6 +446,9 @@ func TestGetOrdersHandler(t *testing.T) {
 			}
 			if tt.opts.status != "" {
 				params = append(params, "status="+tt.opts.status)
+			}
+			if tt.opts.sort != "" {
+				params = append(params, "sort="+tt.opts.sort)
 			}
 			if len(params) > 0 {
 				path += "?" + strings.Join(params, "&")
@@ -1599,6 +1624,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		search   string
 		dateFrom string
 		dateTo   string
+		sort     string
 	}
 
 	tests := []struct {
@@ -1761,6 +1787,29 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			wantCount:   1,
 		},
 		{
+			name:   "get temp orders with sort order",
+			shopID: 1,
+			opts:   queryOpts{sort: "created_at,desc"},
+			mockSetup: func() {
+				sort := "created_at,desc"
+				mockOrderService.EXPECT().
+					GetTempOrdersByShopID(1, model.OrderFilterOptions{Sort: &sort}).
+					Return([]response.TempOrderData{
+						{
+							ID:            1,
+							CustomerName:  "John Doe",
+							CustomerPhone: "123456789",
+							TotalPrice:    10000,
+							Status:        "pending",
+							CreatedAt:     time.Now(),
+						},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
+		},
+		{
 			name:   "get temp orders returns error on service failure",
 			shopID: 1,
 			mockSetup: func() {
@@ -1791,6 +1840,9 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			}
 			if tt.opts.dateTo != "" {
 				params = append(params, "date_to="+tt.opts.dateTo)
+			}
+			if tt.opts.sort != "" {
+				params = append(params, "sort="+tt.opts.sort)
 			}
 			if len(params) > 0 {
 				path += "?" + strings.Join(params, "&")
