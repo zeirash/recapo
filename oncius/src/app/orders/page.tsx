@@ -65,6 +65,7 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 }
 
 export default function OrdersPage() {
+  const DEFAULT_STATUSES = ['created', 'in_progress'] as const
   const t = useTranslations('common')
   const to = useTranslations('orders')
   const toStatus = useTranslations('orderStatus')
@@ -77,6 +78,7 @@ export default function OrdersPage() {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string[]>([...DEFAULT_STATUSES])
   const [createFormConflict, setCreateFormConflict] = useState(false)
 
   // Debounce search: only trigger API after user stops typing for 300ms
@@ -87,9 +89,12 @@ export default function OrdersPage() {
 
   // Fetch orders
   const { data: ordersRes, isLoading, isError, error } = useQuery(
-    ['orders', debouncedSearch],
+    ['orders', debouncedSearch, statusFilter],
     async () => {
-      const res = await api.getOrders(debouncedSearch ? { search: debouncedSearch } : undefined)
+      const opts: { search?: string; status?: string } = {}
+      if (debouncedSearch) opts.search = debouncedSearch
+      if (statusFilter.length > 0) opts.status = statusFilter.join(',')
+      const res = await api.getOrders(opts)
       if (!res.success) throw new Error(res.message || to('fetchFailed'))
       return res.data as Order[]
     },
@@ -362,6 +367,29 @@ export default function OrdersPage() {
                     />
                     <AddButton onClick={openCreateForm} title={to('addOrder')} />
                   </Flex>
+                  <Box sx={{ mt: 3 }}>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(Array.from(e.target.selectedOptions).map((o) => o.value))}
+                      style={{
+                        width: '100px',
+                        padding: '6px',
+                        fontSize: 12,
+                        borderRadius: 6,
+                        border: '1px solid var(--theme-ui-colors-border, #e0e0e0)',
+                        backgroundColor: 'white',
+                        color: 'var(--theme-ui-colors-text, #333)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="all">{toStatus('all')}</option>
+                      <option value="created">{toStatus('created')}</option>
+                      <option value="in_progress">{toStatus('in_progress')}</option>
+                      <option value="in_delivery">{toStatus('in_delivery')}</option>
+                      <option value="done">{toStatus('done')}</option>
+                      <option value="cancelled">{toStatus('cancelled')}</option>
+                    </select>
+                  </Box>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                   {(ordersRes || []).map((o) => {

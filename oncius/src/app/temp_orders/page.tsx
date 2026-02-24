@@ -43,7 +43,7 @@ export default function TempOrdersPage() {
   const [selectedTempOrderId, setSelectedTempOrderId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('pending')
+  const [statusFilter, setStatusFilter] = useState<string[]>(['pending'])
   const [acceptLoading, setAcceptLoading] = useState(false)
   const [acceptError, setAcceptError] = useState<string | null>(null)
   const [acceptSuccess, setAcceptSuccess] = useState(false)
@@ -61,8 +61,9 @@ export default function TempOrdersPage() {
   const { data: tempOrdersRes, isLoading, isError, error } = useQuery(
     ['temp_orders', debouncedSearch, statusFilter],
     async () => {
-      const opts: { search?: string; status: string } = { status: statusFilter }
+      const opts: { search?: string; status?: string } = {}
       if (debouncedSearch) opts.search = debouncedSearch
+      if (statusFilter.length > 0) opts.status = statusFilter.join(',')
       const res = await api.getTempOrders(opts)
       if (!res.success) throw new Error(res.message || tTemp('fetchFailed'))
       return res.data as TempOrder[]
@@ -253,10 +254,10 @@ export default function TempOrdersPage() {
                   <Box sx={{ mt: 3 }}>
                     <select
                       value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                      onChange={(e) => setStatusFilter(Array.from(e.target.selectedOptions).map(o => o.value))}
                       style={{
                         width: '100px',
-                        padding: '6px 10px',
+                        padding: '6px',
                         fontSize: 12,
                         borderRadius: 6,
                         border: '1px solid var(--theme-ui-colors-border, #e0e0e0)',
@@ -265,10 +266,10 @@ export default function TempOrdersPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      <option value="all">{tTemp('filterAll')}</option>
-                      <option value="pending">{tTemp('filterPending')}</option>
-                      <option value="accepted">{tTemp('filterAccepted')}</option>
-                      <option value="rejected">{tTemp('filterRejected')}</option>
+                      <option value="all">{toStatus('all')}</option>
+                      <option value="pending">{toStatus('pending')}</option>
+                      <option value="accepted">{toStatus('accepted')}</option>
+                      <option value="rejected">{toStatus('rejected')}</option>
                     </select>
                   </Box>
                 </Box>
