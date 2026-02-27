@@ -88,3 +88,4 @@ temp/
 
 # Temporary ignored it (manually exec queries in migrations folder)
 arion/migrations/*
+arion/uploads/*
