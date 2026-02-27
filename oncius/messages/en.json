@@ -120,7 +120,11 @@
     "updateFailed": "Failed to update product",
     "deleteFailed": "Failed to delete product",
     "shareButton": "Share",
-    "linkCopied": "Link copied!"
+    "linkCopied": "Link copied!",
+    "image": "Product Image",
+    "chooseImage": "Choose Image",
+    "removeImage": "Remove Image",
+    "imageUploadFailed": "Failed to upload image"
   },
   "customers": {
     "title": "Customers",

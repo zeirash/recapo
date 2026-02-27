@@ -244,7 +244,7 @@ export const api = {
     return apiRequest<ApiResponse<any>>(`/products/${id}`)
   },
 
-  createProduct: (data: { name: string; description?: string; price: number; original_price?: number }) => {
+  createProduct: (data: { name: string; description?: string; price: number; original_price?: number; image_url?: string }) => {
     return apiRequest<ApiResponse>('/product', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -252,7 +252,7 @@ export const api = {
   },
 
   updateProduct: (id: number | string,
-    data: Partial<{ name: string; description: string; price: number; original_price: number }>
+    data: Partial<{ name: string; description: string; price: number; original_price: number; image_url: string }>
   ) => {
     return apiRequest<ApiResponse>(`/products/${id}`, {
       method: 'PATCH',
@@ -263,6 +263,28 @@ export const api = {
   deleteProduct: (id: number | string) => {
     return apiRequest<ApiResponse>(`/products/${id}`, {
       method: 'DELETE',
+    })
+  },
+
+  uploadProductImage: async (file: File) => {
+    const formData = new FormData()
+    formData.append('image', file)
+    const token = getAuthToken()
+    const response = await fetch(`${API_BASE_URL}/products/image`, {
+      method: 'POST',
+      headers: {
+        'Accept-Language': getApiLocale(),
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    })
+    return response.json() as Promise<ApiResponse<{ image_url: string }>>
+  },
+
+  deleteProductImage: (imageURL: string) => {
+    return apiRequest<ApiResponse>('/products/image', {
+      method: 'DELETE',
+      body: JSON.stringify({ image_url: imageURL }),
     })
   },
 
@@ -433,6 +455,13 @@ export const api = {
       true
     )
   },
+}
+
+// Resolve a potentially relative image URL to an absolute URL using the backend base
+export const resolveImageURL = (imageURL: string | null | undefined): string | undefined => {
+  if (!imageURL) return undefined
+  if (imageURL.startsWith('http')) return imageURL
+  return `${API_BASE_URL}${imageURL}`
 }
 
 export { ApiError, getAuthToken, setAuthToken, removeAuthToken, getRefreshToken, setRefreshToken, removeRefreshToken }

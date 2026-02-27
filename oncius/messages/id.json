@@ -120,7 +120,11 @@
     "updateFailed": "Gagal memperbarui produk",
     "deleteFailed": "Gagal menghapus produk",
     "shareButton": "Bagikan",
-    "linkCopied": "Link disalin!"
+    "linkCopied": "Link disalin!",
+    "image": "Gambar Produk",
+    "chooseImage": "Pilih Gambar",
+    "removeImage": "Hapus Gambar",
+    "imageUploadFailed": "Gagal mengunggah gambar"
   },
   "customers": {
     "title": "Pelanggan",
