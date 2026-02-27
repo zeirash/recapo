@@ -5,6 +5,7 @@
 package mock_service
 
 import (
+	io "io"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -36,18 +37,18 @@ func (m *MockProductService) EXPECT() *MockProductServiceMockRecorder {
 }
 
 // CreateProduct mocks base method.
-func (m *MockProductService) CreateProduct(shopID int, name string, description *string, price int, originalPrice *int) (response.ProductData, error) {
+func (m *MockProductService) CreateProduct(shopID int, name string, description *string, price int, originalPrice *int, imageURL *string) (response.ProductData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateProduct", shopID, name, description, price, originalPrice)
+	ret := m.ctrl.Call(m, "CreateProduct", shopID, name, description, price, originalPrice, imageURL)
 	ret0, _ := ret[0].(response.ProductData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateProduct indicates an expected call of CreateProduct.
-func (mr *MockProductServiceMockRecorder) CreateProduct(shopID, name, description, price, originalPrice interface{}) *gomock.Call {
+func (mr *MockProductServiceMockRecorder) CreateProduct(shopID, name, description, price, originalPrice, imageURL interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductService)(nil).CreateProduct), shopID, name, description, price, originalPrice)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductService)(nil).CreateProduct), shopID, name, description, price, originalPrice, imageURL)
 }
 
 // DeleteProductByID mocks base method.
@@ -127,4 +128,33 @@ func (m *MockProductService) UpdateProduct(input service.UpdateProductInput) (re
 func (mr *MockProductServiceMockRecorder) UpdateProduct(input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProduct", reflect.TypeOf((*MockProductService)(nil).UpdateProduct), input)
+}
+
+// DeleteProductImage mocks base method.
+func (m *MockProductService) DeleteProductImage(imageURL string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteProductImage", imageURL)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteProductImage indicates an expected call of DeleteProductImage.
+func (mr *MockProductServiceMockRecorder) DeleteProductImage(imageURL interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductImage", reflect.TypeOf((*MockProductService)(nil).DeleteProductImage), imageURL)
+}
+
+// UploadProductImage mocks base method.
+func (m *MockProductService) UploadProductImage(file io.Reader) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadProductImage", file)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UploadProductImage indicates an expected call of UploadProductImage.
+func (mr *MockProductServiceMockRecorder) UploadProductImage(file interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadProductImage", reflect.TypeOf((*MockProductService)(nil).UploadProductImage), file)
 }

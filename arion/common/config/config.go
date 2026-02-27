@@ -20,6 +20,8 @@ type Config struct {
 	DbPort     int    `env:"DB_PORT"`
 
 	SecretKey string `env:"SECRET_KEY"`
+
+	UploadDir string `env:"UPLOAD_DIR" envDefault:"./uploads"`
 }
 
 var cfg Config

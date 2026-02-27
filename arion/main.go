@@ -18,6 +18,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -74,6 +75,8 @@ func NewRouter() *mux.Router {
 	r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateProductHandler))).Methods("POST")
 	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")
 	r.Handle("/products/purchase_list", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.PurchaseListProductHandler))).Methods("GET")
+	r.Handle("/products/image", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UploadProductImageHandler))).Methods("POST")
+	r.Handle("/products/image", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteProductImageHandler))).Methods("DELETE")
 	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateProductHandler))).Methods("PATCH")
 	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteProductHandler))).Methods("DELETE")
 	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductHandler))).Methods("GET")
@@ -99,6 +102,10 @@ func NewRouter() *mux.Router {
 	// For System
 	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
 
+	// Static file serving for uploaded product images
+	uploadDir := config.GetConfig().UploadDir
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir(uploadDir))))
+
 	return r
 }
 
@@ -112,6 +119,9 @@ func main() {
 	// init database
 	database.InitDB()
 	defer database.CloseDB()
+
+	// ensure upload directory exists
+	os.MkdirAll(config.GetConfig().UploadDir+"/products", 0755)
 
 	// init router
 	r := NewRouter()

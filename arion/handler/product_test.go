@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -65,7 +66,7 @@ func TestCreateProductHandler(t *testing.T) {
 				desc := "Test description"
 				orgPrice := 800
 				mockProductService.EXPECT().
-					CreateProduct(1, "Test Product", &desc, 1000, &orgPrice).
+					CreateProduct(1, "Test Product", &desc, 1000, &orgPrice, nil).
 					Return(response.ProductData{
 						ID:            1,
 						Name:          "Test Product",
@@ -87,7 +88,7 @@ func TestCreateProductHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					CreateProduct(1, "Test", nil, 100, nil).
+					CreateProduct(1, "Test", nil, 100, nil, nil).
 					Return(response.ProductData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -633,6 +634,241 @@ func TestPurchaseListProductHandler(t *testing.T) {
 				} else if ok && len(products) != tt.wantCount {
 					t.Errorf("PurchaseListProductHandler() data count = %v, want %v", len(products), tt.wantCount)
 				}
+			}
+		})
+	}
+}
+
+func TestUploadProductImageHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetProductService()
+	defer handler.SetProductService(oldService)
+
+	mockProductService := mock_service.NewMockProductService(ctrl)
+	handler.SetProductService(mockProductService)
+
+	buildMultipartRequest := func(fieldName, filename string, content []byte) *http.Request {
+		var body bytes.Buffer
+		writer := multipart.NewWriter(&body)
+		part, err := writer.CreateFormFile(fieldName, filename)
+		if err != nil {
+			t.Fatalf("failed to create form file: %v", err)
+		}
+		part.Write(content)
+		writer.Close()
+
+		req := httptest.NewRequest("POST", "/products/image", &body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		return req
+	}
+
+	jpegBytes := []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01}
+
+	tests := []struct {
+		name        string
+		buildReq    func() *http.Request
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name: "successfully upload jpeg image",
+			buildReq: func() *http.Request {
+				return buildMultipartRequest("image", "test.jpg", jpegBytes)
+			},
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					UploadProductImage(gomock.Any()).
+					Return("/uploads/products/abc123.jpg", nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name: "returns 400 when image field is missing",
+			buildReq: func() *http.Request {
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+				writer.WriteField("other_field", "value")
+				writer.Close()
+				req := httptest.NewRequest("POST", "/products/image", &body)
+				req.Header.Set("Content-Type", writer.FormDataContentType())
+				return req
+			},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name: "returns 400 when service returns unsupported image type error",
+			buildReq: func() *http.Request {
+				return buildMultipartRequest("image", "test.txt", []byte("hello world plain text"))
+			},
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					UploadProductImage(gomock.Any()).
+					Return("", errors.New("unsupported image type; allowed: jpeg, png, webp"))
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name: "returns 500 on service internal error",
+			buildReq: func() *http.Request {
+				return buildMultipartRequest("image", "test.jpg", jpegBytes)
+			},
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					UploadProductImage(gomock.Any()).
+					Return("", errors.New("failed to save file"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+			req := tt.buildReq()
+			rec := httptest.NewRecorder()
+
+			handler.UploadProductImageHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("UploadProductImageHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("UploadProductImageHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+
+			if tt.wantSuccess {
+				data, ok := resp.Data.(map[string]interface{})
+				if !ok {
+					t.Errorf("UploadProductImageHandler() data is not a map, got %T", resp.Data)
+					return
+				}
+				imageURL, ok := data["image_url"].(string)
+				if !ok || imageURL == "" {
+					t.Errorf("UploadProductImageHandler() image_url missing or empty in response")
+				}
+			}
+		})
+	}
+}
+
+func TestDeleteProductImageHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetProductService()
+	defer handler.SetProductService(oldService)
+
+	mockProductService := mock_service.NewMockProductService(ctrl)
+	handler.SetProductService(mockProductService)
+
+	tests := []struct {
+		name           string
+		body           interface{}
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantErrMessage string
+	}{
+		{
+			name: "successfully delete image",
+			body: map[string]interface{}{"image_url": "/uploads/products/abc123.jpg"},
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					DeleteProductImage("/uploads/products/abc123.jpg").
+					Return(nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:        "returns 400 when image_url is missing",
+			body:        map[string]interface{}{},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on invalid json",
+			body:        "invalid json",
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name: "returns 400 when service returns invalid URL error",
+			body: map[string]interface{}{"image_url": "/other/path/image.jpg"},
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					DeleteProductImage("/other/path/image.jpg").
+					Return(errors.New("invalid image URL"))
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name: "returns 404 when image not found",
+			body: map[string]interface{}{"image_url": "/uploads/products/missing.jpg"},
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					DeleteProductImage("/uploads/products/missing.jpg").
+					Return(errors.New("image not found"))
+			},
+			wantStatus:  http.StatusNotFound,
+			wantSuccess: false,
+		},
+		{
+			name: "returns 500 on service internal error",
+			body: map[string]interface{}{"image_url": "/uploads/products/abc123.jpg"},
+			mockSetup: func() {
+				mockProductService.EXPECT().
+					DeleteProductImage("/uploads/products/abc123.jpg").
+					Return(errors.New("permission denied"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "permission denied",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			var bodyBytes []byte
+			switch b := tt.body.(type) {
+			case string:
+				bodyBytes = []byte(b)
+			default:
+				bodyBytes, _ = json.Marshal(b)
+			}
+
+			req := httptest.NewRequest("DELETE", "/products/image", bytes.NewReader(bodyBytes))
+			rec := httptest.NewRecorder()
+
+			handler.DeleteProductImageHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("DeleteProductImageHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("DeleteProductImageHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("DeleteProductImageHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
 			}
 		})
 	}

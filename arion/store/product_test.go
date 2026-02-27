@@ -29,9 +29,9 @@ func Test_product_GetProductByID(t *testing.T) {
 			productID: 1,
 			shopID:    nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"}).
-					AddRow(1, 10, "Product A", "A great product", 1000, 800, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE id = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
+					AddRow(1, 10, "Product A", "A great product", 1000, 800, "", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE id = \$1`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
@@ -51,9 +51,9 @@ func Test_product_GetProductByID(t *testing.T) {
 			productID: 1,
 			shopID:    []int{10},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"}).
-					AddRow(1, 10, "Product A", "A great product", 1000, 800, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE id = \$1\s+AND shop_id = \$2`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
+					AddRow(1, 10, "Product A", "A great product", 1000, 800, "", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE id = \$1\s+AND shop_id = \$2`).
 					WithArgs(1, 10).
 					WillReturnRows(rows)
 			},
@@ -73,7 +73,7 @@ func Test_product_GetProductByID(t *testing.T) {
 			productID: 9999,
 			shopID:    nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE id = \$1`).
 					WithArgs(9999).
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -85,7 +85,7 @@ func Test_product_GetProductByID(t *testing.T) {
 			productID: 1,
 			shopID:    nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE id = \$1`).
 					WithArgs(1).
 					WillReturnError(errors.New("database error"))
 			},
@@ -142,10 +142,10 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			shopID:      10,
 			searchQuery: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"}).
-					AddRow(1, 10, "Product A", "Description A", 1000, 800, fixedTime, nil).
-					AddRow(2, 10, "Product B", "Description B", 2000, 1500, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
+					AddRow(1, 10, "Product A", "Description A", 1000, 800, "", fixedTime, nil).
+					AddRow(2, 10, "Product B", "Description B", 2000, 1500, "", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
 					WithArgs(10).
 					WillReturnRows(rows)
 			},
@@ -160,8 +160,8 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			shopID:      9999,
 			searchQuery: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"})
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"})
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
 					WithArgs(9999).
 					WillReturnRows(rows)
 			},
@@ -173,7 +173,7 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			shopID:      9999,
 			searchQuery: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
 					WithArgs(9999).
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -185,7 +185,7 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			shopID:      10,
 			searchQuery: nil,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1`).
 					WithArgs(10).
 					WillReturnError(errors.New("database error"))
 			},
@@ -197,9 +197,9 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			shopID:      10,
 			searchQuery: strPtr("widget"),
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"}).
-					AddRow(1, 10, "Widget A", "A useful widget", 1000, 800, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1\s+AND name ILIKE \$2`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
+					AddRow(1, 10, "Widget A", "A useful widget", 1000, 800, "", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1\s+AND name ILIKE \$2`).
 					WithArgs(10, "%widget%").
 					WillReturnRows(rows)
 			},
@@ -249,6 +249,7 @@ func Test_product_CreateProduct(t *testing.T) {
 		price         int
 		shopID        int
 		originalPrice *int
+		imageURL      *string
 	}
 
 	strPtr := func(s string) *string { return &s }
@@ -270,9 +271,9 @@ func Test_product_CreateProduct(t *testing.T) {
 				originalPrice: nil,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "description"}).AddRow(1, "Product description")
-				mock.ExpectQuery(`INSERT INTO products \(name, description, price, original_price, shop_id, created_at\)\s+VALUES \(\$1, COALESCE\(\$2, ''\), \$3, \$4, \$5, \$6\)\s+RETURNING id, description`).
-					WithArgs("New Product", strPtr("Product description"), 1500, 1500, 10, sqlmock.AnyArg()).
+				rows := sqlmock.NewRows([]string{"id", "description", "image_url"}).AddRow(1, "Product description", "")
+				mock.ExpectQuery(`INSERT INTO products \(name, description, price, original_price, shop_id, image_url, created_at\)\s+VALUES \(\$1, COALESCE\(\$2, ''\), \$3, \$4, \$5, COALESCE\(\$6, ''\), \$7\)\s+RETURNING id, description, image_url`).
+					WithArgs("New Product", strPtr("Product description"), 1500, 1500, 10, nil, sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
 			wantResult: &model.Product{
@@ -295,9 +296,9 @@ func Test_product_CreateProduct(t *testing.T) {
 				originalPrice: intPtr(1200),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "description"}).AddRow(1, "")
-				mock.ExpectQuery(`INSERT INTO products \(name, description, price, original_price, shop_id, created_at\)\s+VALUES \(\$1, COALESCE\(\$2, ''\), \$3, \$4, \$5, \$6\)\s+RETURNING id, description`).
-					WithArgs("New Product", nil, 1500, 1200, 10, sqlmock.AnyArg()).
+				rows := sqlmock.NewRows([]string{"id", "description", "image_url"}).AddRow(1, "", "")
+				mock.ExpectQuery(`INSERT INTO products \(name, description, price, original_price, shop_id, image_url, created_at\)\s+VALUES \(\$1, COALESCE\(\$2, ''\), \$3, \$4, \$5, COALESCE\(\$6, ''\), \$7\)\s+RETURNING id, description, image_url`).
+					WithArgs("New Product", nil, 1500, 1200, 10, nil, sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
 			wantResult: &model.Product{
@@ -320,8 +321,8 @@ func Test_product_CreateProduct(t *testing.T) {
 				originalPrice: nil,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`INSERT INTO products \(name, description, price, original_price, shop_id, created_at\)\s+VALUES \(\$1, COALESCE\(\$2, ''\), \$3, \$4, \$5, \$6\)\s+RETURNING id, description`).
-					WithArgs("Existing Product", nil, 1000, 1000, 10, sqlmock.AnyArg()).
+				mock.ExpectQuery(`INSERT INTO products \(name, description, price, original_price, shop_id, image_url, created_at\)\s+VALUES \(\$1, COALESCE\(\$2, ''\), \$3, \$4, \$5, COALESCE\(\$6, ''\), \$7\)\s+RETURNING id, description, image_url`).
+					WithArgs("Existing Product", nil, 1000, 1000, 10, nil, sqlmock.AnyArg()).
 					WillReturnError(&pq.Error{Code: "23505"})
 			},
 			wantResult: nil,
@@ -337,8 +338,8 @@ func Test_product_CreateProduct(t *testing.T) {
 				originalPrice: nil,
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`INSERT INTO products \(name, description, price, original_price, shop_id, created_at\)\s+VALUES \(\$1, COALESCE\(\$2, ''\), \$3, \$4, \$5, \$6\)\s+RETURNING id, description`).
-					WithArgs("New Product", nil, 1000, 1000, 10, sqlmock.AnyArg()).
+				mock.ExpectQuery(`INSERT INTO products \(name, description, price, original_price, shop_id, image_url, created_at\)\s+VALUES \(\$1, COALESCE\(\$2, ''\), \$3, \$4, \$5, COALESCE\(\$6, ''\), \$7\)\s+RETURNING id, description, image_url`).
+					WithArgs("New Product", nil, 1000, 1000, 10, nil, sqlmock.AnyArg()).
 					WillReturnError(errors.New("database error"))
 			},
 			wantResult: nil,
@@ -357,7 +358,7 @@ func Test_product_CreateProduct(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewProductStoreWithDB(db)
 
-			got, gotErr := store.CreateProduct(tt.input.name, tt.input.description, tt.input.price, tt.input.shopID, tt.input.originalPrice)
+			got, gotErr := store.CreateProduct(tt.input.name, tt.input.description, tt.input.price, tt.input.shopID, tt.input.originalPrice, tt.input.imageURL)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -401,9 +402,9 @@ func Test_product_UpdateProduct(t *testing.T) {
 				Name: strPtr("Updated Product"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"}).
-					AddRow(1, 10, "Updated Product", "Description", 1000, 800, fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE products\s+SET name = 'Updated Product',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, created_at, updated_at`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
+					AddRow(1, 10, "Updated Product", "Description", 1000, 800, "", fixedTime, updatedTime)
+				mock.ExpectQuery(`UPDATE products\s+SET name = 'Updated Product',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
@@ -426,9 +427,9 @@ func Test_product_UpdateProduct(t *testing.T) {
 				Price: intPtr(2000),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"}).
-					AddRow(1, 10, "Product A", "Description", 2000, 800, fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE products\s+SET price = 2000,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, created_at, updated_at`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
+					AddRow(1, 10, "Product A", "Description", 2000, 800, "", fixedTime, updatedTime)
+				mock.ExpectQuery(`UPDATE products\s+SET price = 2000,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
@@ -451,9 +452,9 @@ func Test_product_UpdateProduct(t *testing.T) {
 				Description: strPtr("Updated description"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"}).
-					AddRow(1, 10, "Product A", "Updated description", 1000, 800, fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE products\s+SET description = 'Updated description',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, created_at, updated_at`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
+					AddRow(1, 10, "Product A", "Updated description", 1000, 800, "", fixedTime, updatedTime)
+				mock.ExpectQuery(`UPDATE products\s+SET description = 'Updated description',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
@@ -476,9 +477,9 @@ func Test_product_UpdateProduct(t *testing.T) {
 				OriginalPrice: intPtr(1200),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "created_at", "updated_at"}).
-					AddRow(1, 10, "Product A", "Description", 1000, 1200, fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE products\s+SET original_price = 1200,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, created_at, updated_at`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
+					AddRow(1, 10, "Product A", "Description", 1000, 1200, "", fixedTime, updatedTime)
+				mock.ExpectQuery(`UPDATE products\s+SET original_price = 1200,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
@@ -501,7 +502,7 @@ func Test_product_UpdateProduct(t *testing.T) {
 				Name: strPtr("Existing Name"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`UPDATE products\s+SET name = 'Existing Name',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, created_at, updated_at`).
+				mock.ExpectQuery(`UPDATE products\s+SET name = 'Existing Name',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at`).
 					WithArgs(1).
 					WillReturnError(&pq.Error{Code: "23505"})
 			},
@@ -515,7 +516,7 @@ func Test_product_UpdateProduct(t *testing.T) {
 				Name: strPtr("New Name"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`UPDATE products\s+SET name = 'New Name',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, created_at, updated_at`).
+				mock.ExpectQuery(`UPDATE products\s+SET name = 'New Name',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at`).
 					WithArgs(9999).
 					WillReturnError(sql.ErrNoRows)
 			},

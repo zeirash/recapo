@@ -1,7 +1,14 @@
 package service
 
 import (
+	"crypto/rand"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
@@ -10,12 +17,14 @@ import (
 
 type (
 	ProductService interface {
-		CreateProduct(shopID int, name string, description *string, price int, originalPrice *int) (response.ProductData, error)
+		CreateProduct(shopID int, name string, description *string, price int, originalPrice *int, imageURL *string) (response.ProductData, error)
 		GetProductByID(productID int, shopID ...int) (*response.ProductData, error)
 		GetProductsByShopID(shopID int, searchQuery *string) ([]response.ProductData, error)
 		UpdateProduct(input UpdateProductInput) (response.ProductData, error)
 		DeleteProductByID(id int) error
 		GetPurchaseListProducts(shopID int) ([]response.PurchaseListProductData, error)
+		UploadProductImage(file io.Reader) (string, error)
+		DeleteProductImage(imageURL string) error
 	}
 
 	pservice struct{}
@@ -26,6 +35,7 @@ type (
 		Description   *string
 		Price         *int
 		OriginalPrice *int
+		ImageURL      *string
 	}
 )
 
@@ -39,8 +49,8 @@ func NewProductService() ProductService {
 	return &pservice{}
 }
 
-func (p *pservice) CreateProduct(shopID int, name string, description *string, price int, originalPrice *int) (response.ProductData, error) {
-	product, err := productStore.CreateProduct(name, description, price, shopID, originalPrice)
+func (p *pservice) CreateProduct(shopID int, name string, description *string, price int, originalPrice *int, imageURL *string) (response.ProductData, error) {
+	product, err := productStore.CreateProduct(name, description, price, shopID, originalPrice, imageURL)
 	if err != nil {
 		return response.ProductData{}, err
 	}
@@ -51,6 +61,7 @@ func (p *pservice) CreateProduct(shopID int, name string, description *string, p
 		Description:   product.Description,
 		Price:         product.Price,
 		OriginalPrice: product.OriginalPrice,
+		ImageURL:      product.ImageURL,
 		CreatedAt:     product.CreatedAt,
 	}
 
@@ -73,6 +84,7 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 		Description:   product.Description,
 		Price:         product.Price,
 		OriginalPrice: product.OriginalPrice,
+		ImageURL:      product.ImageURL,
 		CreatedAt:     product.CreatedAt,
 	}
 
@@ -97,6 +109,7 @@ func (p *pservice) GetProductsByShopID(shopID int, searchQuery *string) ([]respo
 			Description:   product.Description,
 			Price:         product.Price,
 			OriginalPrice: product.OriginalPrice,
+			ImageURL:      product.ImageURL,
 			CreatedAt:     product.CreatedAt,
 		}
 
@@ -117,14 +130,11 @@ func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData
 		Description:   input.Description,
 		Price:         input.Price,
 		OriginalPrice: input.OriginalPrice,
+		ImageURL:      input.ImageURL,
 	}
 	productData, err := productStore.UpdateProduct(input.ID, updateData)
 	if err != nil {
 		return response.ProductData{}, err
-	}
-
-	if productData == nil {
-		return response.ProductData{}, errors.New("product not found")
 	}
 
 	res := response.ProductData{
@@ -133,6 +143,7 @@ func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData
 		Description:   productData.Description,
 		Price:         productData.Price,
 		OriginalPrice: productData.OriginalPrice,
+		ImageURL:      productData.ImageURL,
 		CreatedAt:     productData.CreatedAt,
 	}
 
@@ -168,4 +179,73 @@ func (p *pservice) GetPurchaseListProducts(shopID int) ([]response.PurchaseListP
 	}
 
 	return productsData, nil
+}
+
+func (p *pservice) UploadProductImage(file io.Reader) (string, error) {
+	buf := make([]byte, 512)
+	n, err := file.Read(buf)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	contentType := http.DetectContentType(buf[:n])
+
+	var ext string
+	switch contentType {
+	case "image/jpeg":
+		ext = ".jpg"
+	case "image/png":
+		ext = ".png"
+	case "image/webp":
+		ext = ".webp"
+	default:
+		return "", errors.New("unsupported image type; allowed: jpeg, png, webp")
+	}
+
+	randBytes := make([]byte, 16)
+	if _, err := rand.Read(randBytes); err != nil {
+		return "", err
+	}
+	filename := fmt.Sprintf("%x%s", randBytes, ext)
+
+	uploadDir := filepath.Join(cfg.UploadDir, "products")
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return "", err
+	}
+
+	filePath := filepath.Join(uploadDir, filename)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
+
+	if _, err := dst.Write(buf[:n]); err != nil {
+		os.Remove(filePath)
+		return "", err
+	}
+	if _, err := io.Copy(dst, file); err != nil {
+		os.Remove(filePath)
+		return "", err
+	}
+
+	return "/uploads/products/" + filename, nil
+}
+
+
+func (p *pservice) DeleteProductImage(imageURL string) error {
+	const urlPrefix = "/uploads/products/"
+	if !strings.HasPrefix(imageURL, urlPrefix) {
+		return errors.New("invalid image URL")
+	}
+
+	filename := strings.TrimPrefix(imageURL, urlPrefix)
+	filePath := filepath.Join(cfg.UploadDir, "products", filename)
+	if err := os.Remove(filePath); err != nil {
+		if os.IsNotExist(err) {
+			return errors.New("image not found")
+		}
+		return err
+	}
+
+	return nil
 }

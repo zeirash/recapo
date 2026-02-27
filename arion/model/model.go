@@ -71,6 +71,7 @@ type (
 		Description   string       `db:"description"`
 		Price         int          `db:"price"`
 		OriginalPrice int          `db:"original_price"`
+		ImageURL      string       `db:"image_url"`
 		CreatedAt     time.Time    `db:"created_at"`
 		UpdatedAt     sql.NullTime `db:"updated_at"`
 	}

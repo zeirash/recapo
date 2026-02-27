@@ -41,8 +41,13 @@ type (
 		Description   string     `json:"description"`
 		Price         int        `json:"price"`
 		OriginalPrice int        `json:"original_price"`
+		ImageURL      string     `json:"image_url"`
 		CreatedAt     time.Time  `json:"created_at"`
 		UpdatedAt     *time.Time `json:"updated_at"`
+	}
+
+	UploadImageData struct {
+		ImageURL string `json:"image_url"`
 	}
 
 	OrderData struct {

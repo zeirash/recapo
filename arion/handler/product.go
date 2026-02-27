@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/common/logger"
+	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -18,6 +19,7 @@ type (
 		Price         int     `json:"price"`
 		Description   *string `json:"description"`
 		OriginalPrice *int    `json:"original_price"`
+		ImageURL      *string `json:"image_url"`
 	}
 
 	UpdateProductRequest struct {
@@ -25,6 +27,11 @@ type (
 		Price         *int    `json:"price"`
 		Description   *string `json:"description"`
 		OriginalPrice *int    `json:"original_price"`
+		ImageURL      *string `json:"image_url"`
+	}
+
+	DeleteProductImageRequest struct {
+		ImageURL string `json:"image_url"`
 	}
 )
 
@@ -57,7 +64,7 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := productService.CreateProduct(shopID, inp.Name, inp.Description, inp.Price, inp.OriginalPrice)
+	res, err := productService.CreateProduct(shopID, inp.Name, inp.Description, inp.Price, inp.OriginalPrice, inp.ImageURL)
 	if err != nil {
 		logger.WithError(err).Error("create_product_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_product")
@@ -178,6 +185,7 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 		Description:   inp.Description,
 		Price:         inp.Price,
 		OriginalPrice: inp.OriginalPrice,
+		ImageURL:      inp.ImageURL,
 	})
 	if err != nil {
 		logger.WithError(err).Error("update_product_error")
@@ -246,6 +254,91 @@ func PurchaseListProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJson(w, http.StatusOK, res)
+}
+
+// UploadProductImageHandler godoc
+//
+//	@Summary		Upload product image
+//	@Description	Upload an image file (jpeg, png, webp, max 5MB). Returns the image_url to include in create/update product requests.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			product
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			image	formData	file	true	"Image file (jpeg/png/webp, max 5MB)"
+//	@Success		200		{object}	response.UploadImageData
+//	@Failure		400		{object}	ErrorApiResponse	"Bad request (missing file, invalid type)"
+//	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/products/image [post]
+func UploadProductImageHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(5 << 20); err != nil {
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("file too large or invalid form (max 5MB)"), "validation")
+		return
+	}
+
+	file, _, err := r.FormFile("image")
+	if err != nil {
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("image field is required"), "validation")
+		return
+	}
+	defer file.Close()
+
+	imageURL, err := productService.UploadProductImage(file)
+	if err != nil {
+		if strings.Contains(err.Error(), "unsupported image type") {
+			WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+			return
+		}
+		logger.WithError(err).Error("upload_product_image_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "upload_product_image")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, response.UploadImageData{ImageURL: imageURL})
+}
+
+// DeleteProductImageHandler godoc
+//
+//	@Summary		Delete product image
+//	@Description	Delete an uploaded product image by its URL. Call this if product creation fails after a successful image upload.
+//	@Description	Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+//	@Tags			product
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		DeleteProductImageRequest	true	"Image URL to delete"
+//	@Success		200		{string}	string						"Success. data contains \"OK\""
+//	@Failure		400		{object}	ErrorApiResponse			"Bad request (missing or invalid image_url)"
+//	@Failure		404		{object}	ErrorApiResponse			"Image not found"
+//	@Failure		500		{object}	ErrorApiResponse			"Internal server error"
+//	@Router			/products/image [delete]
+func DeleteProductImageHandler(w http.ResponseWriter, r *http.Request) {
+	inp := DeleteProductImageRequest{}
+	if err := ParseJson(r.Body, &inp); err != nil {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
+		return
+	}
+
+	if inp.ImageURL == "" {
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("image_url is required"), "validation")
+		return
+	}
+
+	if err := productService.DeleteProductImage(inp.ImageURL); err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
+		if strings.Contains(err.Error(), "invalid") {
+			WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+			return
+		}
+		logger.WithError(err).Error("delete_product_image_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_product_image")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, "OK")
 }
 
 func validateCreateProduct(inp CreateProductRequest) (bool, error) {

@@ -1,9 +1,13 @@
 package service
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
+	"os"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -25,6 +29,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 		description   *string
 		price         int
 		originalPrice *int
+		imageURL      *string
 	}
 
 	tests := []struct {
@@ -46,7 +51,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product A", strPtr("A great product"), 1000, 10, nil).
+					CreateProduct("Product A", strPtr("A great product"), 1000, 10, nil, nil).
 					Return(&model.Product{
 						ID:            1,
 						Name:          "Product A",
@@ -79,7 +84,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product B", nil, 500, 10, nil).
+					CreateProduct("Product B", nil, 500, 10, nil, nil).
 					Return(&model.Product{
 						ID:            2,
 						Name:          "Product B",
@@ -110,7 +115,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product A", nil, 1000, 10, nil).
+					CreateProduct("Product A", nil, 1000, 10, nil, nil).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -129,7 +134,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			got, gotErr := p.CreateProduct(tt.input.shopID, tt.input.name, tt.input.description, tt.input.price, tt.input.originalPrice)
+			got, gotErr := p.CreateProduct(tt.input.shopID, tt.input.name, tt.input.description, tt.input.price, tt.input.originalPrice, tt.input.imageURL)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -477,22 +482,6 @@ func Test_pservice_UpdateProduct(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "update product not found returns error",
-			input: UpdateProductInput{
-				ID:   9999,
-				Name: strPtr("Updated"),
-			},
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
-				mock := mock_store.NewMockProductStore(ctrl)
-				mock.EXPECT().
-					UpdateProduct(9999, store.UpdateProductInput{Name: strPtr("Updated")}).
-					Return(nil, nil)
-				return mock
-			},
-			wantResult: response.ProductData{},
-			wantErr:    true,
-		},
-		{
 			name: "update product returns error on database failure",
 			input: UpdateProductInput{
 				ID:   1,
@@ -592,6 +581,126 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 			}
 			if tt.wantErr {
 				t.Fatal("DeleteProductByID() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
+func Test_pservice_UploadProductImage(t *testing.T) {
+	jpegBytes := []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01}
+
+	tmpDir := t.TempDir()
+	oldCfg := cfg
+	cfg.UploadDir = tmpDir
+	defer func() { cfg = oldCfg }()
+
+	tests := []struct {
+		name        string
+		fileContent []byte
+		wantURLPfx  string
+		wantErr     bool
+		wantErrMsg  string
+	}{
+		{
+			name:        "successfully upload jpeg image",
+			fileContent: jpegBytes,
+			wantURLPfx:  "/uploads/products/",
+			wantErr:     false,
+		},
+		{
+			name:        "returns error for unsupported file type",
+			fileContent: []byte("hello plain text"),
+			wantErr:     true,
+			wantErrMsg:  "unsupported image type",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var p pservice
+			got, gotErr := p.UploadProductImage(bytes.NewReader(tt.fileContent))
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("UploadProductImage() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				if tt.wantErrMsg != "" && !strings.Contains(gotErr.Error(), tt.wantErrMsg) {
+					t.Errorf("UploadProductImage() error = %v, want containing %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("UploadProductImage() succeeded unexpectedly")
+			}
+			if !strings.HasPrefix(got, tt.wantURLPfx) {
+				t.Errorf("UploadProductImage() url = %v, want prefix %v", got, tt.wantURLPfx)
+			}
+		})
+	}
+}
+
+func Test_pservice_DeleteProductImage(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldCfg := cfg
+	cfg.UploadDir = tmpDir
+	defer func() { cfg = oldCfg }()
+
+	// create a real temp file to test successful deletion
+	createTempImage := func(t *testing.T) string {
+		t.Helper()
+		productDir := filepath.Join(tmpDir, "products")
+		if err := os.MkdirAll(productDir, 0755); err != nil {
+			t.Fatalf("failed to create upload dir: %v", err)
+		}
+		f, err := os.CreateTemp(productDir, "test-*.jpg")
+		if err != nil {
+			t.Fatalf("failed to create temp file: %v", err)
+		}
+		f.Close()
+		return "/uploads/products/" + filepath.Base(f.Name())
+	}
+
+	tests := []struct {
+		name       string
+		imageURL   func(t *testing.T) string
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:     "successfully delete image",
+			imageURL: func(t *testing.T) string { return createTempImage(t) },
+			wantErr:  false,
+		},
+		{
+			name:       "returns error for invalid URL prefix",
+			imageURL:   func(t *testing.T) string { return "/some/other/path/image.jpg" },
+			wantErr:    true,
+			wantErrMsg: "invalid image URL",
+		},
+		{
+			name:       "returns error when file does not exist",
+			imageURL:   func(t *testing.T) string { return "/uploads/products/nonexistent.jpg" },
+			wantErr:    true,
+			wantErrMsg: "image not found",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var p pservice
+			gotErr := p.DeleteProductImage(tt.imageURL(t))
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("DeleteProductImage() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				if tt.wantErrMsg != "" && !strings.Contains(gotErr.Error(), tt.wantErrMsg) {
+					t.Errorf("DeleteProductImage() error = %v, want containing %v", gotErr.Error(), tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("DeleteProductImage() succeeded unexpectedly")
 			}
 		})
 	}

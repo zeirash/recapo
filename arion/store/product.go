@@ -19,7 +19,7 @@ type (
 	ProductStore interface {
 		GetProductByID(productID int, shopID ...int) (*model.Product, error)
 		GetProductsByShopID(shopID int, searchQuery *string) ([]model.Product, error)
-		CreateProduct(name string, description *string, price int, shopID int, originalPrice *int) (*model.Product, error)
+		CreateProduct(name string, description *string, price int, shopID int, originalPrice *int, imageURL *string) (*model.Product, error)
 		UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error)
 		DeleteProductByID(productID int) error
 		GetProductsListByActiveOrders(shopID int) ([]model.PurchaseProduct, error)
@@ -34,6 +34,7 @@ type (
 		Description   *string
 		Price         *int
 		OriginalPrice *int
+		ImageURL      *string
 	}
 )
 
@@ -50,7 +51,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	criteria := []interface{}{productID}
 
 	q := `
-		SELECT id, shop_id, name, description, price, original_price, created_at, updated_at
+		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
 		FROM products
 		WHERE id = $1
 	`
@@ -61,7 +62,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	}
 
 	var product model.Product
-	err := p.db.QueryRow(q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRow(q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -74,7 +75,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 
 func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.Product, error) {
 	q := `
-		SELECT id, shop_id, name, description, price, original_price, created_at, updated_at
+		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
 		FROM products
 		WHERE shop_id = $1
 	`
@@ -97,7 +98,7 @@ func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.
 	products := []model.Product{}
 	for rows.Next() {
 		var product model.Product
-		err := rows.Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.CreatedAt, &product.UpdatedAt)
+		err := rows.Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +108,7 @@ func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.
 	return products, nil
 }
 
-func (p *product) CreateProduct(name string, description *string, price int, shopID int, originalPrice *int) (*model.Product, error) {
+func (p *product) CreateProduct(name string, description *string, price int, shopID int, originalPrice *int, imageURL *string) (*model.Product, error) {
 	now := time.Now()
 	origPrice := price
 	if originalPrice != nil {
@@ -116,14 +117,15 @@ func (p *product) CreateProduct(name string, description *string, price int, sho
 
 	var id int
 	var desc string
+	var imgURL string
 
 	q := `
-		INSERT INTO products (name, description, price, original_price, shop_id, created_at)
-		VALUES ($1, COALESCE($2, ''), $3, $4, $5, $6)
-		RETURNING id, description
+		INSERT INTO products (name, description, price, original_price, shop_id, image_url, created_at)
+		VALUES ($1, COALESCE($2, ''), $3, $4, $5, COALESCE($6, ''), $7)
+		RETURNING id, description, image_url
 	`
 
-	err := p.db.QueryRow(q, name, description, price, origPrice, shopID, now).Scan(&id, &desc)
+	err := p.db.QueryRow(q, name, description, price, origPrice, shopID, imageURL, now).Scan(&id, &desc, &imgURL)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName
@@ -137,6 +139,7 @@ func (p *product) CreateProduct(name string, description *string, price int, sho
 		Description:   desc,
 		Price:         price,
 		OriginalPrice: origPrice,
+		ImageURL:      imgURL,
 		ShopID:        shopID,
 		CreatedAt:     now,
 	}, nil
@@ -163,6 +166,10 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 		newSet := fmt.Sprintf("original_price = %d", *input.OriginalPrice)
 		set = append(set, newSet)
 	}
+	if input.ImageURL != nil {
+		newSet := fmt.Sprintf("image_url = '%s'", *input.ImageURL)
+		set = append(set, newSet)
+	}
 
 	set = append(set, "updated_at = now()")
 
@@ -170,12 +177,12 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 		UPDATE products
 		SET %s
 		WHERE id = $1
-		RETURNING id, shop_id, name, description, price, original_price, created_at, updated_at
+		RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
 	`
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := p.db.QueryRow(q, productID).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRow(q, productID).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName
