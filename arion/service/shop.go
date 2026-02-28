@@ -64,6 +64,7 @@ func (s *shopService) GetPublicProducts(shareToken string) ([]response.ProductDa
 			Description:   product.Description,
 			Price:         product.Price,
 			OriginalPrice: product.OriginalPrice,
+			ImageURL:      product.ImageURL,
 			CreatedAt:     product.CreatedAt,
 		}
 		if product.UpdatedAt.Valid {

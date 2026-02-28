@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useQuery } from 'react-query'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Box, Button, Card, Flex, Text, Input } from 'theme-ui'
 import { useTranslations, useLocale } from 'next-intl'
-import { api } from '@/utils/api'
+import { api, resolveImageURL } from '@/utils/api'
 import { useChangeLocale } from '@/hooks/useLocale'
 
 type Product = {
@@ -14,6 +14,7 @@ type Product = {
   name: string
   description?: string
   price: number
+  image_url?: string | null
 }
 
 function SharePageHeader() {
@@ -103,6 +104,15 @@ export default function SharePage() {
   )
 
   const products = productsRes || []
+
+  const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
+
+  useEffect(() => {
+    if (!zoomedImage) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setZoomedImage(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [zoomedImage])
 
   const [quantities, setQuantities] = useState<Record<number, number>>({})
   const [customerName, setCustomerName] = useState('')
@@ -199,7 +209,7 @@ export default function SharePage() {
             <Flex
               sx={{
                 display: 'grid',
-                gridTemplateColumns: ['1fr', 'repeat(2, 1fr)'],
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                 gap: 3,
               }}
             >
@@ -207,41 +217,68 @@ export default function SharePage() {
                 <Card
                   key={product.id}
                   sx={{
-                    p: 4,
+                    p: 0,
                     borderRadius: 'medium',
                     border: '1px solid',
                     borderColor: 'border',
                     bg: 'white',
                     boxShadow: 'small',
+                    overflow: 'hidden',
                   }}
                 >
-                  <Flex sx={{ flexDirection: 'column', justifyContent: 'space-between', minHeight: 60 }}>
-                    <Text sx={{ fontWeight: 600, fontSize: 2, mb: 1 }}>{product.name}</Text>
-                    {product.description ? (
-                      <Text sx={{ color: 'text.secondary', fontSize: 1, mb: 2 }}>{product.description}</Text>
-                    ) : null}
-                    <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2, mt: 1 }}>
-                      <Text sx={{ color: 'primary', fontWeight: 600 }}>
-                        Rp. {product.price.toLocaleString()}
+                  <Box
+                    sx={{
+                      width: '100%',
+                      aspectRatio: '1/1',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {product.image_url ? (
+                      <img
+                        src={resolveImageURL(product.image_url)}
+                        alt={product.name}
+                        onClick={() => setZoomedImage({ src: resolveImageURL(product.image_url)!, alt: product.name })}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
+                      />
+                    ) : (
+                      <Text sx={{ fontSize: 5, fontWeight: 700, color: 'white' }}>
+                        {product.name.charAt(0).toUpperCase()}
                       </Text>
-                      <Box as="label" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Text as="span" sx={{ fontSize: 1, color: 'text.secondary' }}>Qty</Text>
-                        <Input
-                          type="number"
-                          min={0}
-                          value={quantities[product.id] ?? 0}
-                          onChange={(e) => setQty(product.id, parseInt(e.target.value, 10) || 0)}
-                          sx={{
-                            width: 56,
-                            py: 1,
-                            px: 2,
-                            fontSize: 1,
-                            textAlign: 'center',
-                          }}
-                        />
-                      </Box>
+                    )}
+                  </Box>
+                  <Box sx={{ p: 3 }}>
+                    <Flex sx={{ flexDirection: 'column', justifyContent: 'space-between', minHeight: 60 }}>
+                      <Text sx={{ fontWeight: 600, fontSize: 2, mb: 1 }}>{product.name}</Text>
+                      {product.description ? (
+                        <Text sx={{ color: 'text.secondary', fontSize: 1, mb: 2 }}>{product.description}</Text>
+                      ) : null}
+                      <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2, mt: 1 }}>
+                        <Text sx={{ color: 'primary', fontWeight: 600 }}>
+                          Rp. {product.price.toLocaleString()}
+                        </Text>
+                        <Box as="label" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Text as="span" sx={{ fontSize: 1, color: 'text.secondary' }}>Qty</Text>
+                          <Input
+                            type="number"
+                            min={0}
+                            value={quantities[product.id] ?? 0}
+                            onChange={(e) => setQty(product.id, parseInt(e.target.value, 10) || 0)}
+                            sx={{
+                              width: 56,
+                              py: 1,
+                              px: 2,
+                              fontSize: 1,
+                              textAlign: 'center',
+                            }}
+                          />
+                        </Box>
+                      </Flex>
                     </Flex>
-                  </Flex>
+                  </Box>
                 </Card>
               ))}
             </Flex>
@@ -328,6 +365,53 @@ export default function SharePage() {
         </Card>
         </Flex>
       </Box>
+
+      {zoomedImage && (
+        <Box
+          onClick={() => setZoomedImage(null)}
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            bg: 'rgba(0,0,0,0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'zoom-out',
+          }}
+        >
+          <img
+            src={zoomedImage.src}
+            alt={zoomedImage.alt}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 8 }}
+          />
+          <Box
+            as="button"
+            onClick={() => setZoomedImage(null)}
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              bg: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              borderRadius: '50%',
+              width: 36,
+              height: 36,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: 'white',
+              fontSize: 3,
+              lineHeight: 1,
+              '&:hover': { bg: 'rgba(255,255,255,0.3)' },
+            }}
+          >
+            ×
+          </Box>
+        </Box>
+      )}
     </Box>
   )
 }
