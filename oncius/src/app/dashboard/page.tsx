@@ -165,10 +165,10 @@ const DashboardPage = () => {
                 flexWrap: 'wrap',
               }}
             >
-              <StatCard label="Total Orders (this month)" value={stats.totalOrders} icon={Package} />
-              <StatCard label="Revenue (this month)" value={formatPrice(stats.revenue)} icon={DollarSign} />
-              <StatCard label="Customers" value={stats.customers} icon={Users} />
-              <StatCard label="Products" value={stats.products} icon={ShoppingBag} />
+              <StatCard label={t('dashboard.totalOrdersThisMonth')} value={stats.totalOrders} icon={Package} />
+              <StatCard label={t('dashboard.revenueThisMonth')} value={formatPrice(stats.revenue)} icon={DollarSign} />
+              <StatCard label={t('dashboard.customers')} value={stats.customers} icon={Users} />
+              <StatCard label={t('dashboard.products')} value={stats.products} icon={ShoppingBag} />
             </Flex>
 
             {/* Quick links */}
