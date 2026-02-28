@@ -88,9 +88,16 @@ const LoginPage = () => {
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
-                {t('common.password')}
-              </Text>
+              <Flex sx={{ justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
+                <Text as="label" sx={{ fontWeight: 'heading' }}>
+                  {t('common.password')}
+                </Text>
+                <Link href="/forgot-password">
+                  <Text sx={{ color: 'primary', fontSize: 0, cursor: 'pointer' }}>
+                    {t('auth.forgotPassword')}
+                  </Text>
+                </Link>
+              </Flex>
               <Input
                 type="password"
                 value={password}

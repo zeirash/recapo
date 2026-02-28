@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Box, Container, Heading, Text, Input, Button, Alert, Flex } from 'theme-ui'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
 
 const RegisterPage = () => {
+  const t = useTranslations()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,25 +23,25 @@ const RegisterPage = () => {
     const newErrors: { [key: string]: string } = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('validation.nameRequired')
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email is required'
+      newErrors.email = t('validation.emailRequired')
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid'
+      newErrors.email = t('validation.emailInvalid')
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = t('validation.passwordRequired')
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
+      newErrors.password = t('validation.passwordMinLength')
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password'
+      newErrors.confirmPassword = t('validation.confirmPasswordRequired')
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
+      newErrors.confirmPassword = t('validation.passwordsMismatch')
     }
 
     setErrors(newErrors)
@@ -75,26 +77,26 @@ const RegisterPage = () => {
       <Container sx={{ maxWidth: '500px' }}>
         <Box sx={{ bg: 'background', p: 4, borderRadius: 'large', boxShadow: 'medium' }}>
           <Heading as="h1" sx={{ textAlign: 'center', mb: 4 }}>
-            Create Account
+            {t('auth.register')}
           </Heading>
 
           {registerError && (
             <Alert sx={{ mb: 3, bg: 'error', color: 'white' }}>
-              {registerError instanceof Error ? registerError.message : 'Registration failed'}
+              {registerError instanceof Error ? registerError.message : t('auth.registrationFailed')}
             </Alert>
           )}
 
           <Box as="form" onSubmit={handleSubmit}>
             <Box sx={{ mb: 3 }}>
               <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
-                Full Name
+                {t('auth.fullName')}
               </Text>
               <Input
                 name="name"
                 type="text"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Enter your full name"
+                placeholder={t('auth.enterFullName')}
                 sx={{ width: '100%' }}
                 className={errors.name ? 'error' : ''}
               />
@@ -107,14 +109,14 @@ const RegisterPage = () => {
 
             <Box sx={{ mb: 3 }}>
               <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
-                Email
+                {t('common.email')}
               </Text>
               <Input
                 name="email"
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Enter your email"
+                placeholder={t('auth.enterEmail')}
                 sx={{ width: '100%' }}
                 className={errors.email ? 'error' : ''}
               />
@@ -127,14 +129,14 @@ const RegisterPage = () => {
 
             <Box sx={{ mb: 3 }}>
               <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
-                Password
+                {t('common.password')}
               </Text>
               <Input
                 name="password"
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Enter your password"
+                placeholder={t('auth.enterPassword')}
                 sx={{ width: '100%' }}
                 className={errors.password ? 'error' : ''}
               />
@@ -147,14 +149,14 @@ const RegisterPage = () => {
 
             <Box sx={{ mb: 4 }}>
               <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
-                Confirm Password
+                {t('auth.confirmPassword')}
               </Text>
               <Input
                 name="confirmPassword"
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="Confirm your password"
+                placeholder={t('auth.confirmYourPassword')}
                 sx={{ width: '100%' }}
                 className={errors.confirmPassword ? 'error' : ''}
               />
@@ -171,16 +173,16 @@ const RegisterPage = () => {
               sx={{ width: '100%', mb: 3 }}
               disabled={registerLoading}
             >
-              {registerLoading ? 'Creating account...' : 'Create Account'}
+              {registerLoading ? t('auth.creatingAccount') : t('auth.register')}
             </Button>
 
             <Flex sx={{ justifyContent: 'center', gap: 1 }}>
-              <Text sx={{ color: 'text.secondary' }}>Already have an account?</Text>
+              <Text sx={{ color: 'text.secondary' }}>{t('auth.hasAccount')}</Text>
               <Link href="/login">
                 <Text
                   sx={{ color: 'primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                 >
-                  Login here
+                  {t('auth.loginHere')}
                 </Text>
               </Link>
             </Flex>

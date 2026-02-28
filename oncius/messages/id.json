@@ -88,7 +88,12 @@
     "noAccount": "Belum punya akun?",
     "hasAccount": "Sudah punya akun?",
     "registerHere": "Daftar di sini",
-    "loginHere": "Masuk di sini"
+    "loginHere": "Masuk di sini",
+    "forgotPassword": "Lupa Kata Sandi?",
+    "forgotPasswordTitle": "Reset Kata Sandi",
+    "forgotPasswordDescription": "Masukkan email Anda dan kami akan mengirimkan tautan reset.",
+    "forgotPasswordSubmit": "Kirim Tautan Reset",
+    "backToLogin": "Kembali ke Login"
   },
   "validation": {
     "nameRequired": "Nama wajib diisi",
