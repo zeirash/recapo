@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -595,11 +596,13 @@ func Test_pservice_UploadProductImage(t *testing.T) {
 	defer func() { cfg = oldCfg }()
 
 	tests := []struct {
-		name        string
-		fileContent []byte
-		wantURLPfx  string
-		wantErr     bool
-		wantErrMsg  string
+		name         string
+		fileContent  []byte
+		r2BucketName string // if non-empty, enables R2 path
+		r2UploadErr  error  // error r2UploadFunc should return (nil = success with mock URL)
+		wantURLPfx   string
+		wantErr      bool
+		wantErrMsg   string
 	}{
 		{
 			name:        "successfully upload jpeg image",
@@ -613,10 +616,42 @@ func Test_pservice_UploadProductImage(t *testing.T) {
 			wantErr:     true,
 			wantErrMsg:  "unsupported image type",
 		},
+		{
+			name:         "with R2 configured, delegates to R2 upload",
+			fileContent:  jpegBytes,
+			r2BucketName: "test-bucket",
+			r2UploadErr:  errors.New("mock R2 unavailable"),
+			wantErr:      true,
+			wantErrMsg:   "mock R2 unavailable",
+		},
+		{
+			name:         "with R2 configured, returns R2 URL on success",
+			fileContent:  jpegBytes,
+			r2BucketName: "test-bucket",
+			r2UploadErr:  nil,
+			wantURLPfx:   "https://pub-test.r2.dev/products/",
+			wantErr:      false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.r2BucketName != "" {
+				cfg.R2BucketName = tt.r2BucketName
+				cfg.R2PublicURL = "https://pub-test.r2.dev"
+				defer func() {
+					cfg.R2BucketName = ""
+					cfg.R2PublicURL = ""
+				}()
+
+				uploadErr := tt.r2UploadErr
+				old := r2UploadFunc
+				r2UploadFunc = func(key string, body io.Reader, contentType string) error {
+					return uploadErr
+				}
+				defer func() { r2UploadFunc = old }()
+			}
+
 			var p pservice
 			got, gotErr := p.UploadProductImage(bytes.NewReader(tt.fileContent))
 
@@ -661,10 +696,12 @@ func Test_pservice_DeleteProductImage(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		imageURL   func(t *testing.T) string
-		wantErr    bool
-		wantErrMsg string
+		name         string
+		imageURL     func(t *testing.T) string
+		r2BucketName string // if non-empty, enables R2 path
+		r2DeleteErr  error  // error r2DeleteFunc should return
+		wantErr      bool
+		wantErrMsg   string
 	}{
 		{
 			name:     "successfully delete image",
@@ -683,10 +720,41 @@ func Test_pservice_DeleteProductImage(t *testing.T) {
 			wantErr:    true,
 			wantErrMsg: "image not found",
 		},
+		{
+			name:         "with R2 configured, delegates to R2 delete for R2 URL",
+			imageURL:     func(t *testing.T) string { return "https://pub-test.r2.dev/products/abc.jpg" },
+			r2BucketName: "test-bucket",
+			r2DeleteErr:  errors.New("mock R2 unavailable"),
+			wantErr:      true,
+			wantErrMsg:   "mock R2 unavailable",
+		},
+		{
+			name:         "with R2 configured, falls back to local path for non-R2 URL",
+			imageURL:     func(t *testing.T) string { return "/uploads/products/nonexistent.jpg" },
+			r2BucketName: "test-bucket",
+			wantErr:      true,
+			wantErrMsg:   "image not found",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.r2BucketName != "" {
+				cfg.R2BucketName = tt.r2BucketName
+				cfg.R2PublicURL = "https://pub-test.r2.dev"
+				defer func() {
+					cfg.R2BucketName = ""
+					cfg.R2PublicURL = ""
+				}()
+
+				deleteErr := tt.r2DeleteErr
+				old := r2DeleteFunc
+				r2DeleteFunc = func(key string) error {
+					return deleteErr
+				}
+				defer func() { r2DeleteFunc = old }()
+			}
+
 			var p pservice
 			gotErr := p.DeleteProductImage(tt.imageURL(t))
 

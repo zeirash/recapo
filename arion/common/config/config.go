@@ -22,6 +22,13 @@ type Config struct {
 	SecretKey string `env:"SECRET_KEY"`
 
 	UploadDir string `env:"UPLOAD_DIR" envDefault:"./uploads"`
+
+	// Cloudflare R2 (leave empty to use local filesystem)
+	R2AccountID       string `env:"R2_ACCOUNT_ID"`
+	R2AccessKeyID     string `env:"R2_ACCESS_KEY_ID"`
+	R2SecretAccessKey string `env:"R2_SECRET_ACCESS_KEY"`
+	R2BucketName      string `env:"R2_BUCKET_NAME"`
+	R2PublicURL       string `env:"R2_PUBLIC_URL"`
 }
 
 var cfg Config

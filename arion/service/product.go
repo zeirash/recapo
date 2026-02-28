@@ -1,6 +1,8 @@
 package service
 
 import (
+	"bytes"
+	"context"
 	"crypto/rand"
 	"errors"
 	"fmt"
@@ -10,6 +12,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
@@ -38,6 +44,51 @@ type (
 		ImageURL      *string
 	}
 )
+
+// r2UploadFunc uploads an object to R2; overridable in tests.
+var r2UploadFunc = func(key string, body io.Reader, contentType string) error {
+	client, err := newR2Client(cfg)
+	if err != nil {
+		return err
+	}
+	_, err = client.PutObject(context.Background(), &s3.PutObjectInput{
+		Bucket:      aws.String(cfg.R2BucketName),
+		Key:         aws.String(key),
+		Body:        body,
+		ContentType: aws.String(contentType),
+	})
+	return err
+}
+
+// r2DeleteFunc deletes an object from R2; overridable in tests.
+var r2DeleteFunc = func(key string) error {
+	client, err := newR2Client(cfg)
+	if err != nil {
+		return err
+	}
+	_, err = client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+		Bucket: aws.String(cfg.R2BucketName),
+		Key:    aws.String(key),
+	})
+	return err
+}
+
+func newR2Client(c config.Config) (*s3.Client, error) {
+	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", c.R2AccountID)
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			c.R2AccessKeyID, c.R2SecretAccessKey, "",
+		)),
+		awsconfig.WithRegion("auto"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(endpoint)
+		o.UsePathStyle = true
+	}), nil
+}
 
 func NewProductService() ProductService {
 	cfg = config.GetConfig()
@@ -207,6 +258,19 @@ func (p *pservice) UploadProductImage(file io.Reader) (string, error) {
 	}
 	filename := fmt.Sprintf("%x%s", randBytes, ext)
 
+	// Reconstruct the full file content from the already-read header bytes plus remainder.
+	fullReader := io.MultiReader(bytes.NewReader(buf[:n]), file)
+
+	// Cloud path: upload to Cloudflare R2.
+	if cfg.R2BucketName != "" {
+		objectKey := "products/" + filename
+		if err := r2UploadFunc(objectKey, fullReader, contentType); err != nil {
+			return "", err
+		}
+		return cfg.R2PublicURL + "/" + objectKey, nil
+	}
+
+	// Local filesystem path.
 	uploadDir := filepath.Join(cfg.UploadDir, "products")
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return "", err
@@ -219,11 +283,7 @@ func (p *pservice) UploadProductImage(file io.Reader) (string, error) {
 	}
 	defer dst.Close()
 
-	if _, err := dst.Write(buf[:n]); err != nil {
-		os.Remove(filePath)
-		return "", err
-	}
-	if _, err := io.Copy(dst, file); err != nil {
+	if _, err := io.Copy(dst, fullReader); err != nil {
 		os.Remove(filePath)
 		return "", err
 	}
@@ -231,8 +291,14 @@ func (p *pservice) UploadProductImage(file io.Reader) (string, error) {
 	return "/uploads/products/" + filename, nil
 }
 
-
 func (p *pservice) DeleteProductImage(imageURL string) error {
+	// Cloud path: delete from Cloudflare R2.
+	if cfg.R2BucketName != "" && cfg.R2PublicURL != "" && strings.HasPrefix(imageURL, cfg.R2PublicURL) {
+		objectKey := strings.TrimPrefix(imageURL, cfg.R2PublicURL+"/")
+		return r2DeleteFunc(objectKey)
+	}
+
+	// Local filesystem path.
 	const urlPrefix = "/uploads/products/"
 	if !strings.HasPrefix(imageURL, urlPrefix) {
 		return errors.New("invalid image URL")
