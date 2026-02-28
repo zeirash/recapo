@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { Box, Flex, Text, Button } from 'theme-ui'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
+import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, type LucideIcon } from 'lucide-react'
 
 interface SideMenuProps {
   selectedMenu: string
@@ -17,17 +18,16 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const { user, logout } = useAuth()
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const router = useRouter()
-  const pathname = usePathname()
   const locale = useLocale()
   const changeLocale = useChangeLocale()
 
-  const menuItems = [
-    { id: 'dashboard', label: t('dashboard'), icon: '🏠', path: '/dashboard' },
-    { id: 'products', label: t('products'), icon: '🛍️', path: '/products' },
-    { id: 'orders', label: t('orders'), icon: '📦', path: '/orders' },
-    { id: 'temp_orders', label: t('tempOrders'), icon: '📋', path: '/temp_orders' },
-    { id: 'purchase', label: t('purchase'), icon: '🛒', path: '/purchase' },
-    { id: 'customers', label: t('customers'), icon: '👥', path: '/customers' },
+  const menuItems: { id: string; label: string; icon: LucideIcon; path: string }[] = [
+    { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'products', label: t('products'), icon: ShoppingBag, path: '/products' },
+    { id: 'orders', label: t('orders'), icon: Package, path: '/orders' },
+    { id: 'temp_orders', label: t('tempOrders'), icon: ClipboardList, path: '/temp_orders' },
+    { id: 'purchase', label: t('purchase'), icon: ShoppingCart, path: '/purchase' },
+    { id: 'customers', label: t('customers'), icon: Users, path: '/customers' },
   ]
 
   const handleMenuClick = (item: typeof menuItems[0]) => {
@@ -82,7 +82,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
             onClick={() => handleMenuClick(item)}
           >
             <Flex sx={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-              <Box sx={{ fontSize: 3, lineHeight: 1 }}>{item.icon}</Box>
+              <item.icon size={20} />
               <Text sx={{ fontSize: 0, lineHeight: 1, mt: 1 }}>{item.label}</Text>
             </Flex>
           </Box>

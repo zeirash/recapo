@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from 'theme-ui'
+import { Plus } from 'lucide-react'
 
 type AddButtonProps = {
   onClick: () => void
@@ -25,7 +26,7 @@ export default function AddButton({ onClick, title }: AddButtonProps) {
         fontWeight: 'bold',
       }}
     >
-      +
+      <Plus size={18} />
     </Button>
   )
 }

@@ -7,6 +7,7 @@ import { Box, Flex, Text, Button, IconButton } from 'theme-ui'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { Menu } from 'lucide-react'
 
 const Header = () => {
   const t = useTranslations('nav')
@@ -87,9 +88,7 @@ const Header = () => {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
-            <Box sx={{ width: 20, height: 2, bg: 'text', mb: 1 }} />
-            <Box sx={{ width: 20, height: 2, bg: 'text', mb: 1 }} />
-            <Box sx={{ width: 20, height: 2, bg: 'text' }} />
+            <Menu size={20} />
           </IconButton>
         </Flex>
       </Flex>

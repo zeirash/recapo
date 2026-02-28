@@ -8,6 +8,7 @@ import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import { api } from '@/utils/api'
+import { Phone, MapPin, User } from 'lucide-react'
 
 type Customer = {
   id: number
@@ -298,11 +299,10 @@ export default function CustomersPage() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontSize: 3,
                               flexShrink: 0,
                             }}
                           >
-                            📞
+                            <Phone size={14} />
                           </Box>
                           <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Text sx={{ fontSize: 1, lineHeight: 1.5, wordBreak: 'break-word' }}>
@@ -320,11 +320,10 @@ export default function CustomersPage() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontSize: 3,
                               flexShrink: 0,
                             }}
                           >
-                            📍
+                            <MapPin size={14} />
                           </Box>
                           <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Text sx={{ fontSize: 1, lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
@@ -347,7 +346,7 @@ export default function CustomersPage() {
                       color: 'text.secondary',
                     }}
                   >
-                    <Box sx={{ fontSize: 6, opacity: 0.4 }}>👤</Box>
+                    <User size={48} opacity={0.4} />
                     <Text sx={{ fontSize: 2 }}>Select a customer to view details</Text>
                     <Text sx={{ fontSize: 1 }}>Choose from the list on the left</Text>
                   </Flex>

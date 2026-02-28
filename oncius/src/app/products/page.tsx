@@ -8,6 +8,7 @@ import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
+import { Share2, Check, Package } from 'lucide-react'
 
 type Product = {
   id: number
@@ -279,7 +280,7 @@ export default function ProductsPage() {
                         fontSize: 1,
                       }}
                     >
-                      {shareCopied ? '✓' : '🔗'}
+                      {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
                     </Button>
                   </Flex>
                 </Box>
@@ -435,7 +436,7 @@ export default function ProductsPage() {
                       color: 'text.secondary',
                     }}
                   >
-                    <Box sx={{ fontSize: 6, opacity: 0.4 }}>📦</Box>
+                    <Package size={48} opacity={0.4} />
                     <Text sx={{ fontSize: 2 }}>{tp('selectProduct')}</Text>
                     <Text sx={{ fontSize: 1 }}>{tp('chooseFromList')}</Text>
                   </Flex>

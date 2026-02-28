@@ -5,6 +5,7 @@ import { Box, Heading, Text, Button, Flex, Card } from 'theme-ui'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import LandingHeader from '@/components/LandingHeader'
+import { Package, Tag, Users, BarChart2, Check, type LucideIcon } from 'lucide-react'
 
 const BLOB_PATH =
   'M76.5 42.2c-12.3 8.5-28.2 12.8-38.5 24.2-10.3 11.4-15 29.8-12.8 46.2 2.2 16.4 12.6 30.8 25.5 42.2 12.9 11.4 28.3 19.8 42.2 25.2 13.9 5.4 26.3 7.8 38.5 4.2 12.2-3.6 24.2-12.6 35.5-22 11.3-9.4 21.9-19.4 30.5-30.4 8.6-11 15.2-23 18.5-35.5 3.3-12.5 3.3-25.5-1.5-37.5-4.8-12-14.4-23-26.4-31-12-8-26.4-13-40.4-14.5-14-1.5-27.6 1-39.6 6.5z'
@@ -81,11 +82,11 @@ const CurveLines = () => (
   </Box>
 )
 
-const FEATURES = [
-  { titleKey: 'landing.featureOrderManagement', descKey: 'landing.featureOrderManagementDesc', icon: '📦' },
-  { titleKey: 'landing.featureProductCatalog', descKey: 'landing.featureProductCatalogDesc', icon: '🏷️' },
-  { titleKey: 'landing.featureCustomerDatabase', descKey: 'landing.featureCustomerDatabaseDesc', icon: '👥' },
-  { titleKey: 'landing.featureDashboardReports', descKey: 'landing.featureDashboardReportsDesc', icon: '📊' },
+const FEATURES: { titleKey: string; descKey: string; icon: LucideIcon }[] = [
+  { titleKey: 'landing.featureOrderManagement', descKey: 'landing.featureOrderManagementDesc', icon: Package },
+  { titleKey: 'landing.featureProductCatalog', descKey: 'landing.featureProductCatalogDesc', icon: Tag },
+  { titleKey: 'landing.featureCustomerDatabase', descKey: 'landing.featureCustomerDatabaseDesc', icon: Users },
+  { titleKey: 'landing.featureDashboardReports', descKey: 'landing.featureDashboardReportsDesc', icon: BarChart2 },
 ]
 
 export default function HomePage() {
@@ -259,7 +260,7 @@ export default function HomePage() {
                   zIndex: 0,
                 }}
               >
-                <Text sx={{ fontSize: 5, mb: 2 }}>{f.icon}</Text>
+                <Box sx={{ mb: 2 }}><f.icon size={36} /></Box>
                 <Heading as="h4" sx={{ fontSize: 2, mb: 2, color: 'text' }}>
                   {t(f.titleKey)}
                 </Heading>
@@ -335,7 +336,7 @@ export default function HomePage() {
                       color: 'text',
                     }}
                   >
-                    <Text sx={{ color: 'success' }}>✓</Text>
+                    <Check size={16} color="green" />
                     {feature}
                   </Flex>
                 ))}

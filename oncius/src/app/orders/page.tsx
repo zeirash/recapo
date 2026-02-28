@@ -8,6 +8,7 @@ import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import { api, ApiError } from '@/utils/api'
+import { ClipboardList, X } from 'lucide-react'
 
 type OrderItem = {
   id: number
@@ -620,7 +621,7 @@ export default function OrdersPage() {
                                       }
                                     }}
                                   >
-                                    ×
+                                    <X size={16} />
                                   </Button>
                                 </Box>
                               </Box>
@@ -656,7 +657,7 @@ export default function OrdersPage() {
                       color: 'text.secondary',
                     }}
                   >
-                    <Box sx={{ fontSize: 6, opacity: 0.4 }}>📋</Box>
+                    <ClipboardList size={48} opacity={0.4} />
                     <Text sx={{ fontSize: 2 }}>{to('selectOrder')}</Text>
                     <Text sx={{ fontSize: 1 }}>{to('chooseFromList')}</Text>
                   </Flex>

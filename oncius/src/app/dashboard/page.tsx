@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
+import { Package, DollarSign, Users, ShoppingBag, type LucideIcon } from 'lucide-react'
 
 type Order = {
   id: number
@@ -28,11 +29,11 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 const StatCard = ({
   label,
   value,
-  icon,
+  icon: Icon,
 }: {
   label: string
   value: number | string
-  icon: string
+  icon: LucideIcon
 }) => (
   <Card
     sx={{
@@ -53,7 +54,7 @@ const StatCard = ({
         </Text>
         <Text sx={{ fontSize: 4, fontWeight: 700 }}>{value}</Text>
       </Box>
-      <Box sx={{ fontSize: 4, opacity: 0.6 }}>{icon}</Box>
+      <Box sx={{ opacity: 0.6 }}><Icon size={28} /></Box>
     </Flex>
   </Card>
 )
@@ -164,10 +165,10 @@ const DashboardPage = () => {
                 flexWrap: 'wrap',
               }}
             >
-              <StatCard label="Total Orders (this month)" value={stats.totalOrders} icon="📦" />
-              <StatCard label="Revenue (this month)" value={formatPrice(stats.revenue)} icon="💰" />
-              <StatCard label="Customers" value={stats.customers} icon="👥" />
-              <StatCard label="Products" value={stats.products} icon="🛍️" />
+              <StatCard label="Total Orders (this month)" value={stats.totalOrders} icon={Package} />
+              <StatCard label="Revenue (this month)" value={formatPrice(stats.revenue)} icon={DollarSign} />
+              <StatCard label="Customers" value={stats.customers} icon={Users} />
+              <StatCard label="Products" value={stats.products} icon={ShoppingBag} />
             </Flex>
 
             {/* Quick links */}
