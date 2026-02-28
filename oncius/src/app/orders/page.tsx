@@ -7,6 +7,7 @@ import { Box, Button, Card, Container, Flex, Heading, Input, Label, Select, Text
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
+import CustomerSearchSelect from '@/components/CustomerSearchSelect'
 import { api, ApiError } from '@/utils/api'
 import { ClipboardList, X } from 'lucide-react'
 
@@ -112,17 +113,6 @@ export default function OrdersPage() {
       return res.data as Order
     },
     { enabled: !!selectedOrderId }
-  )
-
-  // Fetch customers for create form
-  const { data: customersRes } = useQuery(
-    ['customers'],
-    async () => {
-      const res = await api.getCustomers()
-      if (!res.success) throw new Error(res.message || 'Failed to fetch customers')
-      return res.data as Customer[]
-    },
-    { enabled: isCreateFormOpen }
   )
 
   // Fetch products for add item form
@@ -383,7 +373,7 @@ export default function OrdersPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      <option value="all">{toStatus('all')}</option>
+                      <option value="all">{toStatus('active')}</option>
                       <option value="created">{toStatus('created')}</option>
                       <option value="in_progress">{toStatus('in_progress')}</option>
                       <option value="in_delivery">{toStatus('in_delivery')}</option>
@@ -709,17 +699,12 @@ export default function OrdersPage() {
                 <Box as="form" onSubmit={submitCreateForm}>
                   <Box sx={{ mb: 3 }}>
                     <Label htmlFor="customer">{t('customer')}</Label>
-                    <Select
-                      id="customer"
-                      value={createForm.customer_id || ''}
-                      onChange={(e) => setCreateForm({ ...createForm, customer_id: Number(e.target.value) || null })}
-                      required
-                    >
-                      <option value="">{to('selectCustomer')}</option>
-                      {(customersRes || []).map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </Select>
+                    <CustomerSearchSelect
+                      value={createForm.customer_id}
+                      onChange={(id) => setCreateForm({ ...createForm, customer_id: id })}
+                      placeholder={to('selectCustomer')}
+                      searchPlaceholder={to('searchCustomer')}
+                    />
                   </Box>
                   <Box sx={{ mb: 3 }}>
                     <Label htmlFor="notes">{to('notes')}</Label>

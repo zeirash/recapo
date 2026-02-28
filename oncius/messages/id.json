@@ -151,6 +151,7 @@
     "deleteConfirm": "Hapus pesanan ini?",
     "orderNumber": "Pesanan #{id}",
     "selectCustomer": "Pilih pelanggan",
+    "searchCustomer": "Cari pelanggan...",
     "createOrder": "Buat Pesanan",
     "addItem": "+ Tambah Item",
     "addItemTitle": "Tambah Item",
@@ -187,7 +188,8 @@
     "done": "Selesai",
     "cancelled": "Dibatalkan",
     "accepted": "Diterima",
-    "rejected": "Ditolak"
+    "rejected": "Ditolak",
+    "active": "Aktif"
   },
   "tempOrders": {
     "title": "Pesanan Sementara",

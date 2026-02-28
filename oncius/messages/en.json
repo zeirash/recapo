@@ -151,6 +151,7 @@
     "deleteConfirm": "Delete this order?",
     "orderNumber": "Order #{id}",
     "selectCustomer": "Select a customer",
+    "searchCustomer": "Search customer...",
     "createOrder": "Create Order",
     "addItem": "+ Add Item",
     "addItemTitle": "Add Item",
@@ -187,7 +188,8 @@
     "done": "Done",
     "cancelled": "Cancelled",
     "accepted": "Accepted",
-    "rejected": "Rejected"
+    "rejected": "Rejected",
+    "active": "Active"
   },
   "tempOrders": {
     "title": "Temp Orders",
