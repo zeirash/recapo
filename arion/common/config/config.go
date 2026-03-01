@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/zeirash/recapo/arion/common/logger"
@@ -34,10 +36,13 @@ type Config struct {
 var cfg Config
 
 func InitConfig() {
-	// Loading the environment variables from '.env' file.
-	err := godotenv.Load()
+	envFile := ".env.local"
+	if os.Getenv("ENV") == "production" {
+		envFile = ".env.production"
+	}
+	err := godotenv.Load(envFile)
 	if err != nil {
-		logger.WithError(err).Warn("unable to load .env file")
+		logger.WithError(err).Warn("unable to load env file: ", envFile)
 		return
 	}
 
