@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, NativeSelect, OutlinedInput, Paper, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, NativeSelect, OutlinedInput, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
@@ -581,7 +581,7 @@ export default function OrdersPage() {
                                     inputProps={{ min: '1' }}
                                     defaultValue={item.qty}
                                     size="small"
-                                    sx={{ width: '64px', textAlign: 'right', fontSize: '14px', borderRadius: '8px' }}
+                                    sx={{ width: '60px', textAlign: 'right', fontSize: '14px', borderRadius: '8px' }}
                                     onBlur={(e) => {
                                       const newQty = Number(e.target.value) || 1
                                       if (newQty !== item.qty && newQty > 0) {
@@ -661,148 +661,116 @@ export default function OrdersPage() {
         </Box>
 
         {/* Create Order Modal */}
-        {isCreateFormOpen && (
-          <Box
-            sx={{
-              position: 'fixed',
-              inset: 0,
-              bgcolor: 'rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: '16px',
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) closeCreateForm()
-            }}
-          >
-            <Paper sx={{ width: { xs: '100%', sm: '540px' } }} onClick={(e) => e.stopPropagation()}>
-            {createFormConflict ? (
-              <>
-                <Typography component="h3" sx={{ mb: '8px' }}>{to('duplicateOrderTitle')}</Typography>
-                <Box sx={{ mb: '24px', color: 'grey.500', display: 'block' }}>
+        <Dialog open={isCreateFormOpen} onClose={closeCreateForm} fullWidth maxWidth="sm">
+          {createFormConflict ? (
+            <>
+              <DialogTitle sx={{ pb: '8px' }}>{to('duplicateOrderTitle')}</DialogTitle>
+              <DialogContent sx={{ pt: '8px', pb: 0 }}>
+                <Box sx={{ mb: '8px', color: 'grey.500' }}>
                   {to('duplicateOrderMessageInline')}
                 </Box>
-                <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
-                  <Button
-                    type="button"
-                    variant="outlined"
-                    onClick={() => setCreateFormConflict(false)}
-                  >
-                    {to('chooseDifferentCustomer')}
-                  </Button>
-                  <Button type="button" variant="contained" disableElevation onClick={closeCreateForm}>
-                    {t('cancel')}
-                  </Button>
-                </Box>
-              </>
-            ) : (
-              <>
-                <Typography component="h3" sx={{ mb: '16px' }}>{to('newOrder')}</Typography>
-                <Box component="form" onSubmit={submitCreateForm}>
-                  <Box sx={{ mb: '16px' }}>
-                    <Box component="label" htmlFor="customer" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('customer')}</Box>
-                    <CustomerSearchSelect
-                      value={createForm.customer_id}
-                      onChange={(id) => setCreateForm({ ...createForm, customer_id: id })}
-                      placeholder={to('selectCustomer')}
-                      searchPlaceholder={to('searchCustomer')}
-                    />
-                  </Box>
-                  <Box sx={{ mb: '16px' }}>
-                    <Box component="label" htmlFor="notes" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{to('notes')}</Box>
-                    <OutlinedInput
-                      id="notes"
-                      value={createForm.notes}
-                      onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
-                      multiline
-                      rows={3}
-                      size="small"
-                      sx={{
-                        width: '100%',
-                        py: '8px',
-                        px: '16px',
-                        fontSize: '14px',
-                        borderRadius: '8px',
-                        border: '1px solid',
-                        borderColor: 'grey.200',
-                        resize: 'vertical',
-                      }}
-                    />
-                  </Box>
-                  <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
-                    <Button type="button" variant="outlined" onClick={closeCreateForm}>
-                      {t('cancel')}
-                    </Button>
-                    <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || !createForm.customer_id}>
-                      {to('createOrder')}
-                    </Button>
-                  </Box>
-                </Box>
-              </>
-            )}
-            </Paper>
-          </Box>
-        )}
-
-        {/* Add Item Modal */}
-        {isAddItemFormOpen && (
-          <Box
-            sx={{
-              position: 'fixed',
-              inset: 0,
-              bgcolor: 'rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: '16px',
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) closeAddItemForm()
-            }}
-          >
-            <Paper sx={{ width: { xs: '100%', sm: '540px' } }}>
-              <Typography component="h3" sx={{ mb: '16px' }}>{to('addItemTitle')}</Typography>
-              <Box component="form" onSubmit={submitAddItemForm}>
+              </DialogContent>
+              <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+                <Button type="button" variant="outlined" onClick={() => setCreateFormConflict(false)}>
+                  {to('chooseDifferentCustomer')}
+                </Button>
+                <Button type="button" variant="contained" disableElevation onClick={closeCreateForm}>
+                  {t('cancel')}
+                </Button>
+              </DialogActions>
+            </>
+          ) : (
+            <Box component="form" onSubmit={submitCreateForm}>
+              <DialogTitle sx={{ pb: '8px' }}>{to('newOrder')}</DialogTitle>
+              <DialogContent sx={{ pt: '8px', pb: 0 }}>
                 <Box sx={{ mb: '16px' }}>
-                  <Box component="label" htmlFor="product" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('product')}</Box>
-                  <NativeSelect
-                    id="product"
-                    value={addItemForm.product_id || ''}
-                    onChange={(e) => setAddItemForm({ ...addItemForm, product_id: Number(e.target.value) || null })}
-                    disableUnderline
-                    required
-                  >
-                    <option value="">{to('selectProduct')}</option>
-                    {(productsRes || []).map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </NativeSelect>
-                </Box>
-                <Box sx={{ mb: '16px' }}>
-                  <Box component="label" htmlFor="qty" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('quantity')}</Box>
-                  <OutlinedInput
-                    id="qty"
-                    type="number"
-                    inputProps={{ min: '1' }}
-                    value={addItemForm.qty}
-                    onChange={(e) => setAddItemForm({ ...addItemForm, qty: Number(e.target.value) || 1 })}
-                    size="small"
-                    required
+                  <Box component="label" htmlFor="customer" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('customer')}</Box>
+                  <CustomerSearchSelect
+                    value={createForm.customer_id}
+                    onChange={(id) => setCreateForm({ ...createForm, customer_id: id })}
+                    placeholder={to('selectCustomer')}
+                    searchPlaceholder={to('searchCustomer')}
                   />
                 </Box>
-                <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
-                  <Button type="button" variant="outlined" onClick={closeAddItemForm}>
-                    {t('cancel')}
-                  </Button>
-                  <Button type="submit" variant="contained" disableElevation disabled={addItemMutation.isLoading || !addItemForm.product_id}>
-                    {to('addItemButton')}
-                  </Button>
+                <Box sx={{ mb: '8px' }}>
+                  <Box component="label" htmlFor="notes" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{to('notes')}</Box>
+                  <OutlinedInput
+                    id="notes"
+                    value={createForm.notes}
+                    onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
+                    multiline
+                    rows={3}
+                    size="small"
+                    sx={{
+                      width: '100%',
+                      py: '8px',
+                      px: '16px',
+                      fontSize: '14px',
+                      borderRadius: '8px',
+                      border: '1px solid',
+                      borderColor: 'grey.200',
+                      resize: 'vertical',
+                    }}
+                  />
                 </Box>
+              </DialogContent>
+              <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+                <Button type="button" variant="outlined" onClick={closeCreateForm}>
+                  {t('cancel')}
+                </Button>
+                <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || !createForm.customer_id}>
+                  {to('createOrder')}
+                </Button>
+              </DialogActions>
+            </Box>
+          )}
+        </Dialog>
+
+        {/* Add Item Modal */}
+        <Dialog open={isAddItemFormOpen} onClose={closeAddItemForm} fullWidth maxWidth="xs">
+          <Box component="form" onSubmit={submitAddItemForm}>
+            <DialogTitle sx={{ pb: '8px' }}>{to('addItemTitle')}</DialogTitle>
+            <DialogContent sx={{ pt: '8px', pb: 0 }}>
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" htmlFor="product" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('product')}</Box>
+                <NativeSelect
+                  id="product"
+                  value={addItemForm.product_id || ''}
+                  onChange={(e) => setAddItemForm({ ...addItemForm, product_id: Number(e.target.value) || null })}
+                  disableUnderline
+                  required
+                  sx={{ width: '100%' }}
+                >
+                  <option value="">{to('selectProduct')}</option>
+                  {(productsRes || []).map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </NativeSelect>
               </Box>
-            </Paper>
+              <Box sx={{ mb: '8px' }}>
+                <Box component="label" htmlFor="qty" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('quantity')}</Box>
+                <OutlinedInput
+                  id="qty"
+                  type="number"
+                  inputProps={{ min: '1' }}
+                  value={addItemForm.qty}
+                  onChange={(e) => setAddItemForm({ ...addItemForm, qty: Number(e.target.value) || 1 })}
+                  size="small"
+                  sx={{ width: '60px', borderRadius: '8px' }}
+                  required
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+              <Button type="button" variant="outlined" onClick={closeAddItemForm}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" variant="contained" disableElevation disabled={addItemMutation.isLoading || !addItemForm.product_id}>
+                {to('addItemButton')}
+              </Button>
+            </DialogActions>
           </Box>
-        )}
+        </Dialog>
 
       </Container>
     </Layout>

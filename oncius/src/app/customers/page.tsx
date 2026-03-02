@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, OutlinedInput, Paper, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, OutlinedInput, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
@@ -331,50 +331,33 @@ export default function CustomersPage() {
           )}
         </Box>
 
-        {isFormOpen && (
-          <Box
-            sx={{
-              position: 'fixed',
-              inset: 0,
-              bgcolor: 'rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: '16px',
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) closeForm()
-            }}
-          >
-            <Paper sx={{ width: { xs: '100%', sm: '540px' }, p: '24px' }}>
-              <Typography component="h3" sx={{ mb: '16px' }}>
-                {editingCustomer ? 'Edit Customer' : 'New Customer'}
-              </Typography>
-              <Box component="form" onSubmit={submitForm}>
-                <Box sx={{ mb: '16px' }}>
-                  <Box component="label" htmlFor="name" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>Name</Box>
-                  <OutlinedInput size="small" fullWidth id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-                </Box>
-                <Box sx={{ mb: '16px' }}>
-                  <Box component="label" htmlFor="phone" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>Phone</Box>
-                  <OutlinedInput size="small" fullWidth id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
-                </Box>
-                <Box sx={{ mb: '24px' }}>
-                  <Box component="label" htmlFor="address" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>Address</Box>
-                  <OutlinedInput size="small" fullWidth multiline rows={3} id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required />
-                </Box>
-                <Box sx={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                  <Button type="button" variant="outlined" onClick={closeForm}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || updateMutation.isLoading}>
-                    {editingCustomer ? 'Save Changes' : 'Create'}
-                  </Button>
-                </Box>
+        <Dialog open={isFormOpen} onClose={closeForm} fullWidth maxWidth="sm">
+          <Box component="form" onSubmit={submitForm}>
+            <DialogTitle sx={{ pb: '8px' }}>{editingCustomer ? 'Edit Customer' : 'New Customer'}</DialogTitle>
+            <DialogContent sx={{ pt: '8px', pb: 0 }}>
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" htmlFor="name" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>Name</Box>
+                <OutlinedInput size="small" fullWidth id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               </Box>
-            </Paper>
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" htmlFor="phone" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>Phone</Box>
+                <OutlinedInput size="small" fullWidth id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+              </Box>
+              <Box sx={{ mb: '8px' }}>
+                <Box component="label" htmlFor="address" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>Address</Box>
+                <OutlinedInput size="small" fullWidth multiline rows={3} id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required />
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+              <Button type="button" variant="outlined" onClick={closeForm}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || updateMutation.isLoading}>
+                {editingCustomer ? 'Save Changes' : 'Create'}
+              </Button>
+            </DialogActions>
           </Box>
-        )}
+        </Dialog>
       </Container>
     </Layout>
   )

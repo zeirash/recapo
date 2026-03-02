@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, OutlinedInput, Paper, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, OutlinedInput, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
-import { Share2, Check, Package } from 'lucide-react'
+import { Share2, Check, Package, X } from 'lucide-react'
 
 type Product = {
   id: number
@@ -183,6 +183,7 @@ export default function ProductsPage() {
   }
 
   function handleRemoveImage() {
+    if (fileInputRef.current) fileInputRef.current.value = ''
     if (imageFile) {
       // User picked a new file but hasn't submitted — undo the selection
       if (imagePreviewURL?.startsWith('blob:')) URL.revokeObjectURL(imagePreviewURL)
@@ -447,106 +448,89 @@ export default function ProductsPage() {
           )}
         </Box>
 
-        {isFormOpen && (
-          <Box
-            sx={{
-              position: 'fixed',
-              inset: 0,
-              bgcolor: 'rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: '16px',
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) closeForm()
-            }}
-          >
-            <Paper sx={{ width: { xs: '100%', sm: '540px' } }}>
-              <Typography component="h3" sx={{ mb: '16px' }}>
-                {editingProduct ? tp('editProduct') : tp('newProduct')}
-              </Typography>
-              <Box component="form" onSubmit={submitForm}>
-                {/* Hidden native file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    setImageFile(file)
-                    setImagePreviewURL(URL.createObjectURL(file))
-                  }}
-                />
-                {/* Image preview + choose button */}
-                <Box sx={{ mb: '16px' }}>
-                  <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{tp('image')}</Box>
-                  {imagePreviewURL && (
-                    <Box sx={{ mb: '8px', width: 120, height: 120, borderRadius: '8px', overflow: 'hidden', border: '1px solid', borderColor: 'grey.200' }}>
-                      <img src={imagePreviewURL} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </Box>
-                  )}
-                  <Box sx={{ gap: '8px', alignItems: 'center', display: 'flex' }}>
-                    <Button type="button" variant="outlined" onClick={() => fileInputRef.current?.click()}>
-                      {tp('chooseImage')}
-                    </Button>
-                    {(imagePreviewURL || imageFile) && (
-                      <Button
-                        type="button"
-                        variant="outlined"
-                        onClick={handleRemoveImage}
-                        sx={{ color: 'error.main', borderColor: 'error.main', '&:hover': { bgcolor: 'error.light' } }}
-                      >
-                        {tp('removeImage')}
-                      </Button>
-                    )}
+        <Dialog open={isFormOpen} onClose={closeForm} fullWidth maxWidth="sm">
+          <Box component="form" onSubmit={submitForm}>
+            <DialogTitle sx={{ pb: '8px' }}>{editingProduct ? tp('editProduct') : tp('newProduct')}</DialogTitle>
+            <DialogContent sx={{ pt: '8px', pb: 0 }}>
+              {/* Hidden native file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  setImageFile(file)
+                  setImagePreviewURL(URL.createObjectURL(file))
+                }}
+              />
+              {/* Image preview + choose button */}
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{tp('image')}</Box>
+                {imagePreviewURL && (
+                  <Box sx={{ mb: '8px', width: 120, height: 120, borderRadius: '8px', overflow: 'hidden', border: '1px solid', borderColor: 'grey.200' }}>
+                    <img src={imagePreviewURL} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </Box>
-                  {uploadError && <Box sx={{ color: 'error.main', fontSize: '14px', mt: '4px', display: 'block' }}>{uploadError}</Box>}
-                </Box>
-                <Box sx={{ mb: '16px' }}>
-                  <Box component="label" htmlFor="name" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('name')}</Box>
-                  <OutlinedInput size="small" id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required fullWidth />
-                </Box>
-                <Box sx={{ mb: '16px' }}>
-                  <Box component="label" htmlFor="description" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('description')}</Box>
-                  <OutlinedInput size="small" multiline rows={3} id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth />
-                </Box>
-                <Box sx={{ mb: '16px' }}>
-                  <Box component="label" htmlFor="price" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('price')}</Box>
-                  <OutlinedInput size="small" id="price" type="number" inputProps={{ step: '1', min: 0 }} value={form.price ?? ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required fullWidth />
-                </Box>
-                <Box sx={{ mb: '16px' }}>
-                  <Box component="label" htmlFor="originalPrice" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{tp('originalPrice')}</Box>
-                  <OutlinedInput
-                    size="small"
-                    id="originalPrice"
-                    type="number"
-                    inputProps={{ step: '1', min: 0 }}
-                    placeholder={tp('originalPricePlaceholder')}
-                    value={form.originalPrice === '' ? '' : form.originalPrice}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        originalPrice: e.target.value === '' ? '' : Number(e.target.value) || 0,
-                      })
-                    }
-                    fullWidth
-                  />
-                </Box>
-                <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
-                  <Button type="button" variant="outlined" onClick={closeForm}>
-                    {t('cancel')}
+                )}
+                <Box sx={{ gap: '8px', alignItems: 'center', display: 'flex' }}>
+                  <Button type="button" variant="outlined" onClick={() => fileInputRef.current?.click()}>
+                    {tp('chooseImage')}
                   </Button>
-                  <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || updateMutation.isLoading}>
-                    {editingProduct ? t('save') : t('create')}
-                  </Button>
+                  {(imagePreviewURL || imageFile) && (
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      onClick={handleRemoveImage}
+                      sx={{ color: 'error.main', borderColor: 'error.main', '&:hover': { bgcolor: 'error.light' } }}
+                    >
+                      {tp('removeImage')}
+                    </Button>
+                  )}
                 </Box>
+                {uploadError && <Box sx={{ color: 'error.main', fontSize: '14px', mt: '4px', display: 'block' }}>{uploadError}</Box>}
               </Box>
-            </Paper>
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" htmlFor="name" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('name')}</Box>
+                <OutlinedInput size="small" id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required fullWidth />
+              </Box>
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" htmlFor="description" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('description')}</Box>
+                <OutlinedInput size="small" multiline rows={3} id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth />
+              </Box>
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" htmlFor="price" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('price')}</Box>
+                <OutlinedInput size="small" id="price" type="number" inputProps={{ step: '1', min: 0 }} value={form.price ?? ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required fullWidth />
+              </Box>
+              <Box sx={{ mb: '8px' }}>
+                <Box component="label" htmlFor="originalPrice" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{tp('originalPrice')}</Box>
+                <OutlinedInput
+                  size="small"
+                  id="originalPrice"
+                  type="number"
+                  inputProps={{ step: '1', min: 0 }}
+                  placeholder={tp('originalPricePlaceholder')}
+                  value={form.originalPrice === '' ? '' : form.originalPrice}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      originalPrice: e.target.value === '' ? '' : Number(e.target.value) || 0,
+                    })
+                  }
+                  fullWidth
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+              <Button type="button" variant="outlined" onClick={closeForm}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || updateMutation.isLoading}>
+                {editingProduct ? t('save') : t('create')}
+              </Button>
+            </DialogActions>
           </Box>
-        )}
+        </Dialog>
       </Container>
     </Layout>
   )
