@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from 'react-query'
-import { Box, Input, Text } from 'theme-ui'
+import { Box, OutlinedInput } from '@mui/material'
 import { Search, X } from 'lucide-react'
 import { api } from '@/utils/api'
 
@@ -106,25 +106,27 @@ export default function CustomerSearchSelect({
         <Box
           sx={{
             position: 'absolute',
-            left: 2,
+            left: '8px',
             top: '50%',
             transform: 'translateY(-50%)',
             pointerEvents: 'none',
-            color: 'text.secondary',
+            color: '#6b7280',
             display: 'flex',
             alignItems: 'center',
           }}
         >
           <Search size={14} />
         </Box>
-        <Input
+        <OutlinedInput
+          size="small"
           value={inputValue}
           onChange={handleInputChange}
           onFocus={handleFocus}
           placeholder={inputPlaceholder}
           sx={{
-            pl: '30px',
-            pr: value ? '30px' : 2,
+            width: '100%',
+            pr: value ? '30px' : '8px',
+            '& .MuiOutlinedInput-input': { paddingLeft: '30px' },
           }}
         />
         {value && (
@@ -159,41 +161,41 @@ export default function CustomerSearchSelect({
             left: 0,
             right: 0,
             zIndex: 100,
-            mt: 1,
-            bg: 'white',
+            mt: '4px',
+            bgcolor: 'white',
             border: '1px solid',
-            borderColor: 'border',
-            borderRadius: 'medium',
-            boxShadow: 'medium',
+            borderColor: '#e5e7eb',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
             maxHeight: '200px',
             overflowY: 'auto',
           }}
         >
           {isLoading ? (
-            <Text sx={{ display: 'block', px: 3, py: 2, fontSize: 1, color: 'text.secondary' }}>
+            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: '#6b7280' }}>
               Loading...
-            </Text>
+            </Box>
           ) : !customers || customers.length === 0 ? (
-            <Text sx={{ display: 'block', px: 3, py: 2, fontSize: 1, color: 'text.secondary' }}>
+            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: '#6b7280' }}>
               {noResultsText}
-            </Text>
+            </Box>
           ) : (
             customers.map((c) => (
               <Box
                 key={c.id}
                 onClick={() => handleSelect(c)}
                 sx={{
-                  px: 3,
-                  py: 2,
+                  px: '16px',
+                  py: '8px',
                   cursor: 'pointer',
-                  '&:hover': { bg: 'background.secondary' },
+                  '&:hover': { bgcolor: '#f9fafb' },
                   borderBottom: '1px solid',
-                  borderColor: 'border',
+                  borderColor: '#e5e7eb',
                   '&:last-child': { borderBottom: 'none' },
                 }}
               >
-                <Text sx={{ display: 'block', fontWeight: 'medium', fontSize: 1 }}>{c.name}</Text>
-                <Text sx={{ display: 'block', fontSize: 0, color: 'text.secondary' }}>{c.phone}</Text>
+                <Box sx={{ display: 'block', fontWeight: 500, fontSize: '14px' }}>{c.name}</Box>
+                <Box sx={{ display: 'block', fontSize: '12px', color: '#6b7280' }}>{c.phone}</Box>
               </Box>
             ))
           )}

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Card, Container, Flex, Heading, Text } from 'theme-ui'
+import { Box, Button, Container, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import { api } from '@/utils/api'
@@ -222,36 +222,36 @@ export default function TempOrdersPage() {
 
   return (
     <Layout>
-      <Container sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Flex sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
-          {isLoading && <Text>{t('loading')}</Text>}
+      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
+          {isLoading && <Box>{t('loading')}</Box>}
           {isError && (
-            <Text sx={{ color: 'error' }}>
+            <Box sx={{ color: '#ef4444' }}>
               {(error as Error)?.message || tErrors('loadingError', { resource: tTemp('title') })}
-            </Text>
+            </Box>
           )}
 
           {!isLoading && !isError && (
-            <Flex sx={{ overflow: 'hidden', bg: 'transparent', flex: 1, minHeight: 0 }}>
+            <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
               {/* Left list */}
               <Box
                 sx={{
-                  width: ['100%', '300px'],
+                  width: { xs: '100%', sm: '300px' },
                   minHeight: 0,
                   display: 'flex',
                   flexDirection: 'column',
                   overflow: 'hidden',
-                  borderRight: ['none', '1px solid'],
-                  borderColor: 'border',
+                  borderRight: { xs: 'none', sm: '1px solid' },
+                  borderColor: '#e5e7eb',
                 }}
               >
-                <Box sx={{ p: 4, flexShrink: 0 }}>
+                <Box sx={{ p: '24px', flexShrink: 0 }}>
                   <SearchInput
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder={tTemp('searchPlaceholder')}
                   />
-                  <Box sx={{ mt: 3 }}>
+                  <Box sx={{ mt: '16px' }}>
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(Array.from(e.target.selectedOptions).map(o => o.value))}
@@ -260,9 +260,9 @@ export default function TempOrdersPage() {
                         padding: '6px',
                         fontSize: 12,
                         borderRadius: 6,
-                        border: '1px solid var(--theme-ui-colors-border, #e0e0e0)',
+                        border: '1px solid #e5e7eb',
                         backgroundColor: 'white',
-                        color: 'var(--theme-ui-colors-text, #333)',
+                        color: '#1f2937',
                         cursor: 'pointer',
                       }}
                     >
@@ -281,116 +281,118 @@ export default function TempOrdersPage() {
                       <Box
                         key={o.id}
                         sx={{
-                          py: 3,
-                          px: 4,
+                          py: '16px',
+                          px: '24px',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          bg: isActive ? 'backgroundLight' : 'transparent',
-                          borderRadius: 'medium',
+                          bgcolor: isActive ? '#f3f4f6' : 'transparent',
+                          borderRadius: '8px',
                           '&:hover': {
-                            bg: isActive ? 'backgroundLight' : 'background.secondary',
+                            bgcolor: isActive ? '#f3f4f6' : '#f9fafb',
                           },
                         }}
                         onClick={() => setSelectedTempOrderId(o.id)}
                       >
-                        <Flex sx={{ flexDirection: 'column', gap: 1 }}>
-                          <Flex sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text sx={{ fontWeight: 'bold', fontSize: 1 }}>
+                        <Box sx={{ flexDirection: 'column', gap: '4px', display: 'flex' }}>
+                          <Box sx={{ justifyContent: 'space-between', alignItems: 'center', display: 'flex' }}>
+                            <Box sx={{ fontWeight: 700, fontSize: '14px' }}>
                               #{o.id}
-                            </Text>
+                            </Box>
                             <Box
                               sx={{
-                                px: 2,
+                                px: '8px',
                                 py: '2px',
-                                borderRadius: 'small',
-                                fontSize: 0,
-                                fontWeight: 'medium',
-                                bg: statusStyle.bg,
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                bgcolor: statusStyle.bg,
                                 color: statusStyle.color,
                                 textTransform: 'capitalize',
                               }}
                             >
                               {toStatus(o.status) || o.status}
                             </Box>
-                          </Flex>
-                          <Text sx={{ fontSize: 0, color: 'text.secondary' }}>
+                          </Box>
+                          <Box sx={{ fontSize: '12px', color: '#6b7280' }}>
                             {o.customer_name}
-                          </Text>
-                          <Text sx={{ fontSize: 0, fontWeight: 'medium' }}>
+                          </Box>
+                          <Box sx={{ fontSize: '12px', fontWeight: 500 }}>
                             Rp {formatPrice(o.total_price)}
-                          </Text>
-                        </Flex>
+                          </Box>
+                        </Box>
                       </Box>
                     )
                   })}
                   {(tempOrdersRes || []).length === 0 && (
-                    <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>
+                    <Box sx={{ p: '16px', color: '#6b7280', textAlign: 'center' }}>
                       {tTemp('noOrders')}
-                    </Text>
+                    </Box>
                   )}
                 </Box>
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bg: 'background.secondary' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: '#f9fafb' }}>
                 {selectedTempOrder ? (
-                  <Box sx={{ maxWidth: 880, mx: 'auto', p: [4, 5] }}>
-                    <Flex sx={{ alignItems: 'center', gap: 3, mb: 3, flexWrap: 'wrap' }}>
-                      <Heading as="h2" sx={{ fontSize: 3 }}>
+                  <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
+                    <Box sx={{ alignItems: 'center', gap: '16px', mb: '16px', flexWrap: 'wrap', display: 'flex' }}>
+                      <Typography component="h2" sx={{ fontSize: '18px' }}>
                         {tTemp('orderNumber', { id: selectedTempOrder.id })}
-                      </Heading>
+                      </Typography>
                       <Box
                         sx={{
-                          px: 2,
+                          px: '8px',
                           py: '4px',
-                          borderRadius: 'small',
-                          fontSize: 0,
-                          fontWeight: 'medium',
-                          bg: getStatusStyle(selectedTempOrder.status).bg,
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          bgcolor: getStatusStyle(selectedTempOrder.status).bg,
                           color: getStatusStyle(selectedTempOrder.status).color,
                           textTransform: 'capitalize',
                         }}
                       >
                         {toStatus(selectedTempOrder.status) || selectedTempOrder.status}
                       </Box>
-                      <Flex sx={{ ml: 'auto', gap: 2 }}>
+                      <Box sx={{ ml: 'auto', gap: '8px', display: 'flex' }}>
                         <Button
-                          variant={selectedTempOrder.status === 'rejected' ? 'secondary' : 'primary'}
+                          variant={selectedTempOrder.status === 'rejected' ? 'outlined' : 'contained'}
+                          disableElevation
                           onClick={handleAccept}
                           disabled={acceptLoading || rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
                             ...(selectedTempOrder.status === 'rejected'
-                              ? { bg: 'background.secondary', color: 'text', border: '1px solid', borderColor: 'border' }
-                              : { bg: 'primary', color: 'white' }),
+                              ? { bgcolor: '#f9fafb', color: '#1f2937', border: '1px solid', borderColor: '#e5e7eb' }
+                              : { bgcolor: '#3b82f6', color: 'white' }),
                             '&:disabled': { opacity: 0.7 },
                           }}
                         >
                           {acceptLoading ? tTemp('accepting') : tTemp('accept')}
                         </Button>
                         <Button
-                          variant={selectedTempOrder.status === 'rejected' ? 'primary' : 'secondary'}
+                          variant={selectedTempOrder.status === 'rejected' ? 'contained' : 'outlined'}
+                          disableElevation
                           onClick={handleReject}
                           disabled={rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
                             ...(selectedTempOrder.status === 'rejected'
-                              ? { bg: 'primary', color: 'white', border: 'none' }
-                              : { bg: 'background.secondary', color: 'text', border: '1px solid', borderColor: 'border' }),
+                              ? { bgcolor: '#3b82f6', color: 'white', border: 'none' }
+                              : { bgcolor: '#f9fafb', color: '#1f2937', border: '1px solid', borderColor: '#e5e7eb' }),
                             '&:disabled': { opacity: 0.7 },
                           }}
                         >
                           {rejectLoading ? tTemp('rejecting') : tTemp('reject')}
                         </Button>
-                      </Flex>
-                    </Flex>
+                      </Box>
+                    </Box>
                     {(acceptError || acceptSuccess || rejectError || rejectSuccess) && (
                       <Box
                         sx={{
-                          mb: 3,
-                          p: 2,
-                          borderRadius: 'medium',
-                          bg: acceptError || rejectError ? '#FFEBEE' : '#E8F5E9',
+                          mb: '16px',
+                          p: '8px',
+                          borderRadius: '8px',
+                          bgcolor: acceptError || rejectError ? '#FFEBEE' : '#E8F5E9',
                           color: acceptError || rejectError ? '#C62828' : '#2E7D32',
-                          fontSize: 1,
+                          fontSize: '14px',
                         }}
                       >
                         {acceptError || rejectError || (acceptSuccess ? tTemp('acceptSuccess') : '') || (rejectSuccess ? tTemp('rejectSuccess') : '')}
@@ -398,97 +400,95 @@ export default function TempOrdersPage() {
                     )}
 
                     {/* Temp order info card */}
-                    <Card
+                    <Paper
                       sx={{
-                        p: 4,
-                        mb: 4,
-                        borderRadius: 'large',
-                        boxShadow: 'small',
+                        p: '24px',
+                        mb: '24px',
+                        borderRadius: '12px',
+                        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: 'border',
-                        bg: 'white',
+                        borderColor: '#e5e7eb',
+                        bgcolor: 'white',
                       }}
                     >
-                      <Flex sx={{ flexWrap: 'wrap', gap: [4, 5] }}>
+                      <Box sx={{ flexWrap: 'wrap', gap: { xs: '24px', sm: '32px' }, display: 'flex' }}>
                         <Box sx={{ minWidth: 140 }}>
-                          <Text
+                          <Box
                             sx={{
-                              color: 'text.secondary',
-                              fontSize: 1,
+                              color: '#6b7280',
+                              fontSize: '14px',
                               fontWeight: 700,
-                              mb: 1,
+                              mb: '4px',
                               display: 'block',
                             }}
                           >
                             {t('customer')}
-                          </Text>
-                          <Text sx={{ fontSize: 1, fontWeight: 'medium' }}>
+                          </Box>
+                          <Box sx={{ fontSize: '14px', fontWeight: 500 }}>
                             {selectedTempOrder.customer_name}
-                          </Text>
+                          </Box>
                         </Box>
                         <Box sx={{ minWidth: 140 }}>
-                          <Text
+                          <Box
                             sx={{
-                              color: 'text.secondary',
-                              fontSize: 1,
+                              color: '#6b7280',
+                              fontSize: '14px',
                               fontWeight: 700,
-                              mb: 1,
+                              mb: '4px',
                               display: 'block',
                             }}
                           >
                             {tTemp('phone')}
-                          </Text>
-                          <Text sx={{ fontSize: 1 }}>{selectedTempOrder.customer_phone}</Text>
+                          </Box>
+                          <Box sx={{ fontSize: '14px' }}>{selectedTempOrder.customer_phone}</Box>
                         </Box>
                         <Box sx={{ minWidth: 140 }}>
-                          <Text
+                          <Box
                             sx={{
-                              color: 'text.secondary',
-                              fontSize: 1,
+                              color: '#6b7280',
+                              fontSize: '14px',
                               fontWeight: 700,
-                              mb: 1,
+                              mb: '4px',
                               display: 'block',
                             }}
                           >
                             {to('created')}
-                          </Text>
-                          <Text sx={{ fontSize: 1 }}>
+                          </Box>
+                          <Box sx={{ fontSize: '14px' }}>
                             {formatDate(selectedTempOrder.created_at)}
-                          </Text>
+                          </Box>
                         </Box>
-                      </Flex>
-                    </Card>
+                      </Box>
+                    </Paper>
 
                     {/* Order items (read-only) */}
-                    <Card
+                    <Paper
                       sx={{
-                        py: 1,
-                        px: 3,
-                        borderRadius: 'large',
-                        boxShadow: 'small',
+                        borderRadius: '12px',
+                        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: 'border',
-                        bg: 'white',
+                        borderColor: '#e5e7eb',
+                        bgcolor: 'white',
                         overflow: 'hidden',
                       }}
                     >
-                      <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'border', bg: 'background.secondary' }}>
-                        <Heading as="h3" sx={{ fontSize: 2, fontWeight: 600 }}>
+                      <Box sx={{ p: '8px', borderBottom: '1px solid', borderColor: '#e5e7eb', bgcolor: '#f9fafb' }}>
+                        <Typography component="h3" sx={{ fontSize: '16px', fontWeight: 600 }}>
                           {t('items')}
-                        </Heading>
+                        </Typography>
                       </Box>
                       {selectedTempOrder.order_items && selectedTempOrder.order_items.length > 0 ? (
-                        <Box as="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-                          <Box as="thead">
-                            <Box as="tr" sx={{ bg: 'background.secondary' }}>
+                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <Box component="thead">
+                            <Box component="tr" sx={{ bgcolor: '#f9fafb' }}>
                               <Box
-                                as="th"
+                                component="th"
                                 sx={{
-                                  p: 3,
+                                  p: '16px',
                                   textAlign: 'left',
-                                  fontSize: 0,
+                                  fontSize: '12px',
                                   fontWeight: 600,
-                                  color: 'text.secondary',
+                                  color: '#6b7280',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -496,13 +496,13 @@ export default function TempOrdersPage() {
                                 {t('product')}
                               </Box>
                               <Box
-                                as="th"
+                                component="th"
                                 sx={{
-                                  p: 3,
+                                  p: '16px',
                                   textAlign: 'right',
-                                  fontSize: 0,
+                                  fontSize: '12px',
                                   fontWeight: 600,
-                                  color: 'text.secondary',
+                                  color: '#6b7280',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -510,13 +510,13 @@ export default function TempOrdersPage() {
                                 {t('price')}
                               </Box>
                               <Box
-                                as="th"
+                                component="th"
                                 sx={{
-                                  p: 3,
+                                  p: '16px',
                                   textAlign: 'right',
-                                  fontSize: 0,
+                                  fontSize: '12px',
                                   fontWeight: 600,
-                                  color: 'text.secondary',
+                                  color: '#6b7280',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -524,13 +524,13 @@ export default function TempOrdersPage() {
                                 {t('quantity')}
                               </Box>
                               <Box
-                                as="th"
+                                component="th"
                                 sx={{
-                                  p: 3,
+                                  p: '16px',
                                   textAlign: 'right',
-                                  fontSize: 0,
+                                  fontSize: '12px',
                                   fontWeight: 600,
-                                  color: 'text.secondary',
+                                  color: '#6b7280',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -539,34 +539,34 @@ export default function TempOrdersPage() {
                               </Box>
                             </Box>
                           </Box>
-                          <Box as="tbody">
+                          <Box component="tbody">
                             {selectedTempOrder.order_items.map((item) => (
                               <Box
-                                as="tr"
+                                component="tr"
                                 key={item.id}
                                 sx={{
                                   borderTop: '1px solid',
-                                  borderColor: 'border',
-                                  '&:hover': { bg: 'background.secondary' },
+                                  borderColor: '#e5e7eb',
+                                  '&:hover': { bgcolor: '#f9fafb' },
                                 }}
                               >
-                                <Box as="td" sx={{ py: 2, px: 3, fontSize: 1 }}>
+                                <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
                                   {item.product_name}
                                 </Box>
-                                <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontSize: 1 }}>
+                                <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>
                                   Rp {formatPrice(item.price)}
                                 </Box>
-                                <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontSize: 1 }}>
+                                <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>
                                   {item.qty}
                                 </Box>
                                 <Box
-                                  as="td"
+                                  component="td"
                                   sx={{
-                                    py: 2,
-                                    px: 3,
+                                    py: '8px',
+                                    px: '16px',
                                     textAlign: 'right',
-                                    fontSize: 1,
-                                    fontWeight: 'medium',
+                                    fontSize: '14px',
+                                    fontWeight: 500,
                                   }}
                                 >
                                   Rp {formatPrice(item.price * item.qty)}
@@ -574,37 +574,37 @@ export default function TempOrdersPage() {
                               </Box>
                             ))}
                           </Box>
-                          <Box as="tfoot">
+                          <Box component="tfoot">
                             <Box
-                              as="tr"
+                              component="tr"
                               sx={{
                                 borderTop: '2px solid',
-                                borderColor: 'border',
-                                bg: 'background.secondary',
+                                borderColor: '#e5e7eb',
+                                bgcolor: '#f9fafb',
                               }}
                             >
                               <Box
-                                as="td"
+                                component="td"
                                 sx={{
-                                  py: 2,
-                                  px: 3,
+                                  py: '8px',
+                                  px: '16px',
                                   textAlign: 'right',
                                   fontWeight: 700,
-                                  fontSize: 2,
+                                  fontSize: '16px',
                                 }}
                                 {...({ colSpan: 3 } as object)}
                               >
                                 {t('total')}
                               </Box>
                               <Box
-                                as="td"
+                                component="td"
                                 sx={{
-                                  py: 2,
-                                  px: 3,
+                                  py: '8px',
+                                  px: '16px',
                                   textAlign: 'right',
                                   fontWeight: 700,
-                                  fontSize: 2,
-                                  color: 'primary',
+                                  fontSize: '16px',
+                                  color: '#3b82f6',
                                 }}
                               >
                                 Rp {formatPrice(selectedTempOrder.total_price)}
@@ -613,33 +613,34 @@ export default function TempOrdersPage() {
                           </Box>
                         </Box>
                       ) : (
-                        <Box sx={{ p: 5, textAlign: 'center', color: 'text.secondary' }}>
-                          <Text sx={{ fontSize: 2 }}>{to('noItems')}</Text>
+                        <Box sx={{ p: '32px', textAlign: 'center', color: '#6b7280' }}>
+                          <Box sx={{ fontSize: '16px' }}>{to('noItems')}</Box>
                         </Box>
                       )}
-                    </Card>
+                    </Paper>
                   </Box>
                 ) : (
-                  <Flex
+                  <Box
                     sx={{
                       height: '100%',
                       minHeight: 320,
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexDirection: 'column',
-                      gap: 2,
-                      color: 'text.secondary',
+                      gap: '8px',
+                      color: '#6b7280',
+                      display: 'flex',
                     }}
                   >
-                    <Box sx={{ fontSize: 6, opacity: 0.4 }}>📋</Box>
-                    <Text sx={{ fontSize: 2 }}>{tTemp('selectOrder')}</Text>
-                    <Text sx={{ fontSize: 1 }}>{to('chooseFromList')}</Text>
-                  </Flex>
+                    <Box sx={{ fontSize: '30px', opacity: 0.4 }}>📋</Box>
+                    <Box sx={{ fontSize: '16px' }}>{tTemp('selectOrder')}</Box>
+                    <Box sx={{ fontSize: '14px' }}>{to('chooseFromList')}</Box>
+                  </Box>
                 )}
               </Box>
-            </Flex>
+            </Box>
           )}
-        </Flex>
+        </Box>
       </Container>
 
       {/* Active order conflict dialog */}
@@ -648,33 +649,33 @@ export default function TempOrdersPage() {
           sx={{
             position: 'fixed',
             inset: 0,
-            bg: 'rgba(0,0,0,0.4)',
+            bgcolor: 'rgba(0,0,0,0.4)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            p: 3,
+            p: '16px',
             zIndex: 1000,
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowActiveOrderConflictDialog(false)
           }}
         >
-          <Card sx={{ width: ['100%', '540px'], p: 4 }} onClick={(e) => e.stopPropagation()}>
-            <Heading as="h3" sx={{ mb: 2 }}>
+          <Paper sx={{ width: { xs: '100%', sm: '540px' }, p: '24px' }} onClick={(e) => e.stopPropagation()}>
+            <Typography component="h3" sx={{ mb: '8px' }}>
               {to('duplicateOrderTitle')}
-            </Heading>
-            <Text sx={{ mb: 4, color: 'text.secondary', display: 'block' }}>
+            </Typography>
+            <Box sx={{ mb: '24px', color: '#6b7280', display: 'block' }}>
               {to('duplicateOrderMessageInline')}
-            </Text>
-            <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
-              <Button type="button" onClick={() => setShowActiveOrderConflictDialog(false)}>
+            </Box>
+            <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
+              <Button variant="contained" disableElevation type="button" onClick={() => setShowActiveOrderConflictDialog(false)}>
                 {t('cancel')}
               </Button>
-              <Button type="button" onClick={handleConfirmMergeIntoActiveOrder} disabled={acceptLoading}>
+              <Button variant="contained" disableElevation type="button" onClick={handleConfirmMergeIntoActiveOrder} disabled={acceptLoading}>
                 {acceptLoading ? tTemp('accepting') : tTemp('confirmMerge')}
               </Button>
-            </Flex>
-          </Card>
+            </Box>
+          </Paper>
         </Box>
       )}
     </Layout>

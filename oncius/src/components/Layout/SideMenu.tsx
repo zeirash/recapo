@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Box, Flex, Text, Button } from 'theme-ui'
+import { Box, Button } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
@@ -39,97 +39,97 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     <Box
       sx={{
         width: '96px',
-        bg: 'background',
+        bgcolor: 'white',
         borderRight: '1px solid',
-        borderColor: 'border',
+        borderColor: '#e5e7eb',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'stretch',
       }}
     >
       {/* Top Section */}
-      <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'border' }}>
-        <Flex sx={{ alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ p: '16px', borderBottom: '1px solid', borderColor: '#e5e7eb' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {/* Logo/Icon */}
           <Box
             sx={{
               width: '40px',
               height: '40px',
               borderRadius: '50%',
-              bg: 'primary',
+              bgcolor: '#3b82f6',
             }}
           />
-        </Flex>
+        </Box>
       </Box>
 
       {/* Menu Items */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 1 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', p: '4px' }}>
         {menuItems.map((item) => (
           <Box
             key={item.id}
             sx={{
-              py: 2,
-              px: 1,
-              mb: 1,
-              borderRadius: 'medium',
+              py: '8px',
+              px: '4px',
+              mb: '4px',
+              borderRadius: '8px',
               cursor: 'pointer',
               textAlign: 'center',
-              bg: selectedMenu === item.id ? 'primary.light' : 'transparent',
+              bgcolor: selectedMenu === item.id ? '#eff6ff' : 'transparent',
               '&:hover': {
-                bg: selectedMenu === item.id ? 'primary.light' : 'background.light',
+                bgcolor: selectedMenu === item.id ? '#eff6ff' : '#f3f4f6',
               },
             }}
             onClick={() => handleMenuClick(item)}
           >
-            <Flex sx={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
               <item.icon size={20} />
-              <Text sx={{ fontSize: 0, lineHeight: 1, mt: 1 }}>{item.label}</Text>
-            </Flex>
+              <Box sx={{ fontSize: '12px', lineHeight: 1, mt: '4px' }}>{item.label}</Box>
+            </Box>
           </Box>
         ))}
       </Box>
 
       {/* Bottom Section */}
-      <Box sx={{ p: 3, borderTop: '1px solid', borderColor: 'border' }}>
-        <Flex sx={{ alignItems: 'center', justifyContent: 'center', gap: 2, mb: 3 }}>
+      <Box sx={{ p: '16px', borderTop: '1px solid', borderColor: '#e5e7eb' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', mb: '16px' }}>
           <Box
-            as="button"
+            component="button"
             onClick={() => changeLocale('en')}
             sx={{
-              bg: 'transparent',
+              bgcolor: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              fontSize: 0,
+              fontSize: '12px',
               fontWeight: locale === 'en' ? 600 : 400,
-              color: locale === 'en' ? 'primary' : 'text.secondary',
+              color: locale === 'en' ? '#3b82f6' : '#6b7280',
               textDecoration: 'none',
               p: 0,
-              '&:hover': { color: 'primary' },
+              '&:hover': { color: '#3b82f6' },
             }}
           >
             EN
           </Box>
-          <Text sx={{ color: 'border', fontSize: 0 }}>|</Text>
+          <Box sx={{ color: '#e5e7eb', fontSize: '12px' }}>|</Box>
           <Box
-            as="button"
+            component="button"
             onClick={() => changeLocale('id')}
             sx={{
-              bg: 'transparent',
+              bgcolor: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              fontSize: 0,
+              fontSize: '12px',
               fontWeight: locale === 'id' ? 600 : 400,
-              color: locale === 'id' ? 'primary' : 'text.secondary',
+              color: locale === 'id' ? '#3b82f6' : '#6b7280',
               textDecoration: 'none',
               p: 0,
-              '&:hover': { color: 'primary' },
+              '&:hover': { color: '#3b82f6' },
             }}
           >
             ID
           </Box>
-        </Flex>
+        </Box>
         {/* Profile Account */}
-        <Flex sx={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Box
             onClick={() => setShowLogoutDialog(true)}
             sx={{
@@ -140,7 +140,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 1,
+              fontSize: '14px',
               color: 'white',
               fontWeight: 'bold',
               cursor: 'pointer',
@@ -149,7 +149,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
           >
             {user?.name?.charAt(0) || 'U'}
           </Box>
-        </Flex>
+        </Box>
       </Box>
 
       {/* Logout Dialog */}
@@ -158,7 +158,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
           sx={{
             position: 'fixed',
             inset: 0,
-            bg: 'rgba(0,0,0,0.5)',
+            bgcolor: 'rgba(0,0,0,0.5)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -168,26 +168,27 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
         >
           <Box
             sx={{
-              bg: 'white',
-              borderRadius: 'large',
-              p: 4,
+              bgcolor: 'white',
+              borderRadius: '12px',
+              p: '24px',
               maxWidth: 360,
-              boxShadow: 'large',
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Text sx={{ fontSize: 3, fontWeight: 600, mb: 2, display: 'block' }}>
+            <Box sx={{ fontSize: '18px', fontWeight: 600, mb: '8px', display: 'block' }}>
               Log out?
-            </Text>
-            <Text sx={{ fontSize: 1, color: 'text.secondary', mb: 4 }}>
+            </Box>
+            <Box sx={{ fontSize: '14px', color: '#6b7280', mb: '24px' }}>
               Are you sure you want to log out?
-            </Text>
-            <Flex sx={{ gap: 3, justifyContent: 'flex-end' }}>
-              <Button variant="secondary" onClick={() => setShowLogoutDialog(false)}>
+            </Box>
+            <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+              <Button variant="outlined" onClick={() => setShowLogoutDialog(false)}>
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="contained"
+                disableElevation
                 onClick={() => {
                   setShowLogoutDialog(false)
                   logout()
@@ -195,7 +196,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               >
                 Log out
               </Button>
-            </Flex>
+            </Box>
           </Box>
         </Box>
       )}

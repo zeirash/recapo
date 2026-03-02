@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Card, Container, Flex, Heading, Input, Label, Text, Textarea } from 'theme-ui'
+import { Box, Button, Container, OutlinedInput, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
@@ -245,19 +245,19 @@ export default function ProductsPage() {
 
   return (
     <Layout>
-      <Container sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Flex sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
-          {isLoading && <Text>{t('loading')}</Text>}
+      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
+          {isLoading && <Box>{t('loading')}</Box>}
           {isError && (
-            <Text sx={{ color: 'error' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Text>
+            <Box sx={{ color: '#ef4444' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Box>
           )}
 
           {!isLoading && !isError && (
-            <Flex sx={{ overflow: 'hidden', bg: 'transparent', flex: 1, minHeight: 0 }}>
+            <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
               {/* Left list (compact like side menu) */}
-              <Box sx={{ width: ['100%', '300px'], minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: ['none', '1px solid'], borderColor: 'border' }}>
-                <Box sx={{ p: 4, flexShrink: 0 }}>
-                  <Flex sx={{ gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: '#e5e7eb' }}>
+                <Box sx={{ p: '24px', flexShrink: 0 }}>
+                  <Box sx={{ gap: '8px', alignItems: 'center', flexWrap: 'wrap', display: 'flex' }}>
                     <SearchInput
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
@@ -265,7 +265,7 @@ export default function ProductsPage() {
                     />
                     <AddButton onClick={openCreateForm} title={tp('addProduct')} />
                     <Button
-                      variant="secondary"
+                      variant="outlined"
                       onClick={handleShare}
                       title={shareCopied ? tp('linkCopied') : tp('shareButton')}
                       sx={{
@@ -276,13 +276,13 @@ export default function ProductsPage() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        borderRadius: 'medium',
-                        fontSize: 1,
+                        borderRadius: '8px',
+                        fontSize: '14px',
                       }}
                     >
                       {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
                     </Button>
-                  </Flex>
+                  </Box>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                   {(productsRes || []).map((p) => {
@@ -291,28 +291,28 @@ export default function ProductsPage() {
                       <Box
                         key={p.id}
                         sx={{
-                          py: 3,
-                          px: 4,
+                          py: '16px',
+                          px: '24px',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          bg: isActive ? 'backgroundLight' : 'transparent',
-                          borderRadius: 'medium',
-                          '&:hover': { bg: isActive ? 'backgroundLight' : 'background.secondary' },
+                          bgcolor: isActive ? '#f3f4f6' : 'transparent',
+                          borderRadius: '8px',
+                          '&:hover': { bgcolor: isActive ? '#f3f4f6' : '#f9fafb' },
                         }}
                         onClick={() => setSelectedProductId(p.id)}
                       >
-                        <Flex sx={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                        <Box sx={{ flexDirection: 'row', alignItems: 'center', gap: '8px', display: 'flex' }}>
                           <Box sx={{
                             width: 36,
                             height: 36,
                             borderRadius: '50%',
-                            bg: 'primary',
+                            bgcolor: '#3b82f6',
                             color: 'white',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontWeight: 'bold',
-                            fontSize: 1,
+                            fontWeight: 700,
+                            fontSize: '14px',
                             flexShrink: 0,
                             overflow: 'hidden',
                           }}>
@@ -321,51 +321,51 @@ export default function ProductsPage() {
                               : p.name.charAt(0).toUpperCase()
                             }
                           </Box>
-                          <Text sx={{ fontSize: 0, lineHeight: 1, wordBreak: 'break-word' }}>{p.name}</Text>
-                        </Flex>
+                          <Box sx={{ fontSize: '12px', lineHeight: 1, wordBreak: 'break-word' }}>{p.name}</Box>
+                        </Box>
                       </Box>
                     )
                   })}
                   {(productsRes || []).length === 0 && (
-                    <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>{tp('noProducts')}</Text>
+                    <Box sx={{ p: '16px', color: '#6b7280', textAlign: 'center' }}>{tp('noProducts')}</Box>
                   )}
                 </Box>
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bg: 'background.secondary' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: '#f9fafb' }}>
                 {selectedProduct ? (
-                  <Box sx={{ maxWidth: 640, mx: 'auto', p: [4, 5] }}>
-                    <Card
+                  <Box sx={{ maxWidth: 640, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
+                    <Paper
                       sx={{
-                        p: 4,
-                        borderRadius: 'large',
-                        boxShadow: 'medium',
+                        p: '24px',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                         border: '1px solid',
-                        borderColor: 'border',
-                        bg: 'white',
+                        borderColor: '#e5e7eb',
+                        bgcolor: 'white',
                         transition: 'box-shadow 0.2s ease',
-                        '&:hover': { boxShadow: 'large' },
+                        '&:hover': { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' },
                       }}
                     >
                       {/* Header */}
-                      <Flex sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 3, mb: 4, pb: 4, borderBottom: '1px solid', borderColor: 'border' }}>
+                      <Box sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', mb: '24px', pb: '24px', borderBottom: '1px solid', borderColor: '#e5e7eb', display: 'flex' }}>
                         {/* Image + name/price stacked below */}
                         <Box>
                           <Box
                             sx={{
                               width: 300,
                               height: 300,
-                              borderRadius: 'medium',
+                              borderRadius: '8px',
                               background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
                               color: 'white',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontWeight: 'bold',
-                              fontSize: 5,
+                              fontWeight: 700,
+                              fontSize: '24px',
                               overflow: 'hidden',
-                              mb: 3,
+                              mb: '16px',
                             }}
                           >
                             {selectedProduct.image_url
@@ -373,99 +373,100 @@ export default function ProductsPage() {
                               : selectedProduct.name.charAt(0).toUpperCase()
                             }
                           </Box>
-                          <Heading as="h2" sx={{ fontSize: 4, fontWeight: 700, mb: 1, letterSpacing: '-0.02em' }}>
+                          <Typography component="h2" sx={{ fontSize: '20px', fontWeight: 700, mb: '4px', letterSpacing: '-0.02em' }}>
                             {selectedProduct.name}
-                          </Heading>
-                          <Text sx={{ fontSize: 2, fontWeight: 600, color: 'primary' }}>
+                          </Typography>
+                          <Box sx={{ fontSize: '16px', fontWeight: 600, color: '#3b82f6' }}>
                             Rp. {selectedProduct.price.toLocaleString()}
-                          </Text>
+                          </Box>
                         </Box>
                         {/* Action buttons on the right */}
-                        <Flex sx={{ gap: 2, flexShrink: 0 }}>
-                          <Button variant="secondary" onClick={() => openEditForm(selectedProduct)}>
+                        <Box sx={{ gap: '8px', flexShrink: 0, display: 'flex' }}>
+                          <Button variant="outlined" onClick={() => openEditForm(selectedProduct)}>
                             {t('edit')}
                           </Button>
                           <Button
-                            variant="secondary"
+                            variant="outlined"
                             onClick={() => {
                               if (confirm(tp('deleteConfirm'))) deleteMutation.mutate(selectedProduct.id)
                             }}
                             sx={{
-                              bg: 'transparent',
-                              color: 'error',
+                              bgcolor: 'transparent',
+                              color: '#ef4444',
                               border: '2px solid',
-                              borderColor: 'error',
-                              '&:hover': { bg: '#fef2f2' },
+                              borderColor: '#ef4444',
+                              '&:hover': { bgcolor: '#fef2f2' },
                             }}
                           >
                             {t('delete')}
                           </Button>
-                        </Flex>
-                      </Flex>
+                        </Box>
+                      </Box>
 
                       {/* Description */}
                       <Box>
-                        <Text sx={{ fontWeight: 600, fontSize: 2, color: 'text.secondary', mb: 1, display: 'block' }}>
+                        <Box sx={{ fontWeight: 600, fontSize: '16px', color: '#6b7280', mb: '4px', display: 'block' }}>
                           {t('description')}
-                        </Text>
-                        <Text sx={{ fontSize: 1, lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                        </Box>
+                        <Box sx={{ fontSize: '14px', lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
                           {selectedProduct.description || '—'}
-                        </Text>
+                        </Box>
                       </Box>
 
                       {/* Original price */}
-                      <Box sx={{ mt: 4 }}>
-                        <Text sx={{ fontWeight: 600, fontSize: 2, color: 'text.secondary', mb: 1, display: 'block' }}>
+                      <Box sx={{ mt: '24px' }}>
+                        <Box sx={{ fontWeight: 600, fontSize: '16px', color: '#6b7280', mb: '4px', display: 'block' }}>
                           {tp('originalPrice')}
-                        </Text>
-                        <Text sx={{ fontSize: 1, color: 'text.secondary' }}>
+                        </Box>
+                        <Box sx={{ fontSize: '14px', color: '#6b7280' }}>
                           Rp. {(selectedProduct.original_price ?? selectedProduct.price).toLocaleString()}
-                        </Text>
+                        </Box>
                       </Box>
-                    </Card>
+                    </Paper>
                   </Box>
                 ) : (
-                  <Flex
+                  <Box
                     sx={{
                       height: '100%',
                       minHeight: 320,
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexDirection: 'column',
-                      gap: 2,
-                      color: 'text.secondary',
+                      gap: '8px',
+                      color: '#6b7280',
+                      display: 'flex',
                     }}
                   >
                     <Package size={48} opacity={0.4} />
-                    <Text sx={{ fontSize: 2 }}>{tp('selectProduct')}</Text>
-                    <Text sx={{ fontSize: 1 }}>{tp('chooseFromList')}</Text>
-                  </Flex>
+                    <Box sx={{ fontSize: '16px' }}>{tp('selectProduct')}</Box>
+                    <Box sx={{ fontSize: '14px' }}>{tp('chooseFromList')}</Box>
+                  </Box>
                 )}
               </Box>
-            </Flex>
+            </Box>
           )}
-        </Flex>
+        </Box>
 
         {isFormOpen && (
           <Box
             sx={{
               position: 'fixed',
               inset: 0,
-              bg: 'rgba(0,0,0,0.4)',
+              bgcolor: 'rgba(0,0,0,0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              p: 3,
+              p: '16px',
             }}
             onClick={(e) => {
               if (e.target === e.currentTarget) closeForm()
             }}
           >
-            <Card sx={{ width: ['100%', '540px'] }}>
-              <Heading as="h3" sx={{ mb: 3 }}>
+            <Paper sx={{ width: { xs: '100%', sm: '540px' } }}>
+              <Typography component="h3" sx={{ mb: '16px' }}>
                 {editingProduct ? tp('editProduct') : tp('newProduct')}
-              </Heading>
-              <Box as="form" onSubmit={submitForm}>
+              </Typography>
+              <Box component="form" onSubmit={submitForm}>
                 {/* Hidden native file input */}
                 <input
                   ref={fileInputRef}
@@ -480,49 +481,49 @@ export default function ProductsPage() {
                   }}
                 />
                 {/* Image preview + choose button */}
-                <Box sx={{ mb: 3 }}>
-                  <Label>{tp('image')}</Label>
+                <Box sx={{ mb: '16px' }}>
+                  <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{tp('image')}</Box>
                   {imagePreviewURL && (
-                    <Box sx={{ mb: 2, width: 120, height: 120, borderRadius: 'medium', overflow: 'hidden', border: '1px solid', borderColor: 'border' }}>
+                    <Box sx={{ mb: '8px', width: 120, height: 120, borderRadius: '8px', overflow: 'hidden', border: '1px solid', borderColor: '#e5e7eb' }}>
                       <img src={imagePreviewURL} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </Box>
                   )}
-                  <Flex sx={{ gap: 2, alignItems: 'center' }}>
-                    <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                  <Box sx={{ gap: '8px', alignItems: 'center', display: 'flex' }}>
+                    <Button type="button" variant="outlined" onClick={() => fileInputRef.current?.click()}>
                       {tp('chooseImage')}
                     </Button>
                     {(imagePreviewURL || imageFile) && (
                       <Button
                         type="button"
-                        variant="secondary"
+                        variant="outlined"
                         onClick={handleRemoveImage}
-                        sx={{ color: 'error', borderColor: 'error', '&:hover': { bg: '#fef2f2' } }}
+                        sx={{ color: '#ef4444', borderColor: '#ef4444', '&:hover': { bgcolor: '#fef2f2' } }}
                       >
                         {tp('removeImage')}
                       </Button>
                     )}
-                  </Flex>
-                  {uploadError && <Text sx={{ color: 'error', fontSize: 1, mt: 1, display: 'block' }}>{uploadError}</Text>}
+                  </Box>
+                  {uploadError && <Box sx={{ color: '#ef4444', fontSize: '14px', mt: '4px', display: 'block' }}>{uploadError}</Box>}
                 </Box>
-                <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="name">{t('name')}</Label>
-                  <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                <Box sx={{ mb: '16px' }}>
+                  <Box component="label" htmlFor="name" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('name')}</Box>
+                  <OutlinedInput size="small" id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required fullWidth />
                 </Box>
-                <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="description">{t('description')}</Label>
-                  <Textarea id="description" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                <Box sx={{ mb: '16px' }}>
+                  <Box component="label" htmlFor="description" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('description')}</Box>
+                  <OutlinedInput size="small" multiline rows={3} id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth />
                 </Box>
-                <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="price">{t('price')}</Label>
-                  <Input id="price" type="number" step="1" min={0} value={form.price ?? ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required />
+                <Box sx={{ mb: '16px' }}>
+                  <Box component="label" htmlFor="price" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('price')}</Box>
+                  <OutlinedInput size="small" id="price" type="number" inputProps={{ step: '1', min: 0 }} value={form.price ?? ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) || 0 })} required fullWidth />
                 </Box>
-                <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="originalPrice">{tp('originalPrice')}</Label>
-                  <Input
+                <Box sx={{ mb: '16px' }}>
+                  <Box component="label" htmlFor="originalPrice" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{tp('originalPrice')}</Box>
+                  <OutlinedInput
+                    size="small"
                     id="originalPrice"
                     type="number"
-                    step="1"
-                    min={0}
+                    inputProps={{ step: '1', min: 0 }}
                     placeholder={tp('originalPricePlaceholder')}
                     value={form.originalPrice === '' ? '' : form.originalPrice}
                     onChange={(e) =>
@@ -531,22 +532,22 @@ export default function ProductsPage() {
                         originalPrice: e.target.value === '' ? '' : Number(e.target.value) || 0,
                       })
                     }
+                    fullWidth
                   />
                 </Box>
-                <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
-                  <Button type="button" variant="secondary" onClick={closeForm}>
+                <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
+                  <Button type="button" variant="outlined" onClick={closeForm}>
                     {t('cancel')}
                   </Button>
-                  <Button type="submit" disabled={createMutation.isLoading || updateMutation.isLoading}>
+                  <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || updateMutation.isLoading}>
                     {editingProduct ? t('save') : t('create')}
                   </Button>
-                </Flex>
+                </Box>
               </Box>
-            </Card>
+            </Paper>
           </Box>
         )}
       </Container>
     </Layout>
   )
 }
-

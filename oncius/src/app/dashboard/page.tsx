@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useQuery } from 'react-query'
 import Link from 'next/link'
-import { Box, Button, Card, Flex, Heading, Text } from 'theme-ui'
+import { Box, Button, Paper, Typography } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
@@ -35,28 +35,28 @@ const StatCard = ({
   value: number | string
   icon: LucideIcon
 }) => (
-  <Card
+  <Paper
     sx={{
-      p: 4,
-      borderRadius: 'large',
-      boxShadow: 'small',
+      p: '24px',
+      borderRadius: '12px',
+      boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
       border: '1px solid',
-      borderColor: 'border',
-      bg: 'white',
+      borderColor: '#e5e7eb',
+      bgcolor: 'white',
       flex: 1,
-      minWidth: ['100%', 140],
+      minWidth: { xs: '100%', sm: 140 },
     }}
   >
-    <Flex sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
       <Box>
-        <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 600, mb: 1, display: 'block' }}>
+        <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 600, mb: '4px', display: 'block' }}>
           {label}
-        </Text>
-        <Text sx={{ fontSize: 4, fontWeight: 700 }}>{value}</Text>
+        </Box>
+        <Box sx={{ fontSize: '20px', fontWeight: 700 }}>{value}</Box>
       </Box>
       <Box sx={{ opacity: 0.6 }}><Icon size={28} /></Box>
-    </Flex>
-  </Card>
+    </Box>
+  </Paper>
 )
 
 const getThisMonthRange = () => {
@@ -65,7 +65,7 @@ const getThisMonthRange = () => {
   const month = now.getMonth()
   const dateFrom = `${year}-${String(month + 1).padStart(2, '0')}-01`
   const lastDay = new Date(year, month + 1, 0).getDate()
-  const dateTo = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  const dateTo = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '00')}`
   return { dateFrom, dateTo }
 }
 
@@ -139,8 +139,8 @@ const DashboardPage = () => {
   if (!isAuthenticated) {
     return (
       <Layout>
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <Text>{t('dashboard.loginRequired')}</Text>
+        <Box sx={{ p: '24px', textAlign: 'center' }}>
+          <Box>{t('dashboard.loginRequired')}</Box>
         </Box>
       </Layout>
     )
@@ -148,20 +148,21 @@ const DashboardPage = () => {
 
   return (
     <Layout>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: [4, 5] }}>
-        <Heading as="h1" sx={{ mb: 4, fontSize: 3 }}>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
+        <Typography component="h1" sx={{ mb: '24px', fontSize: '18px' }}>
           {t('nav.dashboard')}
-        </Heading>
+        </Typography>
 
         {ordersLoading ? (
-          <Text sx={{ color: 'text.secondary' }}>{t('common.loading')}</Text>
+          <Box sx={{ color: '#6b7280' }}>{t('common.loading')}</Box>
         ) : (
           <>
             {/* Stat cards */}
-            <Flex
+            <Box
               sx={{
-                gap: 3,
-                mb: 5,
+                display: 'flex',
+                gap: '16px',
+                mb: '32px',
                 flexWrap: 'wrap',
               }}
             >
@@ -169,69 +170,70 @@ const DashboardPage = () => {
               <StatCard label={t('dashboard.revenueThisMonth')} value={formatPrice(stats.revenue)} icon={DollarSign} />
               <StatCard label={t('dashboard.customers')} value={stats.customers} icon={Users} />
               <StatCard label={t('dashboard.products')} value={stats.products} icon={ShoppingBag} />
-            </Flex>
+            </Box>
 
             {/* Quick links */}
-            <Flex sx={{ gap: 2, mb: 5, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: '8px', mb: '32px', flexWrap: 'wrap' }}>
               <Link href="/orders" passHref legacyBehavior>
-                <Button as="a" variant="secondary">
+                <Button component="a" variant="outlined">
                   {t('dashboard.newOrder')}
                 </Button>
               </Link>
               <Link href="/customers" passHref legacyBehavior>
-                <Button as="a" variant="secondary">
+                <Button component="a" variant="outlined">
                   {t('dashboard.addCustomer')}
                 </Button>
               </Link>
               <Link href="/products" passHref legacyBehavior>
-                <Button as="a" variant="secondary">
+                <Button component="a" variant="outlined">
                   {t('dashboard.addProduct')}
                 </Button>
               </Link>
-            </Flex>
+            </Box>
 
             {/* Recent orders */}
-            <Card
+            <Paper
               sx={{
-                borderRadius: 'large',
-                boxShadow: 'small',
+                borderRadius: '12px',
+                boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                 border: '1px solid',
-                borderColor: 'border',
-                bg: 'white',
+                borderColor: '#e5e7eb',
+                bgcolor: 'white',
                 overflow: 'hidden',
               }}
             >
-              <Flex
+              <Box
                 sx={{
+                  display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: 4,
+                  p: '24px',
                   borderBottom: '1px solid',
-                  borderColor: 'border',
-                  bg: 'background.secondary',
+                  borderColor: '#e5e7eb',
+                  bgcolor: '#f9fafb',
                 }}
               >
-                <Heading as="h2" sx={{ fontSize: 2, fontWeight: 600 }}>
+                <Typography component="h2" sx={{ fontSize: '16px', fontWeight: 600 }}>
                   {t('dashboard.recentOrders')}
-                </Heading>
+                </Typography>
                 <Link href="/orders" passHref legacyBehavior>
-                  <Button as="a" variant="secondary" sx={{ fontSize: 0, py: 1, px: 2 }}>
+                  <Button component="a" variant="outlined" sx={{ fontSize: '12px', py: '4px', px: '8px' }}>
                     {t('dashboard.viewAll')}
                   </Button>
                 </Link>
-              </Flex>
+              </Box>
               {recentOrders.length > 0 ? (
-                <Box as="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <Box as="thead">
-                    <Box as="tr" sx={{ bg: 'background.secondary' }}>
+                <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <Box component="thead">
+                    <Box component="tr" sx={{ bgcolor: '#f9fafb' }}>
                       <Box
-                        as="th"
+                        component="th"
                         sx={{
-                          p: 3,
+                          p: '16px',
                           textAlign: 'left',
-                          fontSize: 0,
+                          fontSize: '12px',
                           fontWeight: 600,
-                          color: 'text.secondary',
+                          color: '#6b7280',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -239,13 +241,13 @@ const DashboardPage = () => {
                         {t('dashboard.order')}
                       </Box>
                       <Box
-                        as="th"
+                        component="th"
                         sx={{
-                          p: 3,
+                          p: '16px',
                           textAlign: 'left',
-                          fontSize: 0,
+                          fontSize: '12px',
                           fontWeight: 600,
-                          color: 'text.secondary',
+                          color: '#6b7280',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -253,13 +255,13 @@ const DashboardPage = () => {
                         {t('common.customer')}
                       </Box>
                       <Box
-                        as="th"
+                        component="th"
                         sx={{
-                          p: 3,
+                          p: '16px',
                           textAlign: 'right',
-                          fontSize: 0,
+                          fontSize: '12px',
                           fontWeight: 600,
-                          color: 'text.secondary',
+                          color: '#6b7280',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -267,13 +269,13 @@ const DashboardPage = () => {
                         {t('common.total')}
                       </Box>
                       <Box
-                        as="th"
+                        component="th"
                         sx={{
-                          p: 3,
+                          p: '16px',
                           textAlign: 'left',
-                          fontSize: 0,
+                          fontSize: '12px',
                           fontWeight: 600,
-                          color: 'text.secondary',
+                          color: '#6b7280',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -281,13 +283,13 @@ const DashboardPage = () => {
                         {t('common.status')}
                       </Box>
                       <Box
-                        as="th"
+                        component="th"
                         sx={{
-                          p: 3,
+                          p: '16px',
                           textAlign: 'left',
-                          fontSize: 0,
+                          fontSize: '12px',
                           fontWeight: 600,
-                          color: 'text.secondary',
+                          color: '#6b7280',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -296,20 +298,20 @@ const DashboardPage = () => {
                       </Box>
                     </Box>
                   </Box>
-                  <Box as="tbody">
+                  <Box component="tbody">
                     {recentOrders.map((order) => {
                       const statusStyle = getStatusStyle(order.status)
                       return (
                         <Box
-                          as="tr"
+                          component="tr"
                           key={order.id}
                           sx={{
                             borderTop: '1px solid',
-                            borderColor: 'border',
-                            '&:hover': { bg: 'background.secondary' },
+                            borderColor: '#e5e7eb',
+                            '&:hover': { bgcolor: '#f9fafb' },
                           }}
                         >
-                          <Box as="td" sx={{ py: 2, px: 3, fontSize: 1 }}>
+                          <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
                             <Link
                               href="/orders"
                               style={{ color: 'inherit', fontWeight: 600, textDecoration: 'none' }}
@@ -317,22 +319,22 @@ const DashboardPage = () => {
                               #{order.id}
                             </Link>
                           </Box>
-                          <Box as="td" sx={{ py: 2, px: 3, fontSize: 1 }}>
+                          <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
                             {order.customer_name}
                           </Box>
-                          <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontSize: 1 }}>
+                          <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>
                             {formatPrice(order.total_price)}
                           </Box>
-                          <Box as="td" sx={{ py: 2, px: 3 }}>
+                          <Box component="td" sx={{ py: '8px', px: '16px' }}>
                             <Box
                               sx={{
                                 display: 'inline-block',
-                                px: 2,
+                                px: '8px',
                                 py: '2px',
-                                borderRadius: 'small',
-                                fontSize: 0,
-                                fontWeight: 'medium',
-                                bg: statusStyle.bg,
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                bgcolor: statusStyle.bg,
                                 color: statusStyle.color,
                                 textTransform: 'capitalize',
                               }}
@@ -340,7 +342,7 @@ const DashboardPage = () => {
                               {t(`orderStatus.${order.status}`)}
                             </Box>
                           </Box>
-                          <Box as="td" sx={{ py: 2, px: 3, fontSize: 1, color: 'text.secondary' }}>
+                          <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px', color: '#6b7280' }}>
                             {formatDate(order.created_at)}
                           </Box>
                         </Box>
@@ -349,14 +351,14 @@ const DashboardPage = () => {
                   </Box>
                 </Box>
               ) : (
-                <Box sx={{ p: 5, textAlign: 'center', color: 'text.secondary' }}>
-                  <Text sx={{ fontSize: 2, display: 'block', mb: 2 }}>{t('dashboard.noOrdersYet')}</Text>
+                <Box sx={{ p: '32px', textAlign: 'center', color: '#6b7280' }}>
+                  <Box sx={{ fontSize: '16px', display: 'block', mb: '8px' }}>{t('dashboard.noOrdersYet')}</Box>
                   <Link href="/orders" passHref legacyBehavior>
-                    <Button as="a">{t('dashboard.createFirstOrder')}</Button>
+                    <Button component="a" variant="contained" disableElevation>{t('dashboard.createFirstOrder')}</Button>
                   </Link>
                 </Box>
               )}
-            </Card>
+            </Paper>
           </>
         )}
       </Box>

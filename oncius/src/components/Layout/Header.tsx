@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Box, Flex, Text, Button, IconButton } from 'theme-ui'
+import { Box, Button, IconButton } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
@@ -28,103 +28,103 @@ const Header = () => {
   }
 
   return (
-    <Box as="header" sx={{ bg: 'background', borderBottom: '1px solid', borderColor: 'border', py: 2 }}>
-      <Flex sx={{ maxWidth: 'container', mx: 'auto', px: 3, alignItems: 'center', justifyContent: 'space-between' }}>
+    <Box component="header" sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: '#e5e7eb', py: '8px' }}>
+      <Box sx={{ display: 'flex', maxWidth: 'container', mx: 'auto', px: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Logo */}
         <Link href="/">
-          <Text sx={{ fontSize: 3, fontWeight: 'bold', color: 'primary', textDecoration: 'none' }}>
+          <Box sx={{ fontSize: '18px', fontWeight: 'bold', color: '#3b82f6', textDecoration: 'none' }}>
             Recapo
-          </Text>
+          </Box>
         </Link>
 
         {/* Desktop Navigation */}
-        <Flex sx={{ display: ['none', 'flex'], gap: 4, alignItems: 'center' }}>
+        <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: '24px', alignItems: 'center' }}>
           {isAuthenticated && (
             <>
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href}>
-                  <Text sx={{ color: 'text', textDecoration: 'none', '&:hover': { color: 'primary' } }}>
+                  <Box sx={{ color: '#1f2937', textDecoration: 'none', '&:hover': { color: '#3b82f6' } }}>
                     {item.label}
-                  </Text>
+                  </Box>
                 </Link>
               ))}
             </>
           )}
-        </Flex>
+        </Box>
 
         {/* User Menu / Auth Buttons */}
-        <Flex sx={{ alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <LanguageSwitcher />
           {isAuthenticated ? (
-            <Flex sx={{ alignItems: 'center', gap: 2 }}>
-              <Box sx={{ display: ['none', 'block'] }}>
-                <Text sx={{ color: 'text.secondary' }}>{t('welcome', { name: user?.name ?? '' })}</Text>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                <Box sx={{ color: '#6b7280' }}>{t('welcome', { name: user?.name ?? '' })}</Box>
               </Box>
-              <Button variant="secondary" onClick={() => router.push('/profile')}>
+              <Button variant="outlined" onClick={() => router.push('/profile')}>
                 {t('profile')}
               </Button>
-              <Button variant="secondary" onClick={handleLogout}>
+              <Button variant="outlined" onClick={handleLogout}>
                 {t('logout')}
               </Button>
-            </Flex>
+            </Box>
           ) : (
-            <Flex sx={{ gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: '8px' }}>
               <Link href="/login">
-                <Button variant="secondary">
+                <Button variant="outlined">
                   {t('login')}
                 </Button>
               </Link>
               <Link href="/register">
-                <Button variant="primary">
+                <Button variant="contained" disableElevation>
                   {t('register')}
                 </Button>
               </Link>
-            </Flex>
+            </Box>
           )}
 
           {/* Mobile Menu Button */}
           <IconButton
-            sx={{ display: ['block', 'none'] }}
+            sx={{ display: { xs: 'block', sm: 'none' } }}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
             <Menu size={20} />
           </IconButton>
-        </Flex>
-      </Flex>
+        </Box>
+      </Box>
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <Box sx={{ display: ['block', 'none'], bg: 'background.secondary', borderTop: '1px solid', borderColor: 'border' }}>
-          <Flex sx={{ flexDirection: 'column', py: 2 }}>
+        <Box sx={{ display: { xs: 'block', sm: 'none' }, bgcolor: '#f9fafb', borderTop: '1px solid', borderColor: '#e5e7eb' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', py: '8px' }}>
             {isAuthenticated && (
               <>
                 {navigationItems.map((item) => (
                   <Link key={item.href} href={item.href}>
-                    <Text
+                    <Box
                       sx={{
                         display: 'block',
-                        px: 3,
-                        py: 2,
-                        color: 'text',
+                        px: '16px',
+                        py: '8px',
+                        color: '#1f2937',
                         textDecoration: 'none',
-                        '&:hover': { bg: 'background', color: 'primary' },
+                        '&:hover': { bgcolor: 'white', color: '#3b82f6' },
                       }}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {item.label}
-                    </Text>
+                    </Box>
                   </Link>
                 ))}
-                <Box sx={{ borderTop: '1px solid', borderColor: 'border', mt: 2, pt: 2 }}>
-                  <Text
+                <Box sx={{ borderTop: '1px solid', borderColor: '#e5e7eb', mt: '8px', pt: '8px' }}>
+                  <Box
                     sx={{
                       display: 'block',
-                      px: 3,
-                      py: 2,
-                      color: 'text',
+                      px: '16px',
+                      py: '8px',
+                      color: '#1f2937',
                       cursor: 'pointer',
-                      '&:hover': { bg: 'background', color: 'error' },
+                      '&:hover': { bgcolor: 'white', color: '#ef4444' },
                     }}
                     onClick={() => {
                       handleLogout()
@@ -132,11 +132,11 @@ const Header = () => {
                     }}
                   >
                     {t('logout')}
-                  </Text>
+                  </Box>
                 </Box>
               </>
             )}
-          </Flex>
+          </Box>
         </Box>
       )}
     </Box>

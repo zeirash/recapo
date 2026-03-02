@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Box, Container, Heading, Text, Input, Button, Flex } from 'theme-ui'
+import { Box, Container, Typography, OutlinedInput, Button } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import Layout from '@/components/Layout'
 
@@ -37,34 +37,35 @@ const ForgotPasswordPage = () => {
 
   return (
     <Layout>
-      <Container sx={{ maxWidth: '500px' }}>
-        <Box sx={{ bg: 'background', p: 4, borderRadius: 'large', boxShadow: 'medium' }}>
-          <Heading as="h1" sx={{ textAlign: 'center', mb: 2 }}>
+      <Container maxWidth="xs">
+        <Box sx={{ bgcolor: 'white', p: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <Typography component="h1" sx={{ textAlign: 'center', mb: '8px' }}>
             {t('auth.forgotPasswordTitle')}
-          </Heading>
+          </Typography>
 
-          <Text sx={{ textAlign: 'center', color: 'text.secondary', mb: 4, display: 'block' }}>
+          <Box sx={{ textAlign: 'center', color: '#6b7280', mb: '24px', display: 'block' }}>
             {t('auth.forgotPasswordDescription')}
-          </Text>
+          </Box>
 
           {submitted ? (
             <Box sx={{ textAlign: 'center' }}>
-              <Text sx={{ color: 'success', mb: 4, display: 'block' }}>
+              <Box sx={{ color: '#10b981', mb: '24px', display: 'block' }}>
                 If an account exists for {email}, a reset link will be sent shortly.
-              </Text>
+              </Box>
               <Link href="/login">
-                <Text sx={{ color: 'primary', cursor: 'pointer' }}>
+                <Box sx={{ color: '#3b82f6', cursor: 'pointer' }}>
                   {t('auth.backToLogin')}
-                </Text>
+                </Box>
               </Link>
             </Box>
           ) : (
-            <Box as="form" onSubmit={handleSubmit}>
-              <Box sx={{ mb: 4 }}>
-                <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
+            <Box component="form" onSubmit={handleSubmit}>
+              <Box sx={{ mb: '24px' }}>
+                <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
                   {t('common.email')}
-                </Text>
-                <Input
+                </Box>
+                <OutlinedInput
+                  size="small"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -73,27 +74,28 @@ const ForgotPasswordPage = () => {
                   className={errors.email ? 'error' : ''}
                 />
                 {errors.email && (
-                  <Text sx={{ color: 'error', fontSize: 0, mt: 1 }}>
+                  <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
                     {errors.email}
-                  </Text>
+                  </Box>
                 )}
               </Box>
 
               <Button
                 type="submit"
-                variant="primary"
-                sx={{ width: '100%', mb: 3 }}
+                variant="contained"
+                disableElevation
+                sx={{ width: '100%', mb: '16px' }}
               >
                 {t('auth.forgotPasswordSubmit')}
               </Button>
 
-              <Flex sx={{ justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Link href="/login">
-                  <Text sx={{ color: 'primary', cursor: 'pointer' }}>
+                  <Box sx={{ color: '#3b82f6', cursor: 'pointer' }}>
                     {t('auth.backToLogin')}
-                  </Text>
+                  </Box>
                 </Link>
-              </Flex>
+              </Box>
             </Box>
           )}
         </Box>

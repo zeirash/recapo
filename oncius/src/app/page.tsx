@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { Box, Heading, Text, Button, Flex, Card } from 'theme-ui'
+import { Box, Typography, Button, Paper } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import LandingHeader from '@/components/LandingHeader'
@@ -25,13 +25,13 @@ const BlobShape = ({
   }
   return (
     <Box
+      component="span"
       sx={{
         position: 'absolute',
         pointerEvents: 'none',
         zIndex: 0,
         ...sx,
       }}
-      as="span"
     >
       <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%', fill: colors[variant] }}>
         <path d={BLOB_PATH} />
@@ -96,7 +96,7 @@ export default function HomePage() {
   if (isLoadingUser) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Text>{t('common.loading')}</Text>
+        <Box>{t('common.loading')}</Box>
       </Box>
     )
   }
@@ -150,126 +150,126 @@ export default function HomePage() {
           position: 'relative',
           maxWidth: 1200,
           mx: 'auto',
-          px: [3, 4],
-          py: [6, 8],
+          px: { xs: '16px', sm: '24px' },
+          py: { xs: '48px', sm: '96px' },
           textAlign: 'center',
         }}
       >
-        <Heading
-          as="h2"
+        <Typography
+          component="h2"
           sx={{
-            fontSize: [5, 6, 7],
+            fontSize: { xs: '24px', sm: '30px', md: '36px' },
             fontWeight: 700,
             lineHeight: 1.2,
-            mb: 3,
-            color: 'text',
+            mb: '16px',
+            color: '#1f2937',
           }}
         >
           {t('landing.heroTitle')}{' '}
-          <Box as="span" sx={{ color: 'primary' }}>
+          <Box component="span" sx={{ color: '#3b82f6' }}>
             {t('landing.heroHighlight')}
           </Box>
-        </Heading>
-        <Text
+        </Typography>
+        <Box
           sx={{
             display: 'block',
-            fontSize: [2, 3],
-            color: 'text.secondary',
+            fontSize: { xs: '16px', sm: '18px' },
+            color: '#6b7280',
             maxWidth: 840,
             mx: 'auto',
-            mb: 3,
+            mb: '16px',
             lineHeight: 1.6,
           }}
         >
           {t('landing.heroDescription')}
-        </Text>
-        <Flex sx={{ gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
+        </Box>
+        <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           {isAuthenticated ? (
             <Link href="/dashboard">
-              <Button variant="primary" sx={{ px: 5, py: 3, fontSize: 2 }}>
+              <Button variant="contained" disableElevation sx={{ px: '32px', py: '16px', fontSize: '16px' }}>
                 {t('landing.goToDashboard')}
               </Button>
             </Link>
           ) : (
             <>
               <Link href="/register">
-                <Button variant="primary" sx={{ px: 5, py: 3, fontSize: 2 }}>
+                <Button variant="contained" disableElevation sx={{ px: '32px', py: '16px', fontSize: '16px' }}>
                   {t('landing.startForFree')}
                 </Button>
               </Link>
               <Link href="#pricing">
-                <Button variant="secondary" sx={{ px: 5, py: 3, fontSize: 2 }}>
+                <Button variant="outlined" sx={{ px: '32px', py: '16px', fontSize: '16px' }}>
                   {t('landing.viewPricing')}
                 </Button>
               </Link>
             </>
           )}
-        </Flex>
+        </Box>
       </Box>
 
       {/* About / Features */}
       <Box
         sx={{
-          bg: 'backgroundLight',
-          py: 6,
+          bgcolor: '#f3f4f6',
+          py: '48px',
         }}
       >
-        <Box sx={{ maxWidth: 1200, mx: 'auto', px: [3, 4] }}>
-          <Heading
-            as="h3"
+        <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: '16px', sm: '24px' } }}>
+          <Typography
+            component="h3"
             sx={{
-              fontSize: [4, 5],
+              fontSize: { xs: '20px', sm: '24px' },
               fontWeight: 700,
               textAlign: 'center',
-              mb: 2,
-              color: 'text',
+              mb: '8px',
+              color: '#1f2937',
             }}
           >
             {t('landing.featuresTitle')}
-          </Heading>
-          <Text
+          </Typography>
+          <Box
             sx={{
               display: 'block',
-              fontSize: [1, 2],
-              color: 'text.secondary',
+              fontSize: { xs: '14px', sm: '16px' },
+              color: '#6b7280',
               textAlign: 'center',
               maxWidth: 600,
               mx: 'auto',
-              mb: 6,
+              mb: '48px',
             }}
           >
             {t('landing.featuresSubtitle')}
-          </Text>
-          <Flex
+          </Box>
+          <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: ['1fr', '1fr 1fr', 'repeat(4, 1fr)'],
-              gap: 4,
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' },
+              gap: '24px',
             }}
           >
             {FEATURES.map((f) => (
-              <Card
+              <Paper
                 key={f.titleKey}
                 sx={{
-                  p: 4,
-                  borderRadius: 'large',
+                  p: '24px',
+                  borderRadius: '12px',
                   border: '1px solid',
-                  borderColor: 'border',
-                  bg: 'white',
+                  borderColor: '#e5e7eb',
+                  bgcolor: 'white',
                   textAlign: 'center',
                   zIndex: 0,
                 }}
               >
-                <Box sx={{ mb: 2 }}><f.icon size={36} /></Box>
-                <Heading as="h4" sx={{ fontSize: 2, mb: 2, color: 'text' }}>
+                <Box sx={{ mb: '8px' }}><f.icon size={36} /></Box>
+                <Typography component="h4" sx={{ fontSize: '16px', mb: '8px', color: '#1f2937' }}>
                   {t(f.titleKey)}
-                </Heading>
-                <Text sx={{ fontSize: 1, color: 'text.secondary', lineHeight: 1.6 }}>
+                </Typography>
+                <Box sx={{ fontSize: '14px', color: '#6b7280', lineHeight: 1.6 }}>
                   {t(f.descKey)}
-                </Text>
-              </Card>
+                </Box>
+              </Paper>
             ))}
-          </Flex>
+          </Box>
         </Box>
       </Box>
 
@@ -277,93 +277,94 @@ export default function HomePage() {
       <Box
         id="pricing"
         sx={{
-          py: 6,
+          py: '48px',
         }}
       >
-        <Box sx={{ maxWidth: 1200, mx: 'auto', px: [3, 4] }}>
-          <Heading
-            as="h3"
+        <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: '16px', sm: '24px' } }}>
+          <Typography
+            component="h3"
             sx={{
-              fontSize: [4, 5],
+              fontSize: { xs: '20px', sm: '24px' },
               fontWeight: 700,
               textAlign: 'center',
-              mb: 3,
-              color: 'text',
+              mb: '16px',
+              color: '#1f2937',
             }}
           >
             {t('landing.pricingTitle')}
-          </Heading>
-          <Flex sx={{ justifyContent: 'center' }}>
-            <Card
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Paper
               sx={{
-                p: 5,
-                borderRadius: 'large',
+                p: '32px',
+                borderRadius: '12px',
                 border: '2px solid',
-                borderColor: 'border',
-                bg: 'white',
+                borderColor: '#e5e7eb',
+                bgcolor: 'white',
                 maxWidth: 360,
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
-              <Heading as="h4" sx={{ fontSize: 3, mb: 1, color: 'text' }}>
+              <Typography component="h4" sx={{ fontSize: '18px', mb: '4px', color: '#1f2937' }}>
                 {t('landing.pricingName')}
-              </Heading>
-              <Flex sx={{ alignItems: 'baseline', mb: 2 }}>
-                <Text sx={{ fontSize: 5, fontWeight: 700, color: 'text' }}>{t('landing.pricingPrice')}</Text>
-                <Text sx={{ fontSize: 1, color: 'text.secondary', ml: 1 }}>{t('landing.pricingPeriod')}</Text>
-              </Flex>
-              <Text sx={{ fontSize: 1, color: 'text.secondary', mb: 4 }}>
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', mb: '8px' }}>
+                <Box sx={{ fontSize: '24px', fontWeight: 700, color: '#1f2937' }}>{t('landing.pricingPrice')}</Box>
+                <Box sx={{ fontSize: '14px', color: '#6b7280', ml: '4px' }}>{t('landing.pricingPeriod')}</Box>
+              </Box>
+              <Box sx={{ fontSize: '14px', color: '#6b7280', mb: '24px' }}>
                 {t('landing.pricingDescription')}
-              </Text>
-              <Box as="ul" sx={{ listStyle: 'none', p: 0, m: 0, mb: 4, flex: 1 }}>
+              </Box>
+              <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, mb: '24px', flex: 1 }}>
                 {[
                   t('landing.pricingFeature1'),
                   t('landing.pricingFeature2'),
                   t('landing.pricingFeature3'),
                   t('landing.pricingFeature4'),
                 ].map((feature) => (
-                  <Flex
+                  <Box
                     key={feature}
-                    as="li"
+                    component="li"
                     sx={{
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: 2,
-                      py: 2,
+                      gap: '8px',
+                      py: '8px',
                       borderBottom: '1px solid',
-                      borderColor: 'border',
-                      fontSize: 1,
-                      color: 'text',
+                      borderColor: '#e5e7eb',
+                      fontSize: '14px',
+                      color: '#1f2937',
                     }}
                   >
                     <Check size={16} color="green" />
                     {feature}
-                  </Flex>
+                  </Box>
                 ))}
               </Box>
               <Box sx={{ mt: 'auto' }}>
                 <Link href="/register" style={{ display: 'block' }}>
-                  <Button variant="primary" sx={{ width: '100%', py: 3 }}>
+                  <Button variant="contained" disableElevation sx={{ width: '100%', py: '16px' }}>
                     {t('landing.pricingCta')}
                   </Button>
                 </Link>
               </Box>
-            </Card>
-          </Flex>
+            </Paper>
+          </Box>
         </Box>
       </Box>
 
       {/* CTA */}
-      <Box sx={{ maxWidth: 1000, mx: 'auto', px: [3, 4], py: 6 }}>
-        <Card
+      <Box sx={{ maxWidth: 1000, mx: 'auto', px: { xs: '16px', sm: '24px' }, py: '48px' }}>
+        <Paper
           sx={{
             position: 'relative',
             overflow: 'hidden',
-            p: 6,
-            borderRadius: 'large',
-            bg: 'primary',
+            p: '48px',
+            borderRadius: '12px',
+            bgcolor: '#3b82f6',
             border: 'none',
-            boxShadow: 'medium',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
             textAlign: 'center',
           }}
         >
@@ -395,67 +396,68 @@ export default function HomePage() {
             }}
           />
           <Box sx={{ position: 'relative', zIndex: 1 }}>
-          <Heading
-            as="h3"
-            sx={{
-              fontSize: [4, 5],
-              fontWeight: 700,
-              color: 'white',
-              mb: 2,
-            }}
-          >
-            {t('landing.ctaTitle')}
-          </Heading>
-          <Text sx={{ fontSize: [1, 2], color: 'rgba(255,255,255,0.9)', mb: 4, maxWidth: 560, mx: 'auto', display: 'block' }}>
-            {isAuthenticated ? t('landing.ctaSignedIn') : t('landing.ctaJoin')}
-          </Text>
-          <Flex sx={{ justifyContent: 'center' }}>
-            <Link href={isAuthenticated ? '/dashboard' : '/register'}>
-              <Button
-                sx={{
-                  bg: 'white',
-                  color: 'primary',
-                  px: 5,
-                  py: 3,
-                  fontSize: 2,
-                  fontWeight: 600,
-                  border: 'none',
-                  borderRadius: 'medium',
-                  cursor: 'pointer',
-                  '&:hover': { bg: 'backgroundLight', color: 'primary' },
-                }}
-              >
-                {isAuthenticated ? t('landing.goToDashboard') : t('landing.ctaButton')}
-              </Button>
-            </Link>
-          </Flex>
+            <Typography
+              component="h3"
+              sx={{
+                fontSize: { xs: '20px', sm: '24px' },
+                fontWeight: 700,
+                color: 'white',
+                mb: '8px',
+              }}
+            >
+              {t('landing.ctaTitle')}
+            </Typography>
+            <Box sx={{ fontSize: { xs: '14px', sm: '16px' }, color: 'rgba(255,255,255,0.9)', mb: '24px', maxWidth: 560, mx: 'auto', display: 'block' }}>
+              {isAuthenticated ? t('landing.ctaSignedIn') : t('landing.ctaJoin')}
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Link href={isAuthenticated ? '/dashboard' : '/register'}>
+                <Button
+                  sx={{
+                    bgcolor: 'white',
+                    color: '#3b82f6',
+                    px: '32px',
+                    py: '16px',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: '#f3f4f6', color: '#3b82f6' },
+                  }}
+                >
+                  {isAuthenticated ? t('landing.goToDashboard') : t('landing.ctaButton')}
+                </Button>
+              </Link>
+            </Box>
           </Box>
-        </Card>
+        </Paper>
       </Box>
 
       {/* Footer */}
       <Box
-        as="footer"
+        component="footer"
         sx={{
-          py: 4,
+          py: '24px',
           borderTop: '1px solid',
-          borderColor: 'border',
-          bg: 'backgroundLight',
+          borderColor: '#e5e7eb',
+          bgcolor: '#f3f4f6',
         }}
       >
-        <Flex
+        <Box
           sx={{
+            display: 'flex',
             maxWidth: 1200,
             mx: 'auto',
-            px: [3, 4],
+            px: { xs: '16px', sm: '24px' },
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: 3,
+            gap: '16px',
           }}
         >
-          <Text sx={{ fontSize: 1, color: 'text.secondary' }}>{t('landing.footer')}</Text>
-        </Flex>
+          <Box sx={{ fontSize: '14px', color: '#6b7280' }}>{t('landing.footer')}</Box>
+        </Box>
       </Box>
     </Box>
   )

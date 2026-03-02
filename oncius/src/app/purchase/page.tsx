@@ -2,7 +2,7 @@
 
 import { useQuery } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Card, Flex, Heading, Text } from 'theme-ui'
+import { Box, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
 
@@ -28,43 +28,43 @@ export default function PurchasePage() {
 
   return (
     <Layout>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: [4, 5] }}>
-        <Heading as="h1" sx={{ mb: 2, fontSize: 3 }}>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
+        <Typography component="h1" sx={{ mb: '8px', fontSize: '18px' }}>
           {tPurchase('title')}
-        </Heading>
-        <Text sx={{ color: 'text.secondary', fontSize: 1, mb: 4, display: 'block' }}>
+        </Typography>
+        <Box sx={{ color: '#6b7280', fontSize: '14px', mb: '24px', display: 'block' }}>
           {tPurchase('note')}
-        </Text>
+        </Box>
 
         {isLoading ? (
-          <Text sx={{ color: 'text.secondary' }}>{t('loading')}</Text>
+          <Box sx={{ color: '#6b7280' }}>{t('loading')}</Box>
         ) : isError ? (
-          <Text sx={{ color: 'error' }}>
+          <Box sx={{ color: '#ef4444' }}>
             {(error as Error)?.message || tErrors('loadingError', { resource: tPurchase('title') })}
-          </Text>
+          </Box>
         ) : (
-          <Card
+          <Paper
             sx={{
-              borderRadius: 'large',
-              boxShadow: 'small',
+              borderRadius: '12px',
+              boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
               border: '1px solid',
-              borderColor: 'border',
-              bg: 'white',
+              borderColor: '#e5e7eb',
+              bgcolor: 'white',
               overflow: 'hidden',
             }}
           >
             {products && products.length > 0 ? (
-              <Box as="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-                <Box as="thead">
-                  <Box as="tr" sx={{ bg: 'background.secondary' }}>
+              <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                <Box component="thead">
+                  <Box component="tr" sx={{ bgcolor: '#f9fafb' }}>
                     <Box
-                      as="th"
+                      component="th"
                       sx={{
-                        p: 3,
+                        p: '16px',
                         textAlign: 'left',
-                        fontSize: 0,
+                        fontSize: '12px',
                         fontWeight: 600,
-                        color: 'text.secondary',
+                        color: '#6b7280',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
@@ -72,13 +72,13 @@ export default function PurchasePage() {
                       {t('product')}
                     </Box>
                     <Box
-                      as="th"
+                      component="th"
                       sx={{
-                        p: 3,
+                        p: '16px',
                         textAlign: 'right',
-                        fontSize: 0,
+                        fontSize: '12px',
                         fontWeight: 600,
-                        color: 'text.secondary',
+                        color: '#6b7280',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
@@ -87,33 +87,33 @@ export default function PurchasePage() {
                     </Box>
                   </Box>
                 </Box>
-                <Box as="tbody">
+                <Box component="tbody">
                   {products.map((product, index) => (
                     <Box
-                      as="tr"
+                      component="tr"
                       key={index}
                       sx={{
                         borderTop: '1px solid',
-                        borderColor: 'border',
-                        '&:hover': { bg: 'background.secondary' },
+                        borderColor: '#e5e7eb',
+                        '&:hover': { bgcolor: '#f9fafb' },
                       }}
                     >
-                      <Box as="td" sx={{ py: 2, px: 3, fontSize: 1 }}>
-                        <Text sx={{ fontWeight: 600 }}>{product.product_name}</Text>
+                      <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
+                        <Box sx={{ fontWeight: 600 }}>{product.product_name}</Box>
                       </Box>
-                      <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontSize: 1 }}>
-                        <Text sx={{ fontWeight: 600, color: 'primary' }}>{product.qty}</Text>
+                      <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>
+                        <Box sx={{ fontWeight: 600, color: '#3b82f6' }}>{product.qty}</Box>
                       </Box>
                     </Box>
                   ))}
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ p: 5, textAlign: 'center', color: 'text.secondary' }}>
-                <Text sx={{ fontSize: 2 }}>{tPurchase('empty')}</Text>
+              <Box sx={{ p: '32px', textAlign: 'center', color: '#6b7280' }}>
+                <Box sx={{ fontSize: '16px' }}>{tPurchase('empty')}</Box>
               </Box>
             )}
-          </Card>
+          </Paper>
         )}
       </Box>
     </Layout>

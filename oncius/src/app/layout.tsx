@@ -1,15 +1,21 @@
 "use client"
 
 import { Inter } from 'next/font/google'
-import { ThemeProvider } from 'theme-ui'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import { NextIntlClientProvider } from 'next-intl'
-import theme from '@/styles/theme'
 import '@/styles/globals.css'
 import { useEffect, useState } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
+
+const muiTheme = createTheme({
+  typography: {
+    fontFamily: 'Inter, system-ui, sans-serif',
+  },
+})
 
 // Create a client
 const queryClient = new QueryClient({
@@ -62,7 +68,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <QueryClientProvider client={queryClient}>
-            <ThemeProvider theme={theme}>
+            <ThemeProvider theme={muiTheme}>
+              <CssBaseline />
               {children}
               <ReactQueryDevtools initialIsOpen={false} />
             </ThemeProvider>

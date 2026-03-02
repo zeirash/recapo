@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Card, Container, Flex, Heading, Input, Label, Select, Text, Textarea } from 'theme-ui'
+import { Box, Button, Container, NativeSelect, OutlinedInput, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import CustomerSearchSelect from '@/components/CustomerSearchSelect'
 import { api, ApiError } from '@/utils/api'
-import { ClipboardList, X } from 'lucide-react'
+import { ClipboardList, Trash2 } from 'lucide-react'
 
 type OrderItem = {
   id: number
@@ -338,27 +338,27 @@ export default function OrdersPage() {
 
   return (
     <Layout>
-      <Container sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Flex sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
-          {isLoading && <Text>{t('loading')}</Text>}
+      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
+          {isLoading && <Box>{t('loading')}</Box>}
           {isError && (
-            <Text sx={{ color: 'error' }}>{(error as Error)?.message || tErrors('loadingError', { resource: to('title') })}</Text>
+            <Box sx={{ color: '#ef4444' }}>{(error as Error)?.message || tErrors('loadingError', { resource: to('title') })}</Box>
           )}
 
           {!isLoading && !isError && (
-            <Flex sx={{ overflow: 'hidden', bg: 'transparent', flex: 1, minHeight: 0 }}>
+            <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
               {/* Left list */}
-              <Box sx={{ width: ['100%', '300px'], minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: ['none', '1px solid'], borderColor: 'border' }}>
-                <Box sx={{ p: 4, flexShrink: 0 }}>
-                  <Flex sx={{ gap: 2, alignItems: 'center' }}>
+              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: '#e5e7eb' }}>
+                <Box sx={{ p: '24px', flexShrink: 0 }}>
+                  <Box sx={{ gap: '8px', alignItems: 'center', display: 'flex' }}>
                     <SearchInput
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       placeholder={to('searchPlaceholder')}
                     />
                     <AddButton onClick={openCreateForm} title={to('addOrder')} />
-                  </Flex>
-                  <Box sx={{ mt: 3 }}>
+                  </Box>
+                  <Box sx={{ mt: '16px' }}>
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(Array.from(e.target.selectedOptions).map((o) => o.value))}
@@ -390,114 +390,115 @@ export default function OrdersPage() {
                       <Box
                         key={o.id}
                         sx={{
-                          py: 3,
-                          px: 4,
+                          py: '16px',
+                          px: '24px',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          bg: isActive ? 'backgroundLight' : 'transparent',
-                          borderRadius: 'medium',
-                          '&:hover': { bg: isActive ? 'backgroundLight' : 'background.secondary' },
+                          bgcolor: isActive ? '#f3f4f6' : 'transparent',
+                          borderRadius: '8px',
+                          '&:hover': { bgcolor: isActive ? '#f3f4f6' : '#f9fafb' },
                         }}
                         onClick={() => setSelectedOrderId(o.id)}
                       >
-                        <Flex sx={{ flexDirection: 'column', gap: 1 }}>
-                          <Flex sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text sx={{ fontWeight: 'bold', fontSize: 1 }}>#{o.id}</Text>
+                        <Box sx={{ flexDirection: 'column', gap: '4px', display: 'flex' }}>
+                          <Box sx={{ justifyContent: 'space-between', alignItems: 'center', display: 'flex' }}>
+                            <Box sx={{ fontWeight: 700, fontSize: '14px' }}>#{o.id}</Box>
                             <Box
                               sx={{
-                                px: 2,
+                                px: '8px',
                                 py: '2px',
-                                borderRadius: 'small',
-                                fontSize: 0,
-                                fontWeight: 'medium',
-                                bg: statusStyle.bg,
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                bgcolor: statusStyle.bg,
                                 color: statusStyle.color,
                                 textTransform: 'capitalize',
                               }}
                             >
                               {toStatus(o.status)}
                             </Box>
-                          </Flex>
-                          <Text sx={{ fontSize: 0, color: 'text.secondary' }}>{o.customer_name}</Text>
-                          <Text sx={{ fontSize: 0, fontWeight: 'medium' }}>{formatPrice(o.total_price)}</Text>
-                        </Flex>
+                          </Box>
+                          <Box sx={{ fontSize: '12px', color: '#6b7280' }}>{o.customer_name}</Box>
+                          <Box sx={{ fontSize: '12px', fontWeight: 500 }}>{formatPrice(o.total_price)}</Box>
+                        </Box>
                       </Box>
                     )
                   })}
                   {(ordersRes || []).length === 0 && (
-                    <Text sx={{ p: 3, color: 'text.secondary', textAlign: 'center' }}>{to('noOrders')}</Text>
+                    <Box sx={{ p: '16px', color: '#6b7280', textAlign: 'center' }}>{to('noOrders')}</Box>
                   )}
                 </Box>
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bg: 'background.secondary' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: '#f9fafb' }}>
                 {selectedOrder ? (
-                  <Box sx={{ maxWidth: 880, mx: 'auto', p: [4, 5] }}>
-                    <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                      <Flex sx={{ alignItems: 'center', gap: 3 }}>
-                        <Heading as="h2" sx={{ fontSize: 3 }}>{to('orderNumber', { id: selectedOrder.id })}</Heading>
+                  <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
+                    <Box sx={{ alignItems: 'center', justifyContent: 'space-between', mb: '16px', display: 'flex' }}>
+                      <Box sx={{ alignItems: 'center', gap: '16px', display: 'flex' }}>
+                        <Typography component="h2" sx={{ fontSize: '18px' }}>{to('orderNumber', { id: selectedOrder.id })}</Typography>
                         <Box
                           sx={{
-                            px: 2,
+                            px: '8px',
                             py: '4px',
-                            borderRadius: 'small',
-                            fontSize: 0,
-                            fontWeight: 'medium',
-                            bg: getStatusStyle(selectedOrder.status).bg,
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            bgcolor: getStatusStyle(selectedOrder.status).bg,
                             color: getStatusStyle(selectedOrder.status).color,
                             textTransform: 'capitalize',
                           }}
                         >
                           {toStatus(selectedOrder.status)}
                         </Box>
-                      </Flex>
+                      </Box>
                       <Button
-                        variant="secondary"
+                        variant="outlined"
                         onClick={() => {
                           if (confirm(to('deleteConfirm'))) deleteMutation.mutate(selectedOrder.id)
                         }}
                       >
                         {t('delete')}
                       </Button>
-                    </Flex>
+                    </Box>
 
                     {/* Order info card */}
-                    <Card
+                    <Paper
                       sx={{
-                        p: 4,
-                        mb: 4,
-                        borderRadius: 'large',
-                        boxShadow: 'small',
+                        p: '24px',
+                        mb: '24px',
+                        borderRadius: '12px',
+                        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: 'border',
-                        bg: 'white',
+                        borderColor: '#e5e7eb',
+                        bgcolor: 'white',
                         transition: 'box-shadow 0.2s ease',
-                        '&:hover': { boxShadow: 'medium' },
+                        '&:hover': { boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
                       }}
                     >
-                      <Flex sx={{ flexWrap: 'wrap', gap: [4, 5] }}>
+                      <Box sx={{ flexWrap: 'wrap', gap: { xs: '24px', sm: '32px' }, display: 'flex' }}>
                         <Box sx={{ minWidth: 140 }}>
-                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>{t('customer')}</Text>
-                          <Text sx={{ fontSize: 1, fontWeight: 'medium' }}>{selectedOrder.customer_name}</Text>
+                          <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('customer')}</Box>
+                          <Box sx={{ fontSize: '14px', fontWeight: 500 }}>{selectedOrder.customer_name}</Box>
                         </Box>
                         <Box sx={{ minWidth: 140 }}>
-                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>{to('created')}</Text>
-                          <Text sx={{ fontSize: 1 }}>{formatDate(selectedOrder.created_at)}</Text>
+                          <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('created')}</Box>
+                          <Box sx={{ fontSize: '14px' }}>{formatDate(selectedOrder.created_at)}</Box>
                         </Box>
                         <Box sx={{ minWidth: 140, ml: 'auto' }}>
-                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>{t('status')}</Text>
-                          <Select
+                          <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('status')}</Box>
+                          <NativeSelect
                             value={selectedOrder.status}
                             onChange={(e) => updateStatusMutation.mutate({ id: selectedOrder.id, status: e.target.value })}
+                            disableUnderline
                             sx={{
-                              py: 1,
-                              px: 2,
-                              fontSize: 1,
-                              borderRadius: 'medium',
+                              py: '4px',
+                              px: '8px',
+                              fontSize: '14px',
+                              borderRadius: '8px',
                               border: '1px solid',
-                              borderColor: 'border',
-                              fontWeight: 'medium',
+                              borderColor: '#e5e7eb',
+                              fontWeight: 500,
                               cursor: 'pointer',
                             }}
                           >
@@ -506,11 +507,11 @@ export default function OrdersPage() {
                             <option value="in_delivery">{toStatus('in_delivery')}</option>
                             <option value="done">{toStatus('done')}</option>
                             <option value="cancelled">{toStatus('cancelled')}</option>
-                          </Select>
+                          </NativeSelect>
                         </Box>
                         <Box sx={{ flex: '1 1 100%', minWidth: 0 }}>
-                          <Text sx={{ color: 'text.secondary', fontSize: 1, fontWeight: 700, mb: 1, display: 'block' }}>{to('notes')}</Text>
-                          <Textarea
+                          <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('notes')}</Box>
+                          <OutlinedInput
                             key={selectedOrder.id}
                             defaultValue={selectedOrder.notes || ''}
                             onBlur={(e) => {
@@ -519,67 +520,68 @@ export default function OrdersPage() {
                                 updateNotesMutation.mutate({ id: selectedOrder.id, notes })
                               }
                             }}
+                            multiline
                             rows={2}
+                            size="small"
                             sx={{
                               width: '100%',
-                              py: 2,
-                              px: 3,
-                              fontSize: 1,
-                              borderRadius: 'medium',
+                              py: '8px',
+                              px: '16px',
+                              fontSize: '14px',
+                              borderRadius: '8px',
                               border: '1px solid',
-                              borderColor: 'border',
+                              borderColor: '#e5e7eb',
                               resize: 'vertical',
                               minHeight: '60px',
                             }}
                           />
                         </Box>
-                      </Flex>
-                    </Card>
+                      </Box>
+                    </Paper>
 
                     {/* Order items */}
-                    <Card
+                    <Paper
                       sx={{
-                        py: 1,
-                        px: 3,
-                        borderRadius: 'large',
-                        boxShadow: 'small',
+                        borderRadius: '12px',
+                        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: 'border',
-                        bg: 'white',
+                        borderColor: '#e5e7eb',
+                        bgcolor: 'white',
                         overflow: 'hidden',
                         transition: 'box-shadow 0.2s ease',
-                        '&:hover': { boxShadow: 'medium' },
+                        '&:hover': { boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
                       }}
                     >
-                      <Flex sx={{ alignItems: 'center', justifyContent: 'space-between', p: 2, borderBottom: '1px solid', borderColor: 'border', bg: 'background.secondary' }}>
-                        <Heading as="h3" sx={{ fontSize: 2, fontWeight: 600 }}>{t('items')}</Heading>
-                        <Button variant="secondary" onClick={openAddItemForm} sx={{ fontSize: 0, py: 1, px: 2 }}>
+                      <Box sx={{ alignItems: 'center', justifyContent: 'space-between', p: '8px', borderBottom: '1px solid', borderColor: '#e5e7eb', bgcolor: '#f9fafb', display: 'flex' }}>
+                        <Typography component="h3" sx={{ fontSize: '16px', fontWeight: 600 }}>{t('items')}</Typography>
+                        <Button variant="outlined" onClick={openAddItemForm} sx={{ fontSize: '12px', py: '4px', px: '8px' }}>
                           {to('addItem')}
                         </Button>
-                      </Flex>
+                      </Box>
                       {selectedOrder.order_items && selectedOrder.order_items.length > 0 ? (
-                        <Box as="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-                          <Box as="thead">
-                            <Box as="tr" sx={{ bg: 'background.secondary' }}>
-                              <Box as="th" sx={{ p: 3, textAlign: 'left', fontSize: 0, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('product')}</Box>
-                              <Box as="th" sx={{ p: 3, textAlign: 'right', fontSize: 0, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('price')}</Box>
-                              <Box as="th" sx={{ p: 3, textAlign: 'right', fontSize: 0, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('quantity')}</Box>
-                              <Box as="th" sx={{ p: 3, textAlign: 'right', fontSize: 0, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{to('subtotal')}</Box>
-                              <Box as="th" sx={{ p: 3, width: '56px' }}></Box>
+                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <Box component="thead">
+                            <Box component="tr" sx={{ bgcolor: '#f9fafb' }}>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('product')}</Box>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('price')}</Box>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('quantity')}</Box>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{to('subtotal')}</Box>
+                              <Box component="th" sx={{ p: '16px', width: '56px' }}></Box>
                             </Box>
                           </Box>
-                          <Box as="tbody">
+                          <Box component="tbody">
                             {selectedOrder.order_items.map((item) => (
-                              <Box as="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'border', '&:hover': { bg: 'background.secondary' } }}>
-                                <Box as="td" sx={{ py: 2, px: 3, fontSize: 1 }}>{item.product_name}</Box>
-                                <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontSize: 1 }}>{formatPrice(item.price)}</Box>
-                                <Box as="td" sx={{ py: 2, pl: 3, pr: 2 }}>
-                                  <Flex sx={{ justifyContent: 'flex-end' }}>
-                                  <Input
+                              <Box component="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: '#e5e7eb', '&:hover': { bgcolor: '#f9fafb' } }}>
+                                <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>{item.product_name}</Box>
+                                <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>{formatPrice(item.price)}</Box>
+                                <Box component="td" sx={{ py: '8px', pl: '16px', pr: '8px' }}>
+                                  <Box sx={{ justifyContent: 'flex-end', display: 'flex' }}>
+                                  <OutlinedInput
                                     type="number"
-                                    min="1"
+                                    inputProps={{ min: '1' }}
                                     defaultValue={item.qty}
-                                    sx={{ width: '64px', textAlign: 'right', py: 2, px: 2, fontSize: 1, borderRadius: 'medium' }}
+                                    size="small"
+                                    sx={{ width: '64px', textAlign: 'right', fontSize: '14px', borderRadius: '8px' }}
                                     onBlur={(e) => {
                                       const newQty = Number(e.target.value) || 1
                                       if (newQty !== item.qty && newQty > 0) {
@@ -598,64 +600,65 @@ export default function OrdersPage() {
                                       }
                                     }}
                                   />
-                                  </Flex>
+                                  </Box>
                                 </Box>
-                                <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontSize: 1, fontWeight: 'medium' }}>{formatPrice(item.price * item.qty)}</Box>
-                                <Box as="td" sx={{ py: 2, px: 3, textAlign: 'center' }}>
-                                  <Button
-                                    variant="secondary"
-                                    sx={{ fontSize: 1, py: 1, px: 2, bg: 'transparent', color: 'error', borderRadius: 'medium', '&:hover': { bg: '#fef2f2' } }}
+                                <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px', fontWeight: 500 }}>{formatPrice(item.price * item.qty)}</Box>
+                                <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'center' }}>
+                                  <Box
+                                    component="span"
+                                    sx={{ color: '#ef4444', cursor: 'pointer', display: 'inline-flex', '&:hover': { color: '#b91c1c' } }}
                                     onClick={() => {
                                       if (confirm(to('removeItemConfirm'))) {
                                         deleteItemMutation.mutate({ orderId: selectedOrder.id, itemId: item.id, itemPrice: item.price, itemQty: item.qty })
                                       }
                                     }}
                                   >
-                                    <X size={16} />
-                                  </Button>
+                                    <Trash2 size={20} />
+                                  </Box>
                                 </Box>
                               </Box>
                             ))}
                           </Box>
-                          <Box as="tfoot">
-                            <Box as="tr" sx={{ borderTop: '2px solid', borderColor: 'border', bg: 'background.secondary' }}>
-                              <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontWeight: 700, fontSize: 2 }} {...({ colSpan: 3 } as object)}>{t('total')}</Box>
-                              <Box as="td" sx={{ py: 2, px: 3, textAlign: 'right', fontWeight: 700, fontSize: 2, color: 'primary' }}>{formatPrice(selectedOrder.total_price)}</Box>
-                              <Box as="td" sx={{ py: 2, px: 3 }}></Box>
+                          <Box component="tfoot">
+                            <Box component="tr" sx={{ borderTop: '2px solid', borderColor: '#e5e7eb', bgcolor: '#f9fafb' }}>
+                              <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 700, fontSize: '16px' }} {...({ colSpan: 3 } as object)}>{t('total')}</Box>
+                              <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 700, fontSize: '16px', color: '#3b82f6' }}>{formatPrice(selectedOrder.total_price)}</Box>
+                              <Box component="td" sx={{ py: '8px', px: '16px' }}></Box>
                             </Box>
                           </Box>
                         </Box>
                       ) : (
-                        <Box sx={{ p: 5, textAlign: 'center', color: 'text.secondary' }}>
-                          <Text sx={{ fontSize: 2, display: 'block', mb: 2 }}>{to('noItems')}</Text>
-                          <Button variant="secondary" onClick={openAddItemForm}>
+                        <Box sx={{ p: '32px', textAlign: 'center', color: '#6b7280' }}>
+                          <Box sx={{ fontSize: '16px', display: 'block', mb: '8px' }}>{to('noItems')}</Box>
+                          <Button variant="outlined" onClick={openAddItemForm}>
                             {to('addFirstItem')}
                           </Button>
                         </Box>
                       )}
-                    </Card>
+                    </Paper>
                   </Box>
                 ) : (
-                  <Flex
+                  <Box
                     sx={{
                       height: '100%',
                       minHeight: 320,
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexDirection: 'column',
-                      gap: 2,
-                      color: 'text.secondary',
+                      gap: '8px',
+                      color: '#6b7280',
+                      display: 'flex',
                     }}
                   >
                     <ClipboardList size={48} opacity={0.4} />
-                    <Text sx={{ fontSize: 2 }}>{to('selectOrder')}</Text>
-                    <Text sx={{ fontSize: 1 }}>{to('chooseFromList')}</Text>
-                  </Flex>
+                    <Box sx={{ fontSize: '16px' }}>{to('selectOrder')}</Box>
+                    <Box sx={{ fontSize: '14px' }}>{to('chooseFromList')}</Box>
+                  </Box>
                 )}
               </Box>
-            </Flex>
+            </Box>
           )}
-        </Flex>
+        </Box>
 
         {/* Create Order Modal */}
         {isCreateFormOpen && (
@@ -663,42 +666,42 @@ export default function OrdersPage() {
             sx={{
               position: 'fixed',
               inset: 0,
-              bg: 'rgba(0,0,0,0.4)',
+              bgcolor: 'rgba(0,0,0,0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              p: 3,
+              p: '16px',
             }}
             onClick={(e) => {
               if (e.target === e.currentTarget) closeCreateForm()
             }}
           >
-            <Card sx={{ width: ['100%', '540px'] }} onClick={(e) => e.stopPropagation()}>
+            <Paper sx={{ width: { xs: '100%', sm: '540px' } }} onClick={(e) => e.stopPropagation()}>
             {createFormConflict ? (
               <>
-                <Heading as="h3" sx={{ mb: 2 }}>{to('duplicateOrderTitle')}</Heading>
-                <Text sx={{ mb: 4, color: 'text.secondary', display: 'block' }}>
+                <Typography component="h3" sx={{ mb: '8px' }}>{to('duplicateOrderTitle')}</Typography>
+                <Box sx={{ mb: '24px', color: '#6b7280', display: 'block' }}>
                   {to('duplicateOrderMessageInline')}
-                </Text>
-                <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
+                </Box>
+                <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
                   <Button
                     type="button"
-                    variant="secondary"
+                    variant="outlined"
                     onClick={() => setCreateFormConflict(false)}
                   >
                     {to('chooseDifferentCustomer')}
                   </Button>
-                  <Button type="button" onClick={closeCreateForm}>
+                  <Button type="button" variant="contained" disableElevation onClick={closeCreateForm}>
                     {t('cancel')}
                   </Button>
-                </Flex>
+                </Box>
               </>
             ) : (
               <>
-                <Heading as="h3" sx={{ mb: 3 }}>{to('newOrder')}</Heading>
-                <Box as="form" onSubmit={submitCreateForm}>
-                  <Box sx={{ mb: 3 }}>
-                    <Label htmlFor="customer">{t('customer')}</Label>
+                <Typography component="h3" sx={{ mb: '16px' }}>{to('newOrder')}</Typography>
+                <Box component="form" onSubmit={submitCreateForm}>
+                  <Box sx={{ mb: '16px' }}>
+                    <Box component="label" htmlFor="customer" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('customer')}</Box>
                     <CustomerSearchSelect
                       value={createForm.customer_id}
                       onChange={(id) => setCreateForm({ ...createForm, customer_id: id })}
@@ -706,37 +709,39 @@ export default function OrdersPage() {
                       searchPlaceholder={to('searchCustomer')}
                     />
                   </Box>
-                  <Box sx={{ mb: 3 }}>
-                    <Label htmlFor="notes">{to('notes')}</Label>
-                    <Textarea
+                  <Box sx={{ mb: '16px' }}>
+                    <Box component="label" htmlFor="notes" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{to('notes')}</Box>
+                    <OutlinedInput
                       id="notes"
                       value={createForm.notes}
                       onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
+                      multiline
                       rows={3}
+                      size="small"
                       sx={{
                         width: '100%',
-                        py: 2,
-                        px: 3,
-                        fontSize: 1,
-                        borderRadius: 'medium',
+                        py: '8px',
+                        px: '16px',
+                        fontSize: '14px',
+                        borderRadius: '8px',
                         border: '1px solid',
-                        borderColor: 'border',
+                        borderColor: '#e5e7eb',
                         resize: 'vertical',
                       }}
                     />
                   </Box>
-                  <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
-                    <Button type="button" variant="secondary" onClick={closeCreateForm}>
+                  <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
+                    <Button type="button" variant="outlined" onClick={closeCreateForm}>
                       {t('cancel')}
                     </Button>
-                    <Button type="submit" disabled={createMutation.isLoading || !createForm.customer_id}>
+                    <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || !createForm.customer_id}>
                       {to('createOrder')}
                     </Button>
-                  </Flex>
+                  </Box>
                 </Box>
               </>
             )}
-            </Card>
+            </Paper>
           </Box>
         )}
 
@@ -746,54 +751,56 @@ export default function OrdersPage() {
             sx={{
               position: 'fixed',
               inset: 0,
-              bg: 'rgba(0,0,0,0.4)',
+              bgcolor: 'rgba(0,0,0,0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              p: 3,
+              p: '16px',
             }}
             onClick={(e) => {
               if (e.target === e.currentTarget) closeAddItemForm()
             }}
           >
-            <Card sx={{ width: ['100%', '540px'] }}>
-              <Heading as="h3" sx={{ mb: 3 }}>{to('addItemTitle')}</Heading>
-              <Box as="form" onSubmit={submitAddItemForm}>
-                <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="product">{t('product')}</Label>
-                  <Select
+            <Paper sx={{ width: { xs: '100%', sm: '540px' } }}>
+              <Typography component="h3" sx={{ mb: '16px' }}>{to('addItemTitle')}</Typography>
+              <Box component="form" onSubmit={submitAddItemForm}>
+                <Box sx={{ mb: '16px' }}>
+                  <Box component="label" htmlFor="product" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('product')}</Box>
+                  <NativeSelect
                     id="product"
                     value={addItemForm.product_id || ''}
                     onChange={(e) => setAddItemForm({ ...addItemForm, product_id: Number(e.target.value) || null })}
+                    disableUnderline
                     required
                   >
                     <option value="">{to('selectProduct')}</option>
                     {(productsRes || []).map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
-                  </Select>
+                  </NativeSelect>
                 </Box>
-                <Box sx={{ mb: 3 }}>
-                  <Label htmlFor="qty">{t('quantity')}</Label>
-                  <Input
+                <Box sx={{ mb: '16px' }}>
+                  <Box component="label" htmlFor="qty" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('quantity')}</Box>
+                  <OutlinedInput
                     id="qty"
                     type="number"
-                    min="1"
+                    inputProps={{ min: '1' }}
                     value={addItemForm.qty}
                     onChange={(e) => setAddItemForm({ ...addItemForm, qty: Number(e.target.value) || 1 })}
+                    size="small"
                     required
                   />
                 </Box>
-                <Flex sx={{ gap: 2, justifyContent: 'flex-end' }}>
-                  <Button type="button" variant="secondary" onClick={closeAddItemForm}>
+                <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
+                  <Button type="button" variant="outlined" onClick={closeAddItemForm}>
                     {t('cancel')}
                   </Button>
-                  <Button type="submit" disabled={addItemMutation.isLoading || !addItemForm.product_id}>
+                  <Button type="submit" variant="contained" disableElevation disabled={addItemMutation.isLoading || !addItemForm.product_id}>
                     {to('addItemButton')}
                   </Button>
-                </Flex>
+                </Box>
               </Box>
-            </Card>
+            </Paper>
           </Box>
         )}
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from 'theme-ui'
+import { Button } from '@mui/material'
 import { Plus } from 'lucide-react'
 
 type AddButtonProps = {
@@ -13,6 +13,8 @@ export default function AddButton({ onClick, title }: AddButtonProps) {
     <Button
       onClick={onClick}
       title={title}
+      variant="contained"
+      disableElevation
       sx={{
         width: 36,
         minWidth: 36,
@@ -21,9 +23,9 @@ export default function AddButton({ onClick, title }: AddButtonProps) {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 'medium',
-        fontSize: 2,
-        fontWeight: 'bold',
+        borderRadius: '8px',
+        fontSize: '16px',
+        fontWeight: 700,
       }}
     >
       <Plus size={18} />

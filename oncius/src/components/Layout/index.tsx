@@ -1,7 +1,7 @@
 "use client"
 
 import React, { ReactNode, useState, useEffect } from 'react'
-import { Box, Flex } from 'theme-ui'
+import { Box } from '@mui/material'
 import { usePathname } from 'next/navigation'
 import Header from './Header'
 import SideMenu from './SideMenu'
@@ -40,7 +40,7 @@ const Layout = ({ children }: LayoutProps) => {
     return (
       <Box sx={{ minHeight: '100vh', background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #ffffff 100%)' }}>
         <LandingHeader />
-        <Box as="main" sx={{ py: 4 }}>
+        <Box component="main" sx={{ py: '24px' }}>
           {children}
         </Box>
       </Box>
@@ -49,16 +49,16 @@ const Layout = ({ children }: LayoutProps) => {
 
   // Show sidebar for other pages
   return (
-    <Box sx={{ minHeight: '100vh', bg: 'background.secondary' }}>
-      <Flex sx={{ height: '100vh' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f9fafb' }}>
+      <Box sx={{ display: 'flex', height: '100vh' }}>
         <SideMenu
           selectedMenu={selectedMenu}
           onMenuSelect={setSelectedMenu}
         />
-        <Box as="main" sx={{ flex: 1, bg: 'white', overflowY: 'auto' }}>
+        <Box component="main" sx={{ flex: 1, bgcolor: 'white', overflowY: 'auto' }}>
           {children}
         </Box>
-      </Flex>
+      </Box>
     </Box>
   )
 }

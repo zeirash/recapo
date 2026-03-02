@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Box, Container, Heading, Text, Input, Button, Alert, Flex } from 'theme-ui'
+import { Box, Container, Typography, OutlinedInput, Button, Alert } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
@@ -49,30 +49,31 @@ const LoginPage = () => {
 
   return (
     <Layout>
-      <Container sx={{ maxWidth: '500px' }}>
-        <Box sx={{ bg: 'background', p: 4, borderRadius: 'large', boxShadow: 'medium' }}>
-          <Heading as="h1" sx={{ textAlign: 'center', mb: 4 }}>
+      <Container maxWidth="xs">
+        <Box sx={{ bgcolor: 'white', p: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <Typography component="h1" sx={{ textAlign: 'center', mb: '24px' }}>
             {t('auth.login')}
-          </Heading>
+          </Typography>
 
           {message && (
-            <Alert sx={{ mb: 3, bg: 'success', color: 'white' }}>
+            <Alert severity="success" sx={{ mb: '16px' }}>
               {message}
             </Alert>
           )}
 
           {loginError && (
-            <Alert sx={{ mb: 3, bg: 'error', color: 'white' }}>
+            <Alert severity="error" sx={{ mb: '16px' }}>
               {loginError instanceof Error ? loginError.message : t('auth.loginFailed')}
             </Alert>
           )}
 
-          <Box as="form" onSubmit={handleSubmit}>
-            <Box sx={{ mb: 3 }}>
-              <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
+          <Box component="form" onSubmit={handleSubmit}>
+            <Box sx={{ mb: '16px' }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
                 {t('common.email')}
-              </Text>
-              <Input
+              </Box>
+              <OutlinedInput
+                size="small"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -81,24 +82,25 @@ const LoginPage = () => {
                 className={errors.email ? 'error' : ''}
               />
               {errors.email && (
-                <Text sx={{ color: 'error', fontSize: 0, mt: 1 }}>
+                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
                   {errors.email}
-                </Text>
+                </Box>
               )}
             </Box>
 
-            <Box sx={{ mb: 4 }}>
-              <Flex sx={{ justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
-                <Text as="label" sx={{ fontWeight: 'heading' }}>
+            <Box sx={{ mb: '24px' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '4px' }}>
+                <Box component="label" sx={{ fontWeight: 600 }}>
                   {t('common.password')}
-                </Text>
+                </Box>
                 <Link href="/forgot-password">
-                  <Text sx={{ color: 'primary', fontSize: 0, cursor: 'pointer' }}>
+                  <Box sx={{ color: '#3b82f6', fontSize: '12px', cursor: 'pointer' }}>
                     {t('auth.forgotPassword')}
-                  </Text>
+                  </Box>
                 </Link>
-              </Flex>
-              <Input
+              </Box>
+              <OutlinedInput
+                size="small"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -107,31 +109,32 @@ const LoginPage = () => {
                 className={errors.password ? 'error' : ''}
               />
               {errors.password && (
-                <Text sx={{ color: 'error', fontSize: 0, mt: 1 }}>
+                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
                   {errors.password}
-                </Text>
+                </Box>
               )}
             </Box>
 
             <Button
               type="submit"
-              variant="primary"
-              sx={{ width: '100%', mb: 3 }}
+              variant="contained"
+              disableElevation
+              sx={{ width: '100%', mb: '16px' }}
               disabled={loginLoading}
             >
               {loginLoading ? t('auth.loggingIn') : t('auth.login')}
             </Button>
 
-            <Flex sx={{ justifyContent: 'center', gap: 1 }}>
-              <Text sx={{ color: 'text.secondary' }}>{t('auth.noAccount')}</Text>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
+              <Box sx={{ color: '#6b7280' }}>{t('auth.noAccount')}</Box>
               <Link href="/register">
-                <Text
-                  sx={{ color: 'primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                <Box
+                  sx={{ color: '#3b82f6', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                 >
                   {t('auth.registerHere')}
-                </Text>
+                </Box>
               </Link>
-            </Flex>
+            </Box>
           </Box>
         </Box>
       </Container>

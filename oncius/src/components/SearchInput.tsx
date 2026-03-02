@@ -1,6 +1,6 @@
 "use client"
 
-import { Box, Input } from 'theme-ui'
+import { Box, OutlinedInput } from '@mui/material'
 import { Search } from 'lucide-react'
 
 type SearchInputProps = {
@@ -16,30 +16,35 @@ export default function SearchInput({ value, onChange, placeholder, sx = {} }: S
       <Box
         sx={{
           position: 'absolute',
-          left: 3,
+          left: '16px',
           top: '50%',
           transform: 'translateY(-50%)',
-          color: 'text.secondary',
+          color: '#6b7280',
           pointerEvents: 'none',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          zIndex: 1,
         }}
       >
         <Search size={18} />
       </Box>
-      <Input
+      <OutlinedInput
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        aria-label={placeholder}
+        inputProps={{ 'aria-label': placeholder }}
+        size="small"
         sx={{
-          pl: 5,
           width: '100%',
-          borderRadius: 'medium',
-          bg: 'background.secondary',
-          border: '1px solid',
-          borderColor: 'border',
+          borderRadius: '8px',
+          bgcolor: '#f9fafb',
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#e5e7eb',
+          },
+          '& .MuiOutlinedInput-input': {
+            paddingLeft: '40px',
+          },
         }}
       />
     </Box>

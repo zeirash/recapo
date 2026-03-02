@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Box, Container, Heading, Text, Input, Button, Alert, Flex } from 'theme-ui'
+import { Box, Container, Typography, OutlinedInput, Button, Alert } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
@@ -74,24 +74,25 @@ const RegisterPage = () => {
 
   return (
     <Layout>
-      <Container sx={{ maxWidth: '500px' }}>
-        <Box sx={{ bg: 'background', p: 4, borderRadius: 'large', boxShadow: 'medium' }}>
-          <Heading as="h1" sx={{ textAlign: 'center', mb: 4 }}>
+      <Container maxWidth="xs">
+        <Box sx={{ bgcolor: 'white', p: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <Typography component="h1" sx={{ textAlign: 'center', mb: '24px' }}>
             {t('auth.register')}
-          </Heading>
+          </Typography>
 
           {registerError && (
-            <Alert sx={{ mb: 3, bg: 'error', color: 'white' }}>
+            <Alert severity="error" sx={{ mb: '16px' }}>
               {registerError instanceof Error ? registerError.message : t('auth.registrationFailed')}
             </Alert>
           )}
 
-          <Box as="form" onSubmit={handleSubmit}>
-            <Box sx={{ mb: 3 }}>
-              <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
+          <Box component="form" onSubmit={handleSubmit}>
+            <Box sx={{ mb: '16px' }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
                 {t('auth.fullName')}
-              </Text>
-              <Input
+              </Box>
+              <OutlinedInput
+                size="small"
                 name="name"
                 type="text"
                 value={formData.name}
@@ -101,17 +102,18 @@ const RegisterPage = () => {
                 className={errors.name ? 'error' : ''}
               />
               {errors.name && (
-                <Text sx={{ color: 'error', fontSize: 0, mt: 1 }}>
+                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
                   {errors.name}
-                </Text>
+                </Box>
               )}
             </Box>
 
-            <Box sx={{ mb: 3 }}>
-              <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
+            <Box sx={{ mb: '16px' }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
                 {t('common.email')}
-              </Text>
-              <Input
+              </Box>
+              <OutlinedInput
+                size="small"
                 name="email"
                 type="email"
                 value={formData.email}
@@ -121,17 +123,18 @@ const RegisterPage = () => {
                 className={errors.email ? 'error' : ''}
               />
               {errors.email && (
-                <Text sx={{ color: 'error', fontSize: 0, mt: 1 }}>
+                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
                   {errors.email}
-                </Text>
+                </Box>
               )}
             </Box>
 
-            <Box sx={{ mb: 3 }}>
-              <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
+            <Box sx={{ mb: '16px' }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
                 {t('common.password')}
-              </Text>
-              <Input
+              </Box>
+              <OutlinedInput
+                size="small"
                 name="password"
                 type="password"
                 value={formData.password}
@@ -141,17 +144,18 @@ const RegisterPage = () => {
                 className={errors.password ? 'error' : ''}
               />
               {errors.password && (
-                <Text sx={{ color: 'error', fontSize: 0, mt: 1 }}>
+                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
                   {errors.password}
-                </Text>
+                </Box>
               )}
             </Box>
 
-            <Box sx={{ mb: 4 }}>
-              <Text as="label" sx={{ display: 'block', mb: 1, fontWeight: 'heading' }}>
+            <Box sx={{ mb: '24px' }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
                 {t('auth.confirmPassword')}
-              </Text>
-              <Input
+              </Box>
+              <OutlinedInput
+                size="small"
                 name="confirmPassword"
                 type="password"
                 value={formData.confirmPassword}
@@ -161,31 +165,33 @@ const RegisterPage = () => {
                 className={errors.confirmPassword ? 'error' : ''}
               />
               {errors.confirmPassword && (
-                <Text sx={{ color: 'error', fontSize: 0, mt: 1 }}>
+                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
                   {errors.confirmPassword}
-                </Text>
+                </Box>
               )}
             </Box>
 
             <Button
               type="submit"
-              variant="primary"
-              sx={{ width: '100%', mb: 3 }}
+              variant="contained"
+              disableElevation
+              fullWidth
               disabled={registerLoading}
+              sx={{ mb: '16px' }}
             >
               {registerLoading ? t('auth.creatingAccount') : t('auth.register')}
             </Button>
 
-            <Flex sx={{ justifyContent: 'center', gap: 1 }}>
-              <Text sx={{ color: 'text.secondary' }}>{t('auth.hasAccount')}</Text>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
+              <Box sx={{ color: '#6b7280' }}>{t('auth.hasAccount')}</Box>
               <Link href="/login">
-                <Text
-                  sx={{ color: 'primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                <Box
+                  sx={{ color: '#3b82f6', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                 >
                   {t('auth.loginHere')}
-                </Text>
+                </Box>
               </Link>
-            </Flex>
+            </Box>
           </Box>
         </Box>
       </Container>
