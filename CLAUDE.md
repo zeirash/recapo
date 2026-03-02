@@ -72,7 +72,7 @@ Next.js 14 App Router application.
 - `src/types/` — TypeScript type definitions
 - `src/providers/` — React context providers
 
-**Styling:** Theme UI + Emotion + SASS. No CSS modules.
+**Styling:** MUI (Material UI) + Emotion + SASS. No CSS modules.
 
 **Data fetching:** React Query 3.x (`@tanstack/react-query` not used; it's `react-query` v3).
 
@@ -91,3 +91,13 @@ Database name: `recapo_master` (PostgreSQL 15).
 ## Workflow Rules
 
 - Always update unit tests when changing `arion/store`, `arion/service`, or `arion/handler`
+
+## Use the mui-mcp server to answer any MUI questions --
+
+- 1. call the "useMuiDocs" tool to fetch the docs of the package relevant in the question
+- 2. call the "fetchDocs" tool to fetch any additional docs if needed using ONLY the URLs present in the returned content.
+- 3. repeat steps 1-2 until you have fetched all relevant docs for the given question
+- 4. use the fetched content to answer the question
+
+## Use lucide-react for icon library
+- Always use icons from lucide-react for all icons
