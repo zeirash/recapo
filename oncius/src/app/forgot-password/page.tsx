@@ -43,17 +43,17 @@ const ForgotPasswordPage = () => {
             {t('auth.forgotPasswordTitle')}
           </Typography>
 
-          <Box sx={{ textAlign: 'center', color: '#6b7280', mb: '24px', display: 'block' }}>
+          <Box sx={{ textAlign: 'center', color: 'grey.500', mb: '24px', display: 'block' }}>
             {t('auth.forgotPasswordDescription')}
           </Box>
 
           {submitted ? (
             <Box sx={{ textAlign: 'center' }}>
-              <Box sx={{ color: '#10b981', mb: '24px', display: 'block' }}>
+              <Box sx={{ color: 'success.main', mb: '24px', display: 'block' }}>
                 If an account exists for {email}, a reset link will be sent shortly.
               </Box>
               <Link href="/login">
-                <Box sx={{ color: '#3b82f6', cursor: 'pointer' }}>
+                <Box sx={{ color: 'primary.main', cursor: 'pointer' }}>
                   {t('auth.backToLogin')}
                 </Box>
               </Link>
@@ -74,7 +74,7 @@ const ForgotPasswordPage = () => {
                   className={errors.email ? 'error' : ''}
                 />
                 {errors.email && (
-                  <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
+                  <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>
                     {errors.email}
                   </Box>
                 )}
@@ -91,7 +91,7 @@ const ForgotPasswordPage = () => {
 
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Link href="/login">
-                  <Box sx={{ color: '#3b82f6', cursor: 'pointer' }}>
+                  <Box sx={{ color: 'primary.main', cursor: 'pointer' }}>
                     {t('auth.backToLogin')}
                   </Box>
                 </Link>

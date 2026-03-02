@@ -342,13 +342,13 @@ export default function OrdersPage() {
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
           {isLoading && <Box>{t('loading')}</Box>}
           {isError && (
-            <Box sx={{ color: '#ef4444' }}>{(error as Error)?.message || tErrors('loadingError', { resource: to('title') })}</Box>
+            <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || tErrors('loadingError', { resource: to('title') })}</Box>
           )}
 
           {!isLoading && !isError && (
             <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
               {/* Left list */}
-              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: '#e5e7eb' }}>
+              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: 'grey.200' }}>
                 <Box sx={{ p: '24px', flexShrink: 0 }}>
                   <Box sx={{ gap: '8px', alignItems: 'center', display: 'flex' }}>
                     <SearchInput
@@ -394,9 +394,9 @@ export default function OrdersPage() {
                           px: '24px',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          bgcolor: isActive ? '#f3f4f6' : 'transparent',
+                          bgcolor: isActive ? 'grey.100' : 'transparent',
                           borderRadius: '8px',
-                          '&:hover': { bgcolor: isActive ? '#f3f4f6' : '#f9fafb' },
+                          '&:hover': { bgcolor: isActive ? 'grey.100' : 'grey.50' },
                         }}
                         onClick={() => setSelectedOrderId(o.id)}
                       >
@@ -418,20 +418,20 @@ export default function OrdersPage() {
                               {toStatus(o.status)}
                             </Box>
                           </Box>
-                          <Box sx={{ fontSize: '12px', color: '#6b7280' }}>{o.customer_name}</Box>
+                          <Box sx={{ fontSize: '12px', color: 'grey.500' }}>{o.customer_name}</Box>
                           <Box sx={{ fontSize: '12px', fontWeight: 500 }}>{formatPrice(o.total_price)}</Box>
                         </Box>
                       </Box>
                     )
                   })}
                   {(ordersRes || []).length === 0 && (
-                    <Box sx={{ p: '16px', color: '#6b7280', textAlign: 'center' }}>{to('noOrders')}</Box>
+                    <Box sx={{ p: '16px', color: 'grey.500', textAlign: 'center' }}>{to('noOrders')}</Box>
                   )}
                 </Box>
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: '#f9fafb' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'grey.50' }}>
                 {selectedOrder ? (
                   <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
                     <Box sx={{ alignItems: 'center', justifyContent: 'space-between', mb: '16px', display: 'flex' }}>
@@ -470,7 +470,7 @@ export default function OrdersPage() {
                         borderRadius: '12px',
                         boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: '#e5e7eb',
+                        borderColor: 'grey.200',
                         bgcolor: 'white',
                         transition: 'box-shadow 0.2s ease',
                         '&:hover': { boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
@@ -478,15 +478,15 @@ export default function OrdersPage() {
                     >
                       <Box sx={{ flexWrap: 'wrap', gap: { xs: '24px', sm: '32px' }, display: 'flex' }}>
                         <Box sx={{ minWidth: 140 }}>
-                          <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('customer')}</Box>
+                          <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('customer')}</Box>
                           <Box sx={{ fontSize: '14px', fontWeight: 500 }}>{selectedOrder.customer_name}</Box>
                         </Box>
                         <Box sx={{ minWidth: 140 }}>
-                          <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('created')}</Box>
+                          <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('created')}</Box>
                           <Box sx={{ fontSize: '14px' }}>{formatDate(selectedOrder.created_at)}</Box>
                         </Box>
                         <Box sx={{ minWidth: 140, ml: 'auto' }}>
-                          <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('status')}</Box>
+                          <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('status')}</Box>
                           <NativeSelect
                             value={selectedOrder.status}
                             onChange={(e) => updateStatusMutation.mutate({ id: selectedOrder.id, status: e.target.value })}
@@ -497,7 +497,7 @@ export default function OrdersPage() {
                               fontSize: '14px',
                               borderRadius: '8px',
                               border: '1px solid',
-                              borderColor: '#e5e7eb',
+                              borderColor: 'grey.200',
                               fontWeight: 500,
                               cursor: 'pointer',
                             }}
@@ -510,7 +510,7 @@ export default function OrdersPage() {
                           </NativeSelect>
                         </Box>
                         <Box sx={{ flex: '1 1 100%', minWidth: 0 }}>
-                          <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('notes')}</Box>
+                          <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('notes')}</Box>
                           <OutlinedInput
                             key={selectedOrder.id}
                             defaultValue={selectedOrder.notes || ''}
@@ -530,7 +530,7 @@ export default function OrdersPage() {
                               fontSize: '14px',
                               borderRadius: '8px',
                               border: '1px solid',
-                              borderColor: '#e5e7eb',
+                              borderColor: 'grey.200',
                               resize: 'vertical',
                               minHeight: '60px',
                             }}
@@ -545,14 +545,14 @@ export default function OrdersPage() {
                         borderRadius: '12px',
                         boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: '#e5e7eb',
+                        borderColor: 'grey.200',
                         bgcolor: 'white',
                         overflow: 'hidden',
                         transition: 'box-shadow 0.2s ease',
                         '&:hover': { boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
                       }}
                     >
-                      <Box sx={{ alignItems: 'center', justifyContent: 'space-between', p: '8px', borderBottom: '1px solid', borderColor: '#e5e7eb', bgcolor: '#f9fafb', display: 'flex' }}>
+                      <Box sx={{ alignItems: 'center', justifyContent: 'space-between', p: '8px', borderBottom: '1px solid', borderColor: 'grey.200', bgcolor: 'grey.50', display: 'flex' }}>
                         <Typography component="h3" sx={{ fontSize: '16px', fontWeight: 600 }}>{t('items')}</Typography>
                         <Button variant="outlined" onClick={openAddItemForm} sx={{ fontSize: '12px', py: '4px', px: '8px' }}>
                           {to('addItem')}
@@ -561,17 +561,17 @@ export default function OrdersPage() {
                       {selectedOrder.order_items && selectedOrder.order_items.length > 0 ? (
                         <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
                           <Box component="thead">
-                            <Box component="tr" sx={{ bgcolor: '#f9fafb' }}>
-                              <Box component="th" sx={{ p: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('product')}</Box>
-                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('price')}</Box>
-                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('quantity')}</Box>
-                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{to('subtotal')}</Box>
+                            <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'grey.500', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('product')}</Box>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'grey.500', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('price')}</Box>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'grey.500', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('quantity')}</Box>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'grey.500', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{to('subtotal')}</Box>
                               <Box component="th" sx={{ p: '16px', width: '56px' }}></Box>
                             </Box>
                           </Box>
                           <Box component="tbody">
                             {selectedOrder.order_items.map((item) => (
-                              <Box component="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: '#e5e7eb', '&:hover': { bgcolor: '#f9fafb' } }}>
+                              <Box component="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'grey.200', '&:hover': { bgcolor: 'grey.50' } }}>
                                 <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>{item.product_name}</Box>
                                 <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>{formatPrice(item.price)}</Box>
                                 <Box component="td" sx={{ py: '8px', pl: '16px', pr: '8px' }}>
@@ -606,7 +606,7 @@ export default function OrdersPage() {
                                 <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'center' }}>
                                   <Box
                                     component="span"
-                                    sx={{ color: '#ef4444', cursor: 'pointer', display: 'inline-flex', '&:hover': { color: '#b91c1c' } }}
+                                    sx={{ color: 'error.main', cursor: 'pointer', display: 'inline-flex', '&:hover': { color: 'error.dark' } }}
                                     onClick={() => {
                                       if (confirm(to('removeItemConfirm'))) {
                                         deleteItemMutation.mutate({ orderId: selectedOrder.id, itemId: item.id, itemPrice: item.price, itemQty: item.qty })
@@ -620,15 +620,15 @@ export default function OrdersPage() {
                             ))}
                           </Box>
                           <Box component="tfoot">
-                            <Box component="tr" sx={{ borderTop: '2px solid', borderColor: '#e5e7eb', bgcolor: '#f9fafb' }}>
+                            <Box component="tr" sx={{ borderTop: '2px solid', borderColor: 'grey.200', bgcolor: 'grey.50' }}>
                               <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 700, fontSize: '16px' }} {...({ colSpan: 3 } as object)}>{t('total')}</Box>
-                              <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 700, fontSize: '16px', color: '#3b82f6' }}>{formatPrice(selectedOrder.total_price)}</Box>
+                              <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 700, fontSize: '16px', color: 'primary.main' }}>{formatPrice(selectedOrder.total_price)}</Box>
                               <Box component="td" sx={{ py: '8px', px: '16px' }}></Box>
                             </Box>
                           </Box>
                         </Box>
                       ) : (
-                        <Box sx={{ p: '32px', textAlign: 'center', color: '#6b7280' }}>
+                        <Box sx={{ p: '32px', textAlign: 'center', color: 'grey.500' }}>
                           <Box sx={{ fontSize: '16px', display: 'block', mb: '8px' }}>{to('noItems')}</Box>
                           <Button variant="outlined" onClick={openAddItemForm}>
                             {to('addFirstItem')}
@@ -646,7 +646,7 @@ export default function OrdersPage() {
                       justifyContent: 'center',
                       flexDirection: 'column',
                       gap: '8px',
-                      color: '#6b7280',
+                      color: 'grey.500',
                       display: 'flex',
                     }}
                   >
@@ -680,7 +680,7 @@ export default function OrdersPage() {
             {createFormConflict ? (
               <>
                 <Typography component="h3" sx={{ mb: '8px' }}>{to('duplicateOrderTitle')}</Typography>
-                <Box sx={{ mb: '24px', color: '#6b7280', display: 'block' }}>
+                <Box sx={{ mb: '24px', color: 'grey.500', display: 'block' }}>
                   {to('duplicateOrderMessageInline')}
                 </Box>
                 <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
@@ -725,7 +725,7 @@ export default function OrdersPage() {
                         fontSize: '14px',
                         borderRadius: '8px',
                         border: '1px solid',
-                        borderColor: '#e5e7eb',
+                        borderColor: 'grey.200',
                         resize: 'vertical',
                       }}
                     />

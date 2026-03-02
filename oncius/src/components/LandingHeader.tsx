@@ -22,7 +22,7 @@ export default function LandingHeader() {
         bgcolor: 'rgba(255,255,255,0.9)',
         backdropFilter: 'saturate(180%) blur(10px)',
         borderBottom: '1px solid',
-        borderColor: '#e5e7eb',
+        borderColor: 'grey.200',
       }}
     >
       <Box
@@ -37,7 +37,7 @@ export default function LandingHeader() {
         }}
       >
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <Box component="span" sx={{ fontSize: { xs: '18px', sm: '20px' }, fontWeight: 700, color: '#3b82f6' }}>
+          <Box component="span" sx={{ fontSize: { xs: '18px', sm: '20px' }, fontWeight: 700, color: 'primary.main' }}>
             Recapo
           </Box>
         </Link>
@@ -52,13 +52,13 @@ export default function LandingHeader() {
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: locale === 'en' ? 600 : 400,
-                color: locale === 'en' ? '#3b82f6' : '#6b7280',
-                '&:hover': { color: '#3b82f6' },
+                color: locale === 'en' ? 'primary.main' : 'grey.500',
+                '&:hover': { color: 'primary.main' },
               }}
             >
               EN
             </Box>
-            <Box sx={{ color: '#e5e7eb' }}>|</Box>
+            <Box sx={{ color: 'grey.200' }}>|</Box>
             <Box
               component="button"
               onClick={() => changeLocale('id')}
@@ -68,8 +68,8 @@ export default function LandingHeader() {
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: locale === 'id' ? 600 : 400,
-                color: locale === 'id' ? '#3b82f6' : '#6b7280',
-                '&:hover': { color: '#3b82f6' },
+                color: locale === 'id' ? 'primary.main' : 'grey.500',
+                '&:hover': { color: 'primary.main' },
               }}
             >
               ID

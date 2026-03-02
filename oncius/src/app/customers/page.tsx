@@ -139,13 +139,13 @@ export default function CustomersPage() {
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
           {isLoading && <Box>Loading...</Box>}
           {isError && (
-            <Box sx={{ color: '#ef4444' }}>{(error as Error)?.message || 'Error loading customers'}</Box>
+            <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || 'Error loading customers'}</Box>
           )}
 
           {!isLoading && !isError && (
             <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
               {/* Left list (compact like side menu) */}
-              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: '#e5e7eb' }}>
+              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: 'grey.200' }}>
                 <Box sx={{ p: '24px', flexShrink: 0 }}>
                   <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <SearchInput
@@ -167,9 +167,9 @@ export default function CustomersPage() {
                           px: '24px',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          bgcolor: isActive ? '#f3f4f6' : 'transparent',
+                          bgcolor: isActive ? 'grey.100' : 'transparent',
                           borderRadius: '8px',
-                          '&:hover': { bgcolor: isActive ? '#f3f4f6' : '#f9fafb' },
+                          '&:hover': { bgcolor: isActive ? 'grey.100' : 'grey.50' },
                         }}
                         onClick={() => setSelectedCustomerId(c.id)}
                       >
@@ -178,7 +178,7 @@ export default function CustomersPage() {
                             width: 36,
                             height: 36,
                             borderRadius: '50%',
-                            bgcolor: '#3b82f6',
+                            bgcolor: 'primary.main',
                             color: 'white',
                             display: 'flex',
                             alignItems: 'center',
@@ -194,13 +194,13 @@ export default function CustomersPage() {
                     )
                   })}
                   {(customersRes || []).length === 0 && (
-                    <Box sx={{ p: '16px', color: '#6b7280', textAlign: 'center' }}>No customers</Box>
+                    <Box sx={{ p: '16px', color: 'grey.500', textAlign: 'center' }}>No customers</Box>
                   )}
                 </Box>
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: '#f9fafb' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'grey.50' }}>
                 {selectedCustomer ? (
                   <Box sx={{ maxWidth: 640, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
                     {/* Header card with avatar */}
@@ -266,7 +266,7 @@ export default function CustomersPage() {
                               bgcolor: 'rgba(239,68,68,0.3)',
                               border: '1px solid rgba(239,68,68,0.6)',
                               color: 'white',
-                              '&:hover': { bgcolor: 'rgba(239,68,68,0.5)', borderColor: '#ef4444' },
+                              '&:hover': { bgcolor: 'rgba(239,68,68,0.5)', borderColor: 'error.main' },
                             }}
                           >
                             Delete
@@ -282,7 +282,7 @@ export default function CustomersPage() {
                         borderRadius: '12px',
                         boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: '#e5e7eb',
+                        borderColor: 'grey.200',
                         bgcolor: 'white',
                         transition: 'box-shadow 0.2s ease',
                         '&:hover': { boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
@@ -317,7 +317,7 @@ export default function CustomersPage() {
                       justifyContent: 'center',
                       flexDirection: 'column',
                       gap: '8px',
-                      color: '#6b7280',
+                      color: 'grey.500',
                       display: 'flex',
                     }}
                   >

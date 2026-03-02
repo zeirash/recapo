@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Box, Button, IconButton } from '@mui/material'
+import { Box, Button, IconButton, Typography } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
@@ -28,13 +28,13 @@ const Header = () => {
   }
 
   return (
-    <Box component="header" sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: '#e5e7eb', py: '8px' }}>
-      <Box sx={{ display: 'flex', maxWidth: 'container', mx: 'auto', px: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
+    <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'rgba(255,255,255,0.9)', backdropFilter: 'saturate(180%) blur(10px)', borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ display: 'flex', mx: 'auto', px: { xs: 3, sm: 4 }, py: 2, alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Logo */}
-        <Link href="/">
-          <Box sx={{ fontSize: '18px', fontWeight: 'bold', color: '#3b82f6', textDecoration: 'none' }}>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <Typography sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, fontWeight: 700, color: 'primary.main' }}>
             Recapo
-          </Box>
+          </Typography>
         </Link>
 
         {/* Desktop Navigation */}
@@ -43,9 +43,9 @@ const Header = () => {
             <>
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href}>
-                  <Box sx={{ color: '#1f2937', textDecoration: 'none', '&:hover': { color: '#3b82f6' } }}>
+                  <Typography sx={{ color: 'grey.800', textDecoration: 'none', '&:hover': { color: 'primary.main' } }}>
                     {item.label}
-                  </Box>
+                  </Typography>
                 </Link>
               ))}
             </>
@@ -58,7 +58,7 @@ const Header = () => {
           {isAuthenticated ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                <Box sx={{ color: '#6b7280' }}>{t('welcome', { name: user?.name ?? '' })}</Box>
+                <Typography sx={{ color: 'grey.500' }}>{t('welcome', { name: user?.name ?? '' })}</Typography>
               </Box>
               <Button variant="outlined" onClick={() => router.push('/profile')}>
                 {t('profile')}
@@ -95,36 +95,36 @@ const Header = () => {
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <Box sx={{ display: { xs: 'block', sm: 'none' }, bgcolor: '#f9fafb', borderTop: '1px solid', borderColor: '#e5e7eb' }}>
+        <Box sx={{ display: { xs: 'block', sm: 'none' }, bgcolor: 'grey.50', borderTop: '1px solid', borderColor: 'grey.200' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', py: '8px' }}>
             {isAuthenticated && (
               <>
                 {navigationItems.map((item) => (
                   <Link key={item.href} href={item.href}>
-                    <Box
+                    <Typography
                       sx={{
                         display: 'block',
                         px: '16px',
                         py: '8px',
-                        color: '#1f2937',
+                        color: 'grey.800',
                         textDecoration: 'none',
-                        '&:hover': { bgcolor: 'white', color: '#3b82f6' },
+                        '&:hover': { bgcolor: 'white', color: 'primary.main' },
                       }}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {item.label}
-                    </Box>
+                    </Typography>
                   </Link>
                 ))}
-                <Box sx={{ borderTop: '1px solid', borderColor: '#e5e7eb', mt: '8px', pt: '8px' }}>
-                  <Box
+                <Box sx={{ borderTop: '1px solid', borderColor: 'grey.200', mt: '8px', pt: '8px' }}>
+                  <Typography
                     sx={{
                       display: 'block',
                       px: '16px',
                       py: '8px',
-                      color: '#1f2937',
+                      color: 'grey.800',
                       cursor: 'pointer',
-                      '&:hover': { bgcolor: 'white', color: '#ef4444' },
+                      '&:hover': { bgcolor: 'white', color: 'error.main' },
                     }}
                     onClick={() => {
                       handleLogout()
@@ -132,7 +132,7 @@ const Header = () => {
                     }}
                   >
                     {t('logout')}
-                  </Box>
+                  </Typography>
                 </Box>
               </>
             )}

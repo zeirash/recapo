@@ -249,13 +249,13 @@ export default function ProductsPage() {
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
           {isLoading && <Box>{t('loading')}</Box>}
           {isError && (
-            <Box sx={{ color: '#ef4444' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Box>
+            <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Box>
           )}
 
           {!isLoading && !isError && (
             <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
               {/* Left list (compact like side menu) */}
-              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: '#e5e7eb' }}>
+              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: 'grey.200' }}>
                 <Box sx={{ p: '24px', flexShrink: 0 }}>
                   <Box sx={{ gap: '8px', alignItems: 'center', flexWrap: 'wrap', display: 'flex' }}>
                     <SearchInput
@@ -295,9 +295,9 @@ export default function ProductsPage() {
                           px: '24px',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          bgcolor: isActive ? '#f3f4f6' : 'transparent',
+                          bgcolor: isActive ? 'grey.100' : 'transparent',
                           borderRadius: '8px',
-                          '&:hover': { bgcolor: isActive ? '#f3f4f6' : '#f9fafb' },
+                          '&:hover': { bgcolor: isActive ? 'grey.100' : 'grey.50' },
                         }}
                         onClick={() => setSelectedProductId(p.id)}
                       >
@@ -306,7 +306,7 @@ export default function ProductsPage() {
                             width: 36,
                             height: 36,
                             borderRadius: '50%',
-                            bgcolor: '#3b82f6',
+                            bgcolor: 'primary.main',
                             color: 'white',
                             display: 'flex',
                             alignItems: 'center',
@@ -327,13 +327,13 @@ export default function ProductsPage() {
                     )
                   })}
                   {(productsRes || []).length === 0 && (
-                    <Box sx={{ p: '16px', color: '#6b7280', textAlign: 'center' }}>{tp('noProducts')}</Box>
+                    <Box sx={{ p: '16px', color: 'grey.500', textAlign: 'center' }}>{tp('noProducts')}</Box>
                   )}
                 </Box>
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: '#f9fafb' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'grey.50' }}>
                 {selectedProduct ? (
                   <Box sx={{ maxWidth: 640, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
                     <Paper
@@ -342,14 +342,14 @@ export default function ProductsPage() {
                         borderRadius: '12px',
                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
                         border: '1px solid',
-                        borderColor: '#e5e7eb',
+                        borderColor: 'grey.200',
                         bgcolor: 'white',
                         transition: 'box-shadow 0.2s ease',
                         '&:hover': { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' },
                       }}
                     >
                       {/* Header */}
-                      <Box sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', mb: '24px', pb: '24px', borderBottom: '1px solid', borderColor: '#e5e7eb', display: 'flex' }}>
+                      <Box sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', mb: '24px', pb: '24px', borderBottom: '1px solid', borderColor: 'grey.200', display: 'flex' }}>
                         {/* Image + name/price stacked below */}
                         <Box>
                           <Box
@@ -376,7 +376,7 @@ export default function ProductsPage() {
                           <Typography component="h2" sx={{ fontSize: '20px', fontWeight: 700, mb: '4px', letterSpacing: '-0.02em' }}>
                             {selectedProduct.name}
                           </Typography>
-                          <Box sx={{ fontSize: '16px', fontWeight: 600, color: '#3b82f6' }}>
+                          <Box sx={{ fontSize: '16px', fontWeight: 600, color: 'primary.main' }}>
                             Rp. {selectedProduct.price.toLocaleString()}
                           </Box>
                         </Box>
@@ -392,10 +392,10 @@ export default function ProductsPage() {
                             }}
                             sx={{
                               bgcolor: 'transparent',
-                              color: '#ef4444',
+                              color: 'error.main',
                               border: '2px solid',
-                              borderColor: '#ef4444',
-                              '&:hover': { bgcolor: '#fef2f2' },
+                              borderColor: 'error.main',
+                              '&:hover': { bgcolor: 'error.light' },
                             }}
                           >
                             {t('delete')}
@@ -405,7 +405,7 @@ export default function ProductsPage() {
 
                       {/* Description */}
                       <Box>
-                        <Box sx={{ fontWeight: 600, fontSize: '16px', color: '#6b7280', mb: '4px', display: 'block' }}>
+                        <Box sx={{ fontWeight: 600, fontSize: '16px', color: 'grey.500', mb: '4px', display: 'block' }}>
                           {t('description')}
                         </Box>
                         <Box sx={{ fontSize: '14px', lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
@@ -415,10 +415,10 @@ export default function ProductsPage() {
 
                       {/* Original price */}
                       <Box sx={{ mt: '24px' }}>
-                        <Box sx={{ fontWeight: 600, fontSize: '16px', color: '#6b7280', mb: '4px', display: 'block' }}>
+                        <Box sx={{ fontWeight: 600, fontSize: '16px', color: 'grey.500', mb: '4px', display: 'block' }}>
                           {tp('originalPrice')}
                         </Box>
-                        <Box sx={{ fontSize: '14px', color: '#6b7280' }}>
+                        <Box sx={{ fontSize: '14px', color: 'grey.500' }}>
                           Rp. {(selectedProduct.original_price ?? selectedProduct.price).toLocaleString()}
                         </Box>
                       </Box>
@@ -433,7 +433,7 @@ export default function ProductsPage() {
                       justifyContent: 'center',
                       flexDirection: 'column',
                       gap: '8px',
-                      color: '#6b7280',
+                      color: 'grey.500',
                       display: 'flex',
                     }}
                   >
@@ -484,7 +484,7 @@ export default function ProductsPage() {
                 <Box sx={{ mb: '16px' }}>
                   <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{tp('image')}</Box>
                   {imagePreviewURL && (
-                    <Box sx={{ mb: '8px', width: 120, height: 120, borderRadius: '8px', overflow: 'hidden', border: '1px solid', borderColor: '#e5e7eb' }}>
+                    <Box sx={{ mb: '8px', width: 120, height: 120, borderRadius: '8px', overflow: 'hidden', border: '1px solid', borderColor: 'grey.200' }}>
                       <img src={imagePreviewURL} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </Box>
                   )}
@@ -497,13 +497,13 @@ export default function ProductsPage() {
                         type="button"
                         variant="outlined"
                         onClick={handleRemoveImage}
-                        sx={{ color: '#ef4444', borderColor: '#ef4444', '&:hover': { bgcolor: '#fef2f2' } }}
+                        sx={{ color: 'error.main', borderColor: 'error.main', '&:hover': { bgcolor: 'error.light' } }}
                       >
                         {tp('removeImage')}
                       </Button>
                     )}
                   </Box>
-                  {uploadError && <Box sx={{ color: '#ef4444', fontSize: '14px', mt: '4px', display: 'block' }}>{uploadError}</Box>}
+                  {uploadError && <Box sx={{ color: 'error.main', fontSize: '14px', mt: '4px', display: 'block' }}>{uploadError}</Box>}
                 </Box>
                 <Box sx={{ mb: '16px' }}>
                   <Box component="label" htmlFor="name" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('name')}</Box>

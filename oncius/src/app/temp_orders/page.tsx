@@ -226,7 +226,7 @@ export default function TempOrdersPage() {
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
           {isLoading && <Box>{t('loading')}</Box>}
           {isError && (
-            <Box sx={{ color: '#ef4444' }}>
+            <Box sx={{ color: 'error.main' }}>
               {(error as Error)?.message || tErrors('loadingError', { resource: tTemp('title') })}
             </Box>
           )}
@@ -242,7 +242,7 @@ export default function TempOrdersPage() {
                   flexDirection: 'column',
                   overflow: 'hidden',
                   borderRight: { xs: 'none', sm: '1px solid' },
-                  borderColor: '#e5e7eb',
+                  borderColor: 'grey.200',
                 }}
               >
                 <Box sx={{ p: '24px', flexShrink: 0 }}>
@@ -285,10 +285,10 @@ export default function TempOrdersPage() {
                           px: '24px',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          bgcolor: isActive ? '#f3f4f6' : 'transparent',
+                          bgcolor: isActive ? 'grey.100' : 'transparent',
                           borderRadius: '8px',
                           '&:hover': {
-                            bgcolor: isActive ? '#f3f4f6' : '#f9fafb',
+                            bgcolor: isActive ? 'grey.100' : 'grey.50',
                           },
                         }}
                         onClick={() => setSelectedTempOrderId(o.id)}
@@ -313,7 +313,7 @@ export default function TempOrdersPage() {
                               {toStatus(o.status) || o.status}
                             </Box>
                           </Box>
-                          <Box sx={{ fontSize: '12px', color: '#6b7280' }}>
+                          <Box sx={{ fontSize: '12px', color: 'grey.500' }}>
                             {o.customer_name}
                           </Box>
                           <Box sx={{ fontSize: '12px', fontWeight: 500 }}>
@@ -324,7 +324,7 @@ export default function TempOrdersPage() {
                     )
                   })}
                   {(tempOrdersRes || []).length === 0 && (
-                    <Box sx={{ p: '16px', color: '#6b7280', textAlign: 'center' }}>
+                    <Box sx={{ p: '16px', color: 'grey.500', textAlign: 'center' }}>
                       {tTemp('noOrders')}
                     </Box>
                   )}
@@ -332,7 +332,7 @@ export default function TempOrdersPage() {
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: '#f9fafb' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'grey.50' }}>
                 {selectedTempOrder ? (
                   <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
                     <Box sx={{ alignItems: 'center', gap: '16px', mb: '16px', flexWrap: 'wrap', display: 'flex' }}>
@@ -361,8 +361,8 @@ export default function TempOrdersPage() {
                           disabled={acceptLoading || rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
                             ...(selectedTempOrder.status === 'rejected'
-                              ? { bgcolor: '#f9fafb', color: '#1f2937', border: '1px solid', borderColor: '#e5e7eb' }
-                              : { bgcolor: '#3b82f6', color: 'white' }),
+                              ? { bgcolor: 'grey.50', color: 'grey.800', border: '1px solid', borderColor: 'grey.200' }
+                              : { bgcolor: 'primary.main', color: 'white' }),
                             '&:disabled': { opacity: 0.7 },
                           }}
                         >
@@ -375,8 +375,8 @@ export default function TempOrdersPage() {
                           disabled={rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
                             ...(selectedTempOrder.status === 'rejected'
-                              ? { bgcolor: '#3b82f6', color: 'white', border: 'none' }
-                              : { bgcolor: '#f9fafb', color: '#1f2937', border: '1px solid', borderColor: '#e5e7eb' }),
+                              ? { bgcolor: 'primary.main', color: 'white', border: 'none' }
+                              : { bgcolor: 'grey.50', color: 'grey.800', border: '1px solid', borderColor: 'grey.200' }),
                             '&:disabled': { opacity: 0.7 },
                           }}
                         >
@@ -407,7 +407,7 @@ export default function TempOrdersPage() {
                         borderRadius: '12px',
                         boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: '#e5e7eb',
+                        borderColor: 'grey.200',
                         bgcolor: 'white',
                       }}
                     >
@@ -415,7 +415,7 @@ export default function TempOrdersPage() {
                         <Box sx={{ minWidth: 140 }}>
                           <Box
                             sx={{
-                              color: '#6b7280',
+                              color: 'grey.500',
                               fontSize: '14px',
                               fontWeight: 700,
                               mb: '4px',
@@ -431,7 +431,7 @@ export default function TempOrdersPage() {
                         <Box sx={{ minWidth: 140 }}>
                           <Box
                             sx={{
-                              color: '#6b7280',
+                              color: 'grey.500',
                               fontSize: '14px',
                               fontWeight: 700,
                               mb: '4px',
@@ -445,7 +445,7 @@ export default function TempOrdersPage() {
                         <Box sx={{ minWidth: 140 }}>
                           <Box
                             sx={{
-                              color: '#6b7280',
+                              color: 'grey.500',
                               fontSize: '14px',
                               fontWeight: 700,
                               mb: '4px',
@@ -467,12 +467,12 @@ export default function TempOrdersPage() {
                         borderRadius: '12px',
                         boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
-                        borderColor: '#e5e7eb',
+                        borderColor: 'grey.200',
                         bgcolor: 'white',
                         overflow: 'hidden',
                       }}
                     >
-                      <Box sx={{ p: '8px', borderBottom: '1px solid', borderColor: '#e5e7eb', bgcolor: '#f9fafb' }}>
+                      <Box sx={{ p: '8px', borderBottom: '1px solid', borderColor: 'grey.200', bgcolor: 'grey.50' }}>
                         <Typography component="h3" sx={{ fontSize: '16px', fontWeight: 600 }}>
                           {t('items')}
                         </Typography>
@@ -480,7 +480,7 @@ export default function TempOrdersPage() {
                       {selectedTempOrder.order_items && selectedTempOrder.order_items.length > 0 ? (
                         <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
                           <Box component="thead">
-                            <Box component="tr" sx={{ bgcolor: '#f9fafb' }}>
+                            <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
                               <Box
                                 component="th"
                                 sx={{
@@ -488,7 +488,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'left',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  color: '#6b7280',
+                                  color: 'grey.500',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -502,7 +502,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'right',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  color: '#6b7280',
+                                  color: 'grey.500',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -516,7 +516,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'right',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  color: '#6b7280',
+                                  color: 'grey.500',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -530,7 +530,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'right',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  color: '#6b7280',
+                                  color: 'grey.500',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -546,8 +546,8 @@ export default function TempOrdersPage() {
                                 key={item.id}
                                 sx={{
                                   borderTop: '1px solid',
-                                  borderColor: '#e5e7eb',
-                                  '&:hover': { bgcolor: '#f9fafb' },
+                                  borderColor: 'grey.200',
+                                  '&:hover': { bgcolor: 'grey.50' },
                                 }}
                               >
                                 <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
@@ -579,8 +579,8 @@ export default function TempOrdersPage() {
                               component="tr"
                               sx={{
                                 borderTop: '2px solid',
-                                borderColor: '#e5e7eb',
-                                bgcolor: '#f9fafb',
+                                borderColor: 'grey.200',
+                                bgcolor: 'grey.50',
                               }}
                             >
                               <Box
@@ -604,7 +604,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'right',
                                   fontWeight: 700,
                                   fontSize: '16px',
-                                  color: '#3b82f6',
+                                  color: 'primary.main',
                                 }}
                               >
                                 Rp {formatPrice(selectedTempOrder.total_price)}
@@ -613,7 +613,7 @@ export default function TempOrdersPage() {
                           </Box>
                         </Box>
                       ) : (
-                        <Box sx={{ p: '32px', textAlign: 'center', color: '#6b7280' }}>
+                        <Box sx={{ p: '32px', textAlign: 'center', color: 'grey.500' }}>
                           <Box sx={{ fontSize: '16px' }}>{to('noItems')}</Box>
                         </Box>
                       )}
@@ -628,7 +628,7 @@ export default function TempOrdersPage() {
                       justifyContent: 'center',
                       flexDirection: 'column',
                       gap: '8px',
-                      color: '#6b7280',
+                      color: 'grey.500',
                       display: 'flex',
                     }}
                   >
@@ -664,7 +664,7 @@ export default function TempOrdersPage() {
             <Typography component="h3" sx={{ mb: '8px' }}>
               {to('duplicateOrderTitle')}
             </Typography>
-            <Box sx={{ mb: '24px', color: '#6b7280', display: 'block' }}>
+            <Box sx={{ mb: '24px', color: 'grey.500', display: 'block' }}>
               {to('duplicateOrderMessageInline')}
             </Box>
             <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>

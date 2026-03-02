@@ -41,14 +41,14 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
         width: '96px',
         bgcolor: 'white',
         borderRight: '1px solid',
-        borderColor: '#e5e7eb',
+        borderColor: 'grey.200',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'stretch',
       }}
     >
       {/* Top Section */}
-      <Box sx={{ p: '16px', borderBottom: '1px solid', borderColor: '#e5e7eb' }}>
+      <Box sx={{ p: '16px', borderBottom: '1px solid', borderColor: 'grey.200' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {/* Logo/Icon */}
           <Box
@@ -56,7 +56,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               width: '40px',
               height: '40px',
               borderRadius: '50%',
-              bgcolor: '#3b82f6',
+              bgcolor: 'primary.main',
             }}
           />
         </Box>
@@ -76,7 +76,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               textAlign: 'center',
               bgcolor: selectedMenu === item.id ? '#eff6ff' : 'transparent',
               '&:hover': {
-                bgcolor: selectedMenu === item.id ? '#eff6ff' : '#f3f4f6',
+                bgcolor: selectedMenu === item.id ? '#eff6ff' : 'grey.100',
               },
             }}
             onClick={() => handleMenuClick(item)}
@@ -90,7 +90,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
       </Box>
 
       {/* Bottom Section */}
-      <Box sx={{ p: '16px', borderTop: '1px solid', borderColor: '#e5e7eb' }}>
+      <Box sx={{ p: '16px', borderTop: '1px solid', borderColor: 'grey.200' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', mb: '16px' }}>
           <Box
             component="button"
@@ -101,15 +101,15 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               cursor: 'pointer',
               fontSize: '12px',
               fontWeight: locale === 'en' ? 600 : 400,
-              color: locale === 'en' ? '#3b82f6' : '#6b7280',
+              color: locale === 'en' ? 'primary.main' : 'grey.500',
               textDecoration: 'none',
               p: 0,
-              '&:hover': { color: '#3b82f6' },
+              '&:hover': { color: 'primary.main' },
             }}
           >
             EN
           </Box>
-          <Box sx={{ color: '#e5e7eb', fontSize: '12px' }}>|</Box>
+          <Box sx={{ color: 'grey.200', fontSize: '12px' }}>|</Box>
           <Box
             component="button"
             onClick={() => changeLocale('id')}
@@ -119,10 +119,10 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               cursor: 'pointer',
               fontSize: '12px',
               fontWeight: locale === 'id' ? 600 : 400,
-              color: locale === 'id' ? '#3b82f6' : '#6b7280',
+              color: locale === 'id' ? 'primary.main' : 'grey.500',
               textDecoration: 'none',
               p: 0,
-              '&:hover': { color: '#3b82f6' },
+              '&:hover': { color: 'primary.main' },
             }}
           >
             ID
@@ -179,7 +179,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
             <Box sx={{ fontSize: '18px', fontWeight: 600, mb: '8px', display: 'block' }}>
               Log out?
             </Box>
-            <Box sx={{ fontSize: '14px', color: '#6b7280', mb: '24px' }}>
+            <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
               Are you sure you want to log out?
             </Box>
             <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>

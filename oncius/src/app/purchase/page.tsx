@@ -32,14 +32,14 @@ export default function PurchasePage() {
         <Typography component="h1" sx={{ mb: '8px', fontSize: '18px' }}>
           {tPurchase('title')}
         </Typography>
-        <Box sx={{ color: '#6b7280', fontSize: '14px', mb: '24px', display: 'block' }}>
+        <Box sx={{ color: 'grey.500', fontSize: '14px', mb: '24px', display: 'block' }}>
           {tPurchase('note')}
         </Box>
 
         {isLoading ? (
-          <Box sx={{ color: '#6b7280' }}>{t('loading')}</Box>
+          <Box sx={{ color: 'grey.500' }}>{t('loading')}</Box>
         ) : isError ? (
-          <Box sx={{ color: '#ef4444' }}>
+          <Box sx={{ color: 'error.main' }}>
             {(error as Error)?.message || tErrors('loadingError', { resource: tPurchase('title') })}
           </Box>
         ) : (
@@ -48,7 +48,7 @@ export default function PurchasePage() {
               borderRadius: '12px',
               boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
               border: '1px solid',
-              borderColor: '#e5e7eb',
+              borderColor: 'grey.200',
               bgcolor: 'white',
               overflow: 'hidden',
             }}
@@ -56,7 +56,7 @@ export default function PurchasePage() {
             {products && products.length > 0 ? (
               <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
                 <Box component="thead">
-                  <Box component="tr" sx={{ bgcolor: '#f9fafb' }}>
+                  <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
                     <Box
                       component="th"
                       sx={{
@@ -64,7 +64,7 @@ export default function PurchasePage() {
                         textAlign: 'left',
                         fontSize: '12px',
                         fontWeight: 600,
-                        color: '#6b7280',
+                        color: 'grey.500',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
@@ -78,7 +78,7 @@ export default function PurchasePage() {
                         textAlign: 'right',
                         fontSize: '12px',
                         fontWeight: 600,
-                        color: '#6b7280',
+                        color: 'grey.500',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
@@ -94,22 +94,22 @@ export default function PurchasePage() {
                       key={index}
                       sx={{
                         borderTop: '1px solid',
-                        borderColor: '#e5e7eb',
-                        '&:hover': { bgcolor: '#f9fafb' },
+                        borderColor: 'grey.200',
+                        '&:hover': { bgcolor: 'grey.50' },
                       }}
                     >
                       <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
                         <Box sx={{ fontWeight: 600 }}>{product.product_name}</Box>
                       </Box>
                       <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>
-                        <Box sx={{ fontWeight: 600, color: '#3b82f6' }}>{product.qty}</Box>
+                        <Box sx={{ fontWeight: 600, color: 'primary.main' }}>{product.qty}</Box>
                       </Box>
                     </Box>
                   ))}
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ p: '32px', textAlign: 'center', color: '#6b7280' }}>
+              <Box sx={{ p: '32px', textAlign: 'center', color: 'grey.500' }}>
                 <Box sx={{ fontSize: '16px' }}>{tPurchase('empty')}</Box>
               </Box>
             )}

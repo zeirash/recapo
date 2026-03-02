@@ -162,11 +162,11 @@ export default function HomePage() {
             fontWeight: 700,
             lineHeight: 1.2,
             mb: '16px',
-            color: '#1f2937',
+            color: 'grey.800',
           }}
         >
           {t('landing.heroTitle')}{' '}
-          <Box component="span" sx={{ color: '#3b82f6' }}>
+          <Box component="span" sx={{ color: 'primary.main' }}>
             {t('landing.heroHighlight')}
           </Box>
         </Typography>
@@ -174,7 +174,7 @@ export default function HomePage() {
           sx={{
             display: 'block',
             fontSize: { xs: '16px', sm: '18px' },
-            color: '#6b7280',
+            color: 'grey.500',
             maxWidth: 840,
             mx: 'auto',
             mb: '16px',
@@ -210,7 +210,7 @@ export default function HomePage() {
       {/* About / Features */}
       <Box
         sx={{
-          bgcolor: '#f3f4f6',
+          bgcolor: 'grey.100',
           py: '48px',
         }}
       >
@@ -222,7 +222,7 @@ export default function HomePage() {
               fontWeight: 700,
               textAlign: 'center',
               mb: '8px',
-              color: '#1f2937',
+              color: 'grey.800',
             }}
           >
             {t('landing.featuresTitle')}
@@ -231,7 +231,7 @@ export default function HomePage() {
             sx={{
               display: 'block',
               fontSize: { xs: '14px', sm: '16px' },
-              color: '#6b7280',
+              color: 'grey.500',
               textAlign: 'center',
               maxWidth: 600,
               mx: 'auto',
@@ -254,17 +254,17 @@ export default function HomePage() {
                   p: '24px',
                   borderRadius: '12px',
                   border: '1px solid',
-                  borderColor: '#e5e7eb',
+                  borderColor: 'grey.200',
                   bgcolor: 'white',
                   textAlign: 'center',
                   zIndex: 0,
                 }}
               >
                 <Box sx={{ mb: '8px' }}><f.icon size={36} /></Box>
-                <Typography component="h4" sx={{ fontSize: '16px', mb: '8px', color: '#1f2937' }}>
+                <Typography component="h4" sx={{ fontSize: '16px', mb: '8px', color: 'grey.800' }}>
                   {t(f.titleKey)}
                 </Typography>
-                <Box sx={{ fontSize: '14px', color: '#6b7280', lineHeight: 1.6 }}>
+                <Box sx={{ fontSize: '14px', color: 'grey.500', lineHeight: 1.6 }}>
                   {t(f.descKey)}
                 </Box>
               </Paper>
@@ -288,7 +288,7 @@ export default function HomePage() {
               fontWeight: 700,
               textAlign: 'center',
               mb: '16px',
-              color: '#1f2937',
+              color: 'grey.800',
             }}
           >
             {t('landing.pricingTitle')}
@@ -299,21 +299,21 @@ export default function HomePage() {
                 p: '32px',
                 borderRadius: '12px',
                 border: '2px solid',
-                borderColor: '#e5e7eb',
+                borderColor: 'grey.200',
                 bgcolor: 'white',
                 maxWidth: 360,
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
-              <Typography component="h4" sx={{ fontSize: '18px', mb: '4px', color: '#1f2937' }}>
+              <Typography component="h4" sx={{ fontSize: '18px', mb: '4px', color: 'grey.800' }}>
                 {t('landing.pricingName')}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'baseline', mb: '8px' }}>
-                <Box sx={{ fontSize: '24px', fontWeight: 700, color: '#1f2937' }}>{t('landing.pricingPrice')}</Box>
-                <Box sx={{ fontSize: '14px', color: '#6b7280', ml: '4px' }}>{t('landing.pricingPeriod')}</Box>
+                <Box sx={{ fontSize: '24px', fontWeight: 700, color: 'grey.800' }}>{t('landing.pricingPrice')}</Box>
+                <Box sx={{ fontSize: '14px', color: 'grey.500', ml: '4px' }}>{t('landing.pricingPeriod')}</Box>
               </Box>
-              <Box sx={{ fontSize: '14px', color: '#6b7280', mb: '24px' }}>
+              <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
                 {t('landing.pricingDescription')}
               </Box>
               <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, mb: '24px', flex: 1 }}>
@@ -332,9 +332,9 @@ export default function HomePage() {
                       gap: '8px',
                       py: '8px',
                       borderBottom: '1px solid',
-                      borderColor: '#e5e7eb',
+                      borderColor: 'grey.200',
                       fontSize: '14px',
-                      color: '#1f2937',
+                      color: 'grey.800',
                     }}
                   >
                     <Check size={16} color="green" />
@@ -362,7 +362,7 @@ export default function HomePage() {
             overflow: 'hidden',
             p: '48px',
             borderRadius: '12px',
-            bgcolor: '#3b82f6',
+            bgcolor: 'primary.main',
             border: 'none',
             boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
             textAlign: 'center',
@@ -415,7 +415,7 @@ export default function HomePage() {
                 <Button
                   sx={{
                     bgcolor: 'white',
-                    color: '#3b82f6',
+                    color: 'primary.main',
                     px: '32px',
                     py: '16px',
                     fontSize: '16px',
@@ -423,7 +423,7 @@ export default function HomePage() {
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    '&:hover': { bgcolor: '#f3f4f6', color: '#3b82f6' },
+                    '&:hover': { bgcolor: 'grey.100', color: 'primary.main' },
                   }}
                 >
                   {isAuthenticated ? t('landing.goToDashboard') : t('landing.ctaButton')}
@@ -440,8 +440,8 @@ export default function HomePage() {
         sx={{
           py: '24px',
           borderTop: '1px solid',
-          borderColor: '#e5e7eb',
-          bgcolor: '#f3f4f6',
+          borderColor: 'grey.200',
+          bgcolor: 'grey.100',
         }}
       >
         <Box
@@ -456,7 +456,7 @@ export default function HomePage() {
             gap: '16px',
           }}
         >
-          <Box sx={{ fontSize: '14px', color: '#6b7280' }}>{t('landing.footer')}</Box>
+          <Box sx={{ fontSize: '14px', color: 'grey.500' }}>{t('landing.footer')}</Box>
         </Box>
       </Box>
     </Box>

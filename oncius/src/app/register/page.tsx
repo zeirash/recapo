@@ -102,7 +102,7 @@ const RegisterPage = () => {
                 className={errors.name ? 'error' : ''}
               />
               {errors.name && (
-                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
+                <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>
                   {errors.name}
                 </Box>
               )}
@@ -123,7 +123,7 @@ const RegisterPage = () => {
                 className={errors.email ? 'error' : ''}
               />
               {errors.email && (
-                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
+                <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>
                   {errors.email}
                 </Box>
               )}
@@ -144,7 +144,7 @@ const RegisterPage = () => {
                 className={errors.password ? 'error' : ''}
               />
               {errors.password && (
-                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
+                <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>
                   {errors.password}
                 </Box>
               )}
@@ -165,7 +165,7 @@ const RegisterPage = () => {
                 className={errors.confirmPassword ? 'error' : ''}
               />
               {errors.confirmPassword && (
-                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
+                <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>
                   {errors.confirmPassword}
                 </Box>
               )}
@@ -183,10 +183,10 @@ const RegisterPage = () => {
             </Button>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
-              <Box sx={{ color: '#6b7280' }}>{t('auth.hasAccount')}</Box>
+              <Box sx={{ color: 'grey.500' }}>{t('auth.hasAccount')}</Box>
               <Link href="/login">
                 <Box
-                  sx={{ color: '#3b82f6', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                  sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                 >
                   {t('auth.loginHere')}
                 </Box>

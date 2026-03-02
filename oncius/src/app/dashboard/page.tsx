@@ -41,7 +41,7 @@ const StatCard = ({
       borderRadius: '12px',
       boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
       border: '1px solid',
-      borderColor: '#e5e7eb',
+      borderColor: 'grey.200',
       bgcolor: 'white',
       flex: 1,
       minWidth: { xs: '100%', sm: 140 },
@@ -49,7 +49,7 @@ const StatCard = ({
   >
     <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
       <Box>
-        <Box sx={{ color: '#6b7280', fontSize: '14px', fontWeight: 600, mb: '4px', display: 'block' }}>
+        <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 600, mb: '4px', display: 'block' }}>
           {label}
         </Box>
         <Box sx={{ fontSize: '20px', fontWeight: 700 }}>{value}</Box>
@@ -154,7 +154,7 @@ const DashboardPage = () => {
         </Typography>
 
         {ordersLoading ? (
-          <Box sx={{ color: '#6b7280' }}>{t('common.loading')}</Box>
+          <Box sx={{ color: 'grey.500' }}>{t('common.loading')}</Box>
         ) : (
           <>
             {/* Stat cards */}
@@ -197,7 +197,7 @@ const DashboardPage = () => {
                 borderRadius: '12px',
                 boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                 border: '1px solid',
-                borderColor: '#e5e7eb',
+                borderColor: 'grey.200',
                 bgcolor: 'white',
                 overflow: 'hidden',
               }}
@@ -209,8 +209,8 @@ const DashboardPage = () => {
                   justifyContent: 'space-between',
                   p: '24px',
                   borderBottom: '1px solid',
-                  borderColor: '#e5e7eb',
-                  bgcolor: '#f9fafb',
+                  borderColor: 'grey.200',
+                  bgcolor: 'grey.50',
                 }}
               >
                 <Typography component="h2" sx={{ fontSize: '16px', fontWeight: 600 }}>
@@ -225,7 +225,7 @@ const DashboardPage = () => {
               {recentOrders.length > 0 ? (
                 <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
                   <Box component="thead">
-                    <Box component="tr" sx={{ bgcolor: '#f9fafb' }}>
+                    <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
                       <Box
                         component="th"
                         sx={{
@@ -233,7 +233,7 @@ const DashboardPage = () => {
                           textAlign: 'left',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: '#6b7280',
+                          color: 'grey.500',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -247,7 +247,7 @@ const DashboardPage = () => {
                           textAlign: 'left',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: '#6b7280',
+                          color: 'grey.500',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -261,7 +261,7 @@ const DashboardPage = () => {
                           textAlign: 'right',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: '#6b7280',
+                          color: 'grey.500',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -275,7 +275,7 @@ const DashboardPage = () => {
                           textAlign: 'left',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: '#6b7280',
+                          color: 'grey.500',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -289,7 +289,7 @@ const DashboardPage = () => {
                           textAlign: 'left',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: '#6b7280',
+                          color: 'grey.500',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -307,8 +307,8 @@ const DashboardPage = () => {
                           key={order.id}
                           sx={{
                             borderTop: '1px solid',
-                            borderColor: '#e5e7eb',
-                            '&:hover': { bgcolor: '#f9fafb' },
+                            borderColor: 'grey.200',
+                            '&:hover': { bgcolor: 'grey.50' },
                           }}
                         >
                           <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
@@ -342,7 +342,7 @@ const DashboardPage = () => {
                               {t(`orderStatus.${order.status}`)}
                             </Box>
                           </Box>
-                          <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px', color: '#6b7280' }}>
+                          <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px', color: 'grey.500' }}>
                             {formatDate(order.created_at)}
                           </Box>
                         </Box>
@@ -351,7 +351,7 @@ const DashboardPage = () => {
                   </Box>
                 </Box>
               ) : (
-                <Box sx={{ p: '32px', textAlign: 'center', color: '#6b7280' }}>
+                <Box sx={{ p: '32px', textAlign: 'center', color: 'grey.500' }}>
                   <Box sx={{ fontSize: '16px', display: 'block', mb: '8px' }}>{t('dashboard.noOrdersYet')}</Box>
                   <Link href="/orders" passHref legacyBehavior>
                     <Button component="a" variant="contained" disableElevation>{t('dashboard.createFirstOrder')}</Button>

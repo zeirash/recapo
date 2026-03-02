@@ -110,7 +110,7 @@ export default function CustomerSearchSelect({
             top: '50%',
             transform: 'translateY(-50%)',
             pointerEvents: 'none',
-            color: '#6b7280',
+            color: 'grey.500',
             display: 'flex',
             alignItems: 'center',
           }}
@@ -164,7 +164,7 @@ export default function CustomerSearchSelect({
             mt: '4px',
             bgcolor: 'white',
             border: '1px solid',
-            borderColor: '#e5e7eb',
+            borderColor: 'grey.200',
             borderRadius: '8px',
             boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
             maxHeight: '200px',
@@ -172,11 +172,11 @@ export default function CustomerSearchSelect({
           }}
         >
           {isLoading ? (
-            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: '#6b7280' }}>
+            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'grey.500' }}>
               Loading...
             </Box>
           ) : !customers || customers.length === 0 ? (
-            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: '#6b7280' }}>
+            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'grey.500' }}>
               {noResultsText}
             </Box>
           ) : (
@@ -188,14 +188,14 @@ export default function CustomerSearchSelect({
                   px: '16px',
                   py: '8px',
                   cursor: 'pointer',
-                  '&:hover': { bgcolor: '#f9fafb' },
+                  '&:hover': { bgcolor: 'grey.50' },
                   borderBottom: '1px solid',
-                  borderColor: '#e5e7eb',
+                  borderColor: 'grey.200',
                   '&:last-child': { borderBottom: 'none' },
                 }}
               >
                 <Box sx={{ display: 'block', fontWeight: 500, fontSize: '14px' }}>{c.name}</Box>
-                <Box sx={{ display: 'block', fontSize: '12px', color: '#6b7280' }}>{c.phone}</Box>
+                <Box sx={{ display: 'block', fontSize: '12px', color: 'grey.500' }}>{c.phone}</Box>
               </Box>
             ))
           )}

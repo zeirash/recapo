@@ -82,7 +82,7 @@ const LoginPage = () => {
                 className={errors.email ? 'error' : ''}
               />
               {errors.email && (
-                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
+                <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>
                   {errors.email}
                 </Box>
               )}
@@ -94,7 +94,7 @@ const LoginPage = () => {
                   {t('common.password')}
                 </Box>
                 <Link href="/forgot-password">
-                  <Box sx={{ color: '#3b82f6', fontSize: '12px', cursor: 'pointer' }}>
+                  <Box sx={{ color: 'primary.main', fontSize: '12px', cursor: 'pointer' }}>
                     {t('auth.forgotPassword')}
                   </Box>
                 </Link>
@@ -109,7 +109,7 @@ const LoginPage = () => {
                 className={errors.password ? 'error' : ''}
               />
               {errors.password && (
-                <Box sx={{ color: '#ef4444', fontSize: '12px', mt: '4px' }}>
+                <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>
                   {errors.password}
                 </Box>
               )}
@@ -126,10 +126,10 @@ const LoginPage = () => {
             </Button>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
-              <Box sx={{ color: '#6b7280' }}>{t('auth.noAccount')}</Box>
+              <Box sx={{ color: 'grey.500' }}>{t('auth.noAccount')}</Box>
               <Link href="/register">
                 <Box
-                  sx={{ color: '#3b82f6', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                  sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                 >
                   {t('auth.registerHere')}
                 </Box>
