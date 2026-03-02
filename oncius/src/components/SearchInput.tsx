@@ -44,6 +44,7 @@ export default function SearchInput({ value, onChange, placeholder, sx = {} }: S
           },
           '& .MuiOutlinedInput-input': {
             paddingLeft: '40px',
+            fontSize: '13px',
           },
         }}
       />
