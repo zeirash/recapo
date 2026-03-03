@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Box, Container, Typography, OutlinedInput, Button } from '@mui/material'
 import { useTranslations } from 'next-intl'
-import Layout from '@/components/Layout'
+import Layout from '@/components/layout'
 
 const ForgotPasswordPage = () => {
   const t = useTranslations()

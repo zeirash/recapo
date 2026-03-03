@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
 import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, type LucideIcon } from 'lucide-react'
-import RecapoLogo from '@/components/RecapoLogo'
+import RecapoLogo from '@/components/ui/RecapoLogo'
 
 interface SideMenuProps {
   selectedMenu: string
@@ -26,7 +26,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, path: '/dashboard' },
     { id: 'products', label: t('products'), icon: ShoppingBag, path: '/products' },
     { id: 'orders', label: t('orders'), icon: Package, path: '/orders' },
-    { id: 'temp_orders', label: t('tempOrders'), icon: ClipboardList, path: '/temp_orders' },
+    { id: 'temp_orders', label: t('tempOrders'), icon: ClipboardList, path: '/temp-orders' },
     { id: 'purchase', label: t('purchase'), icon: ShoppingCart, path: '/purchase' },
     { id: 'customers', label: t('customers'), icon: Users, path: '/customers' },
   ]

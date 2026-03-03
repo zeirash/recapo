@@ -1,10 +1,10 @@
 # Recapo - Next.js Frontend
 
-A modern order management system for Jastipers (Indonesian cross-border social media sellers), built with Next.js 14, TypeScript, and Theme UI.
+A modern order management system for Jastipers (Indonesian cross-border social media sellers), built with Next.js 14, TypeScript, and Material UI.
 
 ## 🚀 Features
 
-- **Modern Stack**: Next.js 14 with App Router, TypeScript, and Theme UI
+- **Modern Stack**: Next.js 14 with App Router, TypeScript, and Material UI
 - **Mobile-First**: Responsive design optimized for mobile devices
 - **Authentication**: JWT-based authentication with React Query
 - **Real-time Data**: React Query for efficient data fetching and caching
@@ -14,20 +14,39 @@ A modern order management system for Jastipers (Indonesian cross-border social m
 ## 🏗️ Project Structure
 
 ```
-nextjs/
+oncius/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
-│   │   ├── dashboard/          # Dashboard page
-│   │   ├── login/             # Login page
-│   │   ├── register/          # Registration page
-│   │   ├── layout.tsx         # Root layout
-│   │   └── page.tsx           # Home page
-│   ├── components/            # Reusable components
-│   │   └── Layout/            # Layout components
-│   ├── hooks/                 # Custom React hooks
-│   ├── styles/                # Global styles and theme
-│   ├── types/                 # TypeScript type definitions
-│   └── utils/                 # Utility functions
+│   │   ├── dashboard/
+│   │   ├── orders/
+│   │   ├── temp-orders/
+│   │   ├── purchase/
+│   │   ├── products/
+│   │   ├── customers/
+│   │   ├── share/[shareToken]/
+│   │   ├── login/
+│   │   ├── register/
+│   │   ├── forgot-password/
+│   │   ├── layout.tsx          # Root layout (providers, theme)
+│   │   └── page.tsx            # Landing page
+│   ├── components/
+│   │   ├── layout/             # Layout shell components
+│   │   │   ├── index.tsx       # Layout wrapper
+│   │   │   ├── Header.tsx      # Auth page header
+│   │   │   └── SideMenu.tsx    # Sidebar navigation
+│   │   └── ui/                 # Reusable UI primitives
+│   │       ├── AddButton.tsx
+│   │       ├── CustomerSearchSelect.tsx
+│   │       ├── LanguageSwitcher.tsx
+│   │       ├── RecapoLogo.tsx
+│   │       ├── RecapoLogoText.tsx
+│   │       └── SearchInput.tsx
+│   ├── constants/
+│   ├── hooks/                  # useAuth, useLocale
+│   ├── providers/
+│   ├── theme/
+│   ├── types/
+│   └── utils/                  # API client (api.ts)
 ├── package.json
 ├── next.config.js
 ├── tsconfig.json
@@ -38,10 +57,12 @@ nextjs/
 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
-- **Styling**: Theme UI + Emotion
-- **State Management**: React Query (@tanstack/react-query)
+- **Styling**: MUI (Material UI) + Emotion + SASS
+- **State Management**: React Query v3 (`react-query`)
+- **i18n**: next-intl (EN / ID)
+- **Icons**: lucide-react
 - **Authentication**: JWT with localStorage
-- **Backend**: Golang API (separate service)
+- **Backend**: Golang API on port 4000 (separate service)
 - **Database**: PostgreSQL (via Golang backend)
 
 ## 📦 Installation
@@ -77,7 +98,7 @@ nextjs/
    ```
 
 5. **Open your browser**
-   Navigate to [http://localhost:3001](http://localhost:3001)
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 🔧 Development
 
@@ -91,12 +112,13 @@ nextjs/
 
 ### Backend Integration
 
-The Next.js frontend communicates with the Golang backend API. Make sure the backend is running on port 3000:
+The Next.js frontend communicates with the Golang backend API. Make sure the backend is running on port 4000:
 
 ```bash
 # In the arion directory
-docker build -t arion .
-docker run -p 3000:3000 arion
+go run main.go
+# or via Docker
+docker compose up -d
 ```
 
 ### API Endpoints
@@ -122,12 +144,7 @@ The frontend expects the following API endpoints from the Golang backend:
 
 ## 🎨 Styling
 
-The project uses Theme UI for consistent styling and design tokens. The theme is configured in `src/styles/theme.ts` and includes:
-
-- Color palette optimized for business applications
-- Responsive breakpoints
-- Component variants (buttons, forms, cards)
-- Mobile-first design approach
+The project uses MUI (Material UI) with a custom theme configured in `src/theme/`. Emotion is used for CSS-in-JS and SASS for global styles in `src/styles/`.
 
 ## 🔐 Authentication
 
@@ -166,23 +183,6 @@ docker build -t recapo-frontend .
 docker run -p 3001:3000 recapo-frontend
 ```
 
-## 🔄 Migration from Gatsby
-
-This Next.js project is a migration from the original Gatsby frontend. Key changes:
-
-1. **Routing**: Migrated from Gatsby pages to Next.js App Router
-2. **Data Fetching**: Replaced Gatsby GraphQL with React Query
-3. **Styling**: Kept Theme UI for consistency
-4. **Build System**: Next.js build system instead of Gatsby
-5. **Performance**: Improved with Next.js optimizations
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
 
 ## 📄 License
 

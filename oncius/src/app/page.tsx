@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Box, Typography, Button, Paper } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
-import LandingHeader from '@/components/LandingHeader'
+import Header from '@/components/layout/Header'
 import { Package, Tag, Users, BarChart2, Check, type LucideIcon } from 'lucide-react'
 
 const BLOB_PATH =
@@ -142,7 +142,7 @@ export default function HomePage() {
         }}
       />
 
-      <LandingHeader />
+      <Header />
 
       {/* Hero */}
       <Box

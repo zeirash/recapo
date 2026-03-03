@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Container, Paper, Typography } from '@mui/material'
-import Layout from '@/components/Layout'
-import SearchInput from '@/components/SearchInput'
+import Layout from '@/components/layout'
+import SearchInput from '@/components/ui/SearchInput'
 import { api } from '@/utils/api'
 
 type TempOrderItem = {

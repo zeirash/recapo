@@ -1,145 +1,101 @@
-"use client"
+'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Box, Button, IconButton, Typography } from '@mui/material'
-import { useTranslations } from 'next-intl'
+import { Box, Button } from '@mui/material'
+import { useTranslations, useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
-import LanguageSwitcher from '@/components/LanguageSwitcher'
-import RecapoLogoText from '@/components/RecapoLogoText'
-import { Menu } from 'lucide-react'
+import { useChangeLocale } from '@/hooks/useLocale'
+import RecapoLogoText from '@/components/ui/RecapoLogoText'
 
-const Header = () => {
-  const t = useTranslations('nav')
-  const { user, logout, isAuthenticated } = useAuth()
-  const router = useRouter()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  const navigationItems = [
-    { href: '/dashboard', label: t('dashboard') },
-    { href: '/products', label: t('products') },
-    { href: '/orders', label: t('orders') },
-    { href: '/purchase', label: t('purchase') },
-    { href: '/customers', label: t('customers') },
-  ]
-
-  const handleLogout = () => {
-    logout()
-  }
+export default function Header() {
+  const t = useTranslations()
+  const locale = useLocale()
+  const changeLocale = useChangeLocale()
+  const { isAuthenticated } = useAuth()
 
   return (
-    <Box component="header" sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'rgba(255,255,255,0.9)', backdropFilter: 'saturate(180%) blur(10px)', borderBottom: '1px solid', borderColor: 'divider' }}>
-      <Box sx={{ display: 'flex', mx: 'auto', px: { xs: 3, sm: 4 }, py: 2, alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Logo */}
+    <Box
+      component="header"
+      sx={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        bgcolor: 'rgba(255,255,255,0.9)',
+        backdropFilter: 'saturate(180%) blur(10px)',
+        borderBottom: '1px solid',
+        borderColor: 'grey.200',
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          maxWidth: 1200,
+          mx: 'auto',
+          px: { xs: '16px', sm: '24px' },
+          py: '16px',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Link href="/" style={{ textDecoration: 'none' }}>
           <RecapoLogoText />
         </Link>
-
-        {/* Desktop Navigation */}
-        <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: '24px', alignItems: 'center' }}>
-          {isAuthenticated && (
-            <>
-              {navigationItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <Typography sx={{ color: 'grey.800', textDecoration: 'none', '&:hover': { color: 'primary.main' } }}>
-                    {item.label}
-                  </Typography>
-                </Link>
-              ))}
-            </>
-          )}
-        </Box>
-
-        {/* User Menu / Auth Buttons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <LanguageSwitcher />
-          {isAuthenticated ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                <Typography sx={{ color: 'grey.500' }}>{t('welcome', { name: user?.name ?? '' })}</Typography>
-              </Box>
-              <Button variant="outlined" onClick={() => router.push('/profile')}>
-                {t('profile')}
-              </Button>
-              <Button variant="outlined" onClick={handleLogout}>
-                {t('logout')}
-              </Button>
+        <Box sx={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: '8px', mr: '8px' }}>
+            <Box
+              component="button"
+              onClick={() => changeLocale('en')}
+              sx={{
+                bgcolor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: locale === 'en' ? 600 : 400,
+                color: locale === 'en' ? 'primary.main' : 'grey.500',
+                '&:hover': { color: 'primary.main' },
+              }}
+            >
+              EN
             </Box>
+            <Box sx={{ color: 'grey.200' }}>|</Box>
+            <Box
+              component="button"
+              onClick={() => changeLocale('id')}
+              sx={{
+                bgcolor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: locale === 'id' ? 600 : 400,
+                color: locale === 'id' ? 'primary.main' : 'grey.500',
+                '&:hover': { color: 'primary.main' },
+              }}
+            >
+              ID
+            </Box>
+          </Box>
+          {isAuthenticated ? (
+            <Link href="/dashboard">
+              <Button variant="contained" disableElevation sx={{ py: '8px' }}>
+                {t('landing.goToDashboard')}
+              </Button>
+            </Link>
           ) : (
-            <Box sx={{ display: 'flex', gap: '8px' }}>
+            <>
               <Link href="/login">
-                <Button variant="outlined">
-                  {t('login')}
+                <Button variant="outlined" sx={{ py: '8px' }}>
+                  {t('nav.login')}
                 </Button>
               </Link>
               <Link href="/register">
-                <Button variant="contained" disableElevation>
-                  {t('register')}
+                <Button variant="contained" disableElevation sx={{ py: '8px' }}>
+                  {t('landing.getStarted')}
                 </Button>
               </Link>
-            </Box>
+            </>
           )}
-
-          {/* Mobile Menu Button */}
-          <IconButton
-            sx={{ display: { xs: 'block', sm: 'none' } }}
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle mobile menu"
-          >
-            <Menu size={20} />
-          </IconButton>
         </Box>
       </Box>
-
-      {/* Mobile Navigation */}
-      {isMobileMenuOpen && (
-        <Box sx={{ display: { xs: 'block', sm: 'none' }, bgcolor: 'grey.50', borderTop: '1px solid', borderColor: 'grey.200' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', py: '8px' }}>
-            {isAuthenticated && (
-              <>
-                {navigationItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    <Typography
-                      sx={{
-                        display: 'block',
-                        px: '16px',
-                        py: '8px',
-                        color: 'grey.800',
-                        textDecoration: 'none',
-                        '&:hover': { bgcolor: 'white', color: 'primary.main' },
-                      }}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Typography>
-                  </Link>
-                ))}
-                <Box sx={{ borderTop: '1px solid', borderColor: 'grey.200', mt: '8px', pt: '8px' }}>
-                  <Typography
-                    sx={{
-                      display: 'block',
-                      px: '16px',
-                      py: '8px',
-                      color: 'grey.800',
-                      cursor: 'pointer',
-                      '&:hover': { bgcolor: 'white', color: 'error.main' },
-                    }}
-                    onClick={() => {
-                      handleLogout()
-                      setIsMobileMenuOpen(false)
-                    }}
-                  >
-                    {t('logout')}
-                  </Typography>
-                </Box>
-              </>
-            )}
-          </Box>
-        </Box>
-      )}
     </Box>
   )
 }
-
-export default Header

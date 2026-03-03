@@ -8,7 +8,7 @@ import { Box, Button, Card, IconButton, Typography, OutlinedInput } from '@mui/m
 import { Plus, Minus, ImageIcon } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { api, resolveImageURL } from '@/utils/api'
-import RecapoLogoText from '@/components/RecapoLogoText'
+import RecapoLogoText from '@/components/ui/RecapoLogoText'
 import { useChangeLocale } from '@/hooks/useLocale'
 
 type Product = {
