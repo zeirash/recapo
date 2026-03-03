@@ -1,14 +1,14 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, OutlinedInput, Paper, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
-import { Share2, Check, Package, X } from 'lucide-react'
+import { Share2, Check, Package, X, Pencil, Trash2 } from 'lucide-react'
 
 type Product = {
   id: number
@@ -38,7 +38,6 @@ export default function ProductsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [shareCopied, setShareCopied] = useState(false)
@@ -137,18 +136,6 @@ export default function ProductsPage() {
     }
   )
 
-  // Set default selection when data loads
-  useEffect(() => {
-    if (!selectedProductId && productsRes && productsRes.length > 0) {
-      setSelectedProductId(productsRes[0].id)
-    }
-  }, [productsRes, selectedProductId])
-
-  const selectedProduct: Product | null = useMemo(() => {
-    if (!productsRes) return null
-    return productsRes.find((p) => p.id === selectedProductId) || null
-  }, [productsRes, selectedProductId])
-
   function openCreateForm() {
     setEditingProduct(null)
     setForm(emptyForm)
@@ -244,206 +231,137 @@ export default function ProductsPage() {
     }
   }
 
+  const products = productsRes || []
+
   return (
     <Layout>
-      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
+      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+        {/* Top bar */}
+        <Box sx={{ p: '24px', flexShrink: 0 }}>
+          <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', maxWidth: 960, mx: 'auto' }}>
+            <SearchInput
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder={tp('searchPlaceholder')}
+            />
+            <AddButton onClick={openCreateForm} title={tp('addProduct')} />
+            <Button
+              variant="outlined"
+              onClick={handleShare}
+              title={shareCopied ? tp('linkCopied') : tp('shareButton')}
+              sx={{
+                minWidth: 36,
+                width: 36,
+                height: 36,
+                p: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '8px',
+                fontSize: '14px',
+              }}
+            >
+              {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Scrollable body */}
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: '24px', bgcolor: 'grey.50' }}>
           {isLoading && <Box>{t('loading')}</Box>}
           {isError && (
             <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Box>
           )}
 
-          {!isLoading && !isError && (
-            <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
-              {/* Left list (compact like side menu) */}
-              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: 'grey.200' }}>
-                <Box sx={{ p: '24px', flexShrink: 0 }}>
-                  <Box sx={{ gap: '8px', alignItems: 'center', flexWrap: 'wrap', display: 'flex' }}>
-                    <SearchInput
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      placeholder={tp('searchPlaceholder')}
-                    />
-                    <AddButton onClick={openCreateForm} title={tp('addProduct')} />
-                    <Button
-                      variant="outlined"
-                      onClick={handleShare}
-                      title={shareCopied ? tp('linkCopied') : tp('shareButton')}
-                      sx={{
-                        minWidth: 36,
-                        width: 36,
-                        height: 36,
-                        p: 0,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                      }}
-                    >
-                      {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
-                    </Button>
+          {/* Empty state */}
+          {!isLoading && !isError && products.length === 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: 'grey.500', minHeight: 320 }}>
+              <Package size={48} opacity={0.4} />
+              <Typography>{tp('noProducts')}</Typography>
+            </Box>
+          )}
+
+          {/* Product list */}
+          {!isLoading && !isError && products.length > 0 && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
+              {products.map((p) => (
+                <Paper
+                  key={p.id}
+                  elevation={0}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: 'grey.200',
+                    borderRadius: '10px',
+                    bgcolor: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    p: '12px 16px',
+                    '&:hover': { borderColor: 'grey.300', bgcolor: 'grey.50' },
+                  }}
+                >
+                  {/* Thumbnail */}
+                  <Box sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                    flexShrink: 0,
+                    overflow: 'hidden',
+                  }}>
+                    {p.image_url
+                      ? <img src={resolveImageURL(p.image_url)} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : p.name.charAt(0).toUpperCase()
+                    }
                   </Box>
-                </Box>
-                <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                  {(productsRes || []).map((p) => {
-                    const isActive = p.id === selectedProductId
-                    return (
-                      <Box
-                        key={p.id}
-                        sx={{
-                          py: '16px',
-                          px: '24px',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          bgcolor: isActive ? 'grey.100' : 'transparent',
-                          borderRadius: '8px',
-                          '&:hover': { bgcolor: isActive ? 'grey.100' : 'grey.50' },
-                        }}
-                        onClick={() => setSelectedProductId(p.id)}
+
+                  {/* Info */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {p.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '6px', mt: '2px' }}>
+                      <Box sx={{ fontSize: '13px', fontWeight: 600, color: 'primary.main' }}>
+                        Rp. {p.price.toLocaleString()}
+                      </Box>
+                      {p.original_price != null && p.original_price !== p.price && (
+                        <Box sx={{ fontSize: '12px', color: 'grey.400' }}>
+                          Rp. {p.original_price.toLocaleString()}
+                        </Box>
+                      )}
+                    </Box>
+                    {p.description && (
+                      <Typography sx={{ fontSize: '12px', color: 'grey.500', mt: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {p.description}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Actions */}
+                  <Box sx={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    <Tooltip title={t('edit')}>
+                      <IconButton size="small" onClick={() => openEditForm(p)}>
+                        <Pencil size={16} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t('delete')}>
+                      <IconButton
+                        size="small"
+                        onClick={() => { if (confirm(tp('deleteConfirm'))) deleteMutation.mutate(p.id) }}
+                        sx={{ color: 'error.main', '&:hover': { bgcolor: 'error.light' } }}
                       >
-                        <Box sx={{ flexDirection: 'row', alignItems: 'center', gap: '8px', display: 'flex' }}>
-                          <Box sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '50%',
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: '14px',
-                            flexShrink: 0,
-                            overflow: 'hidden',
-                          }}>
-                            {p.image_url
-                              ? <img src={resolveImageURL(p.image_url)} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              : p.name.charAt(0).toUpperCase()
-                            }
-                          </Box>
-                          <Box sx={{ fontSize: '12px', lineHeight: 1, wordBreak: 'break-word' }}>{p.name}</Box>
-                        </Box>
-                      </Box>
-                    )
-                  })}
-                  {(productsRes || []).length === 0 && (
-                    <Box sx={{ p: '16px', color: 'grey.500', textAlign: 'center' }}>{tp('noProducts')}</Box>
-                  )}
-                </Box>
-              </Box>
-
-              {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'grey.50' }}>
-                {selectedProduct ? (
-                  <Box sx={{ maxWidth: 640, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
-                    <Paper
-                      sx={{
-                        p: '24px',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                        border: '1px solid',
-                        borderColor: 'grey.200',
-                        bgcolor: 'white',
-                        transition: 'box-shadow 0.2s ease',
-                        '&:hover': { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' },
-                      }}
-                    >
-                      {/* Header */}
-                      <Box sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', mb: '24px', pb: '24px', borderBottom: '1px solid', borderColor: 'grey.200', display: 'flex' }}>
-                        {/* Image + name/price stacked below */}
-                        <Box>
-                          <Box
-                            sx={{
-                              width: 300,
-                              height: 300,
-                              borderRadius: '8px',
-                              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                              color: 'white',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 700,
-                              fontSize: '24px',
-                              overflow: 'hidden',
-                              mb: '16px',
-                            }}
-                          >
-                            {selectedProduct.image_url
-                              ? <img src={resolveImageURL(selectedProduct.image_url)} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              : selectedProduct.name.charAt(0).toUpperCase()
-                            }
-                          </Box>
-                          <Typography component="h2" sx={{ fontSize: '20px', fontWeight: 700, mb: '4px', letterSpacing: '-0.02em' }}>
-                            {selectedProduct.name}
-                          </Typography>
-                          <Box sx={{ fontSize: '16px', fontWeight: 600, color: 'primary.main' }}>
-                            Rp. {selectedProduct.price.toLocaleString()}
-                          </Box>
-                        </Box>
-                        {/* Action buttons on the right */}
-                        <Box sx={{ gap: '8px', flexShrink: 0, display: 'flex' }}>
-                          <Button variant="outlined" onClick={() => openEditForm(selectedProduct)}>
-                            {t('edit')}
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            onClick={() => {
-                              if (confirm(tp('deleteConfirm'))) deleteMutation.mutate(selectedProduct.id)
-                            }}
-                            sx={{
-                              bgcolor: 'transparent',
-                              color: 'error.main',
-                              border: '2px solid',
-                              borderColor: 'error.main',
-                              '&:hover': { bgcolor: 'error.light' },
-                            }}
-                          >
-                            {t('delete')}
-                          </Button>
-                        </Box>
-                      </Box>
-
-                      {/* Description */}
-                      <Box>
-                        <Box sx={{ fontWeight: 600, fontSize: '16px', color: 'grey.500', mb: '4px', display: 'block' }}>
-                          {t('description')}
-                        </Box>
-                        <Box sx={{ fontSize: '14px', lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                          {selectedProduct.description || '—'}
-                        </Box>
-                      </Box>
-
-                      {/* Original price */}
-                      <Box sx={{ mt: '24px' }}>
-                        <Box sx={{ fontWeight: 600, fontSize: '16px', color: 'grey.500', mb: '4px', display: 'block' }}>
-                          {tp('originalPrice')}
-                        </Box>
-                        <Box sx={{ fontSize: '14px', color: 'grey.500' }}>
-                          Rp. {(selectedProduct.original_price ?? selectedProduct.price).toLocaleString()}
-                        </Box>
-                      </Box>
-                    </Paper>
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
-                ) : (
-                  <Box
-                    sx={{
-                      height: '100%',
-                      minHeight: 320,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexDirection: 'column',
-                      gap: '8px',
-                      color: 'grey.500',
-                      display: 'flex',
-                    }}
-                  >
-                    <Package size={48} opacity={0.4} />
-                    <Box sx={{ fontSize: '16px' }}>{tp('selectProduct')}</Box>
-                    <Box sx={{ fontSize: '14px' }}>{tp('chooseFromList')}</Box>
-                  </Box>
-                )}
-              </Box>
+                </Paper>
+              ))}
             </Box>
           )}
         </Box>

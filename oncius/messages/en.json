@@ -2,7 +2,7 @@
   "common": {
     "loading": "Loading...",
     "cancel": "Cancel",
-    "save": "Save Changes",
+    "save": "Save",
     "create": "Create",
     "edit": "Edit",
     "delete": "Delete",

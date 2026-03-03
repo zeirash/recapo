@@ -222,7 +222,7 @@ export default function TempOrdersPage() {
 
   return (
     <Layout>
-      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
           {isLoading && <Box>{t('loading')}</Box>}
           {isError && (

@@ -1,14 +1,14 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, OutlinedInput, Paper, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import { api } from '@/utils/api'
-import { Phone, MapPin, User } from 'lucide-react'
+import { Phone, MapPin, User, Pencil, Trash2 } from 'lucide-react'
 
 type Customer = {
   id: number
@@ -33,7 +33,6 @@ export default function CustomersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
@@ -94,18 +93,6 @@ export default function CustomersPage() {
     }
   )
 
-  // Set default selection when data loads
-  useEffect(() => {
-    if (!selectedCustomerId && customersRes && customersRes.length > 0) {
-      setSelectedCustomerId(customersRes[0].id)
-    }
-  }, [customersRes, selectedCustomerId])
-
-  const selectedCustomer: Customer | null = useMemo(() => {
-    if (!customersRes) return null
-    return customersRes.find((c) => c.id === selectedCustomerId) || null
-  }, [customersRes, selectedCustomerId])
-
   function openCreateForm() {
     setEditingCustomer(null)
     setForm(emptyForm)
@@ -133,200 +120,116 @@ export default function CustomersPage() {
     }
   }
 
+  const customers = customersRes || []
+
   return (
     <Layout>
-      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
+      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+        {/* Top bar */}
+        <Box sx={{ p: '24px', flexShrink: 0 }}>
+          <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center', maxWidth: 960, mx: 'auto' }}>
+            <SearchInput
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder={tc('searchPlaceholder')}
+            />
+            <AddButton onClick={openCreateForm} title={tc('addCustomer')} />
+          </Box>
+        </Box>
+
+        {/* Scrollable body */}
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: '24px', pb: '24px' }}>
           {isLoading && <Box>Loading...</Box>}
           {isError && (
             <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || 'Error loading customers'}</Box>
           )}
 
-          {!isLoading && !isError && (
-            <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
-              {/* Left list (compact like side menu) */}
-              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: 'grey.200' }}>
-                <Box sx={{ p: '24px', flexShrink: 0 }}>
-                  <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <SearchInput
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      placeholder={tc('searchPlaceholder')}
-                    />
-                    <AddButton onClick={openCreateForm} title={tc('addCustomer')} />
+          {/* Empty state */}
+          {!isLoading && !isError && customers.length === 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: 'grey.500', minHeight: 320 }}>
+              <User size={48} opacity={0.4} />
+              <Typography>{tc('noCustomers')}</Typography>
+            </Box>
+          )}
+
+          {/* Customer list */}
+          {!isLoading && !isError && customers.length > 0 && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
+              {customers.map((c) => (
+                <Paper
+                  key={c.id}
+                  elevation={0}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: 'grey.200',
+                    borderRadius: '10px',
+                    bgcolor: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    p: '12px 16px',
+                    '&:hover': { borderColor: 'grey.300', bgcolor: 'grey.50' },
+                  }}
+                >
+                  {/* Avatar */}
+                  <Box sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                    flexShrink: 0,
+                  }}>
+                    {c.name.charAt(0).toUpperCase()}
                   </Box>
-                </Box>
-                <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                  {(customersRes || []).map((c) => {
-                    const isActive = c.id === selectedCustomerId
-                    return (
-                      <Box
-                        key={c.id}
-                        sx={{
-                          py: '16px',
-                          px: '24px',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          bgcolor: isActive ? 'grey.100' : 'transparent',
-                          borderRadius: '8px',
-                          '&:hover': { bgcolor: isActive ? 'grey.100' : 'grey.50' },
-                        }}
-                        onClick={() => setSelectedCustomerId(c.id)}
+
+                  {/* Info */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 600, fontSize: '14px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {c.name}
+                    </Typography>
+                    {c.phone && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mt: '2px' }}>
+                        <Phone size={11} style={{ color: '#9ca3af', flexShrink: 0 }} />
+                        <Box sx={{ fontSize: '12px', color: 'grey.500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {c.phone}
+                        </Box>
+                      </Box>
+                    )}
+                    {c.address && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mt: '2px' }}>
+                        <MapPin size={11} style={{ color: '#9ca3af', flexShrink: 0 }} />
+                        <Box sx={{ fontSize: '12px', color: 'grey.500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {c.address}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Actions */}
+                  <Box sx={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    <Tooltip title="Edit">
+                      <IconButton size="small" onClick={() => openEditForm(c)}>
+                        <Pencil size={16} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        size="small"
+                        onClick={() => { if (confirm('Delete this customer?')) deleteMutation.mutate(c.id) }}
+                        sx={{ color: 'error.main', '&:hover': { bgcolor: 'error.light' } }}
                       >
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
-                          <Box sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '50%',
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: '14px',
-                          }}>
-                            {c.name.charAt(0).toUpperCase()}
-                          </Box>
-                          <Box sx={{ fontSize: '12px', lineHeight: 1, wordBreak: 'break-word' }}>{c.name}</Box>
-                        </Box>
-                      </Box>
-                    )
-                  })}
-                  {(customersRes || []).length === 0 && (
-                    <Box sx={{ p: '16px', color: 'grey.500', textAlign: 'center' }}>No customers</Box>
-                  )}
-                </Box>
-              </Box>
-
-              {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'grey.50' }}>
-                {selectedCustomer ? (
-                  <Box sx={{ maxWidth: 640, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
-                    {/* Header card with avatar */}
-                    <Paper
-                      sx={{
-                        p: '24px',
-                        mb: '24px',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                        border: 'none',
-                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                        color: 'white',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                          <Box
-                            sx={{
-                              width: 72,
-                              height: 72,
-                              borderRadius: '50%',
-                              bgcolor: 'rgba(255,255,255,0.25)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 700,
-                              fontSize: '24px',
-                              flexShrink: 0,
-                            }}
-                          >
-                            {selectedCustomer.name.charAt(0).toUpperCase()}
-                          </Box>
-                          <Box>
-                            <Typography component="h2" sx={{ fontSize: '20px', fontWeight: 700, mb: '4px', letterSpacing: '-0.02em' }}>
-                              {selectedCustomer.name}
-                            </Typography>
-                            {selectedCustomer.created_at && (
-                              <Box sx={{ fontSize: '12px', opacity: 0.9 }}>
-                                Customer since {new Date(selectedCustomer.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                              </Box>
-                            )}
-                          </Box>
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: '8px' }}>
-                          <Button
-                            variant="outlined"
-                            onClick={() => openEditForm(selectedCustomer)}
-                            sx={{
-                              bgcolor: 'rgba(255,255,255,0.2)',
-                              border: '1px solid rgba(255,255,255,0.5)',
-                              color: 'white',
-                              '&:hover': { bgcolor: 'rgba(255,255,255,0.3)', borderColor: 'white' },
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            onClick={() => {
-                              if (confirm('Delete this customer?')) deleteMutation.mutate(selectedCustomer.id)
-                            }}
-                            sx={{
-                              bgcolor: 'rgba(239,68,68,0.3)',
-                              border: '1px solid rgba(239,68,68,0.6)',
-                              color: 'white',
-                              '&:hover': { bgcolor: 'rgba(239,68,68,0.5)', borderColor: 'error.main' },
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </Box>
-                      </Box>
-                    </Paper>
-
-                    {/* Contact info card */}
-                    <Paper
-                      sx={{
-                        p: '8px',
-                        borderRadius: '12px',
-                        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
-                        border: '1px solid',
-                        borderColor: 'grey.200',
-                        bgcolor: 'white',
-                        transition: 'box-shadow 0.2s ease',
-                        '&:hover': { boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', px: '8px', py: '10px' }}>
-                          <Phone size={14} style={{ flexShrink: 0, color: '#6b7280' }} />
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Box sx={{ fontSize: '14px', lineHeight: 1.5, wordBreak: 'break-word' }}>
-                              {selectedCustomer.phone || '—'}
-                            </Box>
-                          </Box>
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', px: '8px', py: '10px' }}>
-                          <MapPin size={14} style={{ flexShrink: 0, color: '#6b7280' }} />
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Box sx={{ fontSize: '14px', lineHeight: 1.6, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                              {selectedCustomer.address || '—'}
-                            </Box>
-                          </Box>
-                        </Box>
-                      </Box>
-                    </Paper>
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
-                ) : (
-                  <Box
-                    sx={{
-                      height: '100%',
-                      minHeight: 320,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexDirection: 'column',
-                      gap: '8px',
-                      color: 'grey.500',
-                      display: 'flex',
-                    }}
-                  >
-                    <User size={48} opacity={0.4} />
-                    <Box sx={{ fontSize: '16px' }}>Select a customer to view details</Box>
-                    <Box sx={{ fontSize: '14px' }}>Choose from the list on the left</Box>
-                  </Box>
-                )}
-              </Box>
+                </Paper>
+              ))}
             </Box>
           )}
         </Box>

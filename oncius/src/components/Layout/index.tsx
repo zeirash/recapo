@@ -55,7 +55,7 @@ const Layout = ({ children }: LayoutProps) => {
           selectedMenu={selectedMenu}
           onMenuSelect={setSelectedMenu}
         />
-        <Box component="main" sx={{ flex: 1, bgcolor: 'white', overflowY: 'auto' }}>
+        <Box component="main" sx={{ flex: 1, bgcolor: 'grey.50', overflowY: 'auto' }}>
           {children}
         </Box>
       </Box>
