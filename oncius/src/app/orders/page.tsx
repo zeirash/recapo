@@ -9,7 +9,7 @@ import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import CustomerSearchSelect from '@/components/CustomerSearchSelect'
 import { api, ApiError } from '@/utils/api'
-import { ClipboardList, Trash2 } from 'lucide-react'
+import { ClipboardList, Download, Trash2 } from 'lucide-react'
 
 type OrderItem = {
   id: number
@@ -82,6 +82,8 @@ export default function OrdersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string[]>([...DEFAULT_STATUSES])
   const [createFormConflict, setCreateFormConflict] = useState(false)
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
+  const [exportMessage, setExportMessage] = useState('')
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {
@@ -252,6 +254,24 @@ export default function OrdersPage() {
       onSuccess: () => {
         queryClient.invalidateQueries(['order', selectedOrderId])
         queryClient.invalidateQueries(['orders'])
+      },
+    }
+  )
+
+  const exportMutation = useMutation(
+    async ({ orderId, message }: { orderId: number; message: string }) => {
+      const blob = await api.exportOrderInvoice(orderId, message)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `invoice-${orderId}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    },
+    {
+      onSuccess: () => {
+        setIsExportDialogOpen(false)
+        setExportMessage('')
       },
     }
   )
@@ -452,14 +472,26 @@ export default function OrdersPage() {
                           {toStatus(selectedOrder.status)}
                         </Box>
                       </Box>
-                      <Button
-                        variant="outlined"
-                        onClick={() => {
-                          if (confirm(to('deleteConfirm'))) deleteMutation.mutate(selectedOrder.id)
-                        }}
-                      >
-                        {t('delete')}
-                      </Button>
+                      <Box sx={{ display: 'flex', gap: '8px' }}>
+                        <Button
+                          variant="outlined"
+                          startIcon={<Download size={16} />}
+                          onClick={() => {
+                            setExportMessage('')
+                            setIsExportDialogOpen(true)
+                          }}
+                        >
+                          {to('exportInvoice')}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            if (confirm(to('deleteConfirm'))) deleteMutation.mutate(selectedOrder.id)
+                          }}
+                        >
+                          {t('delete')}
+                        </Button>
+                      </Box>
                     </Box>
 
                     {/* Order info card */}
@@ -724,6 +756,58 @@ export default function OrdersPage() {
               </DialogActions>
             </Box>
           )}
+        </Dialog>
+
+        {/* Export Invoice Dialog */}
+        <Dialog open={isExportDialogOpen} onClose={() => setIsExportDialogOpen(false)} fullWidth maxWidth="sm">
+          <Box
+            component="form"
+            onSubmit={(e: React.FormEvent) => {
+              e.preventDefault()
+              if (selectedOrder) exportMutation.mutate({ orderId: selectedOrder.id, message: exportMessage })
+            }}
+          >
+            <DialogTitle sx={{ pb: '8px' }}>{to('exportInvoiceTitle')}</DialogTitle>
+            <DialogContent sx={{ pt: '8px', pb: 0 }}>
+              <Box sx={{ mb: '8px' }}>
+                <Box component="label" htmlFor="export-message" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>
+                  {to('exportMessage')}
+                </Box>
+                <OutlinedInput
+                  id="export-message"
+                  value={exportMessage}
+                  onChange={(e) => setExportMessage(e.target.value)}
+                  placeholder={to('exportMessagePlaceholder')}
+                  multiline
+                  rows={4}
+                  size="small"
+                  sx={{
+                    width: '100%',
+                    py: '8px',
+                    px: '16px',
+                    fontSize: '14px',
+                    borderRadius: '8px',
+                    border: '1px solid',
+                    borderColor: 'grey.200',
+                  }}
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+              <Button type="button" variant="outlined" onClick={() => setIsExportDialogOpen(false)}>
+                {t('cancel')}
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disableElevation
+                disabled={exportMutation.isLoading}
+                startIcon={<Download size={16} />}
+              >
+                {to('exportDownload')}
+              </Button>
+            </DialogActions>
+          </Box>
         </Dialog>
 
         {/* Add Item Modal */}

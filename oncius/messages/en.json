@@ -182,7 +182,13 @@
     "duplicateOrderMessage": "This customer already has an active order (#{id}). Add your notes to that order (Merge) or cancel.",
     "duplicateOrderMessageInline": "This customer already has an active order. Choose a different customer or close and find their order in the list.",
     "chooseDifferentCustomer": "Choose different customer",
-    "mergeOrder": "Merge into order"
+    "mergeOrder": "Merge into order",
+    "exportInvoice": "Export Invoice",
+    "exportInvoiceTitle": "Export Invoice",
+    "exportMessage": "Closing Message (optional)",
+    "exportMessagePlaceholder": "e.g. Thank you for your order! Please transfer to BCA 1234567",
+    "exportDownload": "Download PDF",
+    "exportFailed": "Failed to export invoice"
   },
   "orderStatus": {
     "all": "All",

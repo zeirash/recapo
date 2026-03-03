@@ -182,7 +182,13 @@
     "duplicateOrderMessage": "Pelanggan ini sudah memiliki pesanan aktif (#{id}). Tambahkan catatan ke pesanan itu (Gabungkan) atau batal.",
     "duplicateOrderMessageInline": "Pelanggan ini sudah memiliki pesanan aktif. Pilih pelanggan lain atau tutup dan cari pesanan mereka di daftar.",
     "chooseDifferentCustomer": "Pilih pelanggan lain",
-    "mergeOrder": "Gabung ke pesanan"
+    "mergeOrder": "Gabung ke pesanan",
+    "exportInvoice": "Ekspor Invoice",
+    "exportInvoiceTitle": "Ekspor Invoice",
+    "exportMessage": "Pesan Penutup (opsional)",
+    "exportMessagePlaceholder": "mis. Terima kasih atas pesanannya! Transfer ke BCA 1234567",
+    "exportDownload": "Unduh PDF",
+    "exportFailed": "Gagal mengekspor invoice"
   },
   "orderStatus": {
     "all": "Semua",

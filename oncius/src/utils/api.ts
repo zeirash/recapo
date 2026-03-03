@@ -369,6 +369,28 @@ export const api = {
     })
   },
 
+  exportOrderInvoice: async (id: number | string, message?: string): Promise<Blob> => {
+    const token = getAuthToken()
+    const response = await fetch(`${API_BASE_URL}/orders/${id}/export`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Language': getApiLocale(),
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify({ message: message || '' }),
+    })
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || `HTTP error! status: ${response.status}`,
+        response.status,
+        errorData
+      )
+    }
+    return response.blob()
+  },
+
   mergeTempOrder: (data: {
     temp_order_id: number
     customer_id: number
