@@ -8,6 +8,7 @@ import { Box, Button, Card, IconButton, Typography, OutlinedInput } from '@mui/m
 import { Plus, Minus, ImageIcon } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { api, resolveImageURL } from '@/utils/api'
+import RecapoLogoText from '@/components/RecapoLogoText'
 import { useChangeLocale } from '@/hooks/useLocale'
 
 type Product = {
@@ -38,16 +39,14 @@ function SharePageHeader() {
         sx={{
           mx: 'auto',
           px: { xs: 3, sm: 4 },
-          py: 2,
+          py: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <Typography sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, fontWeight: 700, color: 'primary.main' }}>
-            Recapo
-          </Typography>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <RecapoLogoText />
         </Link>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           <Box

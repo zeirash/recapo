@@ -7,6 +7,7 @@ import { Box, Button, IconButton, Typography } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import RecapoLogoText from '@/components/RecapoLogoText'
 import { Menu } from 'lucide-react'
 
 const Header = () => {
@@ -32,9 +33,7 @@ const Header = () => {
       <Box sx={{ display: 'flex', mx: 'auto', px: { xs: 3, sm: 4 }, py: 2, alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Logo */}
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <Typography sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, fontWeight: 700, color: 'primary.main' }}>
-            Recapo
-          </Typography>
+          <RecapoLogoText />
         </Link>
 
         {/* Desktop Navigation */}

@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
 import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, type LucideIcon } from 'lucide-react'
+import RecapoLogo from '@/components/RecapoLogo'
 
 interface SideMenuProps {
   selectedMenu: string
@@ -51,14 +52,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
       <Box sx={{ p: '16px', borderBottom: '1px solid', borderColor: 'grey.200' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {/* Logo/Icon */}
-          <Box
-            sx={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              bgcolor: 'primary.main',
-            }}
-          />
+          <RecapoLogo />
         </Box>
       </Box>
 

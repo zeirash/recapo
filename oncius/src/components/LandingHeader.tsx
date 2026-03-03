@@ -5,6 +5,7 @@ import { Box, Button } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
+import RecapoLogoText from '@/components/RecapoLogoText'
 
 export default function LandingHeader() {
   const t = useTranslations()
@@ -37,9 +38,7 @@ export default function LandingHeader() {
         }}
       >
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <Box component="span" sx={{ fontSize: { xs: '18px', sm: '20px' }, fontWeight: 700, color: 'primary.main' }}>
-            Recapo
-          </Box>
+          <RecapoLogoText />
         </Link>
         <Box sx={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', gap: '8px', mr: '8px' }}>
