@@ -19,7 +19,9 @@ package main
 import (
 	"net/http"
 	"os"
+	"time"
 
+	sentry "github.com/getsentry/sentry-go"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
@@ -32,6 +34,23 @@ import (
 
 	_ "github.com/zeirash/recapo/arion/docs" // swagger docs
 )
+
+func initSentry() {
+	cfg := config.GetConfig()
+	if cfg.SentryDSN == "" {
+		return
+	}
+
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:              cfg.SentryDSN,
+		Environment:      cfg.Env,
+		Release:          cfg.Version,
+		TracesSampleRate: 0.0,
+	})
+	if err != nil {
+		logger.WithError(err).Warn("failed to initialize Sentry")
+	}
+}
 
 func NewRouter() *mux.Router {
 	handler.Init()
@@ -116,6 +135,10 @@ func main() {
 
 	// init config
 	config.InitConfig()
+
+	// init sentry
+	initSentry()
+	defer sentry.Flush(2 * time.Second)
 
 	// init database
 	database.InitDB()

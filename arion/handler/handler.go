@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	sentry "github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
@@ -129,13 +130,23 @@ func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 // always uses err.Error() to preserve field-level validation details.
 func WriteErrorJson(w http.ResponseWriter, r *http.Request, status int, err error, code string) {
 	w.Header().Set("Content-Type", "application/json")
+
+	if status >= 500 && err != nil {
+		sentry.CaptureException(err)
+	}
+
 	w.WriteHeader(status)
+
+	msg := code
+	if err != nil {
+		msg = err.Error()
+	}
 
 	res := ErrorApiResponse{
 		Success: false,
 		Data:    struct{}{},
 		Code:    code,
-		Message: err.Error(),
+		Message: msg,
 	}
 
 	jsonResp, errMarshal := json.Marshal(res)

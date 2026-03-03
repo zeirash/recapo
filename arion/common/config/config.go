@@ -22,6 +22,7 @@ type Config struct {
 	DbPort     int    `env:"DB_PORT"`
 
 	SecretKey string `env:"SECRET_KEY"`
+	SentryDSN string `env:"SENTRY_DSN"`
 
 	UploadDir string `env:"UPLOAD_DIR" envDefault:"./uploads"`
 
