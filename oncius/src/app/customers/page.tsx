@@ -176,16 +176,14 @@ export default function CustomersPage() {
                     width: 48,
                     height: 48,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                    background: 'linear-gradient(135deg,rgb(92, 151, 245) 0%,rgb(26, 94, 239) 100%)',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '18px',
                     flexShrink: 0,
                   }}>
-                    {c.name.charAt(0).toUpperCase()}
+                    <User size={24} />
                   </Box>
 
                   {/* Info */}

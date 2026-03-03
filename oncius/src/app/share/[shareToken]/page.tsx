@@ -229,7 +229,7 @@ export default function SharePage() {
                       sx={{
                         width: '100%',
                         aspectRatio: '1/1',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: 'linear-gradient(135deg,rgb(92, 151, 245) 0%,rgb(26, 94, 239) 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

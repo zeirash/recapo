@@ -136,7 +136,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #4CAF50, #81C784)',
+              background: 'linear-gradient(135deg,rgb(92, 151, 245) 0%,rgb(26, 94, 239) 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
