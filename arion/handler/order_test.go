@@ -1612,6 +1612,138 @@ func TestRejectTempOrderHandler(t *testing.T) {
 	}
 }
 
+func TestExportOrderHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	fakePDF := []byte("%PDF-1.4 fake pdf content")
+
+	tests := []struct {
+		name            string
+		shopID          int
+		pathVars        map[string]string
+		body            interface{}
+		mockSetup       func()
+		wantStatus      int
+		wantContentType string
+		wantErrMessage  string
+	}{
+		{
+			name:     "successfully export order without message",
+			shopID:   1,
+			pathVars: map[string]string{"order_id": "1"},
+			body:     nil,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GenerateOrderInvoice(1, 1, "").
+					Return(fakePDF, nil)
+			},
+			wantStatus:      http.StatusOK,
+			wantContentType: "application/pdf",
+		},
+		{
+			name:     "successfully export order with custom message",
+			shopID:   1,
+			pathVars: map[string]string{"order_id": "1"},
+			body:     map[string]interface{}{"message": "Thank you!\nSee you again."},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GenerateOrderInvoice(1, 1, "Thank you!\nSee you again.").
+					Return(fakePDF, nil)
+			},
+			wantStatus:      http.StatusOK,
+			wantContentType: "application/pdf",
+		},
+		{
+			name:     "export order returns 404 when order not found",
+			shopID:   1,
+			pathVars: map[string]string{"order_id": "999"},
+			body:     nil,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GenerateOrderInvoice(999, 1, "").
+					Return(nil, errors.New("order not found"))
+			},
+			wantStatus:     http.StatusNotFound,
+			wantErrMessage: "order not found",
+		},
+		{
+			name:     "export order returns 500 on service failure",
+			shopID:   1,
+			pathVars: map[string]string{"order_id": "1"},
+			body:     nil,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GenerateOrderInvoice(1, 1, "").
+					Return(nil, errors.New("pdf generation error"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantErrMessage: "pdf generation error",
+		},
+		{
+			name:           "export order returns 400 on missing order_id",
+			shopID:         1,
+			pathVars:       map[string]string{},
+			body:           nil,
+			mockSetup:      func() {},
+			wantStatus:     http.StatusBadRequest,
+			wantErrMessage: "order_id is required",
+		},
+		{
+			name:           "export order returns 400 on invalid json body",
+			shopID:         1,
+			pathVars:       map[string]string{"order_id": "1"},
+			body:           "invalid json",
+			mockSetup:      func() {},
+			wantStatus:     http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			var bodyBytes []byte
+			if tt.body != nil {
+				switch b := tt.body.(type) {
+				case string:
+					bodyBytes = []byte(b)
+				default:
+					bodyBytes, _ = json.Marshal(b)
+				}
+			}
+
+			req := newRequestWithShopID("POST", "/orders/1/export", bodyBytes, tt.shopID)
+			req = newRequestWithPathVars(req, tt.pathVars)
+			rec := httptest.NewRecorder()
+
+			handler.ExportOrderHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("ExportOrderHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			if tt.wantContentType != "" {
+				ct := rec.Header().Get("Content-Type")
+				if ct != tt.wantContentType {
+					t.Errorf("ExportOrderHandler() Content-Type = %v, want %v", ct, tt.wantContentType)
+				}
+			}
+
+			if tt.wantErrMessage != "" {
+				var resp handler.ApiResponse
+				json.NewDecoder(rec.Body).Decode(&resp)
+				if resp.Message != tt.wantErrMessage {
+					t.Errorf("ExportOrderHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+				}
+			}
+		})
+	}
+}
+
 func TestGetTempOrdersHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

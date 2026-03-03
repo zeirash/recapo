@@ -87,6 +87,7 @@ func NewRouter() *mux.Router {
 	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateOrderHandler))).Methods("PATCH")
 	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteOrderHandler))).Methods("DELETE")
 	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderHandler))).Methods("GET")
+	r.Handle("/orders/{order_id}/export", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.ExportOrderHandler))).Methods("POST")
 	r.Handle("/orders/{order_id}/item", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateOrderItemHandler))).Methods("POST")
 	r.Handle("/orders/{order_id}/items", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderItemsHandler))).Methods("GET")
 	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateOrderItemHandler))).Methods("PATCH")

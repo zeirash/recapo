@@ -81,6 +81,21 @@ func (mr *MockOrderServiceMockRecorder) CreateTempOrder(customerName, customerPh
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTempOrder", reflect.TypeOf((*MockOrderService)(nil).CreateTempOrder), customerName, customerPhone, shareToken, items)
 }
 
+// GenerateOrderInvoice mocks base method.
+func (m *MockOrderService) GenerateOrderInvoice(orderID, shopID int, message string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateOrderInvoice", orderID, shopID, message)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GenerateOrderInvoice indicates an expected call of GenerateOrderInvoice.
+func (mr *MockOrderServiceMockRecorder) GenerateOrderInvoice(orderID, shopID, message interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOrderInvoice", reflect.TypeOf((*MockOrderService)(nil).GenerateOrderInvoice), orderID, shopID, message)
+}
+
 // DeleteOrderByID mocks base method.
 func (m *MockOrderService) DeleteOrderByID(id int) error {
 	m.ctrl.T.Helper()

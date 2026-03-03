@@ -2812,3 +2812,163 @@ func Test_oservice_RejectTempOrderByID(t *testing.T) {
 		})
 	}
 }
+
+func Test_oservice_GenerateOrderInvoice(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name         string
+		orderID      int
+		shopID       int
+		message      string
+		mockSetup    func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore)
+		wantContains []string // strings that must appear in the PDF bytes
+		wantAbsent   []string // strings that must NOT appear in the PDF bytes
+		wantErr      bool
+		wantErrMsg   string
+	}{
+		{
+			name:    "invoice contains order metadata, items, totals and custom message",
+			orderID: 1,
+			shopID:  1,
+			message: "Thank you!\nSee you again.",
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
+				mockOrder := mock_store.NewMockOrderStore(ctrl)
+				mockOrder.EXPECT().
+					GetOrderByID(1, 1).
+					Return(&model.Order{
+						ID:           1,
+						CustomerName: "John Doe",
+						TotalPrice:   15000,
+						Status:       "done",
+						CreatedAt:    fixedTime,
+					}, nil)
+				mockItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockItem.EXPECT().
+					GetOrderItemsByOrderID(1).
+					Return([]model.OrderItem{
+						{ID: 1, OrderID: 1, ProductName: "Product A", Price: 10000, Qty: 1, CreatedAt: fixedTime},
+						{ID: 2, OrderID: 1, ProductName: "Product B", Price: 5000, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+				return mockOrder, mockItem
+			},
+			wantContains: []string{
+				"%PDF",
+				"INVOICE",
+				"John Doe",           // customer name
+				"15 January 2024",    // formatted date
+				"Product A",          // item name
+				"Product B",          // item name
+				"10.000",             // unit price of Product A
+				"5.000",              // unit price of Product B
+				"15.000",             // total price
+				"Thank you!",         // first line of message
+				"See you again.",     // second line of message
+			},
+		},
+		{
+			name:    "invoice without message has no footer text",
+			orderID: 2,
+			shopID:  1,
+			message: "",
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
+				mockOrder := mock_store.NewMockOrderStore(ctrl)
+				mockOrder.EXPECT().
+					GetOrderByID(2, 1).
+					Return(&model.Order{
+						ID:           2,
+						CustomerName: "Jane Doe",
+						TotalPrice:   5000,
+						Status:       "done",
+						CreatedAt:    fixedTime,
+					}, nil)
+				mockItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockItem.EXPECT().
+					GetOrderItemsByOrderID(2).
+					Return([]model.OrderItem{
+						{ID: 3, OrderID: 2, ProductName: "Product C", Price: 5000, Qty: 1, CreatedAt: fixedTime},
+					}, nil)
+				return mockOrder, mockItem
+			},
+			wantContains: []string{
+				"%PDF",
+				"INVOICE",
+				"Jane Doe",
+				"15 January 2024",
+				"Product C",
+				"5.000",
+			},
+		},
+		{
+			name:    "returns error when order not found",
+			orderID: 999,
+			shopID:  1,
+			message: "",
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
+				mockOrder := mock_store.NewMockOrderStore(ctrl)
+				mockOrder.EXPECT().
+					GetOrderByID(999, 1).
+					Return(nil, nil)
+				mockItem := mock_store.NewMockOrderItemStore(ctrl)
+				return mockOrder, mockItem
+			},
+			wantErr:    true,
+			wantErrMsg: "order not found",
+		},
+		{
+			name:    "returns error when store fails",
+			orderID: 1,
+			shopID:  1,
+			message: "",
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockOrderStore, *mock_store.MockOrderItemStore) {
+				mockOrder := mock_store.NewMockOrderStore(ctrl)
+				mockOrder.EXPECT().
+					GetOrderByID(1, 1).
+					Return(nil, errors.New("database error"))
+				mockItem := mock_store.NewMockOrderItemStore(ctrl)
+				return mockOrder, mockItem
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldOrderStore, oldOrderItemStore := orderStore, orderItemStore
+			defer func() { orderStore, orderItemStore = oldOrderStore, oldOrderItemStore }()
+
+			mockOrder, mockItem := tt.mockSetup(ctrl)
+			orderStore = mockOrder
+			orderItemStore = mockItem
+
+			var o oservice
+			got, gotErr := o.GenerateOrderInvoice(tt.orderID, tt.shopID, tt.message)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GenerateOrderInvoice() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				if tt.wantErrMsg != "" && !strings.Contains(gotErr.Error(), tt.wantErrMsg) {
+					t.Errorf("GenerateOrderInvoice() error = %v, want message %q", gotErr, tt.wantErrMsg)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GenerateOrderInvoice() succeeded unexpectedly")
+			}
+			for _, want := range tt.wantContains {
+				if !strings.Contains(string(got), want) {
+					t.Errorf("GenerateOrderInvoice() PDF missing expected content %q", want)
+				}
+			}
+			for _, absent := range tt.wantAbsent {
+				if strings.Contains(string(got), absent) {
+					t.Errorf("GenerateOrderInvoice() PDF contains unexpected content %q", absent)
+				}
+			}
+		})
+	}
+}

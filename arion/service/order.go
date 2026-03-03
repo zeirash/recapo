@@ -1,8 +1,11 @@
 package service
 
 import (
+	"bytes"
 	"errors"
+	"strconv"
 
+	"github.com/go-pdf/fpdf"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/response"
@@ -25,6 +28,8 @@ type (
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
 
 		MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error)
+
+		GenerateOrderInvoice(orderID, shopID int, message string) ([]byte, error)
 
 		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
 		GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error)
@@ -504,6 +509,85 @@ func (o *oservice) RejectTempOrderByID(id int) (response.TempOrderData, error) {
 	tempOrder.Status = constant.TempOrderStatusRejected
 
 	return *tempOrder, nil
+}
+
+func (o *oservice) GenerateOrderInvoice(orderID, shopID int, message string) ([]byte, error) {
+	order, err := o.GetOrderByID(orderID, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	pdf := fpdf.New("P", "mm", "A4", "")
+	pdf.SetCompression(false)
+	pdf.AddPage()
+
+	// Header
+	pdf.SetFont("Arial", "B", 18)
+	pdf.CellFormat(190, 10, "INVOICE", "", 1, "C", false, 0, "")
+	pdf.Ln(4)
+
+	// Invoice meta
+	pdf.SetFont("Arial", "", 11)
+	pdf.CellFormat(40, 7, "Invoice #:", "", 0, "L", false, 0, "")
+	pdf.CellFormat(150, 7, strconv.Itoa(order.ID), "", 1, "L", false, 0, "")
+	pdf.CellFormat(40, 7, "Date:", "", 0, "L", false, 0, "")
+	pdf.CellFormat(150, 7, order.CreatedAt.Format("02 January 2006"), "", 1, "L", false, 0, "")
+	pdf.CellFormat(40, 7, "Customer:", "", 0, "L", false, 0, "")
+	pdf.CellFormat(150, 7, order.CustomerName, "", 1, "L", false, 0, "")
+	pdf.Ln(6)
+
+	// Items table header
+	pdf.SetFont("Arial", "B", 11)
+	pdf.SetFillColor(230, 230, 230)
+	pdf.CellFormat(80, 8, "Product", "1", 0, "L", true, 0, "")
+	pdf.CellFormat(25, 8, "Qty", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(42, 8, "Price (Rp)", "1", 0, "R", true, 0, "")
+	pdf.CellFormat(43, 8, "Subtotal (Rp)", "1", 1, "R", true, 0, "")
+
+	// Items rows
+	pdf.SetFont("Arial", "", 10)
+	for _, item := range order.OrderItems {
+		pdf.CellFormat(80, 7, item.ProductName, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(25, 7, strconv.Itoa(item.Qty), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(42, 7, formatRupiah(item.Price), "1", 0, "R", false, 0, "")
+		pdf.CellFormat(43, 7, formatRupiah(item.Price*item.Qty), "1", 1, "R", false, 0, "")
+	}
+
+	// Total row
+	pdf.Ln(2)
+	pdf.SetFont("Arial", "B", 11)
+	pdf.CellFormat(147, 8, "Total", "1", 0, "R", false, 0, "")
+	pdf.CellFormat(43, 8, formatRupiah(order.TotalPrice), "1", 1, "R", false, 0, "")
+
+	// Custom message footer
+	if message != "" {
+		pdf.Ln(8)
+		pdf.SetFont("Arial", "I", 10)
+		pdf.MultiCell(190, 6, message, "", "L", false)
+	}
+
+	var buf bytes.Buffer
+	if err = pdf.Output(&buf); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// formatRupiah formats integer price with period thousands separator (e.g. 1500000 → "1.500.000")
+func formatRupiah(price int) string {
+	s := strconv.Itoa(price)
+	n := len(s)
+	if n <= 3 {
+		return s
+	}
+	var result []byte
+	for i, c := range s {
+		if i > 0 && (n-i)%3 == 0 {
+			result = append(result, '.')
+		}
+		result = append(result, byte(c))
+	}
+	return string(result)
 }
 
 func (o *oservice) createOrderFromTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error) {

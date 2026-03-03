@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -128,6 +129,65 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJson(w, http.StatusOK, res)
+}
+
+// ExportOrderRequest is the request body for ExportOrderHandler.
+type ExportOrderRequest struct {
+	Message string `json:"message"`
+}
+
+// ExportOrderHandler godoc
+//
+//	@Summary		Export order as PDF invoice
+//	@Description	Generate and download a PDF invoice for a given order. Optional message in body appended as footer; falls back to order notes.
+//	@Tags			order
+//	@Accept			json
+//	@Produce		application/pdf
+//	@Security		BearerAuth
+//	@Param			order_id	path		int					true	"Order ID"
+//	@Param			body		body		ExportOrderRequest	false	"Optional closing message (supports newlines)"
+//	@Success		200			{file}		binary
+//	@Failure		400			{object}	ErrorApiResponse	"Bad request (invalid order_id)"
+//	@Failure		404			{object}	ErrorApiResponse	"Order not found"
+//	@Failure		500			{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/export [post]
+func ExportOrderHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+	params := mux.Vars(r)
+
+	if valid, err := validateOrderID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	orderID, _ := strconv.Atoi(params["order_id"])
+
+	inp := ExportOrderRequest{}
+	if r.Body != nil && r.ContentLength != 0 {
+		if err := ParseJson(r.Body, &inp); err != nil {
+			WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
+			return
+		}
+	}
+
+	pdfBytes, err := orderService.GenerateOrderInvoice(orderID, shopID, inp.Message)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
+		logger.WithError(err).Error("export_order_invoice_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "export_order_invoice")
+		return
+	}
+
+	filename := fmt.Sprintf("invoice-%d.pdf", orderID)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	w.Header().Set("Content-Length", strconv.Itoa(len(pdfBytes)))
+	w.WriteHeader(http.StatusOK)
+	w.Write(pdfBytes)
 }
 
 // GetOrdersHandler godoc
