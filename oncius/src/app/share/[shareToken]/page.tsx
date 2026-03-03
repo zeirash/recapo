@@ -4,7 +4,8 @@ import { useState, useCallback, useEffect } from 'react'
 import { useQuery } from 'react-query'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Box, Button, Card, Typography, OutlinedInput } from '@mui/material'
+import { Box, Button, Card, IconButton, Typography, OutlinedInput } from '@mui/material'
+import { Plus, Minus, ImageIcon } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { api, resolveImageURL } from '@/utils/api'
 import { useChangeLocale } from '@/hooks/useLocale'
@@ -220,16 +221,23 @@ export default function SharePage() {
                     variant="outlined"
                     sx={{
                       p: 0,
-                      borderRadius: 2,
+                      borderRadius: 3,
                       bgcolor: 'white',
                       overflow: 'hidden',
+                      border: '1px solid',
+                      borderColor: 'grey.200',
+                      transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                      '&:hover': {
+                        boxShadow: '0 6px 24px rgba(0,0,0,0.09)',
+                        transform: 'translateY(-2px)',
+                      },
                     }}
                   >
                     <Box
                       sx={{
                         width: '100%',
                         aspectRatio: '1/1',
-                        background: 'linear-gradient(135deg,rgb(92, 151, 245) 0%,rgb(26, 94, 239) 100%)',
+                        background: 'linear-gradient(135deg, rgb(92, 151, 245) 0%, rgb(26, 94, 239) 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -244,36 +252,62 @@ export default function SharePage() {
                           style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
                         />
                       ) : (
-                        <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: 'white' }}>
-                          {product.name.charAt(0).toUpperCase()}
-                        </Typography>
+                        <ImageIcon size={48} color="rgba(255,255,255,0.6)" strokeWidth={1.5} />
                       )}
                     </Box>
-                    <Box sx={{ p: 3 }}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 60 }}>
-                        <Typography sx={{ fontWeight: 600, fontSize: '1rem', mb: 1 }}>{product.name}</Typography>
-                        {product.description ? (
-                          <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem', mb: 2 }}>{product.description}</Typography>
-                        ) : null}
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mt: 1 }}>
-                          <Typography sx={{ color: 'primary.main', fontWeight: 600 }}>
-                            Rp. {product.price.toLocaleString()}
-                          </Typography>
-                          <Box component="label" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography component="span" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>Qty</Typography>
-                            <OutlinedInput
-                              type="number"
-                              inputProps={{ min: 0 }}
-                              value={quantities[product.id] ?? 0}
-                              onChange={(e) => setQty(product.id, parseInt(e.target.value, 10) || 0)}
-                              size="small"
-                              sx={{
-                                width: 72,
-                                fontSize: '0.875rem',
-                                '& input': { textAlign: 'center', py: 0.5, px: 1 },
-                              }}
-                            />
-                          </Box>
+                    <Box sx={{ p: 2.5 }}>
+                      <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem', mb: 0.5, lineHeight: 1.35 }}>
+                        {product.name}
+                      </Typography>
+                      {product.description ? (
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.8125rem', mb: 1.5, lineHeight: 1.4 }}>
+                          {product.description}
+                        </Typography>
+                      ) : null}
+                      <Typography sx={{ color: 'primary.main', fontWeight: 700, fontSize: '1rem', mb: 2 }}>
+                        Rp. {product.price.toLocaleString()}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography sx={{ fontSize: '0.8125rem', color: 'text.secondary', fontWeight: 500 }}>Qty</Typography>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            border: '1px solid',
+                            borderColor: 'grey.300',
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => setQty(product.id, (quantities[product.id] ?? 0) - 1)}
+                            sx={{ borderRadius: 0, px: 0.75, py: 0.5, '&:hover': { bgcolor: 'grey.100' } }}
+                          >
+                            <Minus size={14} />
+                          </IconButton>
+                          <OutlinedInput
+                            type="number"
+                            inputProps={{ min: 0 }}
+                            value={quantities[product.id] ?? 0}
+                            onChange={(e) => setQty(product.id, parseInt(e.target.value, 10) || 0)}
+                            size="small"
+                            sx={{
+                              width: 44,
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              '& fieldset': { border: 'none' },
+                              '& input': { textAlign: 'center', py: 0.5, px: 0.5 },
+                              '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { display: 'none' },
+                            }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => setQty(product.id, (quantities[product.id] ?? 0) + 1)}
+                            sx={{ borderRadius: 0, px: 0.75, py: 0.5, '&:hover': { bgcolor: 'grey.100' } }}
+                          >
+                            <Plus size={14} />
+                          </IconButton>
                         </Box>
                       </Box>
                     </Box>

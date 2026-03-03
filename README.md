@@ -80,6 +80,20 @@ docker compose up -d postgres
 docker compose up -d
 ```
 
+## 📋 Logs
+
+```bash
+# View logs for a specific service
+docker compose logs backend
+docker compose logs frontend
+
+# Follow logs in real time
+docker compose logs -f backend
+
+# View last N lines
+docker compose logs --tail=100 backend
+```
+
 ## 🔒 Security Features
 
 - **JWT Authentication**: Secure token-based authentication

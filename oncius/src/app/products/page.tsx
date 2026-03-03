@@ -8,7 +8,7 @@ import Layout from '@/components/Layout'
 import SearchInput from '@/components/SearchInput'
 import AddButton from '@/components/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
-import { Share2, Check, Package, X, Pencil, Trash2 } from 'lucide-react'
+import { Share2, Check, Package, X, Pencil, Trash2, ImageIcon } from 'lucide-react'
 
 type Product = {
   id: number
@@ -317,7 +317,7 @@ export default function ProductsPage() {
                   }}>
                     {p.image_url
                       ? <img src={resolveImageURL(p.image_url)} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : p.name.charAt(0).toUpperCase()
+                      : <ImageIcon size={22} color="rgba(255,255,255,0.6)" strokeWidth={1.5} />
                     }
                   </Box>
 
