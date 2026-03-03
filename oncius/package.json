@@ -16,6 +16,7 @@
     "@emotion/styled": "^11.14.1",
     "@mdx-js/react": "^2.3.0",
     "@mui/material": "^7.3.8",
+    "@sentry/nextjs": "^10.41.0",
     "lucide-react": "^0.575.0",
     "next": "^14.0.0",
     "next-intl": "^4.7.0",

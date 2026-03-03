@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { ApiResponse } from '@/types'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
@@ -166,11 +167,17 @@ const apiRequest = async <T>(
       }
 
       const errorData = await response.json().catch(() => ({}))
-      throw new ApiError(
+      const apiError = new ApiError(
         errorData.message || `HTTP error! status: ${response.status}`,
         response.status,
         errorData
       )
+      if (response.status >= 500) {
+        Sentry.captureException(apiError, {
+          extra: { endpoint, status: response.status, errorData },
+        })
+      }
+      throw apiError
     }
 
     const data = await response.json()
