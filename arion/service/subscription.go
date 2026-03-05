@@ -277,11 +277,7 @@ func (s *ssubscription) IsSubscriptionActive(shopID int) (bool, error) {
 }
 
 func callMidtransSnap(orderID string, grossAmount int) (*midtransSnapResponse, error) {
-	cfg := cfg
-	baseURL := "https://app.sandbox.midtrans.com"
-	if !cfg.MidtransSandbox {
-		baseURL = "https://app.midtrans.com"
-	}
+	baseURL := cfg.MidtransBaseURL
 
 	reqBody := midtransSnapRequest{
 		TransactionDetails: midtransTransactionDetails{

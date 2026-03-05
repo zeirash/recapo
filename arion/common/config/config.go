@@ -28,7 +28,7 @@ type Config struct {
 
 	// Midtrans payment gateway
 	MidtransServerKey string `env:"MIDTRANS_SERVER_KEY"`
-	MidtransSandbox   bool   `env:"MIDTRANS_SANDBOX" envDefault:"true"`
+	MidtransBaseURL   string `env:"MIDTRANS_BASE_URL" envDefault:"https://app.sandbox.midtrans.com"`
 
 	// Cloudflare R2 (leave empty to use local filesystem)
 	R2AccountID       string `env:"R2_ACCOUNT_ID"`
