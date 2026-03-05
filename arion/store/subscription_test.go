@@ -22,9 +22,9 @@ func Test_subscriptionStore_GetActivePlans(t *testing.T) {
 		{
 			name: "returns active plans",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "name", "display_name", "description", "price_idr", "max_users", "is_active", "sort_order", "created_at", "updated_at"}).
-					AddRow(1, "starter", "Starter", "Full access for 1 user.", 149000, 1, true, 1, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, name, display_name, description, price_idr, max_users, is_active, sort_order, created_at, updated_at\s+FROM plans\s+WHERE is_active = TRUE`).
+				rows := sqlmock.NewRows([]string{"id", "name", "display_name", "description_en", "description_id", "price_idr", "max_users", "is_active", "created_at", "updated_at"}).
+					AddRow(1, "starter", "Starter", "Full access for 1 user.", "Akses penuh untuk 1 pengguna.", 149000, 1, true, fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at\s+FROM plans\s+WHERE is_active = TRUE`).
 					WillReturnRows(rows)
 			},
 			wantLen: 1,
@@ -33,7 +33,7 @@ func Test_subscriptionStore_GetActivePlans(t *testing.T) {
 		{
 			name: "returns error on database failure",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, name, display_name, description, price_idr, max_users, is_active, sort_order, created_at, updated_at\s+FROM plans`).
+				mock.ExpectQuery(`SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at\s+FROM plans`).
 					WillReturnError(errors.New("database error"))
 			},
 			wantLen: 0,
@@ -226,13 +226,13 @@ func Test_subscriptionStore_GetPlanByID(t *testing.T) {
 			name:   "returns plan by ID",
 			planID: 1,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "name", "display_name", "description", "price_idr", "max_users", "is_active", "sort_order", "created_at", "updated_at"}).
-					AddRow(1, "starter", "Starter", "Full access for 1 user.", 149000, 1, true, 1, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, name, display_name, description, price_idr, max_users, is_active, sort_order, created_at, updated_at\s+FROM plans\s+WHERE id = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "name", "display_name", "description_en", "description_id", "price_idr", "max_users", "is_active", "created_at", "updated_at"}).
+					AddRow(1, "starter", "Starter", "Full access for 1 user.", "Akses penuh untuk 1 pengguna.", 149000, 1, true, fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at\s+FROM plans\s+WHERE id = \$1`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
-			want:    &model.Plan{ID: 1, Name: "starter", DisplayName: "Starter", Description: "Full access for 1 user.", PriceIDR: 149000, MaxUsers: 1, IsActive: true, SortOrder: 1, CreatedAt: fixedTime},
+			want:    &model.Plan{ID: 1, Name: "starter", DisplayName: "Starter", DescriptionEN: "Full access for 1 user.", DescriptionID: "Akses penuh untuk 1 pengguna.", PriceIDR: 149000, MaxUsers: 1, IsActive: true, CreatedAt: fixedTime},
 			wantNil: false,
 			wantErr: false,
 		},
@@ -240,7 +240,7 @@ func Test_subscriptionStore_GetPlanByID(t *testing.T) {
 			name:   "returns nil when plan not found",
 			planID: 999,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, name, display_name, description, price_idr, max_users, is_active, sort_order, created_at, updated_at\s+FROM plans\s+WHERE id = \$1`).
+				mock.ExpectQuery(`SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at\s+FROM plans\s+WHERE id = \$1`).
 					WithArgs(999).
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -252,7 +252,7 @@ func Test_subscriptionStore_GetPlanByID(t *testing.T) {
 			name:   "returns error on database failure",
 			planID: 1,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, name, display_name, description, price_idr, max_users, is_active, sort_order, created_at, updated_at\s+FROM plans\s+WHERE id = \$1`).
+				mock.ExpectQuery(`SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at\s+FROM plans\s+WHERE id = \$1`).
 					WithArgs(1).
 					WillReturnError(errors.New("database error"))
 			},

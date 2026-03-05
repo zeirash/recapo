@@ -71,12 +71,13 @@ func (s *ssubscription) GetActivePlans() ([]response.PlanData, error) {
 	result := make([]response.PlanData, 0, len(plans))
 	for _, p := range plans {
 		result = append(result, response.PlanData{
-			ID:          p.ID,
-			Name:        p.Name,
-			DisplayName: p.DisplayName,
-			Description: p.Description,
-			PriceIDR:    p.PriceIDR,
-			MaxUsers:    p.MaxUsers,
+			ID:            p.ID,
+			Name:          p.Name,
+			DisplayName:   p.DisplayName,
+			DescriptionEN: p.DescriptionEN,
+			DescriptionID: p.DescriptionID,
+			PriceIDR:      p.PriceIDR,
+			MaxUsers:      p.MaxUsers,
 		})
 	}
 	return result, nil
@@ -103,12 +104,13 @@ func (s *ssubscription) GetSubscriptionByShopID(shopID int) (*response.Subscript
 		ID:     sub.ID,
 		Status: sub.Status,
 		Plan: response.PlanData{
-			ID:          plan.ID,
-			Name:        plan.Name,
-			DisplayName: plan.DisplayName,
-			Description: plan.Description,
-			PriceIDR:    plan.PriceIDR,
-			MaxUsers:    plan.MaxUsers,
+			ID:            plan.ID,
+			Name:          plan.Name,
+			DisplayName:   plan.DisplayName,
+			DescriptionEN: plan.DescriptionEN,
+			DescriptionID: plan.DescriptionID,
+			PriceIDR:      plan.PriceIDR,
+			MaxUsers:      plan.MaxUsers,
 		},
 		CurrentPeriodStart: sub.CurrentPeriodStart,
 		CurrentPeriodEnd:   sub.CurrentPeriodEnd,

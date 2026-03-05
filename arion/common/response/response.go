@@ -99,12 +99,13 @@ type (
 	}
 
 	PlanData struct {
-		ID          int    `json:"id"`
-		Name        string `json:"name"`
-		DisplayName string `json:"display_name"`
-		Description string `json:"description"`
-		PriceIDR    int    `json:"price_idr"`
-		MaxUsers    int    `json:"max_users"`
+		ID            int    `json:"id"`
+		Name          string `json:"name"`
+		DisplayName   string `json:"display_name"`
+		DescriptionEN string `json:"description_en"`
+		DescriptionID string `json:"description_id"`
+		PriceIDR      int    `json:"price_idr"`
+		MaxUsers      int    `json:"max_users"`
 	}
 
 	SubscriptionData struct {

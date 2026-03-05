@@ -37,10 +37,10 @@ func NewSubscriptionStoreWithDB(db *sql.DB) SubscriptionStore {
 
 func (s *subscriptionStore) GetActivePlans() ([]model.Plan, error) {
 	q := `
-		SELECT id, name, display_name, description, price_idr, max_users, is_active, sort_order, created_at, updated_at
+		SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at
 		FROM plans
 		WHERE is_active = TRUE
-		ORDER BY sort_order ASC
+		ORDER BY price_idr ASC
 	`
 	rows, err := s.db.Query(q)
 	if err != nil {
@@ -51,7 +51,7 @@ func (s *subscriptionStore) GetActivePlans() ([]model.Plan, error) {
 	var plans []model.Plan
 	for rows.Next() {
 		var p model.Plan
-		if err := rows.Scan(&p.ID, &p.Name, &p.DisplayName, &p.Description, &p.PriceIDR, &p.MaxUsers, &p.IsActive, &p.SortOrder, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.DisplayName, &p.DescriptionEN, &p.DescriptionID, &p.PriceIDR, &p.MaxUsers, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		plans = append(plans, p)
@@ -61,12 +61,12 @@ func (s *subscriptionStore) GetActivePlans() ([]model.Plan, error) {
 
 func (s *subscriptionStore) GetPlanByID(planID int) (*model.Plan, error) {
 	q := `
-		SELECT id, name, display_name, description, price_idr, max_users, is_active, sort_order, created_at, updated_at
+		SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at
 		FROM plans
 		WHERE id = $1
 	`
 	var p model.Plan
-	err := s.db.QueryRow(q, planID).Scan(&p.ID, &p.Name, &p.DisplayName, &p.Description, &p.PriceIDR, &p.MaxUsers, &p.IsActive, &p.SortOrder, &p.CreatedAt, &p.UpdatedAt)
+	err := s.db.QueryRow(q, planID).Scan(&p.ID, &p.Name, &p.DisplayName, &p.DescriptionEN, &p.DescriptionID, &p.PriceIDR, &p.MaxUsers, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

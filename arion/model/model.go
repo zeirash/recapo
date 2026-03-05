@@ -137,16 +137,16 @@ type (
 
 	/******************* Subscription *******************/
 	Plan struct {
-		ID          int          `db:"id"`
-		Name        string       `db:"name"`
-		DisplayName string       `db:"display_name"`
-		Description string       `db:"description"`
-		PriceIDR    int          `db:"price_idr"`
-		MaxUsers    int          `db:"max_users"`
-		IsActive    bool         `db:"is_active"`
-		SortOrder   int          `db:"sort_order"`
-		CreatedAt   time.Time    `db:"created_at"`
-		UpdatedAt   sql.NullTime `db:"updated_at"`
+		ID            int          `db:"id"`
+		Name          string       `db:"name"`
+		DisplayName   string       `db:"display_name"`
+		DescriptionEN string       `db:"description_en"`
+		DescriptionID string       `db:"description_id"`
+		PriceIDR      int          `db:"price_idr"`
+		MaxUsers      int          `db:"max_users"`
+		IsActive      bool         `db:"is_active"`
+		CreatedAt     time.Time    `db:"created_at"`
+		UpdatedAt     sql.NullTime `db:"updated_at"`
 	}
 
 	Subscription struct {
