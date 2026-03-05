@@ -72,6 +72,12 @@ const clearTokensAndRedirect = (): void => {
   }
 }
 
+const redirectToSubscription = (): void => {
+  if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/subscription')) {
+    window.location.href = '/subscription'
+  }
+}
+
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false
 let refreshPromise: Promise<boolean> | null = null
@@ -164,6 +170,11 @@ const apiRequest = async <T>(
         // Refresh failed, clear tokens and redirect
         clearTokensAndRedirect()
         throw new ApiError('Unauthorized', 401)
+      }
+
+      if (response.status === 402 && !skipAuth) {
+        redirectToSubscription()
+        throw new ApiError('Subscription required', 402)
       }
 
       const errorData = await response.json().catch(() => ({}))
@@ -462,6 +473,24 @@ export const api = {
   // Purchase list
   getPurchaseListProducts: () => {
     return apiRequest<ApiResponse<any[]>>('/products/purchase_list')
+  },
+
+  // Plans (public)
+  getPlans: () => {
+    return apiRequest<ApiResponse<any[]>>('/plans', {}, true)
+  },
+
+  // Subscription
+  getSubscription: () => {
+    return apiRequest<ApiResponse<any>>('/subscription')
+  },
+
+  checkout: (planId: number) => {
+    return apiRequest<ApiResponse<any>>('/subscription/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan_id: planId }),
+    })
   },
 
   // Health check

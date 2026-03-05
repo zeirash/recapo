@@ -1,6 +1,17 @@
 import React from 'react'
 import { UserRole } from '@/constants/roles'
 
+// Subscription / Plan Types
+export interface Plan {
+  id: number
+  name: string
+  display_name: string
+  description_en: string
+  description_id: string
+  price_idr: number
+  max_users: number
+}
+
 // API Response Types
 export interface ApiResponse<T = any> {
   success: boolean

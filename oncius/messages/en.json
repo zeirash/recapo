@@ -59,12 +59,13 @@
     "pricingTitle": "Simple, transparent pricing",
     "pricingName": "Standard",
     "pricingPrice": "$4",
-    "pricingPeriod": "per user/month",
+    "pricingPeriod": "/month",
     "pricingDescription": "Everything you need to manage your orders",
     "pricingFeature1": "Order management",
     "pricingFeature2": "Product catalog",
     "pricingFeature3": "Customer database",
     "pricingFeature4": "Dashboard & analytics",
+    "pricingMaxUsers": "Up to {count} users",
     "pricingCta": "Get Started",
     "ctaTitle": "Ready to simplify your orders?",
     "ctaSignedIn": "You're already signed in. Head to your dashboard to manage your orders.",
@@ -265,5 +266,15 @@
     "note": "Note: Quantities shown are based on order items from orders with status 'Created' or 'In Progress'.",
     "fetchFailed": "Failed to load purchase list",
     "empty": "No products need to be purchased at this time"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "subtitle": "Manage your plan and billing.",
+    "currentPlan": "Current Plan",
+    "trialEnds": "Trial ends on {date}",
+    "renewsOn": "Renews on {date}",
+    "availablePlans": "Available Plans",
+    "currentBadge": "Current Plan",
+    "choosePlan": "Choose Plan"
   }
 }

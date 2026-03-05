@@ -59,12 +59,13 @@
     "pricingTitle": "Harga sederhana dan transparan",
     "pricingName": "Standard",
     "pricingPrice": "$4",
-    "pricingPeriod": "per pengguna/bulan",
+    "pricingPeriod": "/bulan",
     "pricingDescription": "Semua yang Anda butuhkan untuk mengelola pesanan",
     "pricingFeature1": "Manajemen pesanan",
     "pricingFeature2": "Katalog produk",
     "pricingFeature3": "Basis data pelanggan",
     "pricingFeature4": "Dasbor & analitik",
+    "pricingMaxUsers": "Hingga {count} pengguna",
     "pricingCta": "Mulai",
     "ctaTitle": "Siap menyederhanakan pesanan Anda?",
     "ctaSignedIn": "Anda sudah masuk. Buka dasbor untuk mengelola pesanan Anda.",
@@ -265,5 +266,15 @@
     "note": "Catatan: Jumlah yang ditampilkan berdasarkan item pesanan dari pesanan dengan status 'Dibuat' atau 'Diproses'.",
     "fetchFailed": "Gagal memuat daftar pembelian",
     "empty": "Tidak ada produk yang perlu dibeli saat ini"
+  },
+  "subscription": {
+    "title": "Langganan",
+    "subtitle": "Kelola paket dan tagihan Anda.",
+    "currentPlan": "Paket Saat Ini",
+    "trialEnds": "Masa percobaan berakhir pada {date}",
+    "renewsOn": "Diperbarui pada {date}",
+    "availablePlans": "Paket Tersedia",
+    "currentBadge": "Paket Saat Ini",
+    "choosePlan": "Pilih Paket"
   }
 }

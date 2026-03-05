@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import Link from 'next/link'
 import { Box, Button } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
@@ -7,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
 import RecapoLogoText from '@/components/ui/RecapoLogoText'
 
-export default function Header() {
+export default function Header({ actions }: { actions?: React.ReactNode }) {
   const t = useTranslations()
   const locale = useLocale()
   const changeLocale = useChangeLocale()
@@ -74,7 +75,7 @@ export default function Header() {
               ID
             </Box>
           </Box>
-          {isAuthenticated ? (
+          {actions ?? (isAuthenticated ? (
             <Link href="/dashboard">
               <Button variant="contained" disableElevation sx={{ py: '8px' }}>
                 {t('landing.goToDashboard')}
@@ -93,7 +94,7 @@ export default function Header() {
                 </Button>
               </Link>
             </>
-          )}
+          ))}
         </Box>
       </Box>
     </Box>

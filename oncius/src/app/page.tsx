@@ -1,11 +1,14 @@
 "use client"
 
 import Link from 'next/link'
-import { Box, Typography, Button, Paper } from '@mui/material'
-import { useTranslations } from 'next-intl'
+import { Box, Typography, Button, Paper, Skeleton } from '@mui/material'
+import { useTranslations, useLocale } from 'next-intl'
+import { useQuery } from 'react-query'
 import { useAuth } from '@/hooks/useAuth'
 import Header from '@/components/layout/Header'
 import { Package, Tag, Users, BarChart2, Check, type LucideIcon } from 'lucide-react'
+import { api } from '@/utils/api'
+import type { Plan } from '@/types'
 
 const BLOB_PATH =
   'M76.5 42.2c-12.3 8.5-28.2 12.8-38.5 24.2-10.3 11.4-15 29.8-12.8 46.2 2.2 16.4 12.6 30.8 25.5 42.2 12.9 11.4 28.3 19.8 42.2 25.2 13.9 5.4 26.3 7.8 38.5 4.2 12.2-3.6 24.2-12.6 35.5-22 11.3-9.4 21.9-19.4 30.5-30.4 8.6-11 15.2-23 18.5-35.5 3.3-12.5 3.3-25.5-1.5-37.5-4.8-12-14.4-23-26.4-31-12-8-26.4-13-40.4-14.5-14-1.5-27.6 1-39.6 6.5z'
@@ -89,17 +92,18 @@ const FEATURES: { titleKey: string; descKey: string; icon: LucideIcon }[] = [
   { titleKey: 'landing.featureDashboardReports', descKey: 'landing.featureDashboardReportsDesc', icon: BarChart2 },
 ]
 
+const formatPriceIDR = (price: number) =>
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price)
+
 export default function HomePage() {
   const t = useTranslations()
-  const { isAuthenticated, isLoadingUser } = useAuth()
+  const locale = useLocale()
+  const { isAuthenticated } = useAuth()
 
-  if (isLoadingUser) {
-    return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Box>{t('common.loading')}</Box>
-      </Box>
-    )
-  }
+  const { data: plansRes, isLoading: plansLoading } = useQuery('plans', () => api.getPlans(), {
+    staleTime: 5 * 60 * 1000,
+  })
+  const plans: Plan[] = plansRes?.data ?? []
 
   return (
     <Box
@@ -293,63 +297,81 @@ export default function HomePage() {
           >
             {t('landing.pricingTitle')}
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Paper
-              sx={{
-                p: '32px',
-                borderRadius: '12px',
-                border: '2px solid',
-                borderColor: 'grey.200',
-                bgcolor: 'white',
-                maxWidth: 360,
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Typography component="h4" sx={{ fontSize: '18px', mb: '4px', color: 'grey.800' }}>
-                {t('landing.pricingName')}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'baseline', mb: '8px' }}>
-                <Box sx={{ fontSize: '24px', fontWeight: 700, color: 'grey.800' }}>{t('landing.pricingPrice')}</Box>
-                <Box sx={{ fontSize: '14px', color: 'grey.500', ml: '4px' }}>{t('landing.pricingPeriod')}</Box>
-              </Box>
-              <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
-                {t('landing.pricingDescription')}
-              </Box>
-              <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, mb: '24px', flex: 1 }}>
-                {[
-                  t('landing.pricingFeature1'),
-                  t('landing.pricingFeature2'),
-                  t('landing.pricingFeature3'),
-                  t('landing.pricingFeature4'),
-                ].map((feature) => (
-                  <Box
-                    key={feature}
-                    component="li"
+          <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px' }}>
+            {plansLoading
+              ? Array.from({ length: 2 }).map((_, i) => (
+                  <Skeleton key={i} variant="rectangular" width={320} height={380} sx={{ borderRadius: '12px' }} />
+                ))
+              : plans.map((plan) => (
+                  <Paper
+                    key={plan.id}
                     sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      py: '8px',
-                      borderBottom: '1px solid',
+                      p: '32px',
+                      borderRadius: '12px',
+                      border: '2px solid',
                       borderColor: 'grey.200',
-                      fontSize: '14px',
-                      color: 'grey.800',
+                      bgcolor: 'white',
+                      width: 320,
+                      display: 'flex',
+                      flexDirection: 'column',
                     }}
                   >
-                    <Check size={16} color="green" />
-                    {feature}
-                  </Box>
+                    <Typography component="h4" sx={{ fontSize: '18px', mb: '4px', color: 'grey.800' }}>
+                      {plan.display_name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'baseline', mb: '8px' }}>
+                      <Box sx={{ fontSize: '24px', fontWeight: 700, color: 'grey.800' }}>
+                        {formatPriceIDR(plan.price_idr)}
+                      </Box>
+                      <Box sx={{ fontSize: '14px', color: 'grey.500', ml: '4px' }}>
+                        {t('landing.pricingPeriod')}
+                      </Box>
+                    </Box>
+                    <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
+                      {locale === 'id' ? plan.description_id : plan.description_en}
+                    </Box>
+                    <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, mb: '24px', flex: 1 }}>
+                      {[
+                        t('landing.pricingFeature1'),
+                        t('landing.pricingFeature2'),
+                        t('landing.pricingFeature3'),
+                        t('landing.pricingFeature4'),
+                      ].map((feature) => (
+                        <Box
+                          key={feature}
+                          component="li"
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            py: '8px',
+                            borderBottom: '1px solid',
+                            borderColor: 'grey.200',
+                            fontSize: '14px',
+                            color: 'grey.800',
+                          }}
+                        >
+                          <Check size={16} color="green" />
+                          {feature}
+                        </Box>
+                      ))}
+                      <Box
+                        component="li"
+                        sx={{ display: 'flex', alignItems: 'center', gap: '8px', py: '8px', fontSize: '14px', color: 'grey.800' }}
+                      >
+                        <Users size={16} />
+                        {t('landing.pricingMaxUsers', { count: plan.max_users })}
+                      </Box>
+                    </Box>
+                    <Box sx={{ mt: 'auto' }}>
+                      <Link href="/register" style={{ display: 'block' }}>
+                        <Button variant="contained" disableElevation sx={{ width: '100%', py: '16px' }}>
+                          {t('landing.pricingCta')}
+                        </Button>
+                      </Link>
+                    </Box>
+                  </Paper>
                 ))}
-              </Box>
-              <Box sx={{ mt: 'auto' }}>
-                <Link href="/register" style={{ display: 'block' }}>
-                  <Button variant="contained" disableElevation sx={{ width: '100%', py: '16px' }}>
-                    {t('landing.pricingCta')}
-                  </Button>
-                </Link>
-              </Box>
-            </Paper>
           </Box>
         </Box>
       </Box>
