@@ -31,7 +31,8 @@
     "register": "Daftar",
     "logout": "Keluar",
     "profile": "Profil",
-    "welcome": "Selamat datang, {name}"
+    "welcome": "Selamat datang, {name}",
+    "subscription": "Tagihan"
   },
   "home": {
     "title": "Recapo",

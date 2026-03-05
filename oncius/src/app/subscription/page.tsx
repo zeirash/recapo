@@ -5,10 +5,9 @@ import { useQuery, useMutation } from 'react-query'
 import { Box, Typography, Button, Paper, Chip, CircularProgress } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Users, Crown } from 'lucide-react'
-import Header from '@/components/layout/Header'
+import Layout from '@/components/layout'
 import { api } from '@/utils/api'
-import { useAuth } from '@/hooks/useAuth'
-import type { Plan } from '@/types'
+import type { Plan, Subscription } from '@/types'
 
 const formatPriceIDR = (price: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price)
@@ -19,7 +18,6 @@ const formatDate = (dateStr: string) =>
 export default function SubscriptionPage() {
   const t = useTranslations()
   const locale = useLocale()
-  const { logout } = useAuth()
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   const { data: plansRes, isLoading: plansLoading } = useQuery('plans', () => api.getPlans(), {
@@ -28,7 +26,7 @@ export default function SubscriptionPage() {
   const plans: Plan[] = plansRes?.data ?? []
 
   const { data: subRes, isLoading: subLoading } = useQuery('subscription', () => api.getSubscription())
-  const subscription = subRes?.data ?? null
+  const subscription: Subscription | null = subRes?.data ?? null
 
   const checkoutMutation = useMutation(
     (planId: number) => api.checkout(planId),
@@ -47,12 +45,7 @@ export default function SubscriptionPage() {
   const isLoading = plansLoading || subLoading
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <Header actions={
-        <Button variant="outlined" sx={{ py: '8px' }} onClick={logout}>
-          {t('nav.logout')}
-        </Button>
-      } />
+    <Layout>
       <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: '16px', sm: '24px' }, py: '32px' }}>
         <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
           {t('subscription.title')}
@@ -116,7 +109,8 @@ export default function SubscriptionPage() {
         ) : (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
             {plans.map((plan) => {
-              const isCurrent = subscription?.plan?.id === plan.id
+              const isOnThisPlan = subscription?.plan?.id === plan.id
+              const isCurrent = isOnThisPlan && subscription?.status === 'active'
               return (
                 <Paper
                   key={plan.id}
@@ -131,7 +125,7 @@ export default function SubscriptionPage() {
                     flexDirection: 'column',
                   }}
                 >
-                  {isCurrent && (
+                  {isOnThisPlan && (
                     <Chip label={t('subscription.currentBadge')} size="small" color="primary" sx={{ alignSelf: 'flex-start', mb: '12px' }} />
                   )}
                   <Typography sx={{ fontSize: '18px', fontWeight: 700, mb: '4px', color: 'grey.800' }}>
@@ -182,6 +176,6 @@ export default function SubscriptionPage() {
           </Box>
         )}
       </Box>
-    </Box>
+    </Layout>
   )
 }

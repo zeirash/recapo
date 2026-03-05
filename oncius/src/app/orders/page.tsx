@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, NativeSelect, OutlinedInput, Paper, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, NativeSelect, OutlinedInput, Paper, Typography } from '@mui/material'
 import Layout from '@/components/layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
@@ -682,7 +682,7 @@ export default function OrdersPage() {
                       display: 'flex',
                     }}
                   >
-                    <ClipboardList size={48} opacity={0.4} />
+                    <ClipboardList size={40} opacity={0.4} />
                     <Box sx={{ fontSize: '16px' }}>{to('selectOrder')}</Box>
                     <Box sx={{ fontSize: '14px' }}>{to('chooseFromList')}</Box>
                   </Box>

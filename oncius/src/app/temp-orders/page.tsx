@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Container, Paper, Typography } from '@mui/material'
 import Layout from '@/components/layout'
+import { ClipboardList } from 'lucide-react'
 import SearchInput from '@/components/ui/SearchInput'
 import { api } from '@/utils/api'
 
@@ -632,7 +633,7 @@ export default function TempOrdersPage() {
                       display: 'flex',
                     }}
                   >
-                    <Box sx={{ fontSize: '30px', opacity: 0.4 }}>📋</Box>
+                    <ClipboardList size={40} opacity={0.4} />
                     <Box sx={{ fontSize: '16px' }}>{tTemp('selectOrder')}</Box>
                     <Box sx={{ fontSize: '14px' }}>{to('chooseFromList')}</Box>
                   </Box>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
-import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, type LucideIcon } from 'lucide-react'
 import RecapoLogo from '@/components/ui/RecapoLogo'
 
 interface SideMenuProps {
@@ -24,11 +24,12 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
 
   const menuItems: { id: string; label: string; icon: LucideIcon; path: string }[] = [
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, path: '/dashboard' },
-    { id: 'products', label: t('products'), icon: ShoppingBag, path: '/products' },
-    { id: 'orders', label: t('orders'), icon: Package, path: '/orders' },
-    { id: 'temp_orders', label: t('tempOrders'), icon: ClipboardList, path: '/temp-orders' },
-    { id: 'purchase', label: t('purchase'), icon: ShoppingCart, path: '/purchase' },
+    { id: 'products', label: t('products'), icon: Package, path: '/products' },
+    { id: 'orders', label: t('orders'), icon: ClipboardList, path: '/orders' },
+    { id: 'temp_orders', label: t('tempOrders'), icon: ShoppingCart, path: '/temp-orders' },
+    { id: 'purchase', label: t('purchase'), icon: ShoppingBag, path: '/purchase' },
     { id: 'customers', label: t('customers'), icon: Users, path: '/customers' },
+    { id: 'subscription', label: t('subscription'), icon: CreditCard, path: '/subscription' },
   ]
 
   const handleMenuClick = (item: typeof menuItems[0]) => {

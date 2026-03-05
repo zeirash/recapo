@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
-import { ApiResponse } from '@/types'
+import { ApiResponse, Plan, Subscription, CheckoutData } from '@/types'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
 
@@ -477,18 +477,17 @@ export const api = {
 
   // Plans (public)
   getPlans: () => {
-    return apiRequest<ApiResponse<any[]>>('/plans', {}, true)
+    return apiRequest<ApiResponse<Plan[]>>('/plans', {}, true)
   },
 
   // Subscription
   getSubscription: () => {
-    return apiRequest<ApiResponse<any>>('/subscription')
+    return apiRequest<ApiResponse<Subscription>>('/subscription')
   },
 
   checkout: (planId: number) => {
-    return apiRequest<ApiResponse<any>>('/subscription/checkout', {
+    return apiRequest<ApiResponse<CheckoutData>>('/subscription/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ plan_id: planId }),
     })
   },

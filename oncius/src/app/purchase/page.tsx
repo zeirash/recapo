@@ -29,7 +29,7 @@ export default function PurchasePage() {
   return (
     <Layout>
       <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
-        <Typography component="h1" sx={{ mb: '8px', fontSize: '18px' }}>
+        <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
           {tPurchase('title')}
         </Typography>
         <Box sx={{ color: 'grey.500', fontSize: '14px', mb: '24px', display: 'block' }}>

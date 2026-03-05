@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/layout'
 import { api } from '@/utils/api'
-import { Package, DollarSign, Users, ShoppingBag, type LucideIcon } from 'lucide-react'
+import { Package, DollarSign, Users, ClipboardList, type LucideIcon } from 'lucide-react'
 
 type Order = {
   id: number
@@ -149,7 +149,7 @@ const DashboardPage = () => {
   return (
     <Layout>
       <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
-        <Typography component="h1" sx={{ mb: '24px', fontSize: '18px' }}>
+        <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
           {t('nav.dashboard')}
         </Typography>
 
@@ -166,10 +166,10 @@ const DashboardPage = () => {
                 flexWrap: 'wrap',
               }}
             >
-              <StatCard label={t('dashboard.totalOrdersThisMonth')} value={stats.totalOrders} icon={Package} />
+              <StatCard label={t('dashboard.totalOrdersThisMonth')} value={stats.totalOrders} icon={ClipboardList} />
               <StatCard label={t('dashboard.revenueThisMonth')} value={formatPrice(stats.revenue)} icon={DollarSign} />
               <StatCard label={t('dashboard.customers')} value={stats.customers} icon={Users} />
-              <StatCard label={t('dashboard.products')} value={stats.products} icon={ShoppingBag} />
+              <StatCard label={t('dashboard.products')} value={stats.products} icon={Package} />
             </Box>
 
             {/* Quick links */}

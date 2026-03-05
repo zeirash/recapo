@@ -23,6 +23,7 @@ const Layout = ({ children }: LayoutProps) => {
       '/temp-orders': 'temp_orders',
       '/purchase': 'purchase',
       '/customers': 'customers',
+      '/subscription': 'subscription',
     }
 
     const menuId = pathToMenuMap[pathname]

@@ -31,7 +31,8 @@
     "register": "Register",
     "logout": "Logout",
     "profile": "Profile",
-    "welcome": "Welcome, {name}"
+    "welcome": "Welcome, {name}",
+    "subscription": "Billing"
   },
   "home": {
     "title": "Recapo",

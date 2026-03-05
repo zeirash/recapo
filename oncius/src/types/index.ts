@@ -12,6 +12,21 @@ export interface Plan {
   max_users: number
 }
 
+export interface Subscription {
+  id: number
+  status: 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired'
+  plan: Plan
+  trial_ends_at?: string
+  current_period_start: string
+  current_period_end: string
+}
+
+export interface CheckoutData {
+  order_id: string
+  redirect_url: string
+  snap_token: string
+}
+
 // API Response Types
 export interface ApiResponse<T = any> {
   success: boolean
