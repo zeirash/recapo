@@ -6,6 +6,7 @@ import (
 
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
+	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
 
@@ -45,6 +46,10 @@ func NewUserService() UserService {
 
 	if shopStore == nil {
 		shopStore = store.NewShopStore()
+	}
+
+	if subscriptionService == nil {
+		subscriptionService = NewSubscriptionService()
 	}
 
 	return &uservice{}
@@ -153,6 +158,10 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 
 	if err := tx.Commit(); err != nil {
 		return response.TokenResponse{}, err
+	}
+
+	if trialErr := subscriptionService.CreateTrialSubscription(shop.ID); trialErr != nil {
+		logger.WithError(trialErr).Error("failed to create trial subscription")
 	}
 
 	accessToken, err := tokenStore.CreateAccessToken(newUser, cfg.SecretKey, 2)

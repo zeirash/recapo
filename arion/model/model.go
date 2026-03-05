@@ -134,4 +134,47 @@ type (
 		Qty         int          `db:"qty"`
 		CreatedAt   time.Time    `db:"created_at"`
 	}
+
+	/******************* Subscription *******************/
+	Plan struct {
+		ID          int          `db:"id"`
+		Name        string       `db:"name"`
+		DisplayName string       `db:"display_name"`
+		Description string       `db:"description"`
+		PriceIDR    int          `db:"price_idr"`
+		MaxUsers    int          `db:"max_users"`
+		IsActive    bool         `db:"is_active"`
+		SortOrder   int          `db:"sort_order"`
+		CreatedAt   time.Time    `db:"created_at"`
+		UpdatedAt   sql.NullTime `db:"updated_at"`
+	}
+
+	Subscription struct {
+		ID                 int          `db:"id"`
+		ShopID             int          `db:"shop_id"`
+		PlanID             int          `db:"plan_id"`
+		Status             string       `db:"status"`
+		TrialEndsAt        sql.NullTime `db:"trial_ends_at"`
+		CurrentPeriodStart time.Time    `db:"current_period_start"`
+		CurrentPeriodEnd   time.Time    `db:"current_period_end"`
+		CancelledAt        sql.NullTime `db:"cancelled_at"`
+		CreatedAt          time.Time    `db:"created_at"`
+		UpdatedAt          sql.NullTime `db:"updated_at"`
+	}
+
+	Payment struct {
+		ID               int          `db:"id"`
+		ShopID           int          `db:"shop_id"`
+		SubscriptionID   int          `db:"subscription_id"`
+		PlanID           int          `db:"plan_id"`
+		MidtransOrderID  string       `db:"midtrans_order_id"`
+		MidtransTxnID    string       `db:"midtrans_txn_id"`
+		AmountIDR        int          `db:"amount_idr"`
+		Status           string       `db:"status"`
+		SnapToken        string       `db:"snap_token"`
+		RedirectURL      string       `db:"redirect_url"`
+		PaidAt           sql.NullTime `db:"paid_at"`
+		CreatedAt        time.Time    `db:"created_at"`
+		UpdatedAt        sql.NullTime `db:"updated_at"`
+	}
 )

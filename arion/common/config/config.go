@@ -26,6 +26,10 @@ type Config struct {
 
 	UploadDir string `env:"UPLOAD_DIR" envDefault:"./uploads"`
 
+	// Midtrans payment gateway
+	MidtransServerKey string `env:"MIDTRANS_SERVER_KEY"`
+	MidtransSandbox   bool   `env:"MIDTRANS_SANDBOX" envDefault:"true"`
+
 	// Cloudflare R2 (leave empty to use local filesystem)
 	R2AccountID       string `env:"R2_ACCOUNT_ID"`
 	R2AccessKeyID     string `env:"R2_ACCESS_KEY_ID"`

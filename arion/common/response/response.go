@@ -97,4 +97,28 @@ type (
 		Price       int    `json:"price"`
 		Qty         int    `json:"qty"`
 	}
+
+	PlanData struct {
+		ID          int    `json:"id"`
+		Name        string `json:"name"`
+		DisplayName string `json:"display_name"`
+		Description string `json:"description"`
+		PriceIDR    int    `json:"price_idr"`
+		MaxUsers    int    `json:"max_users"`
+	}
+
+	SubscriptionData struct {
+		ID                 int        `json:"id"`
+		Status             string     `json:"status"`
+		Plan               PlanData   `json:"plan"`
+		TrialEndsAt        *time.Time `json:"trial_ends_at,omitempty"`
+		CurrentPeriodStart time.Time  `json:"current_period_start"`
+		CurrentPeriodEnd   time.Time  `json:"current_period_end"`
+	}
+
+	CheckoutData struct {
+		OrderID     string `json:"order_id"`
+		RedirectURL string `json:"redirect_url"`
+		SnapToken   string `json:"snap_token"`
+	}
 )

@@ -9,13 +9,16 @@ import (
 var (
 	cfg config.Config
 
-	userStore      store.UserStore
-	tokenStore     store.TokenStore
-	shopStore      store.ShopStore
-	customerStore  store.CustomerStore
-	productStore   store.ProductStore
-	orderStore     store.OrderStore
-	orderItemStore store.OrderItemStore
+	userStore         store.UserStore
+	tokenStore        store.TokenStore
+	shopStore         store.ShopStore
+	customerStore     store.CustomerStore
+	productStore      store.ProductStore
+	orderStore        store.OrderStore
+	orderItemStore    store.OrderItemStore
+	subscriptionStore store.SubscriptionStore
+
+	subscriptionService SubscriptionService
 
 	// dbGetter is a function that returns a database connection.
 	// It can be overridden in tests to return a mock.

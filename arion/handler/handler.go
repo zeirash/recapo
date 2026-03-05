@@ -29,11 +29,12 @@ type ErrorApiResponse struct {
 }
 
 var (
-	userService     service.UserService
-	customerService service.CustomerService
-	productService  service.ProductService
-	orderService    service.OrderService
-	shopService     service.ShopService
+	userService         service.UserService
+	customerService     service.CustomerService
+	productService      service.ProductService
+	orderService        service.OrderService
+	shopService         service.ShopService
+	subscriptionService service.SubscriptionService
 )
 
 func Init() {
@@ -56,6 +57,20 @@ func Init() {
 	if shopService == nil {
 		shopService = service.NewShopService()
 	}
+
+	if subscriptionService == nil {
+		subscriptionService = service.NewSubscriptionService()
+	}
+}
+
+// SetSubscriptionService sets the subscription service (for testing)
+func SetSubscriptionService(s service.SubscriptionService) {
+	subscriptionService = s
+}
+
+// GetSubscriptionService returns the current subscription service (for testing).
+func GetSubscriptionService() service.SubscriptionService {
+	return subscriptionService
 }
 
 // SetProductService sets the product service (for testing)

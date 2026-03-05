@@ -18,6 +18,24 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// due to circular dependency, we need to create a noop subscription service
+type noopSubscriptionService struct{}
+
+type errTrialSubscriptionService struct{ noopSubscriptionService }
+
+func (e *errTrialSubscriptionService) CreateTrialSubscription(int) error {
+	return errors.New("trial error")
+}
+
+func (n *noopSubscriptionService) GetActivePlans() ([]response.PlanData, error) { return nil, nil }
+func (n *noopSubscriptionService) GetSubscriptionByShopID(int) (*response.SubscriptionData, error) {
+	return nil, nil
+}
+func (n *noopSubscriptionService) CreateTrialSubscription(int) error             { return nil }
+func (n *noopSubscriptionService) Checkout(int, int) (*response.CheckoutData, error) { return nil, nil }
+func (n *noopSubscriptionService) HandleMidtransWebhook(MidtransWebhookPayload) error { return nil }
+func (n *noopSubscriptionService) IsSubscriptionActive(int) (bool, error)        { return false, nil }
+
 func Test_uservice_UserLogin(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
@@ -748,6 +766,56 @@ func Test_uservice_UserRegister(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "register succeeds even when CreateTrialSubscription returns error",
+			input: input{
+				name:     "John Doe",
+				email:    "john@example.com",
+				password: "password123",
+			},
+			mockSetup: func(ctrl *gomock.Controller) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+
+				mockUser := mock_store.NewMockUserStore(ctrl)
+				mockUser.EXPECT().
+					GetUserByEmail("john@example.com").
+					Return(nil, nil)
+				mockUser.EXPECT().
+					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
+					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
+				userStore = mockUser
+
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().
+					Begin().
+					Return(mockTx, nil)
+				dbGetter = func() database.DB { return mockDB }
+
+				mockShop := mock_store.NewMockShopStore(ctrl)
+				mockShop.EXPECT().
+					CreateShop(mockTx, "John Doe's Shop").
+					Return(&model.Shop{ID: 1, Name: "John Doe's Shop", CreatedAt: fixedTime}, nil)
+				shopStore = mockShop
+
+				mockToken := mock_store.NewMockTokenStore(ctrl)
+				mockToken.EXPECT().
+					CreateAccessToken(gomock.Any(), "testsecret", 2).
+					Return("access-token", nil)
+				mockToken.EXPECT().
+					CreateRefreshToken(gomock.Any(), "testsecret", 168).
+					Return("refresh-token", nil)
+				tokenStore = mockToken
+
+				subscriptionService = &errTrialSubscriptionService{}
+			},
+			wantResult: response.TokenResponse{
+				AccessToken:  "access-token",
+				RefreshToken: "refresh-token",
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -757,10 +825,13 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 			oldUserStore, oldShopStore, oldTokenStore := userStore, shopStore, tokenStore
 			oldDBGetter := dbGetter
+			oldSubscriptionService := subscriptionService
 			defer func() {
 				userStore, shopStore, tokenStore = oldUserStore, oldShopStore, oldTokenStore
 				dbGetter = oldDBGetter
+				subscriptionService = oldSubscriptionService
 			}()
+			subscriptionService = &noopSubscriptionService{}
 
 			tt.mockSetup(ctrl)
 			cfg = config.Config{SecretKey: "testsecret"}

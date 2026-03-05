@@ -64,6 +64,7 @@ func NewRouter() *mux.Router {
 
 	// Routes API No Auth
 	r.HandleFunc("/health", handler.HealthHandler)
+	r.HandleFunc("/plans", handler.GetPlansHandler).Methods("GET")
 	r.HandleFunc("/public/shops/{share_token}/products", handler.GetShopProductsHandler).Methods("GET")
 	r.HandleFunc("/public/shops/{share_token}/order", handler.CreateShopTempOrderHandler).Methods("POST")
 
@@ -71,55 +72,57 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/register", handler.RegisterHandler).Methods("POST")
 	r.HandleFunc("/refresh", handler.RefreshHandler).Methods("POST")
 
-	r.Handle("/test/{id}", middleware.ChainMiddleware()(http.HandlerFunc(handler.HealthHandler)))
-	// r.Handle("/test/{id}", middleware.MiddlewareWrapper(http.HandlerFunc(handler.HealthHandler), middleware.Authentication()))
+	// Subscription
+	r.HandleFunc("/webhook/midtrans", handler.MidtransWebhookHandler).Methods("POST")
+	r.Handle("/subscription", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetSubscriptionHandler))).Methods("GET")
+	r.Handle("/subscription/checkout", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CheckoutHandler))).Methods("POST")
 
-	// For User
-	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateUserHandler))).Methods("PATCH")
-	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
-	r.Handle("/users", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetUsersHandler))).Methods("GET")
+	// User
+	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateUserHandler))).Methods("PATCH")
+	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
+	r.Handle("/users", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetUsersHandler))).Methods("GET")
 
-	// For Customer
-	r.Handle("/customer", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateCustomerHandler))).Methods("POST")
-	r.Handle("/customers", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetCustomersHandler))).Methods("GET")
-	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateCustomerHandler))).Methods("PATCH")
-	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteCustomerHandler))).Methods("DELETE")
-	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetCustomerHandler))).Methods("GET")
-	r.Handle("/customers/check_active_order", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CustomerCheckActiveOrderHandler))).Methods("POST")
+	// Customer
+	r.Handle("/customer", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateCustomerHandler))).Methods("POST")
+	r.Handle("/customers", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetCustomersHandler))).Methods("GET")
+	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateCustomerHandler))).Methods("PATCH")
+	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteCustomerHandler))).Methods("DELETE")
+	r.Handle("/customers/{customer_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetCustomerHandler))).Methods("GET")
+	r.Handle("/customers/check_active_order", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CustomerCheckActiveOrderHandler))).Methods("POST")
 
-	// For Shop
-	r.Handle("/shop/share_token", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetShopShareTokenHandler))).Methods("GET")
+	// Shop
+	r.Handle("/shop/share_token", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetShopShareTokenHandler))).Methods("GET")
 
 	// For Product (register literal paths before /products/{product_id} so they match first)
-	r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateProductHandler))).Methods("POST")
-	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")
-	r.Handle("/products/purchase_list", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.PurchaseListProductHandler))).Methods("GET")
-	r.Handle("/products/image", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UploadProductImageHandler))).Methods("POST")
-	r.Handle("/products/image", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteProductImageHandler))).Methods("DELETE")
-	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateProductHandler))).Methods("PATCH")
-	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteProductHandler))).Methods("DELETE")
-	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetProductHandler))).Methods("GET")
+	r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateProductHandler))).Methods("POST")
+	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")
+	r.Handle("/products/purchase_list", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.PurchaseListProductHandler))).Methods("GET")
+	r.Handle("/products/image", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UploadProductImageHandler))).Methods("POST")
+	r.Handle("/products/image", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteProductImageHandler))).Methods("DELETE")
+	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateProductHandler))).Methods("PATCH")
+	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteProductHandler))).Methods("DELETE")
+	r.Handle("/products/{product_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetProductHandler))).Methods("GET")
 
-	// For Order
-	r.Handle("/order", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateOrderHandler))).Methods("POST")
-	r.Handle("/orders", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrdersHandler))).Methods("GET")
-	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateOrderHandler))).Methods("PATCH")
-	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteOrderHandler))).Methods("DELETE")
-	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderHandler))).Methods("GET")
-	r.Handle("/orders/{order_id}/export", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.ExportOrderHandler))).Methods("POST")
-	r.Handle("/orders/{order_id}/item", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateOrderItemHandler))).Methods("POST")
-	r.Handle("/orders/{order_id}/items", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderItemsHandler))).Methods("GET")
-	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.UpdateOrderItemHandler))).Methods("PATCH")
-	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.DeleteOrderItemHandler))).Methods("DELETE")
-	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetOrderItemHandler))).Methods("GET")
+	// Order
+	r.Handle("/order", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateOrderHandler))).Methods("POST")
+	r.Handle("/orders", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrdersHandler))).Methods("GET")
+	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateOrderHandler))).Methods("PATCH")
+	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteOrderHandler))).Methods("DELETE")
+	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrderHandler))).Methods("GET")
+	r.Handle("/orders/{order_id}/export", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.ExportOrderHandler))).Methods("POST")
+	r.Handle("/orders/{order_id}/item", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateOrderItemHandler))).Methods("POST")
+	r.Handle("/orders/{order_id}/items", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrderItemsHandler))).Methods("GET")
+	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateOrderItemHandler))).Methods("PATCH")
+	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteOrderItemHandler))).Methods("DELETE")
+	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrderItemHandler))).Methods("GET")
 
-	// For Temp Order
-	r.Handle("/temp_orders", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrdersHandler))).Methods("GET")
-	r.Handle("/temp_orders/merge", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.MergeTempOrderHandler))).Methods("POST")
-	r.Handle("/temp_orders/{temp_order_id}", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetTempOrderHandler))).Methods("GET")
-	r.Handle("/temp_orders/{temp_order_id}/reject", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.RejectTempOrderHandler))).Methods("PATCH")
+	// Temp Order
+	r.Handle("/temp_orders", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetTempOrdersHandler))).Methods("GET")
+	r.Handle("/temp_orders/merge", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.MergeTempOrderHandler))).Methods("POST")
+	r.Handle("/temp_orders/{temp_order_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetTempOrderHandler))).Methods("GET")
+	r.Handle("/temp_orders/{temp_order_id}/reject", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.RejectTempOrderHandler))).Methods("PATCH")
 
-	// For System
+	// System
 	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
 
 	// Static file serving for uploaded product images
