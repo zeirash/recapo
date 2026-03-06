@@ -1,7 +1,7 @@
 .PHONY: run-local run-prod
 
 run-local:
-	ENV=local go run main.go
+	ENV=local go run .
 
 run-prod:
-	ENV=production go run main.go
+	ENV=production go run .

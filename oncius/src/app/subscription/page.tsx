@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from 'react'
-import { useQuery, useMutation } from 'react-query'
-import { Box, Typography, Button, Paper, Chip, CircularProgress } from '@mui/material'
+import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { Box, Typography, Button, Paper, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Users, Crown } from 'lucide-react'
 import Layout from '@/components/layout'
@@ -18,7 +18,9 @@ const formatDate = (dateStr: string) =>
 export default function SubscriptionPage() {
   const t = useTranslations()
   const locale = useLocale()
+  const queryClient = useQueryClient()
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   const { data: plansRes, isLoading: plansLoading } = useQuery('plans', () => api.getPlans(), {
     staleTime: 5 * 60 * 1000,
@@ -27,6 +29,13 @@ export default function SubscriptionPage() {
 
   const { data: subRes, isLoading: subLoading } = useQuery('subscription', () => api.getSubscription())
   const subscription: Subscription | null = subRes?.data ?? null
+
+  const cancelMutation = useMutation(() => api.cancelSubscription(), {
+    onSuccess: () => {
+      queryClient.invalidateQueries('subscription')
+      setShowCancelDialog(false)
+    },
+  })
 
   const checkoutMutation = useMutation(
     (planId: number) => api.checkout(planId),
@@ -84,8 +93,18 @@ export default function SubscriptionPage() {
               </Box>
             )}
             {subscription.status === 'active' && (
-              <Box sx={{ fontSize: '13px', color: 'grey.500', mt: '8px' }}>
-                {t('subscription.renewsOn', { date: formatDate(subscription.current_period_end) })}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                <Box sx={{ fontSize: '13px', color: 'grey.500' }}>
+                  {t('subscription.renewsOn', { date: formatDate(subscription.current_period_end) })}
+                </Box>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() => setShowCancelDialog(true)}
+                >
+                  {t('subscription.cancelButton')}
+                </Button>
               </Box>
             )}
           </Paper>
@@ -176,6 +195,34 @@ export default function SubscriptionPage() {
           </Box>
         )}
       </Box>
+
+      <Dialog open={showCancelDialog} onClose={() => setShowCancelDialog(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t('subscription.cancelConfirmTitle')}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ fontSize: '14px', color: 'grey.600' }}>
+            {t('subscription.cancelConfirmBody')}
+          </Box>
+          {cancelMutation.isError && (
+            <Box sx={{ mt: '12px', fontSize: '13px', color: 'error.main' }}>
+              {(cancelMutation.error as Error)?.message || t('subscription.cancelError')}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: '24px', pb: '16px' }}>
+          <Button variant="outlined" onClick={() => setShowCancelDialog(false)} disabled={cancelMutation.isLoading}>
+            {t('subscription.keepPlan')}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            disableElevation
+            onClick={() => cancelMutation.mutate()}
+            disabled={cancelMutation.isLoading}
+          >
+            {cancelMutation.isLoading ? <CircularProgress size={18} color="inherit" /> : t('subscription.confirmCancel')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   )
 }

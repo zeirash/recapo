@@ -492,6 +492,10 @@ export const api = {
     })
   },
 
+  cancelSubscription: () => {
+    return apiRequest<ApiResponse>('/subscription/cancel', { method: 'POST' })
+  },
+
   // Health check
   health: () => {
     return apiRequest<ApiResponse>('/health')

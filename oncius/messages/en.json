@@ -276,6 +276,13 @@
     "renewsOn": "Renews on {date}",
     "availablePlans": "Available Plans",
     "currentBadge": "Current Plan",
-    "choosePlan": "Choose Plan"
+    "choosePlan": "Choose Plan",
+    "cancelPlan": "Cancel plan",
+    "cancelButton": "Cancel plan",
+    "cancelConfirmTitle": "Cancel plan?",
+    "cancelConfirmBody": "Your subscription will be cancelled immediately and you will lose access to all features.",
+    "cancelError": "Something went wrong",
+    "keepPlan": "Keep plan",
+    "confirmCancel": "Yes, cancel"
   }
 }

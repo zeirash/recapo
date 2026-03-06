@@ -276,6 +276,13 @@
     "renewsOn": "Diperbarui pada {date}",
     "availablePlans": "Paket Tersedia",
     "currentBadge": "Paket Saat Ini",
-    "choosePlan": "Pilih Paket"
+    "choosePlan": "Pilih Paket",
+    "cancelPlan": "Batalkan paket",
+    "cancelButton": "Batalkan paket",
+    "cancelConfirmTitle": "Batalkan paket?",
+    "cancelConfirmBody": "Langganan Anda akan segera dibatalkan dan Anda akan kehilangan akses ke semua fitur.",
+    "cancelError": "Terjadi kesalahan",
+    "keepPlan": "Pertahankan paket",
+    "confirmCancel": "Ya, batalkan"
   }
 }

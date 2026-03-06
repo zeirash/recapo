@@ -13,7 +13,7 @@ Recapo is an order management system for Jastipers (Indonesian cross-border soci
 ### Backend (arion)
 ```bash
 cd arion
-go run main.go          # Start dev server on :4000
+go run .                # Start dev server on :4000
 go test ./...           # Run all tests
 go test ./handler/...   # Run tests in a specific package
 go test -run TestName ./handler/...  # Run a single test

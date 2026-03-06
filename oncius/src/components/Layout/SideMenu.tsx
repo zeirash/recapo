@@ -1,13 +1,16 @@
 "use client"
 
-import { useState } from 'react'
-import { Box, Button } from '@mui/material'
+import { useState, Fragment } from 'react'
+import { Box, Button, Tooltip } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import { useQuery } from 'react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
 import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, type LucideIcon } from 'lucide-react'
 import RecapoLogo from '@/components/ui/RecapoLogo'
+import { api } from '@/utils/api'
+import type { Subscription } from '@/types'
 
 interface SideMenuProps {
   selectedMenu: string
@@ -22,6 +25,13 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const locale = useLocale()
   const changeLocale = useChangeLocale()
 
+  const { data: subRes } = useQuery('subscription', () => api.getSubscription(), {
+    staleTime: 5 * 60 * 1000,
+  })
+  const subscription: Subscription | null = subRes?.data ?? null
+  const trialExpired = subscription?.status === 'trialing' && !!subscription.trial_ends_at && new Date(subscription.trial_ends_at) < new Date()
+  const periodExpired = subscription?.status === 'active' && new Date(subscription.current_period_end) < new Date()
+  const isLocked = !!subscription && (['expired', 'past_due', 'cancelled'].includes(subscription.status) || trialExpired || periodExpired)
   const menuItems: { id: string; label: string; icon: LucideIcon; path: string }[] = [
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, path: '/dashboard' },
     { id: 'products', label: t('products'), icon: Package, path: '/products' },
@@ -59,29 +69,38 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
 
       {/* Menu Items */}
       <Box sx={{ flex: 1, overflowY: 'auto', p: '4px' }}>
-        {menuItems.map((item) => (
-          <Box
-            key={item.id}
-            sx={{
-              py: '8px',
-              px: '4px',
-              mb: '4px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              textAlign: 'center',
-              bgcolor: selectedMenu === item.id ? '#eff6ff' : 'transparent',
-              '&:hover': {
-                bgcolor: selectedMenu === item.id ? '#eff6ff' : 'grey.100',
-              },
-            }}
-            onClick={() => handleMenuClick(item)}
-          >
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-              <item.icon size={20} />
-              <Box sx={{ fontSize: '12px', lineHeight: 1, mt: '4px' }}>{item.label}</Box>
+        {menuItems.map((item) => {
+          const locked = isLocked && item.id !== 'subscription'
+          const itemBox = (
+            <Box
+              sx={{
+                py: '8px',
+                px: '4px',
+                mb: '4px',
+                borderRadius: '8px',
+                cursor: locked ? 'not-allowed' : 'pointer',
+                textAlign: 'center',
+                bgcolor: selectedMenu === item.id ? '#eff6ff' : 'transparent',
+                '&:hover': {
+                  bgcolor: locked ? 'transparent' : (selectedMenu === item.id ? '#eff6ff' : 'grey.100'),
+                },
+              }}
+              onClick={locked ? undefined : () => handleMenuClick(item)}
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', opacity: locked ? 0.4 : 1 }}>
+                <item.icon size={20} />
+                <Box sx={{ fontSize: '12px', lineHeight: 1, mt: '4px' }}>{item.label}</Box>
+              </Box>
             </Box>
-          </Box>
-        ))}
+          )
+          return locked ? (
+            <Tooltip key={item.id} title="Subscribe to access" placement="right" arrow>
+              {itemBox}
+            </Tooltip>
+          ) : (
+            <Fragment key={item.id}>{itemBox}</Fragment>
+          )
+        })}
       </Box>
 
       {/* Bottom Section */}
