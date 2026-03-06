@@ -35,6 +35,8 @@ func (n *noopSubscriptionService) CreateTrialSubscription(int) error            
 func (n *noopSubscriptionService) Checkout(int, int) (*response.CheckoutData, error) { return nil, nil }
 func (n *noopSubscriptionService) HandleMidtransWebhook(MidtransWebhookPayload) error { return nil }
 func (n *noopSubscriptionService) IsSubscriptionActive(int) (bool, error)        { return false, nil }
+func (n *noopSubscriptionService) CancelSubscription(int) error                  { return nil }
+func (n *noopSubscriptionService) ExpireSubscriptions() error                    { return nil }
 
 func Test_uservice_UserLogin(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)

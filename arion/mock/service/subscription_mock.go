@@ -122,3 +122,31 @@ func (mr *MockSubscriptionServiceMockRecorder) IsSubscriptionActive(shopID inter
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSubscriptionActive", reflect.TypeOf((*MockSubscriptionService)(nil).IsSubscriptionActive), shopID)
 }
+
+// ExpireSubscriptions mocks base method.
+func (m *MockSubscriptionService) ExpireSubscriptions() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExpireSubscriptions")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ExpireSubscriptions indicates an expected call of ExpireSubscriptions.
+func (mr *MockSubscriptionServiceMockRecorder) ExpireSubscriptions() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExpireSubscriptions", reflect.TypeOf((*MockSubscriptionService)(nil).ExpireSubscriptions))
+}
+
+// CancelSubscription mocks base method.
+func (m *MockSubscriptionService) CancelSubscription(shopID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelSubscription", shopID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CancelSubscription indicates an expected call of CancelSubscription.
+func (mr *MockSubscriptionServiceMockRecorder) CancelSubscription(shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelSubscription", reflect.TypeOf((*MockSubscriptionService)(nil).CancelSubscription), shopID)
+}

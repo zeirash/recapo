@@ -14,6 +14,7 @@ import (
 type (
 	UserStore interface {
 		GetUserByID(userID int) (*model.User, error)
+		GetUserByShopID(shopID int) (*model.User, error)
 		GetUserByEmail(email string) (*model.User, error)
 		GetUsers() ([]model.User, error)
 		CreateUser(tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
@@ -52,6 +53,26 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 	`
 
 	err := u.db.QueryRow(q, userID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+func (u *user) GetUserByShopID(shopID int) (*model.User, error) {
+	resp := model.User{}
+
+	q := `
+		SELECT id, shop_id, name, email, password, role, created_at, updated_at
+		FROM users
+		WHERE shop_id = $1
+	`
+
+	err := u.db.QueryRow(q, shopID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

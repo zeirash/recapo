@@ -21,6 +21,7 @@ import (
 	"os"
 	"time"
 
+
 	sentry "github.com/getsentry/sentry-go"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -58,6 +59,7 @@ func NewRouter() *mux.Router {
 
 	// Global middleware
 	r.Use(middleware.Recovery)
+	r.Use(middleware.RequestLogger)
 
 	// Swagger UI (WrapHandler is http.HandlerFunc; doc is served from swag registry)
 	r.PathPrefix("/swagger/").HandlerFunc(httpSwagger.WrapHandler)
@@ -76,6 +78,7 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/webhook/midtrans", handler.MidtransWebhookHandler).Methods("POST")
 	r.Handle("/subscription", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetSubscriptionHandler))).Methods("GET")
 	r.Handle("/subscription/checkout", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CheckoutHandler))).Methods("POST")
+	r.Handle("/subscription/cancel", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CancelSubscriptionHandler))).Methods("POST")
 
 	// User
 	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateUserHandler))).Methods("PATCH")
@@ -150,8 +153,12 @@ func main() {
 	// ensure upload directory exists
 	os.MkdirAll(config.GetConfig().UploadDir+"/products", 0755)
 
-	// init router
+	// init router (also initializes handler services via handler.Init())
 	r := NewRouter()
+
+	// start cron jobs
+	startCron()
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -159,8 +166,8 @@ func main() {
 		AllowCredentials: true,
 		Debug:            true,
 	})
-	handler := c.Handler(r)
+	h := c.Handler(r)
 
 	logger.Info("Server starting on port :4000")
-	logger.Fatal(http.ListenAndServe(":4000", handler))
+	logger.Fatal(http.ListenAndServe(":4000", h))
 }

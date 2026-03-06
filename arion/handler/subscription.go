@@ -104,6 +104,39 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, data)
 }
 
+// CancelSubscriptionHandler godoc
+//
+//	@Summary		Cancel subscription
+//	@Description	Cancels the active subscription for the authenticated shop.
+//	@Tags			subscription
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	object{}
+//	@Failure		400	{object}	ErrorApiResponse
+//	@Failure		404	{object}	ErrorApiResponse
+//	@Failure		500	{object}	ErrorApiResponse
+//	@Router			/subscription/cancel [post]
+func CancelSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+
+	if err := subscriptionService.CancelSubscription(shopID); err != nil {
+		if err.Error() == "subscription not found" {
+			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
+			return
+		}
+		if err.Error() == "subscription is not active" {
+			WriteErrorJson(w, r, http.StatusBadRequest, err, "not_active")
+			return
+		}
+		logger.WithError(err).Error("cancel_subscription_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "cancel_subscription")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, struct{}{})
+}
+
 // MidtransWebhookHandler godoc
 //
 //	@Summary		Midtrans payment webhook

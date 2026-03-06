@@ -20,6 +20,8 @@ type (
 		UpdatePaymentSettled(tx database.Tx, paymentID int, midtransTxnID string, paidAt time.Time) error
 		UpdatePaymentFailed(tx database.Tx, paymentID int, status string) error
 		UpdatePaymentSnapInfo(paymentID int, snapToken, redirectURL string) error
+		CancelSubscription(tx database.Tx, subID int) error
+		ExpireSubscriptions() (int64, error)
 	}
 
 	subscriptionStore struct {
@@ -191,6 +193,27 @@ func (s *subscriptionStore) UpdatePaymentFailed(tx database.Tx, paymentID int, s
 	now := time.Now()
 	q := `UPDATE payments SET status = $1, updated_at = $2 WHERE id = $3`
 	_, err := tx.Exec(q, status, now, paymentID)
+	return err
+}
+
+func (s *subscriptionStore) ExpireSubscriptions() (int64, error) {
+	now := time.Now()
+	q := `
+		UPDATE subscriptions
+		SET status = 'expired', updated_at = $1
+		WHERE status = 'active' AND current_period_end < $1
+	`
+	res, err := s.db.Exec(q, now)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
+func (s *subscriptionStore) CancelSubscription(tx database.Tx, subID int) error {
+	now := time.Now()
+	q := `UPDATE subscriptions SET status = 'cancelled', cancelled_at = $1, updated_at = $1 WHERE id = $2`
+	_, err := tx.Exec(q, now, subID)
 	return err
 }
 

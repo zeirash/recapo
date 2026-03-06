@@ -30,6 +30,8 @@ type Config struct {
 	MidtransServerKey string `env:"MIDTRANS_SERVER_KEY"`
 	MidtransBaseURL   string `env:"MIDTRANS_BASE_URL" envDefault:"https://app.sandbox.midtrans.com"`
 
+	FrontendURL             string `env:"MIDTRANS_FRONTEND_URL" envDefault:"http://localhost:3000"`
+
 	// Cloudflare R2 (leave empty to use local filesystem)
 	R2AccountID       string `env:"R2_ACCOUNT_ID"`
 	R2AccessKeyID     string `env:"R2_ACCESS_KEY_ID"`

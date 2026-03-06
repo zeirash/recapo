@@ -81,6 +81,21 @@ func (mr *MockUserStoreMockRecorder) GetUserByID(userID interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockUserStore)(nil).GetUserByID), userID)
 }
 
+// GetUserByShopID mocks base method.
+func (m *MockUserStore) GetUserByShopID(shopID int) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByShopID", shopID)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByShopID indicates an expected call of GetUserByShopID.
+func (mr *MockUserStoreMockRecorder) GetUserByShopID(shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByShopID", reflect.TypeOf((*MockUserStore)(nil).GetUserByShopID), shopID)
+}
+
 // GetUsers mocks base method.
 func (m *MockUserStore) GetUsers() ([]model.User, error) {
 	m.ctrl.T.Helper()

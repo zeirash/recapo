@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/common/response"
@@ -25,6 +26,8 @@ type (
 		Checkout(shopID, planID int) (*response.CheckoutData, error)
 		HandleMidtransWebhook(payload MidtransWebhookPayload) error
 		IsSubscriptionActive(shopID int) (bool, error)
+		CancelSubscription(shopID int) error
+		ExpireSubscriptions() error
 	}
 
 	ssubscription struct{}
@@ -42,11 +45,24 @@ type (
 
 	midtransSnapRequest struct {
 		TransactionDetails midtransTransactionDetails `json:"transaction_details"`
+		Callbacks          midtransCallbacks          `json:"callbacks"`
+		CustomerDetails    midtransCustomerDetails    `json:"customer_details"`
 	}
 
 	midtransTransactionDetails struct {
 		OrderID     string `json:"order_id"`
 		GrossAmount int    `json:"gross_amount"`
+	}
+
+	midtransCallbacks struct {
+		Finish string `json:"finish"`
+	}
+
+	midtransCustomerDetails struct {
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Email     string `json:"email"`
+		Phone     string `json:"phone"`
 	}
 
 	midtransSnapResponse struct {
@@ -58,6 +74,9 @@ type (
 func NewSubscriptionService() SubscriptionService {
 	if subscriptionStore == nil {
 		subscriptionStore = store.NewSubscriptionStore()
+	}
+	if userStore == nil {
+		userStore = store.NewUserStore()
 	}
 	return &ssubscription{}
 }
@@ -185,7 +204,7 @@ func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, er
 		return nil, err
 	}
 
-	snapResp, err := callMidtransSnap(orderID, plan.PriceIDR)
+	snapResp, err := callMidtransSnap(orderID, plan.PriceIDR, shopID)
 	if err != nil {
 		return nil, fmt.Errorf("midtrans snap error: %w", err)
 	}
@@ -252,6 +271,42 @@ func (s *ssubscription) HandleMidtransWebhook(payload MidtransWebhookPayload) er
 	return tx.Commit()
 }
 
+func (s *ssubscription) ExpireSubscriptions() error {
+	count, err := subscriptionStore.ExpireSubscriptions()
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		logger.WithFields(logrus.Fields{"count": count}).Info("expired subscriptions")
+	}
+	return nil
+}
+
+func (s *ssubscription) CancelSubscription(shopID int) error {
+	sub, err := subscriptionStore.GetSubscriptionByShopID(shopID)
+	if err != nil {
+		return err
+	}
+	if sub == nil {
+		return errors.New("subscription not found")
+	}
+	if sub.Status != constant.SubStatusActive {
+		return errors.New("subscription is not active")
+	}
+
+	db := dbGetter()
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := subscriptionStore.CancelSubscription(tx, sub.ID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 func (s *ssubscription) IsSubscriptionActive(shopID int) (bool, error) {
 	sub, err := subscriptionStore.GetSubscriptionByShopID(shopID)
 	if err != nil {
@@ -276,7 +331,13 @@ func (s *ssubscription) IsSubscriptionActive(shopID int) (bool, error) {
 	}
 }
 
-func callMidtransSnap(orderID string, grossAmount int) (*midtransSnapResponse, error) {
+func callMidtransSnap(orderID string, grossAmount int, shopID int) (*midtransSnapResponse, error) {
+	logger.WithFields(logrus.Fields{
+		"order_id":         orderID,
+		"gross_amount":     grossAmount,
+		"shop_id":          shopID,
+	}).Info("calling midtrans snap")
+
 	baseURL := cfg.MidtransBaseURL
 
 	reqBody := midtransSnapRequest{
@@ -284,6 +345,21 @@ func callMidtransSnap(orderID string, grossAmount int) (*midtransSnapResponse, e
 			OrderID:     orderID,
 			GrossAmount: grossAmount,
 		},
+		Callbacks: midtransCallbacks{
+			Finish: cfg.FrontendURL + "/dashboard",
+		},
+	}
+
+	user, err := userStore.GetUserByShopID(shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user != nil {
+		reqBody.CustomerDetails = midtransCustomerDetails{
+			FirstName: user.Name,
+			Email:     user.Email,
+		}
 	}
 
 	bodyBytes, err := json.Marshal(reqBody)

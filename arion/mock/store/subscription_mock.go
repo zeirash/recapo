@@ -36,6 +36,35 @@ func (m *MockSubscriptionStore) EXPECT() *MockSubscriptionStoreMockRecorder {
 	return m.recorder
 }
 
+// ExpireSubscriptions mocks base method.
+func (m *MockSubscriptionStore) ExpireSubscriptions() (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExpireSubscriptions")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExpireSubscriptions indicates an expected call of ExpireSubscriptions.
+func (mr *MockSubscriptionStoreMockRecorder) ExpireSubscriptions() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExpireSubscriptions", reflect.TypeOf((*MockSubscriptionStore)(nil).ExpireSubscriptions))
+}
+
+// CancelSubscription mocks base method.
+func (m *MockSubscriptionStore) CancelSubscription(tx database.Tx, subID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelSubscription", tx, subID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CancelSubscription indicates an expected call of CancelSubscription.
+func (mr *MockSubscriptionStoreMockRecorder) CancelSubscription(tx, subID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelSubscription", reflect.TypeOf((*MockSubscriptionStore)(nil).CancelSubscription), tx, subID)
+}
+
 // GetActivePlans mocks base method.
 func (m *MockSubscriptionStore) GetActivePlans() ([]model.Plan, error) {
 	m.ctrl.T.Helper()
