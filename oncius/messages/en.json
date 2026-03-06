@@ -30,6 +30,7 @@
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
+    "feedback": "Feedback",
     "profile": "Profile",
     "welcome": "Welcome, {name}",
     "subscription": "Billing"

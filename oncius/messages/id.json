@@ -30,6 +30,7 @@
     "login": "Masuk",
     "register": "Daftar",
     "logout": "Keluar",
+    "feedback": "Masukan",
     "profile": "Profil",
     "welcome": "Selamat datang, {name}",
     "subscription": "Tagihan"

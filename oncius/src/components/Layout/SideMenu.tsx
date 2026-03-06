@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useQuery } from 'react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
-import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, MessageSquare, LogOut, User, type LucideIcon } from 'lucide-react'
 import RecapoLogo from '@/components/ui/RecapoLogo'
 import { api } from '@/utils/api'
 import type { Subscription } from '@/types'
@@ -21,6 +21,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const t = useTranslations('nav')
   const { user, logout } = useAuth()
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
   const router = useRouter()
   const locale = useLocale()
   const changeLocale = useChangeLocale()
@@ -145,7 +146,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
         {/* Profile Account */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Box
-            onClick={() => setShowLogoutDialog(true)}
+            onClick={() => setShowDropdown(true)}
             sx={{
               width: '32px',
               height: '32px',
@@ -154,17 +155,73 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '14px',
               color: 'white',
-              fontWeight: 'bold',
               cursor: 'pointer',
               '&:hover': { opacity: 0.9 },
             }}
           >
-            {user?.name?.charAt(0) || 'U'}
+            <User size={16} />
           </Box>
         </Box>
       </Box>
+
+      {/* Dropdown Menu */}
+      {showDropdown && (
+        <>
+          <Box
+            sx={{ position: 'fixed', inset: 0, zIndex: 999 }}
+            onClick={() => setShowDropdown(false)}
+          />
+          <Box
+            sx={{
+              position: 'fixed',
+              left: '70px',
+              bottom: '16px',
+              zIndex: 1000,
+              bgcolor: 'white',
+              borderRadius: '8px',
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
+              minWidth: '180px',
+              overflow: 'hidden',
+            }}
+          >
+            <Box
+              onClick={() => setShowDropdown(false)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                py: '10px',
+                px: '16px',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'grey.50' },
+              }}
+            >
+              <MessageSquare size={16} />
+              <Box sx={{ fontSize: '14px' }}>{t('feedback')}</Box>
+            </Box>
+            <Box
+              onClick={() => {
+                setShowDropdown(false)
+                setShowLogoutDialog(true)
+              }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                py: '10px',
+                px: '16px',
+                cursor: 'pointer',
+                color: 'error.main',
+                '&:hover': { bgcolor: 'grey.50' },
+              }}
+            >
+              <LogOut size={16} />
+              <Box sx={{ fontSize: '14px' }}>{t('logout')}</Box>
+            </Box>
+          </Box>
+        </>
+      )}
 
       {/* Logout Dialog */}
       {showLogoutDialog && (
