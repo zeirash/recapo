@@ -278,6 +278,8 @@
     "availablePlans": "Paket Tersedia",
     "currentBadge": "Paket Saat Ini",
     "choosePlan": "Pilih Paket",
+    "manualRenewalTitle": "Pembayaran manual diperlukan setiap bulan",
+    "manualRenewalBody": "Langganan tidak diperbarui secara otomatis. Anda perlu melakukan pembayaran satu kali secara manual setiap bulan untuk melanjutkan penggunaan paket. Fitur perpanjangan otomatis akan segera hadir.",
     "cancelPlan": "Batalkan paket",
     "cancelButton": "Batalkan paket",
     "cancelConfirmTitle": "Batalkan paket?",

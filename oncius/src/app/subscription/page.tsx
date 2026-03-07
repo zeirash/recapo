@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { Box, Typography, Button, Paper, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
-import { Check, Users, Crown } from 'lucide-react'
+import { Check, Users, Crown, Info } from 'lucide-react'
 import Layout from '@/components/layout'
 import { api } from '@/utils/api'
 import type { Plan, Subscription } from '@/types'
@@ -59,8 +59,21 @@ export default function SubscriptionPage() {
         <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
           {t('subscription.title')}
         </Typography>
-        <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '32px' }}>
+        <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
           {t('subscription.subtitle')}
+        </Box>
+
+        {/* Manual renewal notice */}
+        <Box sx={{ display: 'flex', gap: '12px', p: '16px', bgcolor: 'info.50', border: '1px solid', borderColor: 'info.200', borderRadius: '10px', mb: '32px' }}>
+          <Info size={18} color="var(--mui-palette-info-main)" style={{ flexShrink: 0, marginTop: '1px' }} />
+          <Box>
+            <Typography sx={{ fontSize: '14px', fontWeight: 600, color: 'info.dark', mb: '4px' }}>
+              {t('subscription.manualRenewalTitle')}
+            </Typography>
+            <Typography sx={{ fontSize: '13px', color: 'info.dark', lineHeight: 1.5 }}>
+              {t('subscription.manualRenewalBody')}
+            </Typography>
+          </Box>
         </Box>
 
         {/* Current subscription */}

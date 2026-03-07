@@ -278,6 +278,8 @@
     "availablePlans": "Available Plans",
     "currentBadge": "Current Plan",
     "choosePlan": "Choose Plan",
+    "manualRenewalTitle": "Manual payment required each month",
+    "manualRenewalBody": "Subscriptions are not renewed automatically. You will need to manually make a one-time payment each month to continue using your plan. Auto-renewal is coming soon.",
     "cancelPlan": "Cancel plan",
     "cancelButton": "Cancel plan",
     "cancelConfirmTitle": "Cancel plan?",
