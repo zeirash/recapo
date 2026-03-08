@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/logger"
@@ -62,11 +63,11 @@ func (u *uservice) UserLogin(email, password string) (response.TokenResponse, er
 	}
 
 	if user == nil {
-		return response.TokenResponse{}, errors.New("user doesn't exist")
+		return response.TokenResponse{}, errors.New(apierr.ErrUserNotExist)
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
-		return response.TokenResponse{}, errors.New("password incorrect")
+		return response.TokenResponse{}, errors.New(apierr.ErrPasswordIncorrect)
 	}
 
 	accessToken, err := tokenStore.CreateAccessToken(user, cfg.SecretKey, 2)
@@ -89,7 +90,7 @@ func (u *uservice) RefreshToken(refreshToken string) (response.TokenResponse, er
 	// Validate and extract data from refresh token
 	tokenData, err := tokenStore.ExtractDataFromToken(refreshToken, cfg.SecretKey)
 	if err != nil {
-		return response.TokenResponse{}, errors.New("invalid refresh token")
+		return response.TokenResponse{}, errors.New(apierr.ErrInvalidRefreshToken)
 	}
 
 	// Get user from database
@@ -99,7 +100,7 @@ func (u *uservice) RefreshToken(refreshToken string) (response.TokenResponse, er
 	}
 
 	if user == nil {
-		return response.TokenResponse{}, errors.New("user not found")
+		return response.TokenResponse{}, errors.New(apierr.ErrUserNotFound)
 	}
 
 	// Generate new tokens
@@ -126,7 +127,7 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 	}
 
 	if existUser != nil {
-		return response.TokenResponse{}, errors.New("user already exist")
+		return response.TokenResponse{}, errors.New(apierr.ErrUserAlreadyExists)
 	}
 
 	encryptedPassword, err := bcrypt.GenerateFromPassword(
@@ -187,7 +188,7 @@ func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) 
 	}
 
 	if user == nil {
-		return response.UserData{}, errors.New("user not found")
+		return response.UserData{}, errors.New(apierr.ErrUserNotFound)
 	}
 
 	var password string
@@ -237,7 +238,7 @@ func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
 	}
 
 	if user == nil {
-		return nil, errors.New("user not found")
+		return nil, errors.New(apierr.ErrUserNotFound)
 	}
 
 	res := response.UserData{

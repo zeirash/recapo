@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
@@ -120,11 +121,11 @@ func TestCreateOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					CreateOrder(1, 1, nil).
-					Return(response.OrderData{}, errors.New("customer already has an active order"))
+					Return(response.OrderData{}, errors.New(apierr.ErrActiveOrderExists))
 			},
 			wantStatus:     http.StatusConflict,
 			wantSuccess:    false,
-			wantErrMessage: "customer already has an active order",
+			wantErrMessage: "Customer already has an active order",
 		},
 	}
 
@@ -202,11 +203,11 @@ func TestGetOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetOrderByID(999, 1).
-					Return(nil, errors.New("order not found"))
+					Return(nil, errors.New(apierr.ErrOrderNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
 			wantSuccess:    false,
-			wantErrMessage: "order not found",
+			wantErrMessage: "Order not found",
 		},
 		{
 			name:     "get order returns error on service failure",
@@ -228,7 +229,7 @@ func TestGetOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 	}
 
@@ -528,11 +529,11 @@ func TestUpdateOrderHandler(t *testing.T) {
 						ID:     1,
 						Status: &status,
 					}).
-					Return(response.OrderData{}, errors.New("order not found"))
+					Return(response.OrderData{}, errors.New(apierr.ErrOrderNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "order not found",
+			wantErrMessage: "Order not found",
 		},
 		{
 			name:        "update order returns 400 on invalid json",
@@ -549,7 +550,7 @@ func TestUpdateOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 	}
 
@@ -631,7 +632,7 @@ func TestDeleteOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 	}
 
@@ -709,11 +710,11 @@ func TestCreateOrderItemHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					CreateOrderItem(1, 1, 2).
-					Return(response.OrderItemData{}, errors.New("product not found"))
+					Return(response.OrderItemData{}, errors.New(apierr.ErrProductNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "product not found",
+			wantErrMessage: "Product not found",
 		},
 		{
 			name:        "create order item returns 400 on invalid json",
@@ -752,7 +753,7 @@ func TestCreateOrderItemHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 	}
 
@@ -844,11 +845,11 @@ func TestUpdateOrderItemHandler(t *testing.T) {
 						OrderItemID: 1,
 						Qty:         &qty,
 					}).
-					Return(response.OrderItemData{}, errors.New("order item not found"))
+					Return(response.OrderItemData{}, errors.New(apierr.ErrOrderItemNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "order item not found",
+			wantErrMessage: "Order item not found",
 		},
 		{
 			name:        "update order item returns 400 on invalid json",
@@ -865,7 +866,7 @@ func TestUpdateOrderItemHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 		{
 			name:           "update order item returns 400 on missing item_id",
@@ -874,7 +875,7 @@ func TestUpdateOrderItemHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "item_id is required",
+			wantErrMessage: "Order item ID is required",
 		},
 	}
 
@@ -944,11 +945,11 @@ func TestDeleteOrderItemHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					DeleteOrderItemByID(1, 1).
-					Return(errors.New("order item not found"))
+					Return(errors.New(apierr.ErrOrderItemNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "order item not found",
+			wantErrMessage: "Order item not found",
 		},
 		{
 			name:           "delete order item returns 400 on missing order_id",
@@ -956,7 +957,7 @@ func TestDeleteOrderItemHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 		{
 			name:           "delete order item returns 400 on missing item_id",
@@ -964,7 +965,7 @@ func TestDeleteOrderItemHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "item_id is required",
+			wantErrMessage: "Order item ID is required",
 		},
 	}
 
@@ -1035,11 +1036,11 @@ func TestGetOrderItemHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetOrderItemByID(999, 1).
-					Return(nil, errors.New("order item not found"))
+					Return(nil, errors.New(apierr.ErrOrderItemNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "order item not found",
+			wantErrMessage: "Order item not found",
 		},
 		{
 			name:           "get order item returns 400 on missing order_id",
@@ -1047,7 +1048,7 @@ func TestGetOrderItemHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 		{
 			name:           "get order item returns 400 on missing item_id",
@@ -1055,7 +1056,7 @@ func TestGetOrderItemHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "item_id is required",
+			wantErrMessage: "Order item ID is required",
 		},
 	}
 
@@ -1148,7 +1149,7 @@ func TestGetOrderItemsHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 	}
 
@@ -1273,7 +1274,7 @@ func TestMergeTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "temp_order_id is required",
+			wantErrMessage: "Temp order ID is required",
 		},
 		{
 			name: "merge temp order returns 400 when customer_id is missing",
@@ -1285,7 +1286,7 @@ func TestMergeTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "customer_id is required",
+			wantErrMessage: "Customer ID is required",
 		},
 		{
 			name: "merge temp order returns 404 when order not found",
@@ -1297,11 +1298,11 @@ func TestMergeTempOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					MergeTempOrder(10, 5, 1, (*int)(nil)).
-					Return(nil, errors.New("order not found"))
+					Return(nil, errors.New(apierr.ErrOrderNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
 			wantSuccess:    false,
-			wantErrMessage: "order not found",
+			wantErrMessage: "Order not found",
 		},
 		{
 			name: "merge temp order returns 500 on service failure",
@@ -1428,11 +1429,11 @@ func TestGetTempOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetTempOrderByID(999, 1).
-					Return(nil, errors.New("temp order not found"))
+					Return(nil, errors.New(apierr.ErrTempOrderNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
 			wantSuccess:    false,
-			wantErrMessage: "temp order not found",
+			wantErrMessage: "Temp order not found",
 		},
 		{
 			name:     "get temp order returns 500 on service failure",
@@ -1454,7 +1455,7 @@ func TestGetTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "temp_order_id is required",
+			wantErrMessage: "Temp order ID is required",
 		},
 	}
 
@@ -1556,11 +1557,11 @@ func TestRejectTempOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					RejectTempOrderByID(10).
-					Return(response.TempOrderData{}, errors.New("temp order not found"))
+					Return(response.TempOrderData{}, errors.New(apierr.ErrTempOrderNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantSuccess:    false,
-			wantErrMessage: "temp order not found",
+			wantErrMessage: "Temp order not found",
 		},
 		{
 			name:           "reject temp order returns 400 on missing temp_order_id",
@@ -1569,7 +1570,7 @@ func TestRejectTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "temp_order_id is required",
+			wantErrMessage: "Temp order ID is required",
 		},
 	}
 
@@ -1665,10 +1666,10 @@ func TestExportOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GenerateOrderInvoice(999, 1, "").
-					Return(nil, errors.New("order not found"))
+					Return(nil, errors.New(apierr.ErrOrderNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
-			wantErrMessage: "order not found",
+			wantErrMessage: "Order not found",
 		},
 		{
 			name:     "export order returns 500 on service failure",
@@ -1690,7 +1691,7 @@ func TestExportOrderHandler(t *testing.T) {
 			body:           nil,
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
-			wantErrMessage: "order_id is required",
+			wantErrMessage: "Order ID is required",
 		},
 		{
 			name:           "export order returns 400 on invalid json body",

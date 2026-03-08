@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/handler"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -17,7 +18,7 @@ func SubscriptionCheck(next http.Handler) http.Handler {
 		ctx := r.Context()
 		shopID, ok := ctx.Value(common.ShopIDKey).(int)
 		if !ok || shopID == 0 {
-			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New("missing shop context"), "unauthorized")
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New(apierr.ErrMissingShopContext), "unauthorized")
 			return
 		}
 
@@ -34,7 +35,7 @@ func SubscriptionCheck(next http.Handler) http.Handler {
 		}
 
 		if !active {
-			handler.WriteErrorJson(w, r, http.StatusPaymentRequired, errors.New("subscription required"), "subscription_required")
+			handler.WriteErrorJson(w, r, http.StatusPaymentRequired, errors.New(apierr.ErrSubscriptionRequired), "subscription_required")
 			return
 		}
 

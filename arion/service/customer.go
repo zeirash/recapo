@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
@@ -67,7 +68,7 @@ func (c *cservice) GetCustomerByID(customerID int, shopID ...int) (*response.Cus
 	}
 
 	if customer == nil {
-		return nil, errors.New("customer not found")
+		return nil, errors.New(apierr.ErrCustomerNotFound)
 	}
 
 	res := response.CustomerData{
@@ -119,7 +120,7 @@ func (c *cservice) UpdateCustomer(input UpdateCustomerInput) (response.CustomerD
 	}
 
 	if customer == nil {
-		return response.CustomerData{}, errors.New("customer not found")
+		return response.CustomerData{}, errors.New(apierr.ErrCustomerNotFound)
 	}
 
 	updateData := store.UpdateCustomerInput{

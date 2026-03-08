@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/response"
@@ -75,7 +76,7 @@ func Test_oservice_CreateOrder(t *testing.T) {
 			},
 			wantResult: response.OrderData{},
 			wantErr:    true,
-			wantErrMsg: "customer already has an active order",
+			wantErrMsg: apierr.ErrActiveOrderExists,
 		},
 		{
 			name:       "create order returns error when GetActiveOrderByCustomerID fails",
@@ -2747,7 +2748,7 @@ func Test_oservice_RejectTempOrderByID(t *testing.T) {
 			},
 			want:       response.TempOrderData{},
 			wantErr:    true,
-			wantErrMsg: "temp order not found",
+			wantErrMsg: apierr.ErrTempOrderNotFound,
 		},
 		{
 			name: "returns error when UpdateTempOrderStatus fails",
@@ -2913,7 +2914,7 @@ func Test_oservice_GenerateOrderInvoice(t *testing.T) {
 				return mockOrder, mockItem
 			},
 			wantErr:    true,
-			wantErrMsg: "order not found",
+			wantErrMsg: apierr.ErrOrderNotFound,
 		},
 		{
 			name:    "returns error when store fails",

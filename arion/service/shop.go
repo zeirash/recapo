@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
@@ -36,7 +37,7 @@ func (s *shopService) GetShareTokenByID(shopID int) (string, error) {
 		return "", err
 	}
 	if token == "" {
-		return "", errors.New("shop not found")
+		return "", errors.New(apierr.ErrShopNotFound)
 	}
 	return token, nil
 }
@@ -48,7 +49,7 @@ func (s *shopService) GetPublicProducts(shareToken string) ([]response.ProductDa
 	}
 
 	if shop == nil {
-		return nil, errors.New("shop not found")
+		return nil, errors.New(apierr.ErrShopNotFound)
 	}
 
 	products, err := productStore.GetProductsByShopID(shop.ID, nil)

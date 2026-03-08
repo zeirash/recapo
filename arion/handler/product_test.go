@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
@@ -214,7 +215,7 @@ func TestGetProductHandler(t *testing.T) {
 			mockSetup: func() {
 				mockProductService.EXPECT().
 					GetProductByID(999, 1).
-					Return(nil, errors.New("product not found"))
+					Return(nil, errors.New(apierr.ErrProductNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
@@ -709,7 +710,7 @@ func TestUploadProductImageHandler(t *testing.T) {
 			mockSetup: func() {
 				mockProductService.EXPECT().
 					UploadProductImage(gomock.Any()).
-					Return("", errors.New("unsupported image type; allowed: jpeg, png, webp"))
+					Return("", errors.New(apierr.ErrUnsupportedImageType))
 			},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
@@ -811,7 +812,7 @@ func TestDeleteProductImageHandler(t *testing.T) {
 			mockSetup: func() {
 				mockProductService.EXPECT().
 					DeleteProductImage("/other/path/image.jpg").
-					Return(errors.New("invalid image URL"))
+					Return(errors.New(apierr.ErrInvalidImageURL))
 			},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
@@ -822,7 +823,7 @@ func TestDeleteProductImageHandler(t *testing.T) {
 			mockSetup: func() {
 				mockProductService.EXPECT().
 					DeleteProductImage("/uploads/products/missing.jpg").
-					Return(errors.New("image not found"))
+					Return(errors.New(apierr.ErrImageNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,

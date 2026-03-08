@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/model"
@@ -77,7 +78,7 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.CreateOrder(inp.CustomerID, shopID, inp.Notes)
 	if err != nil {
-		if strings.Contains(err.Error(), "customer already has an active order") {
+		if err.Error() == apierr.ErrActiveOrderExists {
 			WriteErrorJson(w, r, http.StatusConflict, err, "duplicate_customer_order")
 			return
 		}
@@ -119,7 +120,7 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetOrderByID(orderID, shopID)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if err.Error() == apierr.ErrOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -173,7 +174,7 @@ func ExportOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	pdfBytes, err := orderService.GenerateOrderInvoice(orderID, shopID, inp.Message)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if err.Error() == apierr.ErrOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -356,7 +357,7 @@ func MergeTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.MergeTempOrder(inp.TempOrderID, inp.CustomerID, shopID, inp.ActiveOrderID)
 	if err != nil {
-		if err.Error() == "order not found" {
+		if err.Error() == apierr.ErrOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -678,7 +679,7 @@ func GetTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := orderService.GetTempOrderByID(tempOrderID, shopID)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if err.Error() == apierr.ErrTempOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -726,11 +727,11 @@ func RejectTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 func validateCreateOrderItem(inp CreateOrderItemRequest) (bool, error) {
 	if inp.ProductID <= 0 {
-		return false, errors.New("product_id is required")
+		return false, errors.New(apierr.ErrProductIDRequired)
 	}
 
 	if inp.Qty <= 0 {
-		return false, errors.New("qty is required")
+		return false, errors.New(apierr.ErrQtyRequired)
 	}
 
 	return true, nil
@@ -738,7 +739,7 @@ func validateCreateOrderItem(inp CreateOrderItemRequest) (bool, error) {
 
 func validateCreateOrder(inp CreateOrderRequest) (bool, error) {
 	if inp.CustomerID <= 0 {
-		return false, errors.New("customer_id is required")
+		return false, errors.New(apierr.ErrCustomerIDRequired)
 	}
 
 	return true, nil
@@ -746,7 +747,7 @@ func validateCreateOrder(inp CreateOrderRequest) (bool, error) {
 
 func validateOrderID(params map[string]string) (bool, error) {
 	if params["order_id"] == "" {
-		return false, errors.New("order_id is required")
+		return false, errors.New(apierr.ErrOrderIDRequired)
 	}
 
 	return true, nil
@@ -754,7 +755,7 @@ func validateOrderID(params map[string]string) (bool, error) {
 
 func validateOrderItemID(params map[string]string) (bool, error) {
 	if params["item_id"] == "" {
-		return false, errors.New("item_id is required")
+		return false, errors.New(apierr.ErrOrderItemIDRequired)
 	}
 
 	return true, nil
@@ -762,7 +763,7 @@ func validateOrderItemID(params map[string]string) (bool, error) {
 
 func validateTempOrderID(params map[string]string) (bool, error) {
 	if params["temp_order_id"] == "" {
-		return false, errors.New("temp_order_id is required")
+		return false, errors.New(apierr.ErrTempOrderIDRequired)
 	}
 
 	return true, nil
@@ -770,11 +771,11 @@ func validateTempOrderID(params map[string]string) (bool, error) {
 
 func validateMergeTempOrder(inp MergeOrderRequest) (bool, error) {
 	if inp.TempOrderID <= 0 {
-		return false, errors.New("temp_order_id is required")
+		return false, errors.New(apierr.ErrTempOrderIDRequired)
 	}
 
 	if inp.CustomerID <= 0 {
-		return false, errors.New("customer_id is required")
+		return false, errors.New(apierr.ErrCustomerIDRequired)
 	}
 
 	return true, nil

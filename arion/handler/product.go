@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/service"
@@ -104,7 +105,7 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := productService.GetProductByID(productID, shopID)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if err.Error() == apierr.ErrProductNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -272,20 +273,20 @@ func PurchaseListProductHandler(w http.ResponseWriter, r *http.Request) {
 //	@Router			/products/image [post]
 func UploadProductImageHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(5 << 20); err != nil {
-		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("file too large or invalid form (max 5MB)"), "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New(apierr.ErrImageTooLarge), "validation")
 		return
 	}
 
 	file, _, err := r.FormFile("image")
 	if err != nil {
-		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("image field is required"), "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New(apierr.ErrImageFieldRequired), "validation")
 		return
 	}
 	defer file.Close()
 
 	imageURL, err := productService.UploadProductImage(file)
 	if err != nil {
-		if strings.Contains(err.Error(), "unsupported image type") {
+		if err.Error() == apierr.ErrUnsupportedImageType {
 			WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 			return
 		}
@@ -320,12 +321,12 @@ func DeleteProductImageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inp.ImageURL == "" {
-		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("image_url is required"), "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New(apierr.ErrImageURLRequired), "validation")
 		return
 	}
 
 	if err := productService.DeleteProductImage(inp.ImageURL); err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if err.Error() == apierr.ErrImageNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -343,11 +344,11 @@ func DeleteProductImageHandler(w http.ResponseWriter, r *http.Request) {
 
 func validateCreateProduct(inp CreateProductRequest) (bool, error) {
 	if inp.Name == "" {
-		return false, errors.New("name is required")
+		return false, errors.New(apierr.ErrNameRequired)
 	}
 
 	if inp.Price < 0 {
-		return false, errors.New("price must be greater than or equal to 0")
+		return false, errors.New(apierr.ErrPriceInvalid)
 	}
 
 	return true, nil
@@ -355,7 +356,7 @@ func validateCreateProduct(inp CreateProductRequest) (bool, error) {
 
 func validateProductID(params map[string]string) (bool, error) {
 	if params["product_id"] == "" {
-		return false, errors.New("product_id is required")
+		return false, errors.New(apierr.ErrProductIDRequired)
 	}
 
 	return true, nil

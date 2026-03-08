@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
 )
 
-var ErrDuplicateProductName = errors.New("product with this name already exists")
+var ErrDuplicateProductName = errors.New(apierr.ErrProductNameExists)
 
 type (
 	ProductStore interface {

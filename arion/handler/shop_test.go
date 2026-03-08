@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
@@ -85,11 +86,11 @@ func TestGetShopProductsHandler(t *testing.T) {
 			mockSetup: func() {
 				mockShopService.EXPECT().
 					GetPublicProducts("invalid").
-					Return(nil, errors.New("shop not found"))
+					Return(nil, errors.New(apierr.ErrShopNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
 			wantSuccess:    false,
-			wantErrMessage: "shop not found",
+			wantErrMessage: "Shop not found",
 		},
 		{
 			name:       "returns 500 on service error",
@@ -173,11 +174,11 @@ func TestGetShopShareTokenHandler(t *testing.T) {
 			mockSetup: func() {
 				mockShopService.EXPECT().
 					GetShareTokenByID(999).
-					Return("", errors.New("shop not found"))
+					Return("", errors.New(apierr.ErrShopNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
 			wantSuccess:    false,
-			wantErrMessage: "shop not found",
+			wantErrMessage: "Shop not found",
 		},
 		{
 			name:   "returns 500 on service error",
@@ -288,7 +289,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "share_token is required",
+			wantErrMessage: "Share token is required",
 		},
 		{
 			name:       "returns 400 when body is invalid JSON",
@@ -308,7 +309,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "customer_name is required",
+			wantErrMessage: "Customer name is required",
 		},
 		{
 			name:       "returns 400 when customer_phone is missing",
@@ -320,7 +321,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "customer_phone is required",
+			wantErrMessage: "Customer phone is required",
 		},
 		{
 			name:       "returns 400 when customer_name is empty string",
@@ -333,7 +334,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "customer_name is required",
+			wantErrMessage: "Customer name is required",
 		},
 		{
 			name:       "returns 400 when customer_phone is empty string",
@@ -346,7 +347,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "customer_phone is required",
+			wantErrMessage: "Customer phone is required",
 		},
 		{
 			name:       "returns 400 when order_items is missing",
@@ -358,7 +359,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_items is required",
+			wantErrMessage: "Order items are required",
 		},
 		{
 			name:       "returns 400 when order_items is empty",
@@ -371,7 +372,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "order_items is required",
+			wantErrMessage: "Order items are required",
 		},
 		{
 			name:       "returns 400 when product_id is zero",
@@ -384,7 +385,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "product_id is required",
+			wantErrMessage: "Product ID is required",
 		},
 		{
 			name:       "returns 400 when qty is zero",
@@ -397,7 +398,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			mockSetup:      func() {},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
-			wantErrMessage: "qty is required",
+			wantErrMessage: "Quantity is required",
 		},
 		{
 			name:       "returns 500 when order service fails",

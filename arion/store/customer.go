@@ -10,11 +10,12 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/model"
 )
 
-var ErrDuplicatePhone = errors.New("customer with this phone number already exists")
+var ErrDuplicatePhone = errors.New(apierr.ErrCustomerPhoneExists)
 
 type (
 	CustomerStore interface {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/handler"
 	"github.com/zeirash/recapo/arion/store"
@@ -32,7 +33,7 @@ func Authentication(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		t := strings.Split(authHeader, " ")
 		if len(t) != 2 {
-			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New("invalid token format"), "unauthorized")
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New(apierr.ErrInvalidTokenFormat), "unauthorized")
 			return
 		}
 
@@ -44,7 +45,7 @@ func Authentication(next http.Handler) http.Handler {
 		}
 
 		if !authorized {
-			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New("is not authorzed"), "unauthorized")
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New(apierr.ErrNotAuthorized), "unauthorized")
 			return
 		}
 
@@ -69,7 +70,7 @@ func CheckSystemMode(next http.Handler) http.Handler {
 		isSystemMode := ctx.Value(common.SystemModeKey).(bool)
 
 		if !isSystemMode {
-			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New("doesn't have system mode access"), "unauthorized")
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New(apierr.ErrNoSystemAccess), "unauthorized")
 			return
 		}
 

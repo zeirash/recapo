@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/response"
 	mock_store "github.com/zeirash/recapo/arion/mock/store"
 	"github.com/zeirash/recapo/arion/model"
@@ -614,7 +615,7 @@ func Test_pservice_UploadProductImage(t *testing.T) {
 			name:        "returns error for unsupported file type",
 			fileContent: []byte("hello plain text"),
 			wantErr:     true,
-			wantErrMsg:  "unsupported image type",
+			wantErrMsg:  apierr.ErrUnsupportedImageType,
 		},
 		{
 			name:         "with R2 configured, delegates to R2 upload",
@@ -712,13 +713,13 @@ func Test_pservice_DeleteProductImage(t *testing.T) {
 			name:       "returns error for invalid URL prefix",
 			imageURL:   func(t *testing.T) string { return "/some/other/path/image.jpg" },
 			wantErr:    true,
-			wantErrMsg: "invalid image URL",
+			wantErrMsg: apierr.ErrInvalidImageURL,
 		},
 		{
 			name:       "returns error when file does not exist",
 			imageURL:   func(t *testing.T) string { return "/uploads/products/nonexistent.jpg" },
 			wantErr:    true,
-			wantErrMsg: "image not found",
+			wantErrMsg: apierr.ErrImageNotFound,
 		},
 		{
 			name:         "with R2 configured, delegates to R2 delete for R2 URL",
@@ -733,7 +734,7 @@ func Test_pservice_DeleteProductImage(t *testing.T) {
 			imageURL:     func(t *testing.T) string { return "/uploads/products/nonexistent.jpg" },
 			r2BucketName: "test-bucket",
 			wantErr:      true,
-			wantErrMsg:   "image not found",
+			wantErrMsg:   apierr.ErrImageNotFound,
 		},
 	}
 

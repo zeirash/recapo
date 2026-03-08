@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
@@ -130,7 +131,7 @@ func TestGetSubscriptionHandler(t *testing.T) {
 			name:   "returns 404 when subscription not found",
 			shopID: 2,
 			mockSetup: func() {
-				mockSvc.EXPECT().GetSubscriptionByShopID(2).Return(nil, errors.New("subscription not found"))
+				mockSvc.EXPECT().GetSubscriptionByShopID(2).Return(nil, errors.New(apierr.ErrSubscriptionNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
@@ -211,7 +212,7 @@ func TestCheckoutHandler(t *testing.T) {
 			shopID: 1,
 			body:   map[string]int{"plan_id": 99},
 			mockSetup: func() {
-				mockSvc.EXPECT().Checkout(1, 99).Return(nil, errors.New("plan not found"))
+				mockSvc.EXPECT().Checkout(1, 99).Return(nil, errors.New(apierr.ErrPlanNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
@@ -278,7 +279,7 @@ func TestMidtransWebhookHandler(t *testing.T) {
 				"signature_key": "bad",
 			},
 			mockSetup: func() {
-				mockSvc.EXPECT().HandleMidtransWebhook(gomock.Any()).Return(errors.New("invalid signature"))
+				mockSvc.EXPECT().HandleMidtransWebhook(gomock.Any()).Return(errors.New(apierr.ErrInvalidSignature))
 			},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,

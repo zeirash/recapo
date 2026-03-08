@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
@@ -70,11 +71,11 @@ func TestGetUserHandler(t *testing.T) {
 			mockSetup: func() {
 				mockUserService.EXPECT().
 					GetUserByID(999).
-					Return(nil, errors.New("user not found"))
+					Return(nil, errors.New(apierr.ErrUserNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
-			wantErrMessage: "user not found",
+			wantErrMessage: "User not found",
 		},
 		{
 			name:   "get user returns 500 on service error",

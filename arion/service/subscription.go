@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/common/response"
@@ -108,7 +109,7 @@ func (s *ssubscription) GetSubscriptionByShopID(shopID int) (*response.Subscript
 		return nil, err
 	}
 	if sub == nil {
-		return nil, errors.New("subscription not found")
+		return nil, errors.New(apierr.ErrSubscriptionNotFound)
 	}
 
 	plan, err := subscriptionStore.GetPlanByID(sub.PlanID)
@@ -116,7 +117,7 @@ func (s *ssubscription) GetSubscriptionByShopID(shopID int) (*response.Subscript
 		return nil, err
 	}
 	if plan == nil {
-		return nil, errors.New("plan not found")
+		return nil, errors.New(apierr.ErrPlanNotFound)
 	}
 
 	data := &response.SubscriptionData{
@@ -148,7 +149,7 @@ func (s *ssubscription) CreateTrialSubscription(shopID int) error {
 		return err
 	}
 	if len(plans) == 0 {
-		return errors.New("no active plans found")
+		return errors.New(apierr.ErrNoActivePlans)
 	}
 
 	starterPlan := plans[0]
@@ -175,7 +176,7 @@ func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, er
 		return nil, err
 	}
 	if plan == nil {
-		return nil, errors.New("plan not found")
+		return nil, errors.New(apierr.ErrPlanNotFound)
 	}
 
 	sub, err := subscriptionStore.GetSubscriptionByShopID(shopID)
@@ -183,7 +184,7 @@ func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, er
 		return nil, err
 	}
 	if sub == nil {
-		return nil, errors.New("subscription not found")
+		return nil, errors.New(apierr.ErrSubscriptionNotFound)
 	}
 
 	orderID := fmt.Sprintf("recapo-%d-%d", shopID, time.Now().Unix())
@@ -227,7 +228,7 @@ func (s *ssubscription) HandleMidtransWebhook(payload MidtransWebhookPayload) er
 	h := sha512.Sum512([]byte(raw))
 	expected := fmt.Sprintf("%x", h)
 	if expected != payload.SignatureKey {
-		return errors.New("invalid signature")
+		return errors.New(apierr.ErrInvalidSignature)
 	}
 
 	payment, err := subscriptionStore.GetPaymentByMidtransOrderID(payload.OrderID)
@@ -235,7 +236,7 @@ func (s *ssubscription) HandleMidtransWebhook(payload MidtransWebhookPayload) er
 		return err
 	}
 	if payment == nil {
-		return errors.New("payment not found")
+		return errors.New(apierr.ErrPaymentNotFound)
 	}
 
 	db := dbGetter()
@@ -288,10 +289,10 @@ func (s *ssubscription) CancelSubscription(shopID int) error {
 		return err
 	}
 	if sub == nil {
-		return errors.New("subscription not found")
+		return errors.New(apierr.ErrSubscriptionNotFound)
 	}
 	if sub.Status != constant.SubStatusActive {
-		return errors.New("subscription is not active")
+		return errors.New(apierr.ErrSubscriptionNotActive)
 	}
 
 	db := dbGetter()

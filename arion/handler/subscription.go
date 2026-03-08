@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -45,7 +46,7 @@ func GetSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 	sub, err := subscriptionService.GetSubscriptionByShopID(shopID)
 	if err != nil {
-		if err.Error() == "subscription not found" {
+		if err.Error() == apierr.ErrSubscriptionNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -86,13 +87,13 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inp.PlanID <= 0 {
-		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("plan_id is required"), "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New(apierr.ErrPlanIDRequired), "validation")
 		return
 	}
 
 	data, err := subscriptionService.Checkout(shopID, inp.PlanID)
 	if err != nil {
-		if err.Error() == "plan not found" || err.Error() == "subscription not found" {
+		if err.Error() == apierr.ErrPlanNotFound || err.Error() == apierr.ErrSubscriptionNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -121,11 +122,11 @@ func CancelSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
 	if err := subscriptionService.CancelSubscription(shopID); err != nil {
-		if err.Error() == "subscription not found" {
+		if err.Error() == apierr.ErrSubscriptionNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
-		if err.Error() == "subscription is not active" {
+		if err.Error() == apierr.ErrSubscriptionNotActive {
 			WriteErrorJson(w, r, http.StatusBadRequest, err, "not_active")
 			return
 		}
@@ -156,11 +157,11 @@ func MidtransWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := subscriptionService.HandleMidtransWebhook(payload); err != nil {
-		if err.Error() == "invalid signature" {
+		if err.Error() == apierr.ErrInvalidSignature {
 			WriteErrorJson(w, r, http.StatusBadRequest, err, "invalid_signature")
 			return
 		}
-		if err.Error() == "payment not found" {
+		if err.Error() == apierr.ErrPaymentNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}

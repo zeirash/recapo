@@ -4,10 +4,10 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -101,7 +101,7 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := customerService.GetCustomerByID(customerID, shopID)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if err.Error() == apierr.ErrCustomerNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -265,15 +265,15 @@ func CustomerCheckActiveOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 func validateCreateCustomer(inp CreateCustomerRequest) (bool, error) {
 	if inp.Name == "" {
-		return false, errors.New("name is required")
+		return false, errors.New(apierr.ErrNameRequired)
 	}
 
 	if inp.Phone == "" {
-		return false, errors.New("phone is required")
+		return false, errors.New(apierr.ErrPhoneRequired)
 	}
 
 	if inp.Address == "" {
-		return false, errors.New("address is required")
+		return false, errors.New(apierr.ErrAddressRequired)
 	}
 
 	return true, nil
@@ -281,7 +281,7 @@ func validateCreateCustomer(inp CreateCustomerRequest) (bool, error) {
 
 func validateCustomerID(params map[string]string) (bool, error) {
 	if params["customer_id"] == "" {
-		return false, errors.New("customer_id is required")
+		return false, errors.New(apierr.ErrCustomerIDRequired)
 	}
 
 	return true, nil
@@ -289,11 +289,11 @@ func validateCustomerID(params map[string]string) (bool, error) {
 
 func validateCheckActiveOrder(inp CheckActiveOrderRequest) (bool, error) {
 	if inp.Phone == "" {
-		return false, errors.New("phone is required")
+		return false, errors.New(apierr.ErrPhoneRequired)
 	}
 
 	if inp.Name == "" {
-		return false, errors.New("name is required")
+		return false, errors.New(apierr.ErrNameRequired)
 	}
 
 	return true, nil

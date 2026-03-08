@@ -2,9 +2,9 @@ package handler
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -23,7 +23,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := userService.GetUserByID(int(userID))
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if err.Error() == apierr.ErrUserNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}

@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
@@ -209,7 +210,7 @@ func TestGetCustomerHandler(t *testing.T) {
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
 					GetCustomerByID(999, 1).
-					Return(nil, errors.New("customer not found"))
+					Return(nil, errors.New(apierr.ErrCustomerNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
@@ -625,7 +626,7 @@ func TestCustomerCheckActiveOrderHandler(t *testing.T) {
 			mockSetup:     func() {},
 			wantStatus:    http.StatusBadRequest,
 			wantSuccess:   false,
-			wantErrMessage: "name is required",
+			wantErrMessage: "Name is required",
 		},
 		{
 			name:   "returns 500 on service error",

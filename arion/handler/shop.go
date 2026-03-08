@@ -3,10 +3,10 @@ package handler
 import (
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/zeirash/recapo/arion/common"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -41,7 +41,7 @@ func GetShopShareTokenHandler(w http.ResponseWriter, r *http.Request) {
 	shopID := ctx.Value(common.ShopIDKey).(int)
 	token, err := shopService.GetShareTokenByID(shopID)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if err.Error() == apierr.ErrShopNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -71,13 +71,13 @@ func GetShopProductsHandler(w http.ResponseWriter, r *http.Request) {
 	shareToken := params["share_token"]
 
 	if shareToken == "" {
-		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("share_token is required"), "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New(apierr.ErrShareTokenRequired), "validation")
 		return
 	}
 
 	products, err := shopService.GetPublicProducts(shareToken)
 	if err != nil {
-		if err.Error() == "shop not found" {
+		if err.Error() == apierr.ErrShopNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
 		}
@@ -108,7 +108,7 @@ func CreateShopTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 	shareToken := params["share_token"]
 
 	if shareToken == "" {
-		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("share_token is required"), "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New(apierr.ErrShareTokenRequired), "validation")
 		return
 	}
 
@@ -142,26 +142,26 @@ func CreateShopTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 func validateCreateShopTempOrder(inp CreateShopTempOrderRequest) (bool, error) {
 	if inp.CustomerName == "" {
-		return false, errors.New("customer_name is required")
+		return false, errors.New(apierr.ErrCustomerNameRequired)
 	}
 
 	if inp.CustomerPhone == "" {
-		return false, errors.New("customer_phone is required")
+		return false, errors.New(apierr.ErrCustomerPhoneRequired)
 	}
 
 	if len(inp.Items) == 0 {
-		return false, errors.New("order_items is required")
+		return false, errors.New(apierr.ErrOrderItemsRequired)
 	}
 
 	for _, item := range inp.Items {
 		if item.ProductID <= 0 {
-			return false, errors.New("product_id is required")
+			return false, errors.New(apierr.ErrProductIDRequired)
 		}
 	}
 
 	for _, item := range inp.Items {
 		if item.Qty <= 0 {
-			return false, errors.New("qty is required")
+			return false, errors.New(apierr.ErrQtyRequired)
 		}
 	}
 

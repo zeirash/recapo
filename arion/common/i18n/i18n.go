@@ -65,20 +65,25 @@ func GetLangFromRequest(r *http.Request) string {
 }
 
 // T returns the translated message for the given language and code.
-// Returns empty string if not found.
+// Falls back to English if the key is missing in the requested language.
+// Returns empty string if not found in any language.
 func T(lang, code string) string {
 	mu.RLock()
-	langMap, ok := messages[lang]
+	langMap := messages[lang]
 	mu.RUnlock()
-	if !ok {
+	if msg, ok := langMap[code]; ok {
+		return msg
+	}
+	// Fall back to English if key missing in requested language.
+	if lang != defaultLang {
 		mu.RLock()
-		langMap = messages[defaultLang]
+		enMap := messages[defaultLang]
 		mu.RUnlock()
+		if msg, ok := enMap[code]; ok {
+			return msg
+		}
 	}
-	if langMap == nil {
-		return ""
-	}
-	return langMap[code]
+	return ""
 }
 
 // Message returns the translated message for the request's language and code.

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-pdf/fpdf"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
 	"github.com/zeirash/recapo/arion/common/response"
@@ -79,7 +80,7 @@ func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (respo
 		return response.OrderData{}, err
 	}
 	if activeOrder != nil {
-		return response.OrderData{}, errors.New("customer already has an active order")
+		return response.OrderData{}, errors.New(apierr.ErrActiveOrderExists)
 	}
 
 	order, err := orderStore.CreateOrder(nil, customerID, shopID, notes, nil)
@@ -106,7 +107,7 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 	}
 
 	if order == nil {
-		return nil, errors.New("order not found")
+		return nil, errors.New(apierr.ErrOrderNotFound)
 	}
 
 	orderItems, err := orderItemStore.GetOrderItemsByOrderID(order.ID)
@@ -178,7 +179,7 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 	}
 
 	if order == nil {
-		return response.OrderData{}, errors.New("order not found")
+		return response.OrderData{}, errors.New(apierr.ErrOrderNotFound)
 	}
 
 	updateData := store.UpdateOrderInput{
@@ -255,7 +256,7 @@ func (o *oservice) UpdateOrderItemByID(input UpdateOrderItemInput) (response.Ord
 	}
 
 	if orderItem == nil {
-		return response.OrderItemData{}, errors.New("order item not found")
+		return response.OrderItemData{}, errors.New(apierr.ErrOrderItemNotFound)
 	}
 
 	updateData := store.UpdateOrderItemInput{
@@ -300,7 +301,7 @@ func (o *oservice) GetOrderItemByID(orderItemID, orderID int) (*response.OrderIt
 	}
 
 	if orderItem == nil {
-		return nil, errors.New("order item not found")
+		return nil, errors.New(apierr.ErrOrderItemNotFound)
 	}
 
 	res := response.OrderItemData{
@@ -354,7 +355,7 @@ func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken strin
 	}
 
 	if shop == nil {
-		return response.TempOrderData{}, errors.New("shop not found")
+		return response.TempOrderData{}, errors.New(apierr.ErrShopNotFound)
 	}
 
 	db := dbGetter()
@@ -420,7 +421,7 @@ func (o *oservice) GetTempOrderByID(id int, shopID ...int) (*response.TempOrderD
 	}
 
 	if tempOrder == nil {
-		return nil, errors.New("temp order not found")
+		return nil, errors.New(apierr.ErrTempOrderNotFound)
 	}
 
 	tempOrderItems, err := orderItemStore.GetTempOrderItemsByTempOrderID(tempOrder.ID)

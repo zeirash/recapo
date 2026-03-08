@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
@@ -58,11 +59,11 @@ func TestLoginHandler(t *testing.T) {
 			mockSetup: func() {
 				mockUserService.EXPECT().
 					UserLogin("user@example.com", "wrongpassword").
-					Return(response.TokenResponse{}, errors.New("password incorrect"))
+					Return(response.TokenResponse{}, errors.New(apierr.ErrPasswordIncorrect))
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantSuccess:    false,
-			wantErrMessage: "password incorrect",
+			wantErrMessage: "Password is incorrect",
 		},
 		{
 			name: "login returns 500 on service error",

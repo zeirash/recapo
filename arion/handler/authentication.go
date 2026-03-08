@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/mail"
 
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/logger"
 )
 
@@ -55,7 +56,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := userService.UserLogin(inp.Email, inp.Password)
 	if err != nil {
 		status := http.StatusInternalServerError
-		if err.Error() == "password incorrect" {
+		if err.Error() == apierr.ErrPasswordIncorrect {
 			status = http.StatusUnauthorized
 		}
 
@@ -122,7 +123,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inp.RefreshToken == "" {
-		WriteErrorJson(w, r, http.StatusBadRequest, errors.New("refresh_token is required"), "validation")
+		WriteErrorJson(w, r, http.StatusBadRequest, errors.New(apierr.ErrRefreshTokenRequired), "validation")
 		return
 	}
 
@@ -137,11 +138,11 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 
 func validateLogin(input LoginRequest) (bool, error) {
 	if input.Email == "" {
-		return false, errors.New("email must not empty")
+		return false, errors.New(apierr.ErrEmailRequired)
 	}
 
 	if input.Password == "" {
-		return false, errors.New("password must not empty")
+		return false, errors.New(apierr.ErrPasswordRequired)
 	}
 
 	return true, nil
@@ -149,20 +150,20 @@ func validateLogin(input LoginRequest) (bool, error) {
 
 func validateRegister(input RegisterRequest) (bool, error) {
 	if input.Name == "" {
-		return false, errors.New("name must not empty")
+		return false, errors.New(apierr.ErrNameRequired)
 	}
 
 	if input.Email == "" {
-		return false, errors.New("email must not empty")
+		return false, errors.New(apierr.ErrEmailRequired)
 	}
 
 	_, err := mail.ParseAddress(input.Email)
 	if err != nil {
-		return false, errors.New("email not valid")
+		return false, errors.New(apierr.ErrEmailInvalid)
 	}
 
 	if input.Password == "" {
-		return false, errors.New("password must not empty")
+		return false, errors.New(apierr.ErrPasswordRequired)
 	}
 
 	return true, nil

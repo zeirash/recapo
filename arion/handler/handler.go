@@ -7,6 +7,7 @@ import (
 
 	sentry "github.com/getsentry/sentry-go"
 	"github.com/pkg/errors"
+	"github.com/zeirash/recapo/arion/common/i18n"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/service"
 )
@@ -18,7 +19,6 @@ type ApiResponse struct {
 	Message string      `json:"message"`
 }
 
-// TODO: fix error message translation
 // ErrorApiResponse is the shape of error responses for Swagger. Data is an
 // empty object {} rather than a string or null.
 type ErrorApiResponse struct {
@@ -140,9 +140,9 @@ func WriteJson(w http.ResponseWriter, status int, body interface{}) {
 	w.Write(jsonResp)
 }
 
-// WriteErrorJson writes a JSON error response. Message is translated using
-// Accept-Language when r is non-nil, except for code "validation" which
-// always uses err.Error() to preserve field-level validation details.
+// WriteErrorJson writes a JSON error response. The message is translated using
+// Accept-Language when r is non-nil; err.Error() is used as an i18n key and
+// falls back to the raw string when no translation exists.
 func WriteErrorJson(w http.ResponseWriter, r *http.Request, status int, err error, code string) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -152,9 +152,10 @@ func WriteErrorJson(w http.ResponseWriter, r *http.Request, status int, err erro
 
 	w.WriteHeader(status)
 
-	msg := code
+	msg := i18n.Message(r, code, code)
 	if err != nil {
-		msg = err.Error()
+		key := err.Error()
+		msg = i18n.Message(r, key, key)
 	}
 
 	res := ErrorApiResponse{

@@ -16,6 +16,7 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
@@ -126,7 +127,7 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 	}
 
 	if product == nil {
-		return nil, errors.New("product not found")
+		return nil, errors.New(apierr.ErrProductNotFound)
 	}
 
 	res := response.ProductData{
@@ -249,7 +250,7 @@ func (p *pservice) UploadProductImage(file io.Reader) (string, error) {
 	case "image/webp":
 		ext = ".webp"
 	default:
-		return "", errors.New("unsupported image type; allowed: jpeg, png, webp")
+		return "", errors.New(apierr.ErrUnsupportedImageType)
 	}
 
 	randBytes := make([]byte, 16)
@@ -301,14 +302,14 @@ func (p *pservice) DeleteProductImage(imageURL string) error {
 	// Local filesystem path.
 	const urlPrefix = "/uploads/products/"
 	if !strings.HasPrefix(imageURL, urlPrefix) {
-		return errors.New("invalid image URL")
+		return errors.New(apierr.ErrInvalidImageURL)
 	}
 
 	filename := strings.TrimPrefix(imageURL, urlPrefix)
 	filePath := filepath.Join(cfg.UploadDir, "products", filename)
 	if err := os.Remove(filePath); err != nil {
 		if os.IsNotExist(err) {
-			return errors.New("image not found")
+			return errors.New(apierr.ErrImageNotFound)
 		}
 		return err
 	}
