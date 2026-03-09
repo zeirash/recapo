@@ -18,6 +18,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -290,7 +291,7 @@ func TestGetProductsHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetProductsByShopID(1, nil).
+					GetProductsByShopID(1, model.FilterOptions{}).
 					Return([]response.ProductData{
 						{ID: 1, Name: "Product A", Price: 1000, CreatedAt: fixedTime},
 						{ID: 2, Name: "Product B", Price: 500, CreatedAt: fixedTime},
@@ -307,7 +308,23 @@ func TestGetProductsHandler(t *testing.T) {
 			mockSetup: func() {
 				q := "widget"
 				mockProductService.EXPECT().
-					GetProductsByShopID(1, &q).
+					GetProductsByShopID(1, model.FilterOptions{SearchQuery: &q}).
+					Return([]response.ProductData{
+						{ID: 1, Name: "Widget A", Price: 1000, CreatedAt: fixedTime},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   1,
+		},
+		{
+			name:   "successfully get products with sort param",
+			url:    "/products?sort=name,asc",
+			shopID: 1,
+			mockSetup: func() {
+				s := "name,asc"
+				mockProductService.EXPECT().
+					GetProductsByShopID(1, model.FilterOptions{Sort: &s}).
 					Return([]response.ProductData{
 						{ID: 1, Name: "Widget A", Price: 1000, CreatedAt: fixedTime},
 					}, nil)
@@ -322,7 +339,7 @@ func TestGetProductsHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetProductsByShopID(1, nil).
+					GetProductsByShopID(1, model.FilterOptions{}).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,

@@ -139,7 +139,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 	tests := []struct {
 		name        string
 		shopID      int
-		searchQuery *string
+		filter      model.FilterOptions
 		mockSetup   func(mock sqlmock.Sqlmock)
 		wantResult  []model.Customer
 		wantErr     bool
@@ -147,6 +147,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 		{
 			name:   "get customers by shop ID returns multiple customers",
 			shopID: 1,
+			filter: model.FilterOptions{},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"}).
 					AddRow(1, "John Doe", "1234567890", "123 Main St", fixedTime, nil).
@@ -176,6 +177,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 		{
 			name:   "get customers by shop ID returns empty slice when no customers exist",
 			shopID: 9999,
+			filter: model.FilterOptions{},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"})
 				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE shop_id = \$1`).
@@ -188,6 +190,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 		{
 			name:   "get customers by shop ID returns error on database failure",
 			shopID: 1,
+			filter: model.FilterOptions{},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE shop_id = \$1`).
 					WithArgs(1).
@@ -199,6 +202,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 		{
 			name:   "get customers by shop ID returns nil when db returns no rows",
 			shopID: 1,
+			filter: model.FilterOptions{},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE shop_id = \$1`).
 					WithArgs(1).
@@ -210,7 +214,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 		{
 			name:        "get customers by shop ID with search query filters by name, phone",
 			shopID:      1,
-			searchQuery: strPtr("john"),
+			filter: model.FilterOptions{SearchQuery: strPtr("john")},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"}).
 					AddRow(1, "John Doe", "1234567890", "123 Main St", fixedTime, nil)
@@ -229,6 +233,36 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:        "get customers by shop ID with sort returns ordered customers",
+			shopID:      1,
+			filter: model.FilterOptions{Sort: strPtr("name,asc")},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"}).
+					AddRow(1, "Alpha", "1234567890", "123 Main St", fixedTime, nil).
+					AddRow(2, "Beta", "0987654321", "456 Oak Ave", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE shop_id = \$1\s+ORDER BY name asc`).
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			wantResult: []model.Customer{
+				{
+					ID:        1,
+					Name:      "Alpha",
+					Phone:     "1234567890",
+					Address:   "123 Main St",
+					CreatedAt: fixedTime,
+				},
+				{
+					ID:        2,
+					Name:      "Beta",
+					Phone:     "0987654321",
+					Address:   "456 Oak Ave",
+					CreatedAt: fixedTime,
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -242,7 +276,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewCustomerStoreWithDB(db)
 
-			got, gotErr := store.GetCustomersByShopID(tt.shopID, tt.searchQuery)
+			got, gotErr := store.GetCustomersByShopID(tt.shopID, tt.filter)
 
 			if gotErr != nil {
 				if !tt.wantErr {

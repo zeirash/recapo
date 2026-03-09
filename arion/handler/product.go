@@ -11,6 +11,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/common/response"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -127,6 +128,7 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			search	query		string	false	"Search query"
+//	@Param			sort  	query		string	false	"Sort by column and order (e.g. name,desc)"
 //	@Success		200		{array}		response.ProductData
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/products [get]
@@ -134,12 +136,15 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
-	var searchQuery *string
+	filter := model.FilterOptions{}
 	if q := r.URL.Query().Get("search"); q != "" {
-		searchQuery = &q
+		filter.SearchQuery = &q
+	}
+	if sort := r.URL.Query().Get("sort"); sort != "" {
+		filter.Sort = &sort
 	}
 
-	res, err := productService.GetProductsByShopID(shopID, searchQuery)
+	res, err := productService.GetProductsByShopID(shopID, filter)
 	if err != nil {
 		logger.WithError(err).Error("get_products_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_products")

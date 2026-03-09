@@ -6,6 +6,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
 )
 
@@ -52,7 +53,7 @@ func (s *shopService) GetPublicProducts(shareToken string) ([]response.ProductDa
 		return nil, errors.New(apierr.ErrShopNotFound)
 	}
 
-	products, err := productStore.GetProductsByShopID(shop.ID, nil)
+	products, err := productStore.GetProductsByShopID(shop.ID, model.FilterOptions{})
 	if err != nil {
 		return nil, err
 	}

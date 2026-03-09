@@ -19,6 +19,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
 )
 
@@ -26,7 +27,7 @@ type (
 	ProductService interface {
 		CreateProduct(shopID int, name string, description *string, price int, originalPrice *int, imageURL *string) (response.ProductData, error)
 		GetProductByID(productID int, shopID ...int) (*response.ProductData, error)
-		GetProductsByShopID(shopID int, searchQuery *string) ([]response.ProductData, error)
+		GetProductsByShopID(shopID int, filter model.FilterOptions) ([]response.ProductData, error)
 		UpdateProduct(input UpdateProductInput) (response.ProductData, error)
 		DeleteProductByID(id int) error
 		GetPurchaseListProducts(shopID int) ([]response.PurchaseListProductData, error)
@@ -147,8 +148,8 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 	return &res, nil
 }
 
-func (p *pservice) GetProductsByShopID(shopID int, searchQuery *string) ([]response.ProductData, error) {
-	products, err := productStore.GetProductsByShopID(shopID, searchQuery)
+func (p *pservice) GetProductsByShopID(shopID int, filter model.FilterOptions) ([]response.ProductData, error) {
+	products, err := productStore.GetProductsByShopID(shopID, filter)
 	if err != nil {
 		return []response.ProductData{}, err
 	}

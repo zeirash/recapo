@@ -21,7 +21,7 @@ type (
 	CustomerStore interface {
 		GetCustomerByID(id int, shopID ...int) (*model.Customer, error)
 		GetCustomerByPhone(phone string, shopID int) (*model.Customer, error)
-		GetCustomersByShopID(shopID int, searchQuery *string) ([]model.Customer, error)
+		GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]model.Customer, error)
 		CreateCustomer(input CreateCustomerInput) (*model.Customer, error)
 		UpdateCustomer(id int, input UpdateCustomerInput) (*model.Customer, error)
 		DeleteCustomerByID(id int) error
@@ -97,7 +97,7 @@ func (c *customer) GetCustomerByPhone(phone string, shopID int) (*model.Customer
 	return &customer, nil
 }
 
-func (c *customer) GetCustomersByShopID(shopID int, searchQuery *string) ([]model.Customer, error) {
+func (c *customer) GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]model.Customer, error) {
 	q := `
 		SELECT id, name, phone, address, created_at, updated_at
 		FROM customers
@@ -105,9 +105,15 @@ func (c *customer) GetCustomersByShopID(shopID int, searchQuery *string) ([]mode
 	`
 	args := []interface{}{shopID}
 
-	if searchQuery != nil && strings.TrimSpace(*searchQuery) != "" {
+	if filter.SearchQuery != nil && strings.TrimSpace(*filter.SearchQuery) != "" {
 		q += ` AND (name ILIKE $2 OR phone ILIKE $2)`
-		args = append(args, "%"+strings.TrimSpace(*searchQuery)+"%")
+		args = append(args, "%"+strings.TrimSpace(*filter.SearchQuery)+"%")
+	}
+	if filter.Sort != nil {
+		sort := strings.Split(*filter.Sort, ",")
+		if len(sort) == 2 {
+			q += fmt.Sprintf(" ORDER BY %s %s", sort[0], sort[1])
+		}
 	}
 
 	rows, err := c.db.Query(q, args...)

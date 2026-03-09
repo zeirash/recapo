@@ -16,6 +16,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/service"
 )
 
@@ -272,8 +273,8 @@ func TestGetCustomersHandler(t *testing.T) {
 
 	tests := []struct {
 		name        string
+		url         string
 		shopID      int
-		searchQuery string
 		mockSetup   func()
 		wantStatus  int
 		wantSuccess bool
@@ -281,10 +282,11 @@ func TestGetCustomersHandler(t *testing.T) {
 	}{
 		{
 			name:   "successfully get customers list",
+			url:    "/customers",
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1, nil).
+					GetCustomersByShopID(1, model.FilterOptions{}).
 					Return([]response.CustomerData{
 						{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "123 Main St", CreatedAt: fixedTime},
 						{ID: 2, Name: "Jane Doe", Phone: "08987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
@@ -295,23 +297,13 @@ func TestGetCustomersHandler(t *testing.T) {
 			wantCount:   2,
 		},
 		{
-			name:   "get customers returns 500 on service error",
+			name:   "successfully get customers with search query",
+			url:    "/customers?search=john",
 			shopID: 1,
 			mockSetup: func() {
+				q := "john"
 				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1, nil).
-					Return(nil, errors.New("database error"))
-			},
-			wantStatus:  http.StatusInternalServerError,
-			wantSuccess: false,
-		},
-		{
-			name:        "get customers with search query passes search to service",
-			shopID:      1,
-			searchQuery: "john",
-			mockSetup: func() {
-				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1, gomock.Any()).
+					GetCustomersByShopID(1, model.FilterOptions{SearchQuery: &q}).
 					Return([]response.CustomerData{
 						{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "123 Main St", CreatedAt: fixedTime},
 					}, nil)
@@ -320,17 +312,42 @@ func TestGetCustomersHandler(t *testing.T) {
 			wantSuccess: true,
 			wantCount:   1,
 		},
+		{
+			name:   "successfully get customers with sort param",
+			url:    "/customers?sort=name,asc",
+			shopID: 1,
+			mockSetup: func() {
+				s := "name,asc"
+				mockCustomerService.EXPECT().
+					GetCustomersByShopID(1, model.FilterOptions{Sort: &s}).
+					Return([]response.CustomerData{
+						{ID: 2, Name: "Jane Doe", Phone: "08987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
+						{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "123 Main St", CreatedAt: fixedTime},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   2,
+		},
+		{
+			name:   "get customers returns 500 on service error",
+			url:    "/customers",
+			shopID: 1,
+			mockSetup: func() {
+				mockCustomerService.EXPECT().
+					GetCustomersByShopID(1, model.FilterOptions{}).
+					Return(nil, errors.New("database error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
 
-			path := "/customers"
-			if tt.searchQuery != "" {
-				path += "?search=" + tt.searchQuery
-			}
-			req := newRequestWithShopID("GET", path, nil, tt.shopID)
+			req := newRequestWithShopID("GET", tt.url, nil, tt.shopID)
 			rec := httptest.NewRecorder()
 
 			handler.GetCustomersHandler(rec, req)

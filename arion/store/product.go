@@ -19,7 +19,7 @@ var ErrDuplicateProductName = errors.New(apierr.ErrProductNameExists)
 type (
 	ProductStore interface {
 		GetProductByID(productID int, shopID ...int) (*model.Product, error)
-		GetProductsByShopID(shopID int, searchQuery *string) ([]model.Product, error)
+		GetProductsByShopID(shopID int, filter model.FilterOptions) ([]model.Product, error)
 		CreateProduct(name string, description *string, price int, shopID int, originalPrice *int, imageURL *string) (*model.Product, error)
 		UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error)
 		DeleteProductByID(productID int) error
@@ -74,7 +74,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	return &product, nil
 }
 
-func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.Product, error) {
+func (p *product) GetProductsByShopID(shopID int, filter model.FilterOptions) ([]model.Product, error) {
 	q := `
 		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
 		FROM products
@@ -82,9 +82,15 @@ func (p *product) GetProductsByShopID(shopID int, searchQuery *string) ([]model.
 	`
 	args := []interface{}{shopID}
 
-	if searchQuery != nil && strings.TrimSpace(*searchQuery) != "" {
+	if filter.SearchQuery != nil && strings.TrimSpace(*filter.SearchQuery) != "" {
 		q += ` AND name ILIKE $2`
-		args = append(args, "%"+strings.TrimSpace(*searchQuery)+"%")
+		args = append(args, "%"+strings.TrimSpace(*filter.SearchQuery)+"%")
+	}
+	if filter.Sort != nil {
+		sort := strings.Split(*filter.Sort, ",")
+		if len(sort) == 2 {
+			q += fmt.Sprintf(" ORDER BY %s %s", sort[0], sort[1])
+		}
 	}
 
 	rows, err := p.db.Query(q, args...)

@@ -10,6 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	response "github.com/zeirash/recapo/arion/common/response"
+	model "github.com/zeirash/recapo/arion/model"
 	service "github.com/zeirash/recapo/arion/service"
 )
 
@@ -86,18 +87,18 @@ func (mr *MockProductServiceMockRecorder) GetProductByID(productID interface{}, 
 }
 
 // GetProductsByShopID mocks base method.
-func (m *MockProductService) GetProductsByShopID(shopID int, searchQuery *string) ([]response.ProductData, error) {
+func (m *MockProductService) GetProductsByShopID(shopID int, filter model.FilterOptions) ([]response.ProductData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProductsByShopID", shopID, searchQuery)
+	ret := m.ctrl.Call(m, "GetProductsByShopID", shopID, filter)
 	ret0, _ := ret[0].([]response.ProductData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetProductsByShopID indicates an expected call of GetProductsByShopID.
-func (mr *MockProductServiceMockRecorder) GetProductsByShopID(shopID, searchQuery interface{}) *gomock.Call {
+func (mr *MockProductServiceMockRecorder) GetProductsByShopID(shopID, filter interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByShopID", reflect.TypeOf((*MockProductService)(nil).GetProductsByShopID), shopID, searchQuery)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByShopID", reflect.TypeOf((*MockProductService)(nil).GetProductsByShopID), shopID, filter)
 }
 
 // GetPurchaseListProducts mocks base method.

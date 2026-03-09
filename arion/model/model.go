@@ -31,6 +31,13 @@ type (
 		SystemMode bool   `json:"system_mode"`
 	}
 
+	/****************** Shared filter *****************/
+	// FilterOptions holds common list filters (search + sort). Reused across products, customers, etc.
+	FilterOptions struct {
+		SearchQuery *string
+		Sort        *string // value: column,order. E.g. created_at,desc
+	}
+
 	/********************* User ************************/
 	User struct {
 		ID        int          `db:"id"`

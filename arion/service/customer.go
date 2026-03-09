@@ -6,6 +6,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/response"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
 )
 
@@ -13,7 +14,7 @@ type (
 	CustomerService interface {
 		CreateCustomer(name, phone, address string, shopID int) (response.CustomerData, error)
 		GetCustomerByID(customerID int, shopID ...int) (*response.CustomerData, error)
-		GetCustomersByShopID(shopID int, searchQuery *string) ([]response.CustomerData, error)
+		GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]response.CustomerData, error)
 		UpdateCustomer(input UpdateCustomerInput) (response.CustomerData, error)
 		DeleteCustomerByID(id int) error
 		CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error)
@@ -86,8 +87,8 @@ func (c *cservice) GetCustomerByID(customerID int, shopID ...int) (*response.Cus
 	return &res, nil
 }
 
-func (c *cservice) GetCustomersByShopID(shopID int, searchQuery *string) ([]response.CustomerData, error) {
-	customers, err := customerStore.GetCustomersByShopID(shopID, searchQuery)
+func (c *cservice) GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]response.CustomerData, error) {
+	customers, err := customerStore.GetCustomersByShopID(shopID, filter)
 	if err != nil {
 		return []response.CustomerData{}, err
 	}

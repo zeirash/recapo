@@ -40,7 +40,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 					}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(5, (*string)(nil)).
+					GetProductsByShopID(5, model.FilterOptions{}).
 					Return([]model.Product{
 						{
 							ID:            1,
@@ -82,7 +82,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 					Return(&model.Shop{ID: 1, Name: "Shop", ShareToken: "empty123", CreatedAt: fixedTime}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(1, (*string)(nil)).
+					GetProductsByShopID(1, model.FilterOptions{}).
 					Return([]model.Product{}, nil)
 
 				return shopMock, productMock
@@ -132,7 +132,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 					Return(&model.Shop{ID: 1, ShareToken: "token", CreatedAt: fixedTime}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(1, (*string)(nil)).
+					GetProductsByShopID(1, model.FilterOptions{}).
 					Return(nil, errors.New("query failed"))
 
 				return shopMock, productMock

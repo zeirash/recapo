@@ -326,7 +326,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 	tests := []struct {
 		name        string
 		shopID      int
-		searchQuery *string
+		filter      model.FilterOptions
 		mockSetup   func(ctrl *gomock.Controller) *mock_store.MockCustomerStore
 		wantResult  []response.CustomerData
 		wantErr     bool
@@ -334,10 +334,11 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 		{
 			name:   "get customers by shop ID returns multiple customers",
 			shopID: 10,
+			filter: model.FilterOptions{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomersByShopID(10, nil).
+					GetCustomersByShopID(10, model.FilterOptions{}).
 					Return([]model.Customer{
 						{ID: 1, Name: "John Doe", Phone: "1234567890", Address: "123 Main St", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
 						{ID: 2, Name: "Jane Doe", Phone: "0987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
@@ -353,10 +354,11 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 		{
 			name:   "get customers by shop ID returns empty slice",
 			shopID: 10,
+			filter: model.FilterOptions{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomersByShopID(10, nil).
+					GetCustomersByShopID(10, model.FilterOptions{}).
 					Return([]model.Customer{}, nil)
 				return mock
 			},
@@ -366,10 +368,11 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 		{
 			name:   "get customers by shop ID returns error on database failure",
 			shopID: 10,
+			filter: model.FilterOptions{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomersByShopID(10, nil).
+					GetCustomersByShopID(10, model.FilterOptions{}).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -379,7 +382,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 		{
 			name:        "get customers by shop ID with search query returns filtered customers",
 			shopID:      10,
-			searchQuery: strPtr("john"),
+			filter: model.FilterOptions{SearchQuery: strPtr("john")},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
@@ -406,7 +409,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
-			got, gotErr := c.GetCustomersByShopID(tt.shopID, tt.searchQuery)
+			got, gotErr := c.GetCustomersByShopID(tt.shopID, tt.filter)
 
 			if gotErr != nil {
 				if !tt.wantErr {
