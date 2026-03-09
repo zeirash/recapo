@@ -151,7 +151,10 @@
     "fetchFailed": "Gagal memuat pelanggan",
     "createFailed": "Gagal membuat pelanggan",
     "updateFailed": "Gagal memperbarui pelanggan",
-    "deleteFailed": "Gagal menghapus pelanggan"
+    "deleteFailed": "Gagal menghapus pelanggan",
+    "sortDefault": "Urutan: Default",
+    "sortNameAsc": "Nama: A → Z",
+    "sortNameDesc": "Nama: Z → A"
   },
   "orders": {
     "title": "Pesanan",

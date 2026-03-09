@@ -151,7 +151,10 @@
     "fetchFailed": "Failed to fetch customers",
     "createFailed": "Failed to create customer",
     "updateFailed": "Failed to update customer",
-    "deleteFailed": "Failed to delete customer"
+    "deleteFailed": "Failed to delete customer",
+    "sortDefault": "Sort: Default",
+    "sortNameAsc": "Name: A → Z",
+    "sortNameDesc": "Name: Z → A"
   },
   "orders": {
     "title": "Orders",

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
 import Layout from '@/components/layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
@@ -35,6 +35,7 @@ export default function CustomersPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [sortValue, setSortValue] = useState<string>('')
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {
@@ -42,10 +43,12 @@ export default function CustomersPage() {
     return () => clearTimeout(timer)
   }, [searchInput])
 
+  const sortParam = sortValue || undefined
+
   const { data: customersRes, isLoading, isError, error } = useQuery(
-    ['customers', debouncedSearch],
+    ['customers', debouncedSearch, sortParam],
     async () => {
-      const res = await api.getCustomers(debouncedSearch || undefined)
+      const res = await api.getCustomers(debouncedSearch || undefined, sortParam)
       if (!res.success) throw new Error(res.message || tc('fetchFailed'))
       return res.data as Customer[]
     },
@@ -127,13 +130,27 @@ export default function CustomersPage() {
       <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
         {/* Top bar */}
         <Box sx={{ p: '24px', flexShrink: 0 }}>
-          <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center', maxWidth: 960, mx: 'auto' }}>
-            <SearchInput
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={tc('searchPlaceholder')}
-            />
-            <AddButton onClick={openCreateForm} title={tc('addCustomer')} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
+            <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <SearchInput
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder={tc('searchPlaceholder')}
+              />
+              <AddButton onClick={openCreateForm} title={tc('addCustomer')} />
+            </Box>
+            <Select
+              size="small"
+              displayEmpty
+              value={sortValue}
+              onChange={(e) => setSortValue(e.target.value)}
+              sx={{ height: 36, fontSize: '14px', borderRadius: '8px', width: 'fit-content', minWidth: 160 }}
+              MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
+            >
+              <MenuItem value="">{tc('sortDefault')}</MenuItem>
+              <MenuItem value="name,asc">{tc('sortNameAsc')}</MenuItem>
+              <MenuItem value="name,desc">{tc('sortNameDesc')}</MenuItem>
+            </Select>
           </Box>
         </Box>
 
