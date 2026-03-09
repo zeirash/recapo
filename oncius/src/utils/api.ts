@@ -253,9 +253,12 @@ export const api = {
   },
 
   // Products
-  getProducts: (search?: string) => {
-    const params = search ? `?search=${encodeURIComponent(search)}` : ''
-    return apiRequest<ApiResponse<any[]>>(`/products${params}`)
+  getProducts: (search?: string, sort?: string) => {
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (sort) params.set('sort', sort)
+    const qs = params.toString()
+    return apiRequest<ApiResponse<any[]>>(`/products${qs ? `?${qs}` : ''}`)
   },
 
   getProduct: (id: number | string) => {

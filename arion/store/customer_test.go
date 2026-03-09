@@ -241,7 +241,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"}).
 					AddRow(1, "Alpha", "1234567890", "123 Main St", fixedTime, nil).
 					AddRow(2, "Beta", "0987654321", "456 Oak Ave", fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE shop_id = \$1\s+ORDER BY name asc`).
+				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at\s+FROM customers\s+WHERE shop_id = \$1\s+ORDER BY LOWER\(name\) asc`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},

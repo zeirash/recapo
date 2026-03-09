@@ -216,7 +216,7 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "description", "price", "original_price", "image_url", "created_at", "updated_at"}).
 					AddRow(1, 10, "Alpha", "Desc", 500, 400, "", fixedTime, nil).
 					AddRow(2, 10, "Beta", "Desc", 1000, 800, "", fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1\s+ORDER BY name asc`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at\s+FROM products\s+WHERE shop_id = \$1\s+ORDER BY LOWER\(name\) asc`).
 					WithArgs(10).
 					WillReturnRows(rows)
 			},

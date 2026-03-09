@@ -89,7 +89,13 @@ func (p *product) GetProductsByShopID(shopID int, filter model.FilterOptions) ([
 	if filter.Sort != nil {
 		sort := strings.Split(*filter.Sort, ",")
 		if len(sort) == 2 {
-			q += fmt.Sprintf(" ORDER BY %s %s", sort[0], sort[1])
+			col, dir := sort[0], sort[1]
+			textCols := map[string]bool{"name": true}
+			if textCols[col] {
+				q += fmt.Sprintf(" ORDER BY LOWER(%s) %s", col, dir)
+			} else {
+				q += fmt.Sprintf(" ORDER BY %s %s", col, dir)
+			}
 		}
 	}
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
 import Layout from '@/components/layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
@@ -40,6 +40,7 @@ export default function ProductsPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [sortValue, setSortValue] = useState<string>('')
   const [shareCopied, setShareCopied] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreviewURL, setImagePreviewURL] = useState<string | null>(null)
@@ -60,10 +61,12 @@ export default function ProductsPage() {
     return () => { if (imagePreviewURL?.startsWith('blob:')) URL.revokeObjectURL(imagePreviewURL) }
   }, [imagePreviewURL])
 
+  const sortParam = sortValue || undefined
+
   const { data: productsRes, isLoading, isError, error } = useQuery(
-    ['products', debouncedSearch],
+    ['products', debouncedSearch, sortParam],
     async () => {
-      const res = await api.getProducts(debouncedSearch || undefined)
+      const res = await api.getProducts(debouncedSearch || undefined, sortParam)
       if (!res.success) throw new Error(res.message || tp('fetchFailed'))
       return res.data as Product[]
     },
@@ -238,31 +241,47 @@ export default function ProductsPage() {
       <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
         {/* Top bar */}
         <Box sx={{ p: '24px', flexShrink: 0 }}>
-          <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', maxWidth: 960, mx: 'auto' }}>
-            <SearchInput
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={tp('searchPlaceholder')}
-            />
-            <AddButton onClick={openCreateForm} title={tp('addProduct')} />
-            <Button
-              variant="outlined"
-              onClick={handleShare}
-              title={shareCopied ? tp('linkCopied') : tp('shareButton')}
-              sx={{
-                minWidth: 36,
-                width: 36,
-                height: 36,
-                p: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '8px',
-                fontSize: '14px',
-              }}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
+            <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <SearchInput
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder={tp('searchPlaceholder')}
+              />
+              <AddButton onClick={openCreateForm} title={tp('addProduct')} />
+              <Button
+                variant="outlined"
+                onClick={handleShare}
+                title={shareCopied ? tp('linkCopied') : tp('shareButton')}
+                sx={{
+                  minWidth: 36,
+                  width: 36,
+                  height: 36,
+                  p: 0,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                }}
+              >
+                {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
+              </Button>
+            </Box>
+            <Select
+              size="small"
+              displayEmpty
+              value={sortValue}
+              onChange={(e) => setSortValue(e.target.value)}
+              sx={{ height: 36, fontSize: '14px', borderRadius: '8px', width: 'fit-content', minWidth: 160 }}
+              MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
             >
-              {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
-            </Button>
+              <MenuItem value="">{tp('sortDefault')}</MenuItem>
+              <MenuItem value="name,asc">{tp('sortNameAsc')}</MenuItem>
+              <MenuItem value="name,desc">{tp('sortNameDesc')}</MenuItem>
+              <MenuItem value="price,asc">{tp('sortPriceAsc')}</MenuItem>
+              <MenuItem value="price,desc">{tp('sortPriceDesc')}</MenuItem>
+            </Select>
           </Box>
         </Box>
 
