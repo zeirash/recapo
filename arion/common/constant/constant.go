@@ -1,23 +1,19 @@
 package constant
 
-// User role constants
 const (
+	// User role constants
 	RoleSystem = "system"
 	RoleOwner  = "owner"
 	RoleAdmin  = "admin"
-)
 
-// Subscription status constants
-const (
+	// Subscription status constants
 	SubStatusTrialing  = "trialing"
 	SubStatusActive    = "active"
 	SubStatusPastDue   = "past_due"
 	SubStatusCancelled = "cancelled"
 	SubStatusExpired   = "expired"
-)
 
-// Payment status constants
-const (
+	// Payment status constants
 	PaymentStatusPending    = "pending"
 	PaymentStatusSettlement = "settlement"
 	PaymentStatusCapture    = "capture"
@@ -25,10 +21,8 @@ const (
 	PaymentStatusCancel     = "cancel"
 	PaymentStatusExpire     = "expire"
 	PaymentStatusFailure    = "failure"
-)
 
-// Order status constants
-const (
+	// Order status constants
 	FilterStatusAll       = "all"
 
 	OrderStatusCreated    = "created"
@@ -40,4 +34,8 @@ const (
 	TempOrderStatusPending   = "pending"
 	TempOrderStatusAccepted  = "accepted"
 	TempOrderStatusRejected  = "rejected"
+
+	OrderPaymentStatusUnpaid = "unpaid"
+	OrderPaymentStatusPaid   = "paid"
+	OrderPaymentStatusPartial = "partial"
 )

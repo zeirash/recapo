@@ -41,10 +41,11 @@ type (
 	oservice struct{}
 
 	UpdateOrderInput struct {
-		ID         int
-		TotalPrice *int
-		Status     *string
-		Notes      *string
+		ID            int
+		TotalPrice    *int
+		Status        *string
+		PaymentStatus *string
+		Notes         *string
 	}
 
 	UpdateOrderItemInput struct {
@@ -89,12 +90,13 @@ func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (respo
 	}
 
 	res := response.OrderData{
-		ID:           order.ID,
-		CustomerName: order.CustomerName,
-		TotalPrice:   order.TotalPrice,
-		Status:       order.Status,
-		Notes:        order.Notes,
-		CreatedAt:    order.CreatedAt,
+		ID:            order.ID,
+		CustomerName:  order.CustomerName,
+		TotalPrice:    order.TotalPrice,
+		Status:        order.Status,
+		PaymentStatus: order.PaymentStatus,
+		Notes:         order.Notes,
+		CreatedAt:     order.CreatedAt,
 	}
 
 	return res, nil
@@ -127,13 +129,14 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 	}
 
 	res := response.OrderData{
-		ID:           order.ID,
-		CustomerName: order.CustomerName,
-		TotalPrice:   order.TotalPrice,
-		Status:       order.Status,
-		Notes:        order.Notes,
-		OrderItems:   orderItemsData,
-		CreatedAt:    order.CreatedAt,
+		ID:            order.ID,
+		CustomerName:  order.CustomerName,
+		TotalPrice:    order.TotalPrice,
+		Status:        order.Status,
+		PaymentStatus: order.PaymentStatus,
+		Notes:         order.Notes,
+		OrderItems:    orderItemsData,
+		CreatedAt:     order.CreatedAt,
 	}
 
 	if order.UpdatedAt.Valid {
@@ -153,12 +156,13 @@ func (o *oservice) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) 
 	ordersData := []response.OrderData{}
 	for _, order := range orders {
 		res := response.OrderData{
-			ID:           order.ID,
-			CustomerName: order.CustomerName,
-			TotalPrice:   order.TotalPrice,
-			Status:       order.Status,
-			Notes:        order.Notes,
-			CreatedAt:    order.CreatedAt,
+			ID:            order.ID,
+			CustomerName:  order.CustomerName,
+			TotalPrice:    order.TotalPrice,
+			Status:        order.Status,
+			PaymentStatus: order.PaymentStatus,
+			Notes:         order.Notes,
+			CreatedAt:     order.CreatedAt,
 		}
 
 		if order.UpdatedAt.Valid {
@@ -183,9 +187,10 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 	}
 
 	updateData := store.UpdateOrderInput{
-		TotalPrice: input.TotalPrice,
-		Status:     input.Status,
-		Notes:      input.Notes,
+		TotalPrice:    input.TotalPrice,
+		Status:        input.Status,
+		PaymentStatus: input.PaymentStatus,
+		Notes:         input.Notes,
 	}
 
 	orderData, err := orderStore.UpdateOrder(nil, input.ID, updateData)
@@ -194,12 +199,13 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 	}
 
 	res := response.OrderData{
-		ID:           orderData.ID,
-		CustomerName: orderData.CustomerName,
-		TotalPrice:   orderData.TotalPrice,
-		Status:       orderData.Status,
-		Notes:        orderData.Notes,
-		CreatedAt:    orderData.CreatedAt,
+		ID:            orderData.ID,
+		CustomerName:  orderData.CustomerName,
+		TotalPrice:    orderData.TotalPrice,
+		Status:        orderData.Status,
+		PaymentStatus: orderData.PaymentStatus,
+		Notes:         orderData.Notes,
+		CreatedAt:     orderData.CreatedAt,
 	}
 
 	if orderData.UpdatedAt.Valid {
@@ -636,13 +642,14 @@ func (o *oservice) createOrderFromTempOrder(tempOrderID, customerID, shopID int)
 	}
 
 	return &response.OrderData{
-		ID:           order.ID,
-		CustomerName: order.CustomerName,
-		TotalPrice:   order.TotalPrice,
-		Status:       order.Status,
-		Notes:        order.Notes,
-		OrderItems:   orderItems,
-		CreatedAt:    order.CreatedAt,
+		ID:            order.ID,
+		CustomerName:  order.CustomerName,
+		TotalPrice:    order.TotalPrice,
+		Status:        order.Status,
+		PaymentStatus: order.PaymentStatus,
+		Notes:         order.Notes,
+		OrderItems:    orderItems,
+		CreatedAt:     order.CreatedAt,
 	}, nil
 }
 
@@ -710,12 +717,13 @@ func (o *oservice) resolveActiveOrderConflict(tempOrderID, shopID, activeOrderID
 	}
 
 	return &response.OrderData{
-		ID:           activeOrder.ID,
-		CustomerName: activeOrder.CustomerName,
-		TotalPrice:   totalPrice,
-		Status:       activeOrder.Status,
-		Notes:        activeOrder.Notes,
-		OrderItems:   orderItems,
-		CreatedAt:    activeOrder.CreatedAt,
+		ID:            activeOrder.ID,
+		CustomerName:  activeOrder.CustomerName,
+		TotalPrice:    totalPrice,
+		Status:        activeOrder.Status,
+		PaymentStatus: activeOrder.PaymentStatus,
+		Notes:         activeOrder.Notes,
+		OrderItems:    orderItems,
+		CreatedAt:     activeOrder.CreatedAt,
 	}, nil
 }

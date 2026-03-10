@@ -24,10 +24,11 @@ type (
 	}
 
 	UpdateOrderRequest struct {
-		CustomerID *int    `json:"customer_id"`
-		TotalPrice *int    `json:"total_price"`
-		Status     *string `json:"status"`
-		Notes      *string `json:"notes"`
+		CustomerID    *int    `json:"customer_id"`
+		TotalPrice    *int    `json:"total_price"`
+		Status        *string `json:"status"`
+		PaymentStatus *string `json:"payment_status"`
+		Notes         *string `json:"notes"`
 	}
 
 	CreateOrderItemRequest struct {
@@ -277,10 +278,11 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := orderService.UpdateOrderByID(service.UpdateOrderInput{
-		ID:         orderID,
-		TotalPrice: inp.TotalPrice,
-		Status:     inp.Status,
-		Notes:      inp.Notes,
+		ID:            orderID,
+		TotalPrice:    inp.TotalPrice,
+		Status:        inp.Status,
+		PaymentStatus: inp.PaymentStatus,
+		Notes:         inp.Notes,
 	})
 	if err != nil {
 		logger.WithError(err).Error("update_order_error")

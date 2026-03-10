@@ -34,9 +34,10 @@ type (
 	}
 
 	UpdateOrderInput struct {
-		TotalPrice *int
-		Status     *string
-		Notes      *string
+		TotalPrice    *int
+		Status        *string
+		PaymentStatus *string
+		Notes         *string
 	}
 )
 
@@ -53,7 +54,7 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 	criteria := []interface{}{id}
 
 	q := `
-		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at
+		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
 		FROM orders o
 		INNER JOIN customers c ON o.customer_id = c.id
 		WHERE o.id = $1
@@ -65,7 +66,7 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 	}
 
 	var order model.Order
-	err := o.db.QueryRow(q, criteria...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+	err := o.db.QueryRow(q, criteria...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -78,7 +79,7 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 
 func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.Order, error) {
 	q := `
-		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at
+		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
 		FROM orders o
 		INNER JOIN customers c ON o.customer_id = c.id
 		WHERE o.shop_id = $1
@@ -122,7 +123,7 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 	orders := []model.Order{}
 	for rows.Next() {
 		var order model.Order
-		err := rows.Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err := rows.Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +135,7 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 
 func (o *order) GetActiveOrderByCustomerID(customerID int, shopID int) (*model.Order, error) {
 	q := `
-		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.notes, o.created_at, o.updated_at
+		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
 		FROM orders o
 		INNER JOIN customers c ON o.customer_id = c.id
 		WHERE o.customer_id = $1 AND o.shop_id = $2 AND o.status IN ($3, $4)
@@ -148,6 +149,7 @@ func (o *order) GetActiveOrderByCustomerID(customerID int, shopID int) (*model.O
 		&order.CustomerName,
 		&order.TotalPrice,
 		&order.Status,
+		&order.PaymentStatus,
 		&order.Notes,
 		&order.CreatedAt,
 		&order.UpdatedAt,
@@ -172,24 +174,24 @@ func (o *order) CreateOrder(tx database.Tx, customerID int, shopID int, notes *s
 
 	q := `
 		WITH inserted AS (
-			INSERT INTO orders (total_price, status, customer_id, shop_id, notes, created_at)
-			VALUES ($1, $2, $3, $4, COALESCE($5, ''), $6)
-			RETURNING id, total_price, status, customer_id, shop_id, notes, created_at
+			INSERT INTO orders (total_price, status, payment_status, customer_id, shop_id, notes, created_at)
+			VALUES ($1, $2, $3, $4, $5, COALESCE($6, ''), $7)
+			RETURNING id, total_price, status, payment_status, customer_id, shop_id, notes, created_at
 		)
-		SELECT i.id, i.total_price, i.status, c.name as customer_name, i.shop_id, i.notes, i.created_at
+		SELECT i.id, i.total_price, i.status, i.payment_status, c.name as customer_name, i.shop_id, i.notes, i.created_at
 		FROM inserted i
 		INNER JOIN customers c ON i.customer_id = c.id
 	`
 
-	args := []interface{}{totalPriceVal, constant.OrderStatusCreated, customerID, shopID, notes, now}
+	args := []interface{}{totalPriceVal, constant.OrderStatusCreated, constant.OrderPaymentStatusUnpaid, customerID, shopID, notes, now}
 	var err error
 	if tx != nil {
 		err = tx.QueryRow(q, args...).Scan(
-			&order.ID, &order.TotalPrice, &order.Status, &order.CustomerName, &order.ShopID, &order.Notes, &order.CreatedAt,
+			&order.ID, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.CustomerName, &order.ShopID, &order.Notes, &order.CreatedAt,
 		)
 	} else {
 		err = o.db.QueryRow(q, args...).Scan(
-			&order.ID, &order.TotalPrice, &order.Status, &order.CustomerName, &order.ShopID, &order.Notes, &order.CreatedAt,
+			&order.ID, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.CustomerName, &order.ShopID, &order.Notes, &order.CreatedAt,
 		)
 	}
 	if err != nil {
@@ -212,6 +214,10 @@ func (o *order) UpdateOrder(tx database.Tx, id int, input UpdateOrderInput) (*mo
 		newSet := fmt.Sprintf("status = '%s'", *input.Status)
 		set = append(set, newSet)
 	}
+	if input.PaymentStatus != nil {
+		newSet := fmt.Sprintf("payment_status = '%s'", *input.PaymentStatus)
+		set = append(set, newSet)
+	}
 	if input.Notes != nil {
 		newSet := fmt.Sprintf("notes = '%s'", *input.Notes)
 		set = append(set, newSet)
@@ -224,9 +230,9 @@ func (o *order) UpdateOrder(tx database.Tx, id int, input UpdateOrderInput) (*mo
 			UPDATE orders
 			SET %s
 			WHERE id = $1
-			RETURNING id, shop_id, customer_id, total_price, status, notes, created_at, updated_at
+			RETURNING id, shop_id, customer_id, total_price, status, payment_status, notes, created_at, updated_at
 		)
-		SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.notes, u.created_at, u.updated_at
+		SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.payment_status, u.notes, u.created_at, u.updated_at
 		FROM updated u
 		INNER JOIN customers c ON u.customer_id = c.id
 	`
@@ -235,9 +241,9 @@ func (o *order) UpdateOrder(tx database.Tx, id int, input UpdateOrderInput) (*mo
 
 	var err error
 	if tx != nil {
-		err = tx.QueryRow(q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err = tx.QueryRow(q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	} else {
-		err = o.db.QueryRow(q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err = o.db.QueryRow(q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	}
 	if err != nil {
 		return nil, err

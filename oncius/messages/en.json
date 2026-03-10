@@ -199,7 +199,13 @@
     "exportMessage": "Closing Message (optional)",
     "exportMessagePlaceholder": "e.g. Thank you for your order! Please transfer to BCA 1234567",
     "exportDownload": "Download PDF",
-    "exportFailed": "Failed to export invoice"
+    "exportFailed": "Failed to export invoice",
+    "paymentStatus": "Payment Status"
+  },
+  "paymentStatus": {
+    "unpaid": "Unpaid",
+    "paid": "Paid",
+    "partial": "Partial"
   },
   "orderStatus": {
     "all": "All",

@@ -51,14 +51,15 @@ type (
 	}
 
 	OrderData struct {
-		ID           int             `json:"id"`
-		CustomerName string          `json:"customer_name"`
-		TotalPrice   int             `json:"total_price"`
-		Status       string          `json:"status"`
-		Notes        string          `json:"notes"`
-		OrderItems   []OrderItemData `json:"order_items,omitempty"`
-		CreatedAt    time.Time       `json:"created_at"`
-		UpdatedAt    *time.Time      `json:"updated_at"`
+		ID            int             `json:"id"`
+		CustomerName  string          `json:"customer_name"`
+		TotalPrice    int             `json:"total_price"`
+		Status        string          `json:"status"`
+		PaymentStatus string          `json:"payment_status"`
+		Notes         string          `json:"notes"`
+		OrderItems    []OrderItemData `json:"order_items,omitempty"`
+		CreatedAt     time.Time       `json:"created_at"`
+		UpdatedAt     *time.Time      `json:"updated_at"`
 	}
 
 	OrderItemData struct {

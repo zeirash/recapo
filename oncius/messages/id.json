@@ -199,7 +199,13 @@
     "exportMessage": "Pesan Penutup (opsional)",
     "exportMessagePlaceholder": "mis. Terima kasih atas pesanannya! Transfer ke BCA 1234567",
     "exportDownload": "Unduh PDF",
-    "exportFailed": "Gagal mengekspor invoice"
+    "exportFailed": "Gagal mengekspor invoice",
+    "paymentStatus": "Status Pembayaran"
+  },
+  "paymentStatus": {
+    "unpaid": "Belum Dibayar",
+    "paid": "Lunas",
+    "partial": "Sebagian"
   },
   "orderStatus": {
     "all": "Semua",

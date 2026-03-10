@@ -26,6 +26,7 @@ type Order = {
   customer_name: string
   total_price: number
   status: string
+  payment_status: string
   notes?: string
   order_items?: OrderItem[]
   created_at: string
@@ -66,11 +67,18 @@ const statusColors: Record<string, { bg: string; color: string }> = {
   cancelled: { bg: '#FFEBEE', color: '#C62828' },
 }
 
+const paymentStatusColors: Record<string, { bg: string; color: string }> = {
+  unpaid: { bg: '#FFEBEE', color: '#C62828' },
+  paid: { bg: '#E8F5E9', color: '#2E7D32' },
+  partial: { bg: '#FFF3E0', color: '#E65100' },
+}
+
 export default function OrdersPage() {
   const DEFAULT_STATUSES = ['created', 'in_progress'] as const
   const t = useTranslations('common')
   const to = useTranslations('orders')
   const toStatus = useTranslations('orderStatus')
+  const toPaymentStatus = useTranslations('paymentStatus')
   const tErrors = useTranslations('errors')
   const queryClient = useQueryClient()
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
@@ -356,6 +364,10 @@ export default function OrdersPage() {
     return statusColors[status] || { bg: '#F5F5F5', color: '#616161' }
   }
 
+  function getPaymentStatusStyle(status: string) {
+    return paymentStatusColors[status] || { bg: '#F5F5F5', color: '#616161' }
+  }
+
   return (
     <Layout>
       <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -516,6 +528,24 @@ export default function OrdersPage() {
                         <Box sx={{ minWidth: 140 }}>
                           <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('created')}</Box>
                           <Box sx={{ fontSize: '14px' }}>{formatDate(selectedOrder.created_at)}</Box>
+                        </Box>
+                        <Box sx={{ minWidth: 140 }}>
+                          <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('paymentStatus')}</Box>
+                          <Box
+                            sx={{
+                              display: 'inline-block',
+                              px: '8px',
+                              py: '2px',
+                              borderRadius: '4px',
+                              fontSize: '13px',
+                              fontWeight: 500,
+                              bgcolor: getPaymentStatusStyle(selectedOrder.payment_status).bg,
+                              color: getPaymentStatusStyle(selectedOrder.payment_status).color,
+                              textTransform: 'capitalize',
+                            }}
+                          >
+                            {toPaymentStatus(selectedOrder.payment_status || 'unpaid')}
+                          </Box>
                         </Box>
                         <Box sx={{ minWidth: 140, ml: 'auto' }}>
                           <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('status')}</Box>
