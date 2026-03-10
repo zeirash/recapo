@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { Box, Typography, Button, Paper, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Users, Crown, Info } from 'lucide-react'
-import Layout from '@/components/layout'
+import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
 import type { Plan, Subscription } from '@/types'
 

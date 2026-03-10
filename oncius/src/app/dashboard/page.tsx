@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Box, Button, Paper, Typography } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
-import Layout from '@/components/layout'
+import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
 import { Package, DollarSign, Users, ClipboardList, type LucideIcon } from 'lucide-react'
 

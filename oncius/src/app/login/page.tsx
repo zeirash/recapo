@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Box, Container, Typography, OutlinedInput, Button, Alert } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
-import Layout from '@/components/layout'
+import Layout from '@/components/Layout'
 
 const LoginPage = () => {
   const t = useTranslations()

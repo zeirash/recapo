@@ -3,7 +3,7 @@
 import { useQuery } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Paper, Typography } from '@mui/material'
-import Layout from '@/components/layout'
+import Layout from '@/components/Layout'
 import { api } from '@/utils/api'
 
 type PurchaseProduct = {
