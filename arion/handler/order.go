@@ -46,6 +46,10 @@ type (
 		CustomerID    int  `json:"customer_id"`
 		ActiveOrderID *int `json:"active_order_id"`
 	}
+
+	OrderPaymentRequest struct {
+		Amount int `json:"amount"`
+	}
 )
 
 // CreateOrderHandler godoc
@@ -117,9 +121,8 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-	orderID := orderIDInt
 
-	res, err := orderService.GetOrderByID(orderID, shopID)
+	res, err := orderService.GetOrderByID(orderIDInt, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -269,7 +272,6 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-	orderID := orderIDInt
 
 	inp := UpdateOrderRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
@@ -278,7 +280,7 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := orderService.UpdateOrderByID(service.UpdateOrderInput{
-		ID:            orderID,
+		ID:            orderIDInt,
 		TotalPrice:    inp.TotalPrice,
 		Status:        inp.Status,
 		PaymentStatus: inp.PaymentStatus,
@@ -315,9 +317,8 @@ func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-	orderID := orderIDInt
 
-	err := orderService.DeleteOrderByID(orderID)
+	err := orderService.DeleteOrderByID(orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("delete_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order")
@@ -388,7 +389,6 @@ func MergeTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Router			/orders/{order_id}/item [post]
 func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
@@ -406,9 +406,8 @@ func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-	orderID := orderIDInt
 
-	res, err := orderService.CreateOrderItem(orderID, inp.ProductID, inp.Qty)
+	res, err := orderService.CreateOrderItem(orderIDInt, inp.ProductID, inp.Qty)
 	if err != nil {
 		logger.WithError(err).Error("create_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order_item")
@@ -436,7 +435,6 @@ func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 //	@Router			/orders/{order_id}/items/{item_id} [patch]
 func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
@@ -454,14 +452,11 @@ func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-	orderID := orderIDInt
-
 	orderItemIDInt, _ := strconv.Atoi(params["item_id"])
-	orderItemID := orderItemIDInt
 
 	res, err := orderService.UpdateOrderItemByID(service.UpdateOrderItemInput{
-		OrderID:     orderID,
-		OrderItemID: orderItemID,
+		OrderID:     orderIDInt,
+		OrderItemID: orderItemIDInt,
 		ProductID:   inp.ProductID,
 		Qty:         inp.Qty,
 	})
@@ -491,7 +486,6 @@ func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 //	@Router			/orders/{order_id}/items/{item_id} [delete]
 func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
 		return
@@ -503,12 +497,9 @@ func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-	orderID := orderIDInt
-
 	orderItemIDInt, _ := strconv.Atoi(params["item_id"])
-	orderItemID := orderItemIDInt
 
-	err := orderService.DeleteOrderItemByID(orderItemID, orderID)
+	err := orderService.DeleteOrderItemByID(orderItemIDInt, orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("delete_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order_item")
@@ -547,12 +538,9 @@ func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-	orderID := orderIDInt
-
 	orderItemIDInt, _ := strconv.Atoi(params["item_id"])
-	orderItemID := orderItemIDInt
 
-	res, err := orderService.GetOrderItemByID(orderItemID, orderID)
+	res, err := orderService.GetOrderItemByID(orderItemIDInt, orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("get_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_item")
@@ -585,9 +573,8 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
-	orderID := orderIDInt
 
-	res, err := orderService.GetOrderItemsByOrderID(orderID)
+	res, err := orderService.GetOrderItemsByOrderID(orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("get_order_items_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_items")
@@ -677,9 +664,8 @@ func GetTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tempOrderIDInt, _ := strconv.Atoi(params["temp_order_id"])
-	tempOrderID := tempOrderIDInt
 
-	res, err := orderService.GetTempOrderByID(tempOrderID, shopID)
+	res, err := orderService.GetTempOrderByID(tempOrderIDInt, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrTempOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -715,9 +701,8 @@ func RejectTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tempOrderIDInt, _ := strconv.Atoi(params["temp_order_id"])
-	tempOrderID := tempOrderIDInt
 
-	res, err := orderService.RejectTempOrderByID(tempOrderID)
+	res, err := orderService.RejectTempOrderByID(tempOrderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("reject_temp_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "reject_temp_order")
@@ -725,6 +710,165 @@ func RejectTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJson(w, http.StatusOK, res)
+}
+
+// CreateOrderPaymentHandler godoc
+//
+//	@Summary		Create order payment
+//	@Description	Create a new order payment for the order.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//  @Param			order_id	path		int	true	"Order ID"
+//  @Param			body		body		OrderPaymentRequest	true	"Order payment data"
+//  @Success		200		{object}	response.OrderPaymentData
+//  @Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON or order_id)"
+//  @Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//  @Router			/orders/{order_id}/payment [post]
+func CreateOrderPaymentHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	if valid, err := validateOrderID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	inp := OrderPaymentRequest{}
+	if err := ParseJson(r.Body, &inp); err != nil {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
+		return
+	}
+
+	orderIDInt, _ := strconv.Atoi(params["order_id"])
+
+	res, err := orderService.CreateOrderPayment(orderIDInt, inp.Amount)
+	if err != nil {
+		logger.WithError(err).Error("create_order_payment_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order_payment")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
+// UpdateOrderPaymentAmountHandler godoc
+//
+//	@Summary		Update order payment amount
+//	@Description	Update the amount of an order payment by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path		int	true	"Order ID"
+//	@Param			body		body		OrderPaymentRequest	true	"Order payment data"
+//	@Success		200		{object}	response.OrderPaymentData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON or order_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/payments/{payment_id} [patch]
+func UpdateOrderPaymentAmountHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	if valid, err := validateOrderID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	if valid, err := validateOrderPaymentID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	inp := OrderPaymentRequest{}
+	if err := ParseJson(r.Body, &inp); err != nil {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
+		return
+	}
+
+	orderIDInt, _ := strconv.Atoi(params["order_id"])
+	paymentIDInt, _ := strconv.Atoi(params["payment_id"])
+
+	res, err := orderService.UpdateOrderPaymentAmountByID(paymentIDInt, orderIDInt, inp.Amount)
+	if err != nil {
+		logger.WithError(err).Error("update_order_payment_amount_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_order_payment_amount")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
+// GetOrderPaymentsHandler godoc
+//
+//	@Summary		List order payments
+//	@Description	Get all payments for an order.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path		int	true	"Order ID"
+//	@Success		200		{array}	response.OrderPaymentData
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid order_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/payments [get]
+func GetOrderPaymentsHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	if valid, err := validateOrderID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	orderIDInt, _ := strconv.Atoi(params["order_id"])
+
+	res, err := orderService.GetOrderPaymentsByOrderID(orderIDInt)
+	if err != nil {
+		logger.WithError(err).Error("get_order_payments_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_payments")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
+// DeleteOrderPaymentHandler godoc
+//
+//	@Summary		Delete order payment
+//	@Description	Delete an order payment by ID.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path		int	true	"Order ID"
+//	@Param			payment_id	path		int	true	"Payment ID"
+//	@Success		200		{string}	string	"Success. data contains \"OK\""
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON or order_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/payments/{payment_id} [delete]
+func DeleteOrderPaymentHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	if valid, err := validateOrderID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	if valid, err := validateOrderPaymentID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	orderIDInt, _ := strconv.Atoi(params["order_id"])
+	paymentIDInt, _ := strconv.Atoi(params["payment_id"])
+
+	err := orderService.DeleteOrderPaymentByID(paymentIDInt, orderIDInt)
+	if err != nil {
+		logger.WithError(err).Error("delete_order_payment_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order_payment")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, "OK")
 }
 
 func validateCreateOrderItem(inp CreateOrderItemRequest) (bool, error) {
@@ -758,6 +902,14 @@ func validateOrderID(params map[string]string) (bool, error) {
 func validateOrderItemID(params map[string]string) (bool, error) {
 	if params["item_id"] == "" {
 		return false, errors.New(apierr.ErrOrderItemIDRequired)
+	}
+
+	return true, nil
+}
+
+func validateOrderPaymentID(params map[string]string) (bool, error) {
+	if params["payment_id"] == "" {
+		return false, errors.New(apierr.ErrOrderPaymentIDRequired)
 	}
 
 	return true, nil

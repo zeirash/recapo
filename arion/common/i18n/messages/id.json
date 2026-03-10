@@ -14,6 +14,7 @@
   "err_image_url_required": "URL gambar wajib diisi",
   "err_order_id_required": "ID pesanan wajib diisi",
   "err_order_item_id_required": "ID item pesanan wajib diisi",
+  "err_order_payment_id_required": "ID pembayaran pesanan wajib diisi",
   "err_product_id_required": "ID produk wajib diisi",
   "err_qty_required": "Jumlah wajib diisi",
   "err_temp_order_id_required": "ID pesanan sementara wajib diisi",

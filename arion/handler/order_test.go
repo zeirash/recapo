@@ -2008,3 +2008,343 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateOrderPaymentHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	fixedTime := time.Now()
+
+	tests := []struct {
+		name        string
+		pathVars    map[string]string
+		body        interface{}
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name:     "successfully create order payment",
+			pathVars: map[string]string{"order_id": "1"},
+			body:     map[string]interface{}{"amount": 50000},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					CreateOrderPayment(1, 50000).
+					Return(response.OrderPaymentData{ID: 1, OrderID: 1, Amount: 50000, CreatedAt: fixedTime}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:        "returns 400 on missing order_id",
+			pathVars:    map[string]string{},
+			body:        map[string]interface{}{"amount": 50000},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on invalid json",
+			pathVars:    map[string]string{"order_id": "1"},
+			body:        "invalid json",
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:     "returns 500 on service failure",
+			pathVars: map[string]string{"order_id": "1"},
+			body:     map[string]interface{}{"amount": 50000},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					CreateOrderPayment(1, 50000).
+					Return(response.OrderPaymentData{}, errors.New("database error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			var bodyBytes []byte
+			switch b := tt.body.(type) {
+			case string:
+				bodyBytes = []byte(b)
+			default:
+				bodyBytes, _ = json.Marshal(b)
+			}
+
+			req := newRequestWithPathVars(
+				newRequestWithShopID("POST", "/orders/1/payment", bodyBytes, 1),
+				tt.pathVars,
+			)
+			rec := httptest.NewRecorder()
+
+			handler.CreateOrderPaymentHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("CreateOrderPaymentHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("CreateOrderPaymentHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+		})
+	}
+}
+
+func TestUpdateOrderPaymentAmountHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	fixedTime := time.Now()
+
+	tests := []struct {
+		name        string
+		pathVars    map[string]string
+		body        interface{}
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name:     "successfully update order payment amount",
+			pathVars: map[string]string{"order_id": "10", "payment_id": "1"},
+			body:     map[string]interface{}{"amount": 75000},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					UpdateOrderPaymentAmountByID(1, 10, 75000).
+					Return(response.OrderPaymentData{ID: 1, OrderID: 10, Amount: 75000, CreatedAt: fixedTime}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:        "returns 400 on missing order_id",
+			pathVars:    map[string]string{"payment_id": "1"},
+			body:        map[string]interface{}{"amount": 75000},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on missing payment_id",
+			pathVars:    map[string]string{"order_id": "10"},
+			body:        map[string]interface{}{"amount": 75000},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on invalid json",
+			pathVars:    map[string]string{"order_id": "10", "payment_id": "1"},
+			body:        "invalid json",
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:     "returns 500 on service failure",
+			pathVars: map[string]string{"order_id": "10", "payment_id": "1"},
+			body:     map[string]interface{}{"amount": 75000},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					UpdateOrderPaymentAmountByID(1, 10, 75000).
+					Return(response.OrderPaymentData{}, errors.New("database error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			var bodyBytes []byte
+			switch b := tt.body.(type) {
+			case string:
+				bodyBytes = []byte(b)
+			default:
+				bodyBytes, _ = json.Marshal(b)
+			}
+
+			req := newRequestWithPathVars(
+				newRequestWithShopID("PATCH", "/orders/10/payments/1", bodyBytes, 1),
+				tt.pathVars,
+			)
+			rec := httptest.NewRecorder()
+
+			handler.UpdateOrderPaymentAmountHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("UpdateOrderPaymentAmountHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("UpdateOrderPaymentAmountHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+		})
+	}
+}
+
+func TestGetOrderPaymentsHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	fixedTime := time.Now()
+
+	tests := []struct {
+		name        string
+		pathVars    map[string]string
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name:     "successfully get order payments",
+			pathVars: map[string]string{"order_id": "1"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetOrderPaymentsByOrderID(1).
+					Return([]response.OrderPaymentData{
+						{ID: 1, OrderID: 1, Amount: 50000, CreatedAt: fixedTime},
+						{ID: 2, OrderID: 1, Amount: 25000, CreatedAt: fixedTime},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:        "returns 400 on missing order_id",
+			pathVars:    map[string]string{},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:     "returns 500 on service failure",
+			pathVars: map[string]string{"order_id": "1"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetOrderPaymentsByOrderID(1).
+					Return(nil, errors.New("database error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := newRequestWithPathVars(
+				newRequestWithShopID("GET", "/orders/1/payments", nil, 1),
+				tt.pathVars,
+			)
+			rec := httptest.NewRecorder()
+
+			handler.GetOrderPaymentsHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("GetOrderPaymentsHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("GetOrderPaymentsHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+		})
+	}
+}
+
+func TestDeleteOrderPaymentHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	tests := []struct {
+		name        string
+		pathVars    map[string]string
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name:     "successfully delete order payment",
+			pathVars: map[string]string{"order_id": "10", "payment_id": "1"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					DeleteOrderPaymentByID(1, 10).
+					Return(nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:        "returns 400 on missing order_id",
+			pathVars:    map[string]string{"payment_id": "1"},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on missing payment_id",
+			pathVars:    map[string]string{"order_id": "10"},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:     "returns 500 on service failure",
+			pathVars: map[string]string{"order_id": "10", "payment_id": "1"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					DeleteOrderPaymentByID(1, 10).
+					Return(errors.New("database error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := newRequestWithPathVars(
+				newRequestWithShopID("DELETE", "/orders/10/payments/1", nil, 1),
+				tt.pathVars,
+			)
+			rec := httptest.NewRecorder()
+
+			handler.DeleteOrderPaymentHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("DeleteOrderPaymentHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("DeleteOrderPaymentHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+		})
+	}
+}

@@ -14,6 +14,7 @@
   "err_image_url_required": "Image URL is required",
   "err_order_id_required": "Order ID is required",
   "err_order_item_id_required": "Order item ID is required",
+  "err_order_payment_id_required": "Order payment ID is required",
   "err_product_id_required": "Product ID is required",
   "err_qty_required": "Quantity is required",
   "err_temp_order_id_required": "Temp order ID is required",

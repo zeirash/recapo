@@ -28,10 +28,14 @@ type (
 		GetOrderItemByID(orderItemID, orderID int) (*response.OrderItemData, error)
 		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
 
-		MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error)
+		CreateOrderPayment(orderID, amount int) (response.OrderPaymentData, error)
+		UpdateOrderPaymentAmountByID(id, orderID, amount int) (response.OrderPaymentData, error)
+		GetOrderPaymentsByOrderID(orderID int) ([]response.OrderPaymentData, error)
+		DeleteOrderPaymentByID(orderPaymentID, orderID int) error
 
 		GenerateOrderInvoice(orderID, shopID int, message string) ([]byte, error)
 
+		MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error)
 		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
 		GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error)
 		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error)
@@ -70,6 +74,10 @@ func NewOrderService() OrderService {
 
 	if orderItemStore == nil {
 		orderItemStore = store.NewOrderItemStore()
+	}
+
+	if orderPaymentStore == nil {
+		orderPaymentStore = store.NewOrderPaymentStore()
 	}
 
 	return &oservice{}
@@ -126,6 +134,29 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 			Qty:         orderItem.Qty,
 			CreatedAt:   orderItem.CreatedAt,
 		})
+		if orderItem.UpdatedAt.Valid {
+			t := orderItem.UpdatedAt.Time
+			orderItemsData[len(orderItemsData)-1].UpdatedAt = &t
+		}
+	}
+
+	orderPayments, err := orderPaymentStore.GetOrderPaymentsByOrderID(order.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	orderPaymentsData := []response.OrderPaymentData{}
+	for _, orderPayment := range orderPayments {
+		orderPaymentsData = append(orderPaymentsData, response.OrderPaymentData{
+			ID:          orderPayment.ID,
+			OrderID:     orderPayment.OrderID,
+			Amount:      orderPayment.Amount,
+			CreatedAt:   orderPayment.CreatedAt,
+		})
+		if orderPayment.UpdatedAt.Valid {
+			t := orderPayment.UpdatedAt.Time
+			orderPaymentsData[len(orderPaymentsData)-1].UpdatedAt = &t
+		}
 	}
 
 	res := response.OrderData{
@@ -136,6 +167,7 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 		PaymentStatus: order.PaymentStatus,
 		Notes:         order.Notes,
 		OrderItems:    orderItemsData,
+		OrderPayments: orderPaymentsData,
 		CreatedAt:     order.CreatedAt,
 	}
 
@@ -229,6 +261,11 @@ func (o *oservice) DeleteOrderByID(id int) error {
 		return err
 	}
 
+	err = orderPaymentStore.DeleteOrderPaymentsByOrderID(tx, id)
+	if err != nil {
+		return err
+	}
+
 	err = orderStore.DeleteOrderByID(tx, id)
 	if err != nil {
 		return err
@@ -238,6 +275,15 @@ func (o *oservice) DeleteOrderByID(id int) error {
 }
 
 func (o *oservice) CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error) {
+	order, err := orderStore.GetOrderByID(orderID)
+	if err != nil {
+		return response.OrderItemData{}, err
+	}
+
+	if order == nil {
+		return response.OrderItemData{}, errors.New(apierr.ErrOrderNotFound)
+	}
+
 	orderItem, err := orderItemStore.CreateOrderItem(nil, orderID, productID, qty)
 	if err != nil {
 		return response.OrderItemData{}, err
@@ -325,6 +371,86 @@ func (o *oservice) GetOrderItemByID(orderItemID, orderID int) (*response.OrderIt
 	}
 
 	return &res, nil
+}
+
+func (o *oservice) CreateOrderPayment(orderID, amount int) (response.OrderPaymentData, error) {
+	order, err := orderStore.GetOrderByID(orderID)
+	if err != nil {
+		return response.OrderPaymentData{}, err
+	}
+
+	if order == nil {
+		return response.OrderPaymentData{}, errors.New(apierr.ErrOrderNotFound)
+	}
+
+	orderPayment, err := orderPaymentStore.CreateOrderPayment(nil, orderID, amount)
+	if err != nil {
+		return response.OrderPaymentData{}, err
+	}
+
+	res := response.OrderPaymentData{
+		ID:          orderPayment.ID,
+		OrderID:     orderPayment.OrderID,
+		Amount:      orderPayment.Amount,
+		CreatedAt:   orderPayment.CreatedAt,
+	}
+
+	return res, nil
+}
+
+func (o *oservice) UpdateOrderPaymentAmountByID(id, orderID, amount int) (response.OrderPaymentData, error) {
+	orderPayment, err := orderPaymentStore.UpdateOrderPaymentAmountByID(nil, id, orderID, amount)
+	if err != nil {
+		return response.OrderPaymentData{}, err
+	}
+
+	res := response.OrderPaymentData{
+		ID:          orderPayment.ID,
+		OrderID:     orderPayment.OrderID,
+		Amount:      orderPayment.Amount,
+		CreatedAt:   orderPayment.CreatedAt,
+	}
+
+	if orderPayment.UpdatedAt.Valid {
+		res.UpdatedAt = &orderPayment.UpdatedAt.Time
+	}
+
+	return res, nil
+}
+
+func (o *oservice) GetOrderPaymentsByOrderID(orderID int) ([]response.OrderPaymentData, error) {
+	orderPayments, err := orderPaymentStore.GetOrderPaymentsByOrderID(orderID)
+	if err != nil {
+		return []response.OrderPaymentData{}, err
+	}
+
+	orderPaymentsData := []response.OrderPaymentData{}
+	for _, orderPayment := range orderPayments {
+		res := response.OrderPaymentData{
+			ID:          orderPayment.ID,
+			OrderID:     orderPayment.OrderID,
+			Amount:      orderPayment.Amount,
+			CreatedAt:   orderPayment.CreatedAt,
+		}
+
+		if orderPayment.UpdatedAt.Valid {
+			t := orderPayment.UpdatedAt.Time
+			res.UpdatedAt = &t
+		}
+
+		orderPaymentsData = append(orderPaymentsData, res)
+	}
+
+	return orderPaymentsData, nil
+}
+
+func (o *oservice) DeleteOrderPaymentByID(orderPaymentID, orderID int) error {
+	err := orderPaymentStore.DeleteOrderPaymentByID(orderPaymentID, orderID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error) {

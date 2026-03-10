@@ -143,6 +143,15 @@ type (
 		CreatedAt   time.Time    `db:"created_at"`
 	}
 
+	/******************* Order Payment *********************/
+	OrderPayment struct {
+		ID        int          `db:"id"`
+		OrderID   int          `db:"order_id"`
+		Amount    int          `db:"amount"`
+		CreatedAt time.Time    `db:"created_at"`
+		UpdatedAt sql.NullTime `db:"updated_at"`
+	}
+
 	/******************* Subscription *******************/
 	Plan struct {
 		ID            int          `db:"id"`

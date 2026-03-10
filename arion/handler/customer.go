@@ -98,9 +98,8 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	customerIDInt, _ := strconv.Atoi(params["customer_id"])
-	customerID := customerIDInt
 
-	res, err := customerService.GetCustomerByID(customerID, shopID)
+	res, err := customerService.GetCustomerByID(customerIDInt, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrCustomerNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -173,7 +172,6 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	customerIDInt, _ := strconv.Atoi(params["customer_id"])
-	customerID := customerIDInt
 
 	inp := UpdateCustomerRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
@@ -182,7 +180,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := customerService.UpdateCustomer(service.UpdateCustomerInput{
-		ID:      customerID,
+		ID:      customerIDInt,
 		Name:    inp.Name,
 		Phone:   inp.Phone,
 		Address: inp.Address,
@@ -218,9 +216,8 @@ func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	customerIDInt, _ := strconv.Atoi(params["customer_id"])
-	customerID := customerIDInt
 
-	err := customerService.DeleteCustomerByID(customerID)
+	err := customerService.DeleteCustomerByID(customerIDInt)
 	if err != nil {
 		logger.WithError(err).Error("delete_customer_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_customer")
