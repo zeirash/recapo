@@ -28,7 +28,7 @@
       "@/utils/*": ["./src/utils/*"],
       "@/types/*": ["./src/types/*"]
     },
-    "types": ["node", "react", "react-dom"]
+    "types": ["node", "react", "react-dom", "jest", "@testing-library/jest-dom"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
