@@ -208,6 +208,7 @@ func ExportOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Param			date_from	query		string	false	"Filter orders from date (YYYY-MM-DD)"
 //	@Param			date_to		query		string	false	"Filter orders to date (YYYY-MM-DD)"
 //	@Param			status		query		string	false	"Filter by status (e.g. created,in_progress,in_delivery,done,cancelled)"
+//	@Param			payment_status	query		string	false	"Filter by payment status (e.g. outstanding,paid)"
 //	@Param			sort		  query		string	false	"Sort by column and order (e.g. created_at,desc)"
 //	@Success		200		{array}		response.OrderData
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
@@ -220,6 +221,9 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	if s := r.URL.Query().Get("status"); s != "" && s != constant.FilterStatusAll {
 		statuses := strings.Split(s, ",")
 		opts.Status = statuses
+	}
+	if ps := r.URL.Query().Get("payment_status"); ps != "" {
+		opts.PaymentStatus = &ps
 	}
 	if q := r.URL.Query().Get("search"); q != "" {
 		opts.SearchQuery = &q

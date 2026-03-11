@@ -267,11 +267,12 @@ func TestGetOrdersHandler(t *testing.T) {
 	handler.SetOrderService(mockOrderService)
 
 	type queryOpts struct {
-		search   string
-		dateFrom string
-		dateTo   string
-		status   string
-		sort     string
+		search        string
+		dateFrom      string
+		dateTo        string
+		status        string
+		sort          string
+		paymentStatus string
 	}
 
 	tests := []struct {
@@ -428,6 +429,21 @@ func TestGetOrdersHandler(t *testing.T) {
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
+		{
+			name:   "get orders with payment_status filter passes to service",
+			shopID: 1,
+			opts:   queryOpts{paymentStatus: "paid"},
+			mockSetup: func() {
+				ps := "paid"
+				mockOrderService.EXPECT().
+					GetOrdersByShopID(1, model.OrderFilterOptions{PaymentStatus: &ps}).
+					Return([]response.OrderData{
+						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "done", CreatedAt: time.Now()},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -450,6 +466,9 @@ func TestGetOrdersHandler(t *testing.T) {
 			}
 			if tt.opts.sort != "" {
 				params = append(params, "sort="+tt.opts.sort)
+			}
+			if tt.opts.paymentStatus != "" {
+				params = append(params, "payment_status="+tt.opts.paymentStatus)
 			}
 			if len(params) > 0 {
 				path += "?" + strings.Join(params, "&")

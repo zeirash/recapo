@@ -107,6 +107,11 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 		args = append(args, pq.Array(opts.Status))
 		argNum++
 	}
+	if opts.PaymentStatus != nil {
+		q += fmt.Sprintf(" AND o.payment_status = $%d", argNum)
+		args = append(args, *opts.PaymentStatus)
+		argNum++
+	}
 	if opts.Sort != nil {
 		sort := strings.Split(*opts.Sort, ",")
 		if len(sort) == 2 {

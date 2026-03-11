@@ -93,11 +93,12 @@ type (
 	// OrderFilterOptions holds optional filters for listing orders.
 	// Used by handler and service; store consumes it. Add fields as needed (e.g. Status, CustomerID).
 	OrderFilterOptions struct {
-		SearchQuery *string
-		DateFrom    *time.Time
-		DateTo      *time.Time
-		Status      []string
-		Sort        *string // value: column,order. E.g. created_at,desc
+		SearchQuery   *string
+		DateFrom      *time.Time
+		DateTo        *time.Time
+		Status        []string
+		PaymentStatus *string
+		Sort          *string // value: column,order. E.g. created_at,desc
 	}
 
 	Order struct {

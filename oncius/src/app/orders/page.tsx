@@ -107,6 +107,7 @@ export default function OrdersPage() {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string[]>([...DEFAULT_STATUSES])
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('')
   const [createFormConflict, setCreateFormConflict] = useState(false)
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [exportMessage, setExportMessage] = useState('')
@@ -119,11 +120,12 @@ export default function OrdersPage() {
 
   // Fetch orders
   const { data: ordersRes, isLoading, isError, error } = useQuery(
-    ['orders', debouncedSearch, statusFilter],
+    ['orders', debouncedSearch, statusFilter, paymentStatusFilter],
     async () => {
-      const opts: { search?: string; status?: string } = {}
+      const opts: { search?: string; status?: string; payment_status?: string } = {}
       if (debouncedSearch) opts.search = debouncedSearch
       if (statusFilter.length > 0) opts.status = statusFilter.join(',')
+      if (paymentStatusFilter) opts.payment_status = paymentStatusFilter
       const res = await api.getOrders(opts)
       if (!res.success) throw new Error(res.message || to('fetchFailed'))
       return res.data as Order[]
@@ -477,7 +479,7 @@ export default function OrdersPage() {
                     />
                     <AddButton onClick={openCreateForm} title={to('addOrder')} />
                   </Box>
-                  <Box sx={{ mt: '16px' }}>
+                  <Box sx={{ mt: '16px', display: 'flex', gap: '8px' }}>
                     <select
                       value={statusFilter.length === 1 ? statusFilter[0] : statusFilter.join(',')}
                       onChange={(e) => {
@@ -485,7 +487,7 @@ export default function OrdersPage() {
                         setStatusFilter(val === '' ? [...DEFAULT_STATUSES] : val.split(','))
                       }}
                       style={{
-                        width: '120px',
+                        width: '100px',
                         padding: '6px',
                         fontSize: 12,
                         borderRadius: 6,
@@ -502,6 +504,26 @@ export default function OrdersPage() {
                         <option value="in_delivery">{toStatus('in_delivery')}</option>
                         <option value="done">{toStatus('done')}</option>
                         <option value="cancelled">{toStatus('cancelled')}</option>
+                      </optgroup>
+                    </select>
+                    <select
+                      value={paymentStatusFilter}
+                      onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                      style={{
+                        width: '100px',
+                        padding: '6px',
+                        fontSize: 12,
+                        borderRadius: 6,
+                        border: '1px solid var(--theme-ui-colors-border, #e0e0e0)',
+                        backgroundColor: 'white',
+                        color: 'var(--theme-ui-colors-text, #333)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <optgroup label={to('paymentStatus')}>
+                        <option value="">{toStatus('all')}</option>
+                        <option value="outstanding">{toPaymentStatus('outstanding')}</option>
+                        <option value="paid">{toPaymentStatus('paid')}</option>
                       </optgroup>
                     </select>
                   </Box>
