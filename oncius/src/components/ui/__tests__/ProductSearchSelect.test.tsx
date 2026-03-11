@@ -88,4 +88,60 @@ describe('ProductSearchSelect', () => {
       expect(screen.getByText('Nothing found')).toBeInTheDocument()
     })
   })
+
+  it('clears selection when clear button is clicked', async () => {
+    const handleChange = jest.fn()
+    ;(api.getProducts as jest.Mock).mockResolvedValue({ success: true, data: [] })
+
+    render(
+      <ProductSearchSelect
+        {...defaultProps}
+        value={5}
+        onChange={handleChange}
+      />,
+      { wrapper: makeWrapper() }
+    )
+
+    const clearBtn = screen.getByRole('button')
+    await userEvent.click(clearBtn)
+
+    expect(handleChange).toHaveBeenCalledWith(null, undefined)
+  })
+
+  it('calls onChange(null) when typing while a value is selected', async () => {
+    const handleChange = jest.fn()
+    ;(api.getProducts as jest.Mock).mockResolvedValue({ success: true, data: [] })
+
+    render(
+      <ProductSearchSelect
+        {...defaultProps}
+        value={5}
+        onChange={handleChange}
+      />,
+      { wrapper: makeWrapper() }
+    )
+
+    const input = screen.getByRole('textbox')
+    await userEvent.type(input, 'a')
+
+    expect(handleChange).toHaveBeenCalledWith(null, undefined)
+  })
+
+  it('closes dropdown when clicking outside', async () => {
+    ;(api.getProducts as jest.Mock).mockResolvedValue({ success: true, data: [] })
+
+    render(
+      <div>
+        <ProductSearchSelect {...defaultProps} noResultsText="Nothing found" />
+        <div data-testid="outside">outside</div>
+      </div>,
+      { wrapper: makeWrapper() }
+    )
+
+    await userEvent.click(screen.getByPlaceholderText('Select product'))
+    await waitFor(() => expect(screen.getByText('Nothing found')).toBeInTheDocument())
+
+    await userEvent.click(screen.getByTestId('outside'))
+    expect(screen.queryByText('Nothing found')).not.toBeInTheDocument()
+  })
 })

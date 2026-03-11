@@ -15,8 +15,9 @@ jest.mock('@/utils/api', () => ({
   removeAuthToken: jest.fn(),
 }))
 
+const mockPush = jest.fn()
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: mockPush }),
 }))
 
 function makeWrapper() {
@@ -30,6 +31,7 @@ function makeWrapper() {
 describe('useAuth', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockPush.mockReset()
   })
 
   it('isAuthenticated is false when no token', async () => {
@@ -70,6 +72,86 @@ describe('useAuth', () => {
     })
 
     expect(result.current.isAuthenticated).toBe(false)
+    consoleSpy.mockRestore()
+  })
+
+  it('isAuthenticated is false when getCurrentUser returns success false', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    ;(getAuthToken as jest.Mock).mockReturnValue('some-token')
+    ;(api.getCurrentUser as jest.Mock).mockResolvedValue({ success: false, message: 'Forbidden' })
+
+    const { result } = renderHook(() => useAuth(), { wrapper: makeWrapper() })
+
+    await waitFor(() => {
+      expect(result.current.isLoadingUser).toBe(false)
+    })
+
+    expect(result.current.isAuthenticated).toBe(false)
+    consoleSpy.mockRestore()
+  })
+
+  it('login mutation calls router.push on success', async () => {
+    ;(getAuthToken as jest.Mock).mockReturnValue(null)
+    ;(api.login as jest.Mock).mockResolvedValue({ success: true, data: { token: 'tok' } })
+    ;(api.getCurrentUser as jest.Mock).mockResolvedValue({ success: true, data: { id: 1, name: 'User' } })
+
+    const { result } = renderHook(() => useAuth(), { wrapper: makeWrapper() })
+
+    await act(async () => {
+      result.current.login({ email: 'a@b.com', password: 'pass' })
+    })
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/dashboard')
+    })
+  })
+
+  it('login mutation sets loginError on failure', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    ;(getAuthToken as jest.Mock).mockReturnValue(null)
+    ;(api.login as jest.Mock).mockResolvedValue({ success: false, message: 'Invalid credentials' })
+
+    const { result } = renderHook(() => useAuth(), { wrapper: makeWrapper() })
+
+    await act(async () => {
+      result.current.login({ email: 'a@b.com', password: 'wrong' })
+    })
+
+    await waitFor(() => {
+      expect(result.current.loginError?.message).toBe('Invalid credentials')
+    })
+    consoleSpy.mockRestore()
+  })
+
+  it('register mutation calls router.push on success', async () => {
+    ;(getAuthToken as jest.Mock).mockReturnValue(null)
+    ;(api.register as jest.Mock).mockResolvedValue({ success: true, data: {} })
+
+    const { result } = renderHook(() => useAuth(), { wrapper: makeWrapper() })
+
+    await act(async () => {
+      result.current.register({ name: 'User', email: 'a@b.com', password: 'pass' })
+    })
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/login?message=Registration successful. Please login.')
+    })
+  })
+
+  it('register mutation sets registerError on failure', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    ;(getAuthToken as jest.Mock).mockReturnValue(null)
+    ;(api.register as jest.Mock).mockResolvedValue({ success: false, message: 'Email taken' })
+
+    const { result } = renderHook(() => useAuth(), { wrapper: makeWrapper() })
+
+    await act(async () => {
+      result.current.register({ name: 'User', email: 'taken@b.com', password: 'pass' })
+    })
+
+    await waitFor(() => {
+      expect(result.current.registerError?.message).toBe('Email taken')
+    })
     consoleSpy.mockRestore()
   })
 
