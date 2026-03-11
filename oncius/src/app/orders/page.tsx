@@ -8,6 +8,7 @@ import Layout from '@/components/Layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import CustomerSearchSelect from '@/components/ui/CustomerSearchSelect'
+import ProductSearchSelect from '@/components/ui/ProductSearchSelect'
 import { api, ApiError } from '@/utils/api'
 import { ClipboardList, Download, Info, Pencil, Trash2 } from 'lucide-react'
 
@@ -62,11 +63,12 @@ type CreateOrderForm = {
 
 type AddItemForm = {
   product_id: number | null
+  product_price: number
   qty: number
 }
 
 const emptyCreateForm: CreateOrderForm = { customer_id: null, notes: '' }
-const emptyAddItemForm: AddItemForm = { product_id: null, qty: 1 }
+const emptyAddItemForm: AddItemForm = { product_id: null, product_price: 0, qty: 1 }
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   created: { bg: '#E3F2FD', color: '#1565C0' },
@@ -139,17 +141,6 @@ export default function OrdersPage() {
       return res.data as Order
     },
     { enabled: !!selectedOrderId }
-  )
-
-  // Fetch products for add item form
-  const { data: productsRes } = useQuery(
-    ['products'],
-    async () => {
-      const res = await api.getProducts()
-      if (!res.success) throw new Error(res.message || 'Failed to fetch products')
-      return res.data as Product[]
-    },
-    { enabled: isAddItemFormOpen }
   )
 
   const createMutation = useMutation(
@@ -434,14 +425,10 @@ export default function OrdersPage() {
   function submitAddItemForm(e: React.FormEvent) {
     e.preventDefault()
     if (selectedOrderId && addItemForm.product_id && addItemForm.qty > 0) {
-      // Find the product price
-      const product = productsRes?.find((p) => p.id === addItemForm.product_id)
-      const itemPrice = product?.price || 0
-
       addItemMutation.mutate({
         orderId: selectedOrderId,
         payload: { product_id: addItemForm.product_id, qty: addItemForm.qty },
-        itemPrice
+        itemPrice: addItemForm.product_price,
       })
     }
   }
@@ -1056,22 +1043,16 @@ export default function OrdersPage() {
         <Dialog open={isAddItemFormOpen} onClose={closeAddItemForm} fullWidth maxWidth="xs">
           <Box component="form" onSubmit={submitAddItemForm}>
             <DialogTitle sx={{ pb: '8px' }}>{to('addItemTitle')}</DialogTitle>
-            <DialogContent sx={{ pt: '8px', pb: 0 }}>
+            <DialogContent sx={{ pt: '8px', pb: 0, minHeight: '180px' }}>
               <Box sx={{ mb: '16px' }}>
-                <Box component="label" htmlFor="product" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('product')}</Box>
-                <NativeSelect
-                  id="product"
-                  value={addItemForm.product_id || ''}
-                  onChange={(e) => setAddItemForm({ ...addItemForm, product_id: Number(e.target.value) || null })}
-                  disableUnderline
-                  required
-                  sx={{ width: '100%' }}
-                >
-                  <option value="">{to('selectProduct')}</option>
-                  {(productsRes || []).map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </NativeSelect>
+                <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('product')}</Box>
+                <ProductSearchSelect
+                  value={addItemForm.product_id}
+                  onChange={(id, price) => setAddItemForm({ ...addItemForm, product_id: id, product_price: price ?? 0 })}
+                  placeholder={to('selectProduct')}
+                  searchPlaceholder={to('searchProduct')}
+                  noResultsText={to('noProductsFound')}
+                />
               </Box>
               <Box sx={{ mb: '8px' }}>
                 <Box component="label" htmlFor="qty" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('quantity')}</Box>

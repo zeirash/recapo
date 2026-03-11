@@ -176,6 +176,8 @@
     "noItems": "Tidak ada item dalam pesanan ini",
     "removeItemConfirm": "Hapus item ini?",
     "selectProduct": "Pilih produk",
+    "searchProduct": "Cari produk...",
+    "noProductsFound": "Produk tidak ditemukan",
     "subtotal": "Subtotal",
     "notes": "Catatan",
     "created": "Dibuat",

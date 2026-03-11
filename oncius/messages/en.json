@@ -176,6 +176,8 @@
     "noItems": "No items in this order",
     "removeItemConfirm": "Remove this item?",
     "selectProduct": "Select a product",
+    "searchProduct": "Search product...",
+    "noProductsFound": "No products found",
     "subtotal": "Subtotal",
     "notes": "Notes",
     "created": "Created",
