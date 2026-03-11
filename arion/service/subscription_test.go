@@ -351,6 +351,7 @@ func Test_ssubscription_Checkout(t *testing.T) {
 		shopID    int
 		planID    int
 		mockSetup func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB)
+		snapFunc  func(string, int, int) (*midtransSnapResponse, error)
 		wantErr   bool
 	}{
 		{
@@ -428,6 +429,74 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:   "returns error when callMidtransSnap fails",
+			shopID: 1,
+			planID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().CreatePayment(gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
+
+				dbMock := mock_database.NewMockDB(ctrl)
+				txMock := mock_database.NewMockTx(ctrl)
+				dbMock.EXPECT().Begin().Return(txMock, nil)
+				txMock.EXPECT().Commit().Return(nil)
+				txMock.EXPECT().Rollback().Return(nil)
+				return m, dbMock
+			},
+			snapFunc: func(string, int, int) (*midtransSnapResponse, error) {
+				return nil, errors.New("midtrans unavailable")
+			},
+			wantErr: true,
+		},
+		{
+			name:   "returns checkout data even when UpdatePaymentSnapInfo fails",
+			shopID: 1,
+			planID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().CreatePayment(gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
+				m.EXPECT().UpdatePaymentSnapInfo(1, "snap-token", "https://snap.example.com").Return(errors.New("db error"))
+
+				dbMock := mock_database.NewMockDB(ctrl)
+				txMock := mock_database.NewMockTx(ctrl)
+				dbMock.EXPECT().Begin().Return(txMock, nil)
+				txMock.EXPECT().Commit().Return(nil)
+				txMock.EXPECT().Rollback().Return(nil)
+				return m, dbMock
+			},
+			snapFunc: func(string, int, int) (*midtransSnapResponse, error) {
+				return &midtransSnapResponse{Token: "snap-token", RedirectURL: "https://snap.example.com"}, nil
+			},
+			wantErr: false,
+		},
+		{
+			name:   "successfully completes checkout",
+			shopID: 1,
+			planID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().CreatePayment(gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
+				m.EXPECT().UpdatePaymentSnapInfo(1, "snap-token", "https://snap.example.com").Return(nil)
+
+				dbMock := mock_database.NewMockDB(ctrl)
+				txMock := mock_database.NewMockTx(ctrl)
+				dbMock.EXPECT().Begin().Return(txMock, nil)
+				txMock.EXPECT().Commit().Return(nil)
+				txMock.EXPECT().Rollback().Return(nil)
+				return m, dbMock
+			},
+			snapFunc: func(string, int, int) (*midtransSnapResponse, error) {
+				return &midtransSnapResponse{Token: "snap-token", RedirectURL: "https://snap.example.com"}, nil
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -440,6 +509,12 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			oldDBGetter := dbGetter
 			defer func() { dbGetter = oldDBGetter }()
 			dbGetter = func() database.DB { return dbMock }
+
+			oldSnapFunc := midtransSnapFunc
+			defer func() { midtransSnapFunc = oldSnapFunc }()
+			if tt.snapFunc != nil {
+				midtransSnapFunc = tt.snapFunc
+			}
 
 			svc := &ssubscription{}
 			got, gotErr := svc.Checkout(tt.shopID, tt.planID)
@@ -624,6 +699,209 @@ func Test_ssubscription_HandleMidtransWebhook(t *testing.T) {
 			}
 			if tt.wantErr {
 				t.Fatal("HandleMidtransWebhook() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
+func Test_ssubscription_ExpireSubscriptions(t *testing.T) {
+	tests := []struct {
+		name      string
+		mockSetup func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore
+		wantErr   bool
+	}{
+		{
+			name: "successfully expires active subscriptions",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().ExpireSubscriptions().Return(int64(3), nil)
+				return m
+			},
+			wantErr: false,
+		},
+		{
+			name: "returns nil error when no subscriptions to expire",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().ExpireSubscriptions().Return(int64(0), nil)
+				return m
+			},
+			wantErr: false,
+		},
+		{
+			name: "returns error on store failure",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().ExpireSubscriptions().Return(int64(0), errors.New("database error"))
+				return m
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			subscriptionStore = tt.mockSetup(ctrl)
+
+			svc := &ssubscription{}
+			gotErr := svc.ExpireSubscriptions()
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("ExpireSubscriptions() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("ExpireSubscriptions() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
+func Test_ssubscription_CancelSubscription(t *testing.T) {
+	tests := []struct {
+		name      string
+		shopID    int
+		mockSetup func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB)
+		wantErr   bool
+	}{
+		{
+			name:   "successfully cancels active subscription",
+			shopID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().
+					GetSubscriptionByShopID(1).
+					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "active"}, nil)
+				m.EXPECT().
+					CancelSubscription(gomock.Any(), 5).
+					Return(nil)
+
+				dbMock := mock_database.NewMockDB(ctrl)
+				txMock := mock_database.NewMockTx(ctrl)
+				dbMock.EXPECT().Begin().Return(txMock, nil)
+				txMock.EXPECT().Commit().Return(nil)
+				txMock.EXPECT().Rollback().Return(nil)
+				return m, dbMock
+			},
+			wantErr: false,
+		},
+		{
+			name:   "returns error when GetSubscriptionByShopID fails",
+			shopID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().
+					GetSubscriptionByShopID(1).
+					Return(nil, errors.New("database error"))
+				return m, mock_database.NewMockDB(ctrl)
+			},
+			wantErr: true,
+		},
+		{
+			name:   "returns error when subscription not found",
+			shopID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().
+					GetSubscriptionByShopID(1).
+					Return(nil, nil)
+				return m, mock_database.NewMockDB(ctrl)
+			},
+			wantErr: true,
+		},
+		{
+			name:   "returns error when subscription is not active",
+			shopID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().
+					GetSubscriptionByShopID(1).
+					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "trialing"}, nil)
+				return m, mock_database.NewMockDB(ctrl)
+			},
+			wantErr: true,
+		},
+		{
+			name:   "returns error on db.Begin failure",
+			shopID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().
+					GetSubscriptionByShopID(1).
+					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "active"}, nil)
+
+				dbMock := mock_database.NewMockDB(ctrl)
+				dbMock.EXPECT().Begin().Return(nil, errors.New("begin error"))
+				return m, dbMock
+			},
+			wantErr: true,
+		},
+		{
+			name:   "returns error when CancelSubscription store call fails",
+			shopID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().
+					GetSubscriptionByShopID(1).
+					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "active"}, nil)
+				m.EXPECT().
+					CancelSubscription(gomock.Any(), 5).
+					Return(errors.New("database error"))
+
+				dbMock := mock_database.NewMockDB(ctrl)
+				txMock := mock_database.NewMockTx(ctrl)
+				dbMock.EXPECT().Begin().Return(txMock, nil)
+				txMock.EXPECT().Rollback().Return(nil)
+				return m, dbMock
+			},
+			wantErr: true,
+		},
+		{
+			name:   "returns error when tx.Commit fails",
+			shopID: 1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
+				m := mock_store.NewMockSubscriptionStore(ctrl)
+				m.EXPECT().
+					GetSubscriptionByShopID(1).
+					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "active"}, nil)
+				m.EXPECT().
+					CancelSubscription(gomock.Any(), 5).
+					Return(nil)
+
+				dbMock := mock_database.NewMockDB(ctrl)
+				txMock := mock_database.NewMockTx(ctrl)
+				dbMock.EXPECT().Begin().Return(txMock, nil)
+				txMock.EXPECT().Commit().Return(errors.New("commit error"))
+				txMock.EXPECT().Rollback().Return(nil)
+				return m, dbMock
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			subMock, dbMock := tt.mockSetup(ctrl)
+			subscriptionStore = subMock
+			oldDBGetter := dbGetter
+			defer func() { dbGetter = oldDBGetter }()
+			dbGetter = func() database.DB { return dbMock }
+
+			svc := &ssubscription{}
+			gotErr := svc.CancelSubscription(tt.shopID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("CancelSubscription() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("CancelSubscription() succeeded unexpectedly")
 			}
 		})
 	}

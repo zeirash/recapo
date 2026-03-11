@@ -305,3 +305,78 @@ func TestMidtransWebhookHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestCancelSubscriptionHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldSvc := handler.GetSubscriptionService()
+	defer handler.SetSubscriptionService(oldSvc)
+
+	mockSvc := mock_service.NewMockSubscriptionService(ctrl)
+	handler.SetSubscriptionService(mockSvc)
+
+	tests := []struct {
+		name        string
+		shopID      int
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name:   "successfully cancels subscription",
+			shopID: 1,
+			mockSetup: func() {
+				mockSvc.EXPECT().CancelSubscription(1).Return(nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:   "returns 404 when subscription not found",
+			shopID: 1,
+			mockSetup: func() {
+				mockSvc.EXPECT().CancelSubscription(1).Return(errors.New(apierr.ErrSubscriptionNotFound))
+			},
+			wantStatus:  http.StatusNotFound,
+			wantSuccess: false,
+		},
+		{
+			name:   "returns 400 when subscription is not active",
+			shopID: 1,
+			mockSetup: func() {
+				mockSvc.EXPECT().CancelSubscription(1).Return(errors.New(apierr.ErrSubscriptionNotActive))
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:   "returns 500 on unexpected service error",
+			shopID: 1,
+			mockSetup: func() {
+				mockSvc.EXPECT().CancelSubscription(1).Return(errors.New("unexpected error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+			req := newSubscriptionRequest(http.MethodPost, "/subscription/cancel", tt.shopID, nil)
+			w := httptest.NewRecorder()
+			handler.CancelSubscriptionHandler(w, req)
+
+			if w.Code != tt.wantStatus {
+				t.Errorf("CancelSubscriptionHandler() status = %d, want %d", w.Code, tt.wantStatus)
+			}
+
+			var resp map[string]interface{}
+			json.Unmarshal(w.Body.Bytes(), &resp)
+			if success, _ := resp["success"].(bool); success != tt.wantSuccess {
+				t.Errorf("CancelSubscriptionHandler() success = %v, want %v", success, tt.wantSuccess)
+			}
+		})
+	}
+}

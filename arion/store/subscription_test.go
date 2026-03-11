@@ -720,3 +720,128 @@ func Test_subscriptionStore_UpdatePaymentSnapInfo(t *testing.T) {
 		})
 	}
 }
+
+func Test_subscriptionStore_ExpireSubscriptions(t *testing.T) {
+	tests := []struct {
+		name      string
+		mockSetup func(mock sqlmock.Sqlmock)
+		want      int64
+		wantErr   bool
+	}{
+		{
+			name: "expires active subscriptions past period end and returns count",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE subscriptions\s+SET status = 'expired', updated_at = \$1\s+WHERE status = 'active' AND current_period_end < \$1`).
+					WithArgs(sqlmock.AnyArg()).
+					WillReturnResult(sqlmock.NewResult(0, 3))
+			},
+			want:    3,
+			wantErr: false,
+		},
+		{
+			name: "returns zero when no subscriptions to expire",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE subscriptions\s+SET status = 'expired'`).
+					WithArgs(sqlmock.AnyArg()).
+					WillReturnResult(sqlmock.NewResult(0, 0))
+			},
+			want:    0,
+			wantErr: false,
+		},
+		{
+			name: "returns error on database failure",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE subscriptions\s+SET status = 'expired'`).
+					WithArgs(sqlmock.AnyArg()).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    0,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+
+			s := &subscriptionStore{db: db}
+			got, gotErr := s.ExpireSubscriptions()
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("ExpireSubscriptions() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("ExpireSubscriptions() succeeded unexpectedly")
+			}
+			if got != tt.want {
+				t.Errorf("ExpireSubscriptions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_subscriptionStore_CancelSubscription(t *testing.T) {
+	tests := []struct {
+		name      string
+		subID     int
+		mockSetup func(mock sqlmock.Sqlmock)
+		wantErr   bool
+	}{
+		{
+			name:  "cancels subscription successfully",
+			subID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(`UPDATE subscriptions SET status = 'cancelled', cancelled_at = \$1, updated_at = \$1 WHERE id = \$2`).
+					WithArgs(sqlmock.AnyArg(), 1).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:  "returns error on database failure",
+			subID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectExec(`UPDATE subscriptions SET status = 'cancelled'`).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+
+			tx, err := db.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin transaction: %v", err)
+			}
+
+			s := &subscriptionStore{db: db}
+			gotErr := s.CancelSubscription(tx, tt.subID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("CancelSubscription() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("CancelSubscription() succeeded unexpectedly")
+			}
+		})
+	}
+}

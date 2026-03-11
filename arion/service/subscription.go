@@ -72,6 +72,10 @@ type (
 	}
 )
 
+// midtransSnapFunc is the function used to call the Midtrans Snap API.
+// Overridable in tests to avoid real HTTP calls.
+var midtransSnapFunc = callMidtransSnap
+
 func NewSubscriptionService() SubscriptionService {
 	if subscriptionStore == nil {
 		subscriptionStore = store.NewSubscriptionStore()
@@ -205,7 +209,7 @@ func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, er
 		return nil, err
 	}
 
-	snapResp, err := callMidtransSnap(orderID, plan.PriceIDR, shopID)
+	snapResp, err := midtransSnapFunc(orderID, plan.PriceIDR, shopID)
 	if err != nil {
 		return nil, fmt.Errorf("midtrans snap error: %w", err)
 	}

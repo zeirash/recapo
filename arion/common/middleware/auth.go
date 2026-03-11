@@ -13,6 +13,10 @@ import (
 	"github.com/zeirash/recapo/arion/store"
 )
 
+// NewTokenStoreFunc is the factory used to create a TokenStore.
+// Overridable in tests to inject a mock.
+var NewTokenStoreFunc = func() store.TokenStore { return store.NewTokenStore() }
+
 // ChainMiddleware takes Handler funcs and chains them to the main handler.
 func ChainMiddleware(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(final http.Handler) http.Handler {
@@ -28,7 +32,7 @@ func ChainMiddleware(middlewares ...func(http.Handler) http.Handler) func(http.H
 func Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		secret := config.GetConfig().SecretKey
-		tokenStore := store.NewTokenStore()
+		tokenStore := NewTokenStoreFunc()
 
 		authHeader := r.Header.Get("Authorization")
 		t := strings.Split(authHeader, " ")
