@@ -233,7 +233,8 @@
     "cancelled": "Dibatalkan",
     "accepted": "Diterima",
     "rejected": "Ditolak",
-    "active": "Aktif"
+    "active": "Aktif",
+    "placeholder": "Status Pesanan"
   },
   "tempOrders": {
     "title": "Pesanan Sementara",

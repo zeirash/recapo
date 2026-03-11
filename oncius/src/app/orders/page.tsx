@@ -492,10 +492,13 @@ export default function OrdersPage() {
                   </Box>
                   <Box sx={{ mt: '16px' }}>
                     <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(Array.from(e.target.selectedOptions).map((o) => o.value))}
+                      value={statusFilter.length === 1 ? statusFilter[0] : statusFilter.join(',')}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setStatusFilter(val === '' ? [...DEFAULT_STATUSES] : val.split(','))
+                      }}
                       style={{
-                        width: '100px',
+                        width: '120px',
                         padding: '6px',
                         fontSize: 12,
                         borderRadius: 6,
@@ -505,12 +508,14 @@ export default function OrdersPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      <option value="all">{toStatus('active')}</option>
-                      <option value="created">{toStatus('created')}</option>
-                      <option value="in_progress">{toStatus('in_progress')}</option>
-                      <option value="in_delivery">{toStatus('in_delivery')}</option>
-                      <option value="done">{toStatus('done')}</option>
-                      <option value="cancelled">{toStatus('cancelled')}</option>
+                      <optgroup label={toStatus('placeholder')}>
+                        <option value="created,in_progress">{toStatus('active')}</option>
+                        <option value="created">{toStatus('created')}</option>
+                        <option value="in_progress">{toStatus('in_progress')}</option>
+                        <option value="in_delivery">{toStatus('in_delivery')}</option>
+                        <option value="done">{toStatus('done')}</option>
+                        <option value="cancelled">{toStatus('cancelled')}</option>
+                      </optgroup>
                     </select>
                   </Box>
                 </Box>

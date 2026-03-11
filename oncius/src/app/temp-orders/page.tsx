@@ -267,10 +267,12 @@ export default function TempOrdersPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      <option value="all">{toStatus('all')}</option>
-                      <option value="pending">{toStatus('pending')}</option>
-                      <option value="accepted">{toStatus('accepted')}</option>
-                      <option value="rejected">{toStatus('rejected')}</option>
+                      <optgroup label={toStatus('placeholder')}>
+                        <option value="all">{toStatus('all')}</option>
+                        <option value="pending">{toStatus('pending')}</option>
+                        <option value="accepted">{toStatus('accepted')}</option>
+                        <option value="rejected">{toStatus('rejected')}</option>
+                      </optgroup>
                     </select>
                   </Box>
                 </Box>

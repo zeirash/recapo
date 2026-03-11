@@ -233,7 +233,8 @@
     "cancelled": "Cancelled",
     "accepted": "Accepted",
     "rejected": "Rejected",
-    "active": "Active"
+    "active": "Active",
+    "placeholder": "Order Status"
   },
   "tempOrders": {
     "title": "Temp Orders",

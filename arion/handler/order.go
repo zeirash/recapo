@@ -207,7 +207,7 @@ func ExportOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Param			search		query		string	false	"Search query"
 //	@Param			date_from	query		string	false	"Filter orders from date (YYYY-MM-DD)"
 //	@Param			date_to		query		string	false	"Filter orders to date (YYYY-MM-DD)"
-//	@Param			status		query		string	false	"Filter by status (e.g. pending,accepted,rejected)"
+//	@Param			status		query		string	false	"Filter by status (e.g. created,in_progress,in_delivery,done,cancelled)"
 //	@Param			sort		  query		string	false	"Sort by column and order (e.g. created_at,desc)"
 //	@Success		200		{array}		response.OrderData
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
@@ -596,7 +596,7 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 //	@Param			search		query		string	false	"Search by customer name or phone"
 //	@Param			date_from	query		string	false	"Filter from date (YYYY-MM-DD)"
 //	@Param			date_to		query		string	false	"Filter to date (YYYY-MM-DD)"
-//	@Param			status		query		string	false	"Filter by status (e.g. created,in_progress,in_delivery,done,cancelled)"
+//	@Param			status		query		string	false	"Filter by status (e.g. pending,accepted,rejected)"
 //	@Param			sort		  query		string	false	"Sort by column and order (e.g. created_at,desc)"
 //	@Success		200			{array}		response.TempOrderData
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
