@@ -183,7 +183,7 @@ func (o *order) CreateOrder(tx database.Tx, customerID int, shopID int, notes *s
 		INNER JOIN customers c ON i.customer_id = c.id
 	`
 
-	args := []interface{}{totalPriceVal, constant.OrderStatusCreated, constant.OrderPaymentStatusUnpaid, customerID, shopID, notes, now}
+	args := []interface{}{totalPriceVal, constant.OrderStatusCreated, constant.OrderPaymentStatusOutstanding, customerID, shopID, notes, now}
 	var err error
 	if tx != nil {
 		err = tx.QueryRow(q, args...).Scan(

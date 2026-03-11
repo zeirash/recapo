@@ -35,7 +35,6 @@ const (
 	TempOrderStatusAccepted  = "accepted"
 	TempOrderStatusRejected  = "rejected"
 
-	OrderPaymentStatusUnpaid = "unpaid"
-	OrderPaymentStatusPaid   = "paid"
-	OrderPaymentStatusPartial = "partial"
+	OrderPaymentStatusOutstanding = "outstanding"
+	OrderPaymentStatusPaid        = "paid"
 )

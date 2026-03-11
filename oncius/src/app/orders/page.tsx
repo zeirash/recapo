@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, NativeSelect, OutlinedInput, Paper, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, NativeSelect, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import CustomerSearchSelect from '@/components/ui/CustomerSearchSelect'
 import { api, ApiError } from '@/utils/api'
-import { ClipboardList, Download, Trash2 } from 'lucide-react'
+import { ClipboardList, Download, Info, Pencil, Trash2 } from 'lucide-react'
 
 type OrderItem = {
   id: number
@@ -17,6 +17,14 @@ type OrderItem = {
   product_name: string
   price: number
   qty: number
+  created_at: string
+  updated_at?: string | null
+}
+
+type OrderPayment = {
+  id: number
+  order_id?: number
+  amount: number
   created_at: string
   updated_at?: string | null
 }
@@ -29,6 +37,7 @@ type Order = {
   payment_status: string
   notes?: string
   order_items?: OrderItem[]
+  order_payments?: OrderPayment[]
   created_at: string
   updated_at?: string | null
 }
@@ -68,9 +77,13 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 }
 
 const paymentStatusColors: Record<string, { bg: string; color: string }> = {
-  unpaid: { bg: '#FFEBEE', color: '#C62828' },
-  paid: { bg: '#E8F5E9', color: '#2E7D32' },
-  partial: { bg: '#FFF3E0', color: '#E65100' },
+  outstanding: { bg: '#FFEBEE', color: '#C62828' },
+  paid:        { bg: '#E8F5E9', color: '#2E7D32' },
+}
+
+function normalizePaymentStatus(status: string): string {
+  if (status === 'unpaid' || status === 'partial') return 'outstanding'
+  return status
 }
 
 export default function OrdersPage() {
@@ -83,6 +96,9 @@ export default function OrdersPage() {
   const queryClient = useQueryClient()
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false)
+  const [isAddPaymentFormOpen, setIsAddPaymentFormOpen] = useState(false)
+  const [addPaymentAmount, setAddPaymentAmount] = useState<number>(0)
+  const [editingPayment, setEditingPayment] = useState<{ id: number; amount: number } | null>(null)
   const [createForm, setCreateForm] = useState<CreateOrderForm>(emptyCreateForm)
   const [addItemForm, setAddItemForm] = useState<AddItemForm>(emptyAddItemForm)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
@@ -201,6 +217,20 @@ export default function OrdersPage() {
     }
   )
 
+  const updatePaymentStatusMutation = useMutation(
+    async ({ id, payment_status }: { id: number; payment_status: string }) => {
+      const res = await api.updateOrder(id, { payment_status })
+      if (!res.success) throw new Error(res.message || to('updatePaymentStatusFailed'))
+      return res
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['orders'])
+        queryClient.invalidateQueries(['order', selectedOrderId])
+      },
+    }
+  )
+
   const addItemMutation = useMutation(
     async ({ orderId, payload, itemPrice }: { orderId: number; payload: { product_id: number; qty: number }; itemPrice: number }) => {
       const res = await api.createOrderItem(orderId, payload)
@@ -255,6 +285,76 @@ export default function OrdersPage() {
       const newTotal = currentTotal + priceDiff
       const updateRes = await api.updateOrder(orderId, { total_price: Math.max(0, newTotal) })
       if (!updateRes.success) throw new Error(updateRes.message || to('updateTotalFailed'))
+
+      return res
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['order', selectedOrderId])
+        queryClient.invalidateQueries(['orders'])
+      },
+    }
+  )
+
+  function derivePaymentStatus(totalPaid: number, totalPrice: number): string {
+    if (totalPaid >= totalPrice && totalPaid > 0) return 'paid'
+    return 'outstanding'
+  }
+
+  const addPaymentMutation = useMutation(
+    async ({ orderId, amount }: { orderId: number; amount: number }) => {
+      const res = await api.createOrderPayment(orderId, { amount })
+      if (!res.success) throw new Error(res.message || to('addPaymentFailed'))
+
+      const currentPaid = (selectedOrder?.order_payments || []).reduce((sum, p) => sum + p.amount, 0)
+      const newTotalPaid = currentPaid + amount
+      const newStatus = derivePaymentStatus(newTotalPaid, selectedOrder?.total_price || 0)
+      await api.updateOrder(orderId, { payment_status: newStatus })
+
+      return res
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['order', selectedOrderId])
+        queryClient.invalidateQueries(['orders'])
+        setIsAddPaymentFormOpen(false)
+        setAddPaymentAmount(0)
+      },
+    }
+  )
+
+  const updatePaymentMutation = useMutation(
+    async ({ orderId, paymentId, amount }: { orderId: number; paymentId: number; amount: number }) => {
+      const res = await api.updateOrderPayment(orderId, paymentId, { amount })
+      if (!res.success) throw new Error(res.message || to('updatePaymentFailed'))
+
+      const currentPayments = selectedOrder?.order_payments || []
+      const oldAmount = currentPayments.find((p) => p.id === paymentId)?.amount || 0
+      const currentPaid = currentPayments.reduce((sum, p) => sum + p.amount, 0)
+      const newTotalPaid = currentPaid - oldAmount + amount
+      const newStatus = derivePaymentStatus(newTotalPaid, selectedOrder?.total_price || 0)
+      await api.updateOrder(orderId, { payment_status: newStatus })
+
+      return res
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['order', selectedOrderId])
+        queryClient.invalidateQueries(['orders'])
+      },
+    }
+  )
+
+  const deletePaymentMutation = useMutation(
+    async ({ orderId, paymentId }: { orderId: number; paymentId: number }) => {
+      const res = await api.deleteOrderPayment(orderId, paymentId)
+      if (!res.success) throw new Error(res.message || to('deletePaymentFailed'))
+
+      const currentPayments = selectedOrder?.order_payments || []
+      const deletedAmount = currentPayments.find((p) => p.id === paymentId)?.amount || 0
+      const newTotalPaid = currentPayments.reduce((sum, p) => sum + p.amount, 0) - deletedAmount
+      const newStatus = derivePaymentStatus(newTotalPaid, selectedOrder?.total_price || 0)
+      await api.updateOrder(orderId, { payment_status: newStatus })
 
       return res
     },
@@ -468,7 +568,10 @@ export default function OrdersPage() {
                   <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
                     <Box sx={{ alignItems: 'center', justifyContent: 'space-between', mb: '16px', display: 'flex' }}>
                       <Box sx={{ alignItems: 'center', gap: '16px', display: 'flex' }}>
-                        <Typography component="h2" sx={{ fontSize: '18px' }}>{to('orderNumber', { id: selectedOrder.id })}</Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <Typography component="h2" sx={{ fontSize: '18px' }}>{to('orderNumber', { id: selectedOrder.id })}</Typography>
+                          <Box sx={{ fontSize: '12px', color: 'grey.500' }}>{formatDate(selectedOrder.created_at)}</Box>
+                        </Box>
                         <Box
                           sx={{
                             px: '8px',
@@ -525,26 +628,42 @@ export default function OrdersPage() {
                           <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('customer')}</Box>
                           <Box sx={{ fontSize: '14px', fontWeight: 500 }}>{selectedOrder.customer_name}</Box>
                         </Box>
-                        <Box sx={{ minWidth: 140 }}>
-                          <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('created')}</Box>
-                          <Box sx={{ fontSize: '14px' }}>{formatDate(selectedOrder.created_at)}</Box>
-                        </Box>
-                        <Box sx={{ minWidth: 140 }}>
-                          <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{to('paymentStatus')}</Box>
-                          <Box
-                            sx={{
-                              display: 'inline-block',
-                              px: '8px',
-                              py: '2px',
-                              borderRadius: '4px',
-                              fontSize: '13px',
-                              fontWeight: 500,
-                              bgcolor: getPaymentStatusStyle(selectedOrder.payment_status).bg,
-                              color: getPaymentStatusStyle(selectedOrder.payment_status).color,
-                              textTransform: 'capitalize',
-                            }}
-                          >
-                            {toPaymentStatus(selectedOrder.payment_status || 'unpaid')}
+                        <Box>
+                          <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {to('paymentStatus')}
+                            <Tooltip title={to('paymentStatusTooltip')} placement="top" arrow>
+                              <Info size={13} style={{ flexShrink: 0 }} />
+                            </Tooltip>
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                            <Box
+                              sx={{
+                                display: 'inline-block',
+                                px: '8px',
+                                py: '2px',
+                                borderRadius: '4px',
+                                fontSize: '13px',
+                                fontWeight: 500,
+                                bgcolor: getPaymentStatusStyle(normalizePaymentStatus(selectedOrder.payment_status)).bg,
+                                color: getPaymentStatusStyle(normalizePaymentStatus(selectedOrder.payment_status)).color,
+                                textTransform: 'capitalize',
+                              }}
+                            >
+                              {toPaymentStatus(normalizePaymentStatus(selectedOrder.payment_status || 'outstanding'))}
+                            </Box>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color={normalizePaymentStatus(selectedOrder.payment_status) === 'paid' ? 'error' : 'success'}
+                              disabled={updatePaymentStatusMutation.isLoading}
+                              onClick={() => updatePaymentStatusMutation.mutate({
+                                id: selectedOrder.id,
+                                payment_status: normalizePaymentStatus(selectedOrder.payment_status) === 'paid' ? 'outstanding' : 'paid',
+                              })}
+                              sx={{ fontSize: '12px', py: '2px', px: '8px', minWidth: 0, textTransform: 'none' }}
+                            >
+                              {normalizePaymentStatus(selectedOrder.payment_status) === 'paid' ? to('markUnpaid') : to('markPaid')}
+                            </Button>
                           </Box>
                         </Box>
                         <Box sx={{ minWidth: 140, ml: 'auto' }}>
@@ -687,6 +806,24 @@ export default function OrdersPage() {
                               <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 700, fontSize: '16px', color: 'primary.main' }}>{formatPrice(selectedOrder.total_price)}</Box>
                               <Box component="td" sx={{ py: '8px', px: '16px' }}></Box>
                             </Box>
+                            {selectedOrder.order_payments && selectedOrder.order_payments.length > 0 && (() => {
+                              const totalPaid = selectedOrder.order_payments.reduce((sum, p) => sum + p.amount, 0)
+                              const remaining = selectedOrder.total_price - totalPaid
+                              return (
+                                <>
+                                  <Box component="tr" sx={{ borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                                    <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 600, fontSize: '14px', color: 'grey.600' }} {...({ colSpan: 3 } as object)}>{to('totalPaid')}</Box>
+                                    <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 600, fontSize: '14px', color: 'success.main' }}>{formatPrice(totalPaid)}</Box>
+                                    <Box component="td" sx={{ py: '8px', px: '16px' }}></Box>
+                                  </Box>
+                                  <Box component="tr" sx={{ borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                                    <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 600, fontSize: '14px', color: 'grey.600' }} {...({ colSpan: 3 } as object)}>{to('remaining')}</Box>
+                                    <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontWeight: 700, fontSize: '14px', color: remaining > 0 ? 'error.main' : 'success.main' }}>{formatPrice(remaining)}</Box>
+                                    <Box component="td" sx={{ py: '8px', px: '16px' }}></Box>
+                                  </Box>
+                                </>
+                              )
+                            })()}
                           </Box>
                         </Box>
                       ) : (
@@ -694,6 +831,76 @@ export default function OrdersPage() {
                           <Box sx={{ fontSize: '16px', display: 'block', mb: '8px' }}>{to('noItems')}</Box>
                           <Button variant="outlined" onClick={openAddItemForm}>
                             {to('addFirstItem')}
+                          </Button>
+                        </Box>
+                      )}
+                    </Paper>
+
+                    {/* Order payments */}
+                    <Paper
+                      sx={{
+                        mt: '24px',
+                        borderRadius: '12px',
+                        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
+                        border: '1px solid',
+                        borderColor: 'grey.200',
+                        bgcolor: 'white',
+                        overflow: 'hidden',
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
+                      }}
+                    >
+                      <Box sx={{ alignItems: 'center', justifyContent: 'space-between', p: '8px', borderBottom: '1px solid', borderColor: 'grey.200', bgcolor: 'grey.50', display: 'flex' }}>
+                        <Typography component="h3" sx={{ fontSize: '16px', fontWeight: 600 }}>Payments</Typography>
+                        <Button variant="outlined" onClick={() => { setAddPaymentAmount(0); setIsAddPaymentFormOpen(true) }} sx={{ fontSize: '12px', py: '4px', px: '8px' }}>
+                          {to('addPayment')}
+                        </Button>
+                      </Box>
+                      {selectedOrder.order_payments && selectedOrder.order_payments.length > 0 ? (
+                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <Box component="thead">
+                            <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'grey.500', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{to('amount')}</Box>
+                              <Box component="th" sx={{ p: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'grey.500', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{to('created')}</Box>
+                              <Box component="th" sx={{ p: '16px', width: '56px' }}></Box>
+                            </Box>
+                          </Box>
+                          <Box component="tbody">
+                            {selectedOrder.order_payments.map((payment) => (
+                              <Box component="tr" key={payment.id} sx={{ borderTop: '1px solid', borderColor: 'grey.200', '&:hover': { bgcolor: 'grey.50' } }}>
+                                <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px', fontWeight: 500 }}>{formatPrice(payment.amount)}</Box>
+                                <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px', color: 'grey.600' }}>{formatDate(payment.created_at)}</Box>
+                                <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'center' }}>
+                                  <Box sx={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                                    <Box
+                                      component="span"
+                                      sx={{ color: 'grey.500', cursor: 'pointer', display: 'inline-flex', '&:hover': { color: 'grey.800' } }}
+                                      onClick={() => setEditingPayment({ id: payment.id, amount: payment.amount })}
+                                    >
+                                      <Pencil size={16} />
+                                    </Box>
+                                    <Box
+                                      component="span"
+                                      sx={{ color: 'error.main', cursor: 'pointer', display: 'inline-flex', '&:hover': { color: 'error.dark' } }}
+                                      onClick={() => {
+                                        if (confirm(to('removePaymentConfirm'))) {
+                                          deletePaymentMutation.mutate({ orderId: selectedOrder.id, paymentId: payment.id })
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 size={16} />
+                                    </Box>
+                                  </Box>
+                                </Box>
+                              </Box>
+                            ))}
+                          </Box>
+                        </Box>
+                      ) : (
+                        <Box sx={{ p: '32px', textAlign: 'center', color: 'grey.500' }}>
+                          <Box sx={{ fontSize: '16px', display: 'block', mb: '8px' }}>{to('noPayments')}</Box>
+                          <Button variant="outlined" onClick={() => { setAddPaymentAmount(0); setIsAddPaymentFormOpen(true) }}>
+                            {to('addFirstPayment')}
                           </Button>
                         </Box>
                       )}
@@ -881,6 +1088,86 @@ export default function OrdersPage() {
               </Button>
               <Button type="submit" variant="contained" disableElevation disabled={addItemMutation.isLoading || !addItemForm.product_id}>
                 {to('addItemButton')}
+              </Button>
+            </DialogActions>
+          </Box>
+        </Dialog>
+
+        {/* Edit Payment Modal */}
+        <Dialog open={!!editingPayment} onClose={() => setEditingPayment(null)} fullWidth maxWidth="xs">
+          <Box
+            component="form"
+            onSubmit={(e: React.FormEvent) => {
+              e.preventDefault()
+              if (selectedOrderId && editingPayment && editingPayment.amount > 0) {
+                updatePaymentMutation.mutate(
+                  { orderId: selectedOrderId, paymentId: editingPayment.id, amount: editingPayment.amount },
+                  { onSuccess: () => setEditingPayment(null) }
+                )
+              }
+            }}
+          >
+            <DialogTitle sx={{ pb: '8px' }}>{to('editPaymentTitle')}</DialogTitle>
+            <DialogContent sx={{ pt: '8px', pb: 0 }}>
+              <Box sx={{ mb: '8px' }}>
+                <Box component="label" htmlFor="edit-payment-amount" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{to('amount')}</Box>
+                <OutlinedInput
+                  id="edit-payment-amount"
+                  type="number"
+                  inputProps={{ min: '1' }}
+                  value={editingPayment?.amount || ''}
+                  onChange={(e) => setEditingPayment(editingPayment ? { ...editingPayment, amount: Number(e.target.value) || 0 } : null)}
+                  size="small"
+                  sx={{ width: '100%', borderRadius: '8px' }}
+                  required
+                  autoFocus
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+              <Button type="button" variant="outlined" onClick={() => setEditingPayment(null)}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" variant="contained" disableElevation disabled={updatePaymentMutation.isLoading || !editingPayment || editingPayment.amount <= 0}>
+                {t('save')}
+              </Button>
+            </DialogActions>
+          </Box>
+        </Dialog>
+
+        {/* Add Payment Modal */}
+        <Dialog open={isAddPaymentFormOpen} onClose={() => setIsAddPaymentFormOpen(false)} fullWidth maxWidth="xs">
+          <Box
+            component="form"
+            onSubmit={(e: React.FormEvent) => {
+              e.preventDefault()
+              if (selectedOrderId && addPaymentAmount > 0) {
+                addPaymentMutation.mutate({ orderId: selectedOrderId, amount: addPaymentAmount })
+              }
+            }}
+          >
+            <DialogTitle sx={{ pb: '8px' }}>{to('addPaymentTitle')}</DialogTitle>
+            <DialogContent sx={{ pt: '8px', pb: 0 }}>
+              <Box sx={{ mb: '8px' }}>
+                <Box component="label" htmlFor="payment-amount" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{to('amount')}</Box>
+                <OutlinedInput
+                  id="payment-amount"
+                  type="number"
+                  inputProps={{ min: '1' }}
+                  value={addPaymentAmount || ''}
+                  onChange={(e) => setAddPaymentAmount(Number(e.target.value) || 0)}
+                  size="small"
+                  sx={{ width: '100%', borderRadius: '8px' }}
+                  required
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+              <Button type="button" variant="outlined" onClick={() => setIsAddPaymentFormOpen(false)}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" variant="contained" disableElevation disabled={addPaymentMutation.isLoading || addPaymentAmount <= 0}>
+                {to('addPaymentButton')}
               </Button>
             </DialogActions>
           </Box>

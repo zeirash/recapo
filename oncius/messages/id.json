@@ -200,12 +200,28 @@
     "exportMessagePlaceholder": "mis. Terima kasih atas pesanannya! Transfer ke BCA 1234567",
     "exportDownload": "Unduh PDF",
     "exportFailed": "Gagal mengekspor invoice",
-    "paymentStatus": "Status Pembayaran"
+    "paymentStatus": "Status Pembayaran",
+    "paymentStatusTooltip": "Status diperbarui otomatis saat pembayaran ditambahkan: terutang → lunas. Kamu juga bisa menggantinya secara manual menggunakan Tandai Lunas atau Tandai Terutang.",
+    "markPaid": "Tandai Lunas",
+    "markUnpaid": "Tandai Terutang",
+    "updatePaymentStatusFailed": "Gagal memperbarui status pembayaran",
+    "addPayment": "+ Tambah Pembayaran",
+    "addPaymentTitle": "Tambah Pembayaran",
+    "addPaymentButton": "Tambah Pembayaran",
+    "addFirstPayment": "Tambah Pembayaran Pertama",
+    "noPayments": "Belum ada pembayaran",
+    "removePaymentConfirm": "Hapus pembayaran ini?",
+    "totalPaid": "Total Dibayar",
+    "remaining": "Sisa",
+    "editPaymentTitle": "Edit Pembayaran",
+    "addPaymentFailed": "Gagal menambah pembayaran",
+    "updatePaymentFailed": "Gagal memperbarui pembayaran",
+    "deletePaymentFailed": "Gagal menghapus pembayaran",
+    "amount": "Jumlah"
   },
   "paymentStatus": {
-    "unpaid": "Belum Dibayar",
-    "paid": "Lunas",
-    "partial": "Sebagian"
+    "outstanding": "Terutang",
+    "paid": "Lunas"
   },
   "orderStatus": {
     "all": "Semua",

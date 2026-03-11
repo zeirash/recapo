@@ -200,12 +200,28 @@
     "exportMessagePlaceholder": "e.g. Thank you for your order! Please transfer to BCA 1234567",
     "exportDownload": "Download PDF",
     "exportFailed": "Failed to export invoice",
-    "paymentStatus": "Payment Status"
+    "paymentStatus": "Payment Status",
+    "paymentStatusTooltip": "Status updates automatically when payments are added: outstanding → paid. You can also override it manually using Mark Paid or Mark Outstanding.",
+    "markPaid": "Mark Paid",
+    "markUnpaid": "Mark Outstanding",
+    "updatePaymentStatusFailed": "Failed to update payment status",
+    "addPayment": "+ Add Payment",
+    "addPaymentTitle": "Add Payment",
+    "addPaymentButton": "Add Payment",
+    "addFirstPayment": "Add First Payment",
+    "noPayments": "No payments recorded",
+    "removePaymentConfirm": "Remove this payment?",
+    "totalPaid": "Total Paid",
+    "remaining": "Remaining",
+    "editPaymentTitle": "Edit Payment",
+    "addPaymentFailed": "Failed to add payment",
+    "updatePaymentFailed": "Failed to update payment",
+    "deletePaymentFailed": "Failed to delete payment",
+    "amount": "Amount"
   },
   "paymentStatus": {
-    "unpaid": "Unpaid",
-    "paid": "Paid",
-    "partial": "Partial"
+    "outstanding": "Outstanding",
+    "paid": "Paid"
   },
   "orderStatus": {
     "all": "All",

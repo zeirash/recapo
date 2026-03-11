@@ -379,7 +379,7 @@ export const api = {
 
   updateOrder: (
     id: number | string,
-    data: Partial<{ customer_id: number; total_price: number; status: string; notes: string }>
+    data: Partial<{ customer_id: number; total_price: number; status: string; notes: string; payment_status: string }>
   ) => {
     return apiRequest<ApiResponse>(`/orders/${id}`, {
       method: 'PATCH',
@@ -451,6 +451,31 @@ export const api = {
 
   deleteOrderItem: (orderId: number | string, itemId: number | string) => {
     return apiRequest<ApiResponse>(`/orders/${orderId}/items/${itemId}`, {
+      method: 'DELETE',
+    })
+  },
+
+  // Order Payments
+  getOrderPayments: (orderId: number | string) => {
+    return apiRequest<ApiResponse<any[]>>(`/orders/${orderId}/payments`)
+  },
+
+  createOrderPayment: (orderId: number | string, data: { amount: number }) => {
+    return apiRequest<ApiResponse>(`/orders/${orderId}/payment`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  updateOrderPayment: (orderId: number | string, paymentId: number | string, data: { amount: number }) => {
+    return apiRequest<ApiResponse>(`/orders/${orderId}/payments/${paymentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
+
+  deleteOrderPayment: (orderId: number | string, paymentId: number | string) => {
+    return apiRequest<ApiResponse>(`/orders/${orderId}/payments/${paymentId}`, {
       method: 'DELETE',
     })
   },

@@ -354,7 +354,7 @@ func Test_order_CreateOrder(t *testing.T) {
 				rows := sqlmock.NewRows([]string{"id", "total_price", "status", "payment_status", "customer_name", "shop_id", "notes", "created_at"}).
 					AddRow(1, 0, constant.OrderStatusCreated, "", "John Doe", 10, "test notes", fixedTime)
 				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, payment_status, customer_id, shop_id, notes, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5, COALESCE\(\$6, ''\), \$7\)\s+RETURNING id, total_price, status, payment_status, customer_id, shop_id, notes, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, i.payment_status, c.name as customer_name, i.shop_id, i.notes, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
-					WithArgs(0, constant.OrderStatusCreated, "unpaid", 1, 10, strPtr("test notes"), sqlmock.AnyArg()).
+					WithArgs(0, constant.OrderStatusCreated, "outstanding", 1, 10, strPtr("test notes"), sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
 			wantResult: &model.Order{
@@ -378,7 +378,7 @@ func Test_order_CreateOrder(t *testing.T) {
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, payment_status, customer_id, shop_id, notes, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5, COALESCE\(\$6, ''\), \$7\)\s+RETURNING id, total_price, status, payment_status, customer_id, shop_id, notes, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, i.payment_status, c.name as customer_name, i.shop_id, i.notes, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
-					WithArgs(0, constant.OrderStatusCreated, "unpaid", 1, 10, (*string)(nil), sqlmock.AnyArg()).
+					WithArgs(0, constant.OrderStatusCreated, "outstanding", 1, 10, (*string)(nil), sqlmock.AnyArg()).
 					WillReturnError(errors.New("database error"))
 			},
 			wantResult: nil,
@@ -397,7 +397,7 @@ func Test_order_CreateOrder(t *testing.T) {
 				rows := sqlmock.NewRows([]string{"id", "total_price", "status", "payment_status", "customer_name", "shop_id", "notes", "created_at"}).
 					AddRow(1, 5000, constant.OrderStatusCreated, "", "John Doe", 10, "", fixedTime)
 				mock.ExpectQuery(`WITH inserted AS \(\s+INSERT INTO orders \(total_price, status, payment_status, customer_id, shop_id, notes, created_at\)\s+VALUES \(\$1, \$2, \$3, \$4, \$5, COALESCE\(\$6, ''\), \$7\)\s+RETURNING id, total_price, status, payment_status, customer_id, shop_id, notes, created_at\s+\)\s+SELECT i.id, i.total_price, i.status, i.payment_status, c.name as customer_name, i.shop_id, i.notes, i.created_at\s+FROM inserted i\s+INNER JOIN customers c ON i.customer_id = c.id`).
-					WithArgs(5000, constant.OrderStatusCreated, "unpaid", 1, 10, (*string)(nil), sqlmock.AnyArg()).
+					WithArgs(5000, constant.OrderStatusCreated, "outstanding", 1, 10, (*string)(nil), sqlmock.AnyArg()).
 					WillReturnRows(rows)
 			},
 			wantResult: &model.Order{
