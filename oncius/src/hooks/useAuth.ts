@@ -3,6 +3,8 @@ import { api, getAuthToken, removeAuthToken } from '@/utils/api'
 import { User, LoginRequest, RegisterRequest } from '@/types'
 import { useRouter } from 'next/navigation'
 
+export const REGISTER_DATA_KEY = 'registerPendingData'
+
 export const useAuth = () => {
   const queryClient = useQueryClient()
   const router = useRouter()
@@ -41,7 +43,7 @@ export const useAuth = () => {
       return response.data
     },
     {
-      onSuccess: async (data) => {
+      onSuccess: async () => {
         // Fetch user data after successful login
         try {
           const userResponse = await api.getCurrentUser()
@@ -59,10 +61,82 @@ export const useAuth = () => {
     }
   )
 
-  // Register mutation
-  const registerMutation = useMutation(
+  // Send OTP mutation (step 1 of registration)
+  const sendOtpMutation = useMutation(
     async (userData: RegisterRequest) => {
-      const response = await api.register(userData.name, userData.email, userData.password)
+      const response = await api.sendOtp(userData.email)
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to send verification code')
+      }
+      return userData
+    },
+    {
+      onSuccess: (userData) => {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(REGISTER_DATA_KEY, JSON.stringify({
+            name: userData.name,
+            email: userData.email,
+            password: userData.password,
+          }))
+        }
+        router.push(`/confirm-email?email=${encodeURIComponent(userData.email)}`)
+      },
+      onError: (error) => {
+        console.error('Send OTP error:', error)
+      },
+    }
+  )
+
+  // Forgot password mutation (step 1 of reset flow)
+  const forgotPasswordMutation = useMutation(
+    async (email: string) => {
+      const response = await api.forgotPassword(email)
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to send reset code')
+      }
+    },
+    {
+      onSuccess: (_, email) => {
+        router.push(`/reset-password?email=${encodeURIComponent(email)}`)
+      },
+      onError: (error) => {
+        console.error('Forgot password error:', error)
+      },
+    }
+  )
+
+  // Reset password mutation (step 2 — called from reset-password page with OTP + new password)
+  const resetPasswordMutation = useMutation(
+    async ({ email, otp, password }: { email: string; otp: string; password: string }) => {
+      const response = await api.resetPassword(email, otp, password)
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to reset password')
+      }
+    },
+    {
+      onSuccess: () => {
+        router.push('/login?reset=1')
+      },
+      onError: (error) => {
+        console.error('Reset password error:', error)
+      },
+    }
+  )
+
+  // Register mutation (step 2 — called from confirm-email page with OTP)
+  const registerMutation = useMutation(
+    async ({ otp }: { otp: string }) => {
+      const stored = typeof window !== 'undefined'
+        ? sessionStorage.getItem(REGISTER_DATA_KEY)
+        : null
+
+      if (!stored) {
+        throw new Error('Registration data not found. Please start over.')
+      }
+
+      const { name, email, password } = JSON.parse(stored) as RegisterRequest
+
+      const response = await api.register(name, email, password, otp)
       if (!response.success) {
         throw new Error(response.message || 'Registration failed')
       }
@@ -70,7 +144,10 @@ export const useAuth = () => {
     },
     {
       onSuccess: () => {
-        router.push('/login?message=Registration successful. Please login.')
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(REGISTER_DATA_KEY)
+        }
+        router.push('/login?registered=1')
       },
       onError: (error) => {
         console.error('Registration error:', error)
@@ -96,9 +173,18 @@ export const useAuth = () => {
     login: loginMutation.mutate,
     loginLoading: loginMutation.isLoading,
     loginError: loginMutation.error as Error | null,
+    sendOtp: sendOtpMutation.mutate,
+    sendOtpLoading: sendOtpMutation.isLoading,
+    sendOtpError: sendOtpMutation.error as Error | null,
     register: registerMutation.mutate,
     registerLoading: registerMutation.isLoading,
     registerError: registerMutation.error as Error | null,
+    forgotPassword: forgotPasswordMutation.mutate,
+    forgotPasswordLoading: forgotPasswordMutation.isLoading,
+    forgotPasswordError: forgotPasswordMutation.error as Error | null,
+    resetPassword: resetPasswordMutation.mutate,
+    resetPasswordLoading: resetPasswordMutation.isLoading,
+    resetPasswordError: resetPasswordMutation.error as Error | null,
     logout,
   }
 }

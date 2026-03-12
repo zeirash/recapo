@@ -30,7 +30,13 @@ type Config struct {
 	MidtransServerKey string `env:"MIDTRANS_SERVER_KEY"`
 	MidtransBaseURL   string `env:"MIDTRANS_BASE_URL" envDefault:"https://app.sandbox.midtrans.com"`
 
-	FrontendURL             string `env:"MIDTRANS_FRONTEND_URL" envDefault:"http://localhost:3000"`
+	FrontendURL string `env:"MIDTRANS_FRONTEND_URL" envDefault:"http://localhost:3000"`
+
+	// SMTP (leave empty to use development log mode)
+	SMTPHost string `env:"SMTP_HOST"`
+	SMTPPort int    `env:"SMTP_PORT" envDefault:"587"`
+	SMTPUser string `env:"SMTP_USER"`
+	SMTPPass string `env:"SMTP_PASS"`
 
 	// Cloudflare R2 (leave empty to use local filesystem)
 	R2AccountID       string `env:"R2_ACCOUNT_ID"`

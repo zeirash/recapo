@@ -223,10 +223,31 @@ export const api = {
     return response
   },
 
-  register: async (name: string, email: string, password: string) => {
+  sendOtp: async (email: string) => {
+    return apiRequest<ApiResponse>('/send_otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }, true)
+  },
+
+  register: async (name: string, email: string, password: string, otp: string) => {
     return apiRequest<ApiResponse>('/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, otp }),
+    }, true)
+  },
+
+  forgotPassword: async (email: string) => {
+    return apiRequest<ApiResponse>('/forgot_password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }, true)
+  },
+
+  resetPassword: async (email: string, otp: string, password: string) => {
+    return apiRequest<ApiResponse>('/reset_password', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, password }),
     }, true)
   },
 

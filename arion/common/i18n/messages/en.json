@@ -51,5 +51,12 @@
   "err_subscription_not_active": "Subscription is not active",
   "err_payment_not_found": "Payment not found",
   "err_no_active_plans": "No active plans found",
-  "err_invalid_signature": "Invalid signature"
+  "err_invalid_signature": "Invalid signature",
+  "err_otp_required": "Verification code is required",
+  "err_invalid_otp": "Invalid or expired verification code",
+
+  "email_otp_subject": "Your Recapo verification code",
+  "email_otp_body": "Your Recapo verification code is: %s\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.",
+  "email_reset_otp_subject": "Reset your Recapo password",
+  "email_reset_otp_body": "Your Recapo password reset code is: %s\n\nThis code will expire in 10 minutes.\n\nIf you did not request a password reset, please ignore this email."
 }

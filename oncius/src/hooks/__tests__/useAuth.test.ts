@@ -9,6 +9,7 @@ jest.mock('@/utils/api', () => ({
     getCurrentUser: jest.fn(),
     login: jest.fn(),
     logout: jest.fn(),
+    sendOtp: jest.fn(),
     register: jest.fn(),
   },
   getAuthToken: jest.fn(),
@@ -126,34 +127,40 @@ describe('useAuth', () => {
 
   it('register mutation calls router.push on success', async () => {
     ;(getAuthToken as jest.Mock).mockReturnValue(null)
+    // Seed sessionStorage with pending registration data
+    sessionStorage.setItem('registerPendingData', JSON.stringify({ name: 'User', email: 'a@b.com', password: 'pass' }))
     ;(api.register as jest.Mock).mockResolvedValue({ success: true, data: {} })
 
     const { result } = renderHook(() => useAuth(), { wrapper: makeWrapper() })
 
     await act(async () => {
-      result.current.register({ name: 'User', email: 'a@b.com', password: 'pass' })
+      result.current.register({ otp: '123456' })
     })
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/login?message=Registration successful. Please login.')
+      expect(mockPush).toHaveBeenCalledWith('/login?registered=1')
     })
+    sessionStorage.clear()
   })
 
   it('register mutation sets registerError on failure', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     ;(getAuthToken as jest.Mock).mockReturnValue(null)
+    // Seed sessionStorage with pending registration data
+    sessionStorage.setItem('registerPendingData', JSON.stringify({ name: 'User', email: 'taken@b.com', password: 'pass' }))
     ;(api.register as jest.Mock).mockResolvedValue({ success: false, message: 'Email taken' })
 
     const { result } = renderHook(() => useAuth(), { wrapper: makeWrapper() })
 
     await act(async () => {
-      result.current.register({ name: 'User', email: 'taken@b.com', password: 'pass' })
+      result.current.register({ otp: '123456' })
     })
 
     await waitFor(() => {
       expect(result.current.registerError?.message).toBe('Email taken')
     })
     consoleSpy.mockRestore()
+    sessionStorage.clear()
   })
 
   it('logout calls api.logout', () => {

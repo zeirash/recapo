@@ -71,8 +71,11 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/public/shops/{share_token}/order", handler.CreateShopTempOrderHandler).Methods("POST")
 
 	r.HandleFunc("/login", handler.LoginHandler).Methods("POST")
+	r.HandleFunc("/send_otp", handler.SendOTPHandler).Methods("POST")
 	r.HandleFunc("/register", handler.RegisterHandler).Methods("POST")
 	r.HandleFunc("/refresh", handler.RefreshHandler).Methods("POST")
+	r.HandleFunc("/forgot_password", handler.ForgotPasswordHandler).Methods("POST")
+	r.HandleFunc("/reset_password", handler.ResetPasswordHandler).Methods("POST")
 
 	// Subscription
 	r.HandleFunc("/webhook/midtrans", handler.MidtransWebhookHandler).Methods("POST")

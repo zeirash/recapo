@@ -61,4 +61,8 @@ const (
 	ErrPaymentNotFound       = "err_payment_not_found"
 	ErrNoActivePlans         = "err_no_active_plans"
 	ErrInvalidSignature      = "err_invalid_signature"
+
+	// OTP
+	ErrOTPRequired = "err_otp_required"
+	ErrInvalidOTP  = "err_invalid_otp"
 )

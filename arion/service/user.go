@@ -7,7 +7,9 @@ import (
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/constant"
+	emailPkg "github.com/zeirash/recapo/arion/common/email"
 	"github.com/zeirash/recapo/arion/common/logger"
+	otpPkg "github.com/zeirash/recapo/arion/common/otp"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/store"
 
@@ -22,6 +24,9 @@ type (
 		UpdateUser(input UpdateUserInput) (response.UserData, error)
 		GetUserByID(userID int) (*response.UserData, error)
 		GetUsers() ([]response.UserData, error)
+		SendOTP(email, lang string) error
+		ForgotPassword(email, lang string) error
+		ResetPassword(email, otp, newPassword string) error
 	}
 
 	uservice struct{}
@@ -253,6 +258,70 @@ func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
 	}
 
 	return &res, nil
+}
+
+func (u *uservice) SendOTP(email, lang string) error {
+	existUser, err := userStore.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	if existUser != nil {
+		return errors.New(apierr.ErrUserAlreadyExists)
+	}
+
+	code := otpPkg.Generate(email)
+	return emailPkg.SendOTP(email, code, lang)
+}
+
+// resetOTPKey returns the namespaced OTP key for password reset to avoid
+// collisions with registration OTPs.
+func resetOTPKey(email string) string {
+	return "reset:" + email
+}
+
+func (u *uservice) ForgotPassword(email, lang string) error {
+	user, err := userStore.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	// If user doesn't exist, return silently to avoid user enumeration.
+	if user == nil {
+		return nil
+	}
+
+	code := otpPkg.Generate(resetOTPKey(email))
+	return emailPkg.SendPasswordResetOTP(email, code, lang)
+}
+
+func (u *uservice) ResetPassword(email, otpCode, newPassword string) error {
+	if !otpPkg.Verify(resetOTPKey(email), otpCode) {
+		return errors.New(apierr.ErrInvalidOTP)
+	}
+
+	user, err := userStore.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	if user == nil {
+		return errors.New(apierr.ErrUserNotExist)
+	}
+
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	hashed := string(encryptedPassword)
+	_, err = userStore.UpdateUser(user.ID, store.UpdateUserInput{Password: &hashed})
+	if err != nil {
+		return err
+	}
+
+	otpPkg.Delete(resetOTPKey(email))
+	return nil
 }
 
 func (u *uservice) GetUsers() ([]response.UserData, error) {

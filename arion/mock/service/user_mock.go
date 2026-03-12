@@ -110,6 +110,48 @@ func (mr *MockUserServiceMockRecorder) UserLogin(email, password interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserLogin", reflect.TypeOf((*MockUserService)(nil).UserLogin), email, password)
 }
 
+// SendOTP mocks base method.
+func (m *MockUserService) SendOTP(email, lang string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendOTP", email, lang)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendOTP indicates an expected call of SendOTP.
+func (mr *MockUserServiceMockRecorder) SendOTP(email, lang interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendOTP", reflect.TypeOf((*MockUserService)(nil).SendOTP), email, lang)
+}
+
+// ForgotPassword mocks base method.
+func (m *MockUserService) ForgotPassword(email, lang string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ForgotPassword", email, lang)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ForgotPassword indicates an expected call of ForgotPassword.
+func (mr *MockUserServiceMockRecorder) ForgotPassword(email, lang interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForgotPassword", reflect.TypeOf((*MockUserService)(nil).ForgotPassword), email, lang)
+}
+
+// ResetPassword mocks base method.
+func (m *MockUserService) ResetPassword(email, otpCode, newPassword string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetPassword", email, otpCode, newPassword)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ResetPassword indicates an expected call of ResetPassword.
+func (mr *MockUserServiceMockRecorder) ResetPassword(email, otpCode, newPassword interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetPassword", reflect.TypeOf((*MockUserService)(nil).ResetPassword), email, otpCode, newPassword)
+}
+
 // UserRegister mocks base method.
 func (m *MockUserService) UserRegister(name, email, password string) (response.TokenResponse, error) {
 	m.ctrl.T.Helper()

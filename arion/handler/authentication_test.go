@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/zeirash/recapo/arion/common/apierr"
+	"github.com/zeirash/recapo/arion/common/otp"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
@@ -81,9 +82,9 @@ func TestLoginHandler(t *testing.T) {
 			wantErrMessage: "database error",
 		},
 		{
-			name:       "login returns 400 on invalid json",
-			body:       "invalid json",
-			mockSetup:  func() {},
+			name:        "login returns 400 on invalid json",
+			body:        "invalid json",
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -93,7 +94,7 @@ func TestLoginHandler(t *testing.T) {
 				"email":    "",
 				"password": "password123",
 			},
-			mockSetup:  func() {},
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -103,7 +104,7 @@ func TestLoginHandler(t *testing.T) {
 				"email":    "user@example.com",
 				"password": "",
 			},
-			mockSetup:  func() {},
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -142,7 +143,7 @@ func TestLoginHandler(t *testing.T) {
 	}
 }
 
-func TestRegisterHandler(t *testing.T) {
+func TestSendOTPHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -161,87 +162,48 @@ func TestRegisterHandler(t *testing.T) {
 		wantErrMessage string
 	}{
 		{
-			name: "successfully register",
-			body: map[string]interface{}{
-				"name":     "John Doe",
-				"email":    "john@example.com",
-				"password": "password123",
-			},
-			mockSetup: func() {
-				mockUserService.EXPECT().
-					UserRegister("John Doe", "john@example.com", "password123").
-					Return(response.TokenResponse{
-						AccessToken:  "access-token",
-						RefreshToken: "refresh-token",
-					}, nil)
-			},
+			name:      "successfully send OTP",
+			body:      map[string]interface{}{"email": "john@example.com"},
+			mockSetup: func() { mockUserService.EXPECT().SendOTP("john@example.com", gomock.Any()).Return(nil) },
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
 		{
-			name: "register returns 500 on service error",
-			body: map[string]interface{}{
-				"name":     "John Doe",
-				"email":    "john@example.com",
-				"password": "password123",
-			},
+			name:      "returns 400 when email already registered",
+			body:      map[string]interface{}{"email": "existing@example.com"},
 			mockSetup: func() {
-				mockUserService.EXPECT().
-					UserRegister("John Doe", "john@example.com", "password123").
-					Return(response.TokenResponse{}, errors.New("database error"))
+				mockUserService.EXPECT().SendOTP("existing@example.com", gomock.Any()).Return(errors.New(apierr.ErrUserAlreadyExists))
 			},
-			wantStatus:     http.StatusInternalServerError,
-			wantSuccess:    false,
-			wantErrMessage: "database error",
-		},
-		{
-			name:       "register returns 400 on invalid json",
-			body:       "invalid json",
-			mockSetup:  func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 		{
-			name: "register returns 400 on validation failure - missing name",
-			body: map[string]interface{}{
-				"name":     "",
-				"email":    "john@example.com",
-				"password": "password123",
+			name:      "returns 500 on service error",
+			body:      map[string]interface{}{"email": "john@example.com"},
+			mockSetup: func() {
+				mockUserService.EXPECT().SendOTP("john@example.com", gomock.Any()).Return(errors.New("smtp error"))
 			},
-			mockSetup:  func() {},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on invalid json",
+			body:        "invalid json",
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 		{
-			name: "register returns 400 on validation failure - missing email",
-			body: map[string]interface{}{
-				"name":     "John Doe",
-				"email":    "",
-				"password": "password123",
-			},
-			mockSetup:  func() {},
+			name:        "returns 400 on missing email",
+			body:        map[string]interface{}{"email": ""},
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 		{
-			name: "register returns 400 on validation failure - invalid email",
-			body: map[string]interface{}{
-				"name":     "John Doe",
-				"email":    "invalid-email",
-				"password": "password123",
-			},
-			mockSetup:  func() {},
-			wantStatus:  http.StatusBadRequest,
-			wantSuccess: false,
-		},
-		{
-			name: "register returns 400 on validation failure - missing password",
-			body: map[string]interface{}{
-				"name":     "John Doe",
-				"email":    "john@example.com",
-				"password": "",
-			},
-			mockSetup:  func() {},
+			name:        "returns 400 on invalid email format",
+			body:        map[string]interface{}{"email": "not-an-email"},
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -259,6 +221,206 @@ func TestRegisterHandler(t *testing.T) {
 				bodyBytes, _ = json.Marshal(b)
 			}
 
+			req := httptest.NewRequest("POST", "/send_otp", bytes.NewReader(bodyBytes))
+			rec := httptest.NewRecorder()
+
+			handler.SendOTPHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("SendOTPHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("SendOTPHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("SendOTPHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+		})
+	}
+}
+
+func TestRegisterHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	handler.SetUserService(mockUserService)
+
+	tests := []struct {
+		name           string
+		bodyFn         func(otpCode string) []byte
+		otpSetup       func() string // seeds OTP store, returns the code
+		mockSetup      func(otpCode string)
+		wantStatus     int
+		wantSuccess    bool
+		wantErrMessage string
+	}{
+		{
+			name: "successfully register",
+			otpSetup: func() string {
+				return otp.Generate("john@example.com")
+			},
+			mockSetup: func(otpCode string) {
+				mockUserService.EXPECT().
+					UserRegister("John Doe", "john@example.com", "password123").
+					Return(response.TokenResponse{
+						AccessToken:  "access-token",
+						RefreshToken: "refresh-token",
+					}, nil)
+			},
+			bodyFn: func(otpCode string) []byte {
+				b, _ := json.Marshal(map[string]interface{}{
+					"name":     "John Doe",
+					"email":    "john@example.com",
+					"password": "password123",
+					"otp":      otpCode,
+				})
+				return b
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name: "register returns 500 on service error",
+			otpSetup: func() string {
+				return otp.Generate("john@example.com")
+			},
+			mockSetup: func(otpCode string) {
+				mockUserService.EXPECT().
+					UserRegister("John Doe", "john@example.com", "password123").
+					Return(response.TokenResponse{}, errors.New("database error"))
+			},
+			bodyFn: func(otpCode string) []byte {
+				b, _ := json.Marshal(map[string]interface{}{
+					"name":     "John Doe",
+					"email":    "john@example.com",
+					"password": "password123",
+					"otp":      otpCode,
+				})
+				return b
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "database error",
+		},
+		{
+			name:      "register returns 400 on invalid json",
+			otpSetup:  func() string { return "" },
+			mockSetup: func(_ string) {},
+			bodyFn:    func(_ string) []byte { return []byte("invalid json") },
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:      "register returns 400 on validation failure - missing name",
+			otpSetup:  func() string { return "" },
+			mockSetup: func(_ string) {},
+			bodyFn: func(_ string) []byte {
+				b, _ := json.Marshal(map[string]interface{}{
+					"name":     "",
+					"email":    "john@example.com",
+					"password": "password123",
+					"otp":      "123456",
+				})
+				return b
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:      "register returns 400 on validation failure - missing email",
+			otpSetup:  func() string { return "" },
+			mockSetup: func(_ string) {},
+			bodyFn: func(_ string) []byte {
+				b, _ := json.Marshal(map[string]interface{}{
+					"name":     "John Doe",
+					"email":    "",
+					"password": "password123",
+					"otp":      "123456",
+				})
+				return b
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:      "register returns 400 on validation failure - invalid email",
+			otpSetup:  func() string { return "" },
+			mockSetup: func(_ string) {},
+			bodyFn: func(_ string) []byte {
+				b, _ := json.Marshal(map[string]interface{}{
+					"name":     "John Doe",
+					"email":    "invalid-email",
+					"password": "password123",
+					"otp":      "123456",
+				})
+				return b
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:      "register returns 400 on validation failure - missing password",
+			otpSetup:  func() string { return "" },
+			mockSetup: func(_ string) {},
+			bodyFn: func(_ string) []byte {
+				b, _ := json.Marshal(map[string]interface{}{
+					"name":     "John Doe",
+					"email":    "john@example.com",
+					"password": "",
+					"otp":      "123456",
+				})
+				return b
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:      "register returns 400 on validation failure - missing otp",
+			otpSetup:  func() string { return "" },
+			mockSetup: func(_ string) {},
+			bodyFn: func(_ string) []byte {
+				b, _ := json.Marshal(map[string]interface{}{
+					"name":     "John Doe",
+					"email":    "john@example.com",
+					"password": "password123",
+					"otp":      "",
+				})
+				return b
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:      "register returns 400 on invalid otp",
+			otpSetup:  func() string { return otp.Generate("john@example.com") },
+			mockSetup: func(_ string) {},
+			bodyFn: func(_ string) []byte {
+				b, _ := json.Marshal(map[string]interface{}{
+					"name":     "John Doe",
+					"email":    "john@example.com",
+					"password": "password123",
+					"otp":      "000000",
+				})
+				return b
+			},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			otpCode := tt.otpSetup()
+			tt.mockSetup(otpCode)
+			bodyBytes := tt.bodyFn(otpCode)
+
 			req := httptest.NewRequest("POST", "/register", bytes.NewReader(bodyBytes))
 			rec := httptest.NewRecorder()
 
@@ -275,6 +437,204 @@ func TestRegisterHandler(t *testing.T) {
 			}
 			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
 				t.Errorf("RegisterHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+		})
+	}
+}
+
+func TestForgotPasswordHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	handler.SetUserService(mockUserService)
+
+	tests := []struct {
+		name        string
+		body        interface{}
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name:        "successfully sends reset OTP",
+			body:        map[string]interface{}{"email": "user@example.com"},
+			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword("user@example.com", gomock.Any()).Return(nil) },
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:        "returns 200 even when user not found (anti-enumeration)",
+			body:        map[string]interface{}{"email": "unknown@example.com"},
+			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword("unknown@example.com", gomock.Any()).Return(nil) },
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:        "returns 500 on service error",
+			body:        map[string]interface{}{"email": "user@example.com"},
+			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword("user@example.com", gomock.Any()).Return(errors.New("smtp error")) },
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on invalid json",
+			body:        "invalid json",
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on missing email",
+			body:        map[string]interface{}{"email": ""},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on invalid email format",
+			body:        map[string]interface{}{"email": "not-an-email"},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			var bodyBytes []byte
+			switch b := tt.body.(type) {
+			case string:
+				bodyBytes = []byte(b)
+			default:
+				bodyBytes, _ = json.Marshal(b)
+			}
+
+			req := httptest.NewRequest("POST", "/forgot_password", bytes.NewReader(bodyBytes))
+			rec := httptest.NewRecorder()
+
+			handler.ForgotPasswordHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("ForgotPasswordHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("ForgotPasswordHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+		})
+	}
+}
+
+func TestResetPasswordHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	handler.SetUserService(mockUserService)
+
+	tests := []struct {
+		name           string
+		body           interface{}
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantErrMessage string
+	}{
+		{
+			name: "successfully resets password",
+			body: map[string]interface{}{"email": "user@example.com", "otp": "123456", "password": "newpassword"},
+			mockSetup: func() {
+				mockUserService.EXPECT().ResetPassword("user@example.com", "123456", "newpassword").Return(nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name: "returns 400 on invalid OTP",
+			body: map[string]interface{}{"email": "user@example.com", "otp": "000000", "password": "newpassword"},
+			mockSetup: func() {
+				mockUserService.EXPECT().ResetPassword("user@example.com", "000000", "newpassword").Return(errors.New(apierr.ErrInvalidOTP))
+			},
+			wantStatus:     http.StatusBadRequest,
+			wantSuccess:    false,
+			wantErrMessage: "Invalid or expired verification code",
+		},
+		{
+			name:        "returns 400 on invalid json",
+			body:        "invalid json",
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on missing email",
+			body:        map[string]interface{}{"email": "", "otp": "123456", "password": "newpassword"},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on invalid email format",
+			body:        map[string]interface{}{"email": "not-an-email", "otp": "123456", "password": "newpassword"},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on missing otp",
+			body:        map[string]interface{}{"email": "user@example.com", "otp": "", "password": "newpassword"},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:        "returns 400 on missing password",
+			body:        map[string]interface{}{"email": "user@example.com", "otp": "123456", "password": ""},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			var bodyBytes []byte
+			switch b := tt.body.(type) {
+			case string:
+				bodyBytes = []byte(b)
+			default:
+				bodyBytes, _ = json.Marshal(b)
+			}
+
+			req := httptest.NewRequest("POST", "/reset_password", bytes.NewReader(bodyBytes))
+			rec := httptest.NewRecorder()
+
+			handler.ResetPasswordHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("ResetPasswordHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("ResetPasswordHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("ResetPasswordHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
 			}
 		})
 	}
@@ -329,9 +689,9 @@ func TestRefreshHandler(t *testing.T) {
 			wantErrMessage: "token expired",
 		},
 		{
-			name:       "refresh returns 400 on invalid json",
-			body:       "invalid json",
-			mockSetup:  func() {},
+			name:        "refresh returns 400 on invalid json",
+			body:        "invalid json",
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -340,7 +700,7 @@ func TestRefreshHandler(t *testing.T) {
 			body: map[string]interface{}{
 				"refresh_token": "",
 			},
-			mockSetup:  func() {},
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
@@ -349,7 +709,7 @@ func TestRefreshHandler(t *testing.T) {
 			body: map[string]interface{}{
 				"other_field": "value",
 			},
-			mockSetup:  func() {},
+			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},

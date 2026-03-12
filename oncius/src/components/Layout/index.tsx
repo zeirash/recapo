@@ -33,7 +33,7 @@ const Layout = ({ children }: LayoutProps) => {
   }, [pathname])
 
   // Show header for login and register pages
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password'
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/confirm-email' || pathname === '/reset-password'
 
   if (isAuthPage) {
     return (

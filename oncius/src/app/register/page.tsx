@@ -17,7 +17,7 @@ const RegisterPage = () => {
   })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
-  const { register, registerLoading, registerError } = useAuth()
+  const { sendOtp, sendOtpLoading, sendOtpError } = useAuth()
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {}
@@ -65,7 +65,7 @@ const RegisterPage = () => {
       return
     }
 
-    register({
+    sendOtp({
       name: formData.name,
       email: formData.email,
       password: formData.password,
@@ -80,9 +80,9 @@ const RegisterPage = () => {
             {t('auth.register')}
           </Typography>
 
-          {registerError && (
+          {sendOtpError && (
             <Alert severity="error" sx={{ mb: '16px' }}>
-              {registerError instanceof Error ? registerError.message : t('auth.registrationFailed')}
+              {sendOtpError instanceof Error ? sendOtpError.message : t('auth.registrationFailed')}
             </Alert>
           )}
 
@@ -176,10 +176,10 @@ const RegisterPage = () => {
               variant="contained"
               disableElevation
               fullWidth
-              disabled={registerLoading}
+              disabled={sendOtpLoading}
               sx={{ mb: '16px' }}
             >
-              {registerLoading ? t('auth.creatingAccount') : t('auth.register')}
+              {sendOtpLoading ? t('auth.sendingCode') : t('auth.register')}
             </Button>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>

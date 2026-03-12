@@ -10,6 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/database"
+	otpPkg "github.com/zeirash/recapo/arion/common/otp"
 	"github.com/zeirash/recapo/arion/common/response"
 	mock_database "github.com/zeirash/recapo/arion/mock/database"
 	mock_store "github.com/zeirash/recapo/arion/mock/store"
@@ -1187,6 +1188,235 @@ func Test_uservice_GetUsers(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tt.wantResult) {
 				t.Errorf("GetUsers() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func Test_uservice_SendOTP(t *testing.T) {
+	tests := []struct {
+		name      string
+		email     string
+		mockSetup func(ctrl *gomock.Controller) *mock_store.MockUserStore
+		wantErr   bool
+	}{
+		{
+			name:  "successfully sends OTP when user does not exist",
+			email: "new@example.com",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("new@example.com").
+					Return(nil, nil)
+				return mock
+			},
+			wantErr: false,
+		},
+		{
+			name:  "returns error when user already exists",
+			email: "existing@example.com",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("existing@example.com").
+					Return(&model.User{ID: 1, Email: "existing@example.com"}, nil)
+				return mock
+			},
+			wantErr: true,
+		},
+		{
+			name:  "returns error on database failure",
+			email: "new@example.com",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("new@example.com").
+					Return(nil, errors.New("database error"))
+				return mock
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldStore := userStore
+			defer func() { userStore = oldStore }()
+			userStore = tt.mockSetup(ctrl)
+
+			var u uservice
+			gotErr := u.SendOTP(tt.email, "en")
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("SendOTP() error = %v, wantErr %v", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_uservice_ForgotPassword(t *testing.T) {
+	tests := []struct {
+		name      string
+		email     string
+		mockSetup func(ctrl *gomock.Controller) *mock_store.MockUserStore
+		wantErr   bool
+	}{
+		{
+			name:  "successfully sends reset OTP when user exists",
+			email: "user@example.com",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("user@example.com").
+					Return(&model.User{ID: 1, Email: "user@example.com"}, nil)
+				return mock
+			},
+			wantErr: false,
+		},
+		{
+			name:  "silently succeeds when user does not exist",
+			email: "unknown@example.com",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("unknown@example.com").
+					Return(nil, nil)
+				return mock
+			},
+			wantErr: false,
+		},
+		{
+			name:  "returns error on database failure",
+			email: "user@example.com",
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("user@example.com").
+					Return(nil, errors.New("database error"))
+				return mock
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldStore := userStore
+			defer func() { userStore = oldStore }()
+			userStore = tt.mockSetup(ctrl)
+
+			var u uservice
+			gotErr := u.ForgotPassword(tt.email, "en")
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("ForgotPassword() error = %v, wantErr %v", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_uservice_ResetPassword(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name      string
+		email     string
+		password  string
+		otpSetup  func(email string) string // seeds OTP, returns code
+		mockSetup func(ctrl *gomock.Controller) *mock_store.MockUserStore
+		wantErr   bool
+	}{
+		{
+			name:     "successfully resets password",
+			email:    "user@example.com",
+			password: "newpassword123",
+			otpSetup: func(email string) string {
+				return otpPkg.Generate(resetOTPKey(email))
+			},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("user@example.com").
+					Return(&model.User{ID: 1, Email: "user@example.com", CreatedAt: fixedTime}, nil)
+				mock.EXPECT().
+					UpdateUser(1, gomock.Any()).
+					Return(&model.User{ID: 1, Email: "user@example.com", CreatedAt: fixedTime}, nil)
+				return mock
+			},
+			wantErr: false,
+		},
+		{
+			name:     "returns error on invalid OTP",
+			email:    "user@example.com",
+			password: "newpassword123",
+			otpSetup: func(email string) string {
+				otpPkg.Generate(resetOTPKey(email))
+				return "000000" // wrong code
+			},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				return mock_store.NewMockUserStore(ctrl)
+			},
+			wantErr: true,
+		},
+		{
+			name:     "returns error when user not found after OTP verification",
+			email:    "user@example.com",
+			password: "newpassword123",
+			otpSetup: func(email string) string {
+				return otpPkg.Generate(resetOTPKey(email))
+			},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("user@example.com").
+					Return(nil, nil)
+				return mock
+			},
+			wantErr: true,
+		},
+		{
+			name:     "returns error on database failure during update",
+			email:    "user@example.com",
+			password: "newpassword123",
+			otpSetup: func(email string) string {
+				return otpPkg.Generate(resetOTPKey(email))
+			},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByEmail("user@example.com").
+					Return(&model.User{ID: 1, Email: "user@example.com", CreatedAt: fixedTime}, nil)
+				mock.EXPECT().
+					UpdateUser(1, gomock.Any()).
+					Return(nil, errors.New("database error"))
+				return mock
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldStore := userStore
+			defer func() { userStore = oldStore }()
+			userStore = tt.mockSetup(ctrl)
+
+			otpCode := tt.otpSetup(tt.email)
+
+			var u uservice
+			gotErr := u.ResetPassword(tt.email, otpCode, tt.password)
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("ResetPassword() error = %v, wantErr %v", gotErr, tt.wantErr)
 			}
 		})
 	}

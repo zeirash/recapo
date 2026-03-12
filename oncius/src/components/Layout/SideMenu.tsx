@@ -19,6 +19,7 @@ interface SideMenuProps {
 
 const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const t = useTranslations('nav')
+  const tCommon = useTranslations('common')
   const { user, logout } = useAuth()
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -248,14 +249,14 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
             onClick={(e) => e.stopPropagation()}
           >
             <Box sx={{ fontSize: '18px', fontWeight: 600, mb: '8px', display: 'block' }}>
-              Log out?
+              {t('logoutConfirmTitle')}
             </Box>
             <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
-              Are you sure you want to log out?
+              {t('logoutConfirmMessage')}
             </Box>
             <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
               <Button variant="outlined" onClick={() => setShowLogoutDialog(false)}>
-                Cancel
+                {tCommon('cancel')}
               </Button>
               <Button
                 variant="contained"
@@ -265,7 +266,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
                   logout()
                 }}
               >
-                Log out
+                {t('logout')}
               </Button>
             </Box>
           </Box>

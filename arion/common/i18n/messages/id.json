@@ -51,5 +51,12 @@
   "err_subscription_not_active": "Langganan tidak aktif",
   "err_payment_not_found": "Pembayaran tidak ditemukan",
   "err_no_active_plans": "Tidak ada paket aktif",
-  "err_invalid_signature": "Tanda tangan tidak valid"
+  "err_invalid_signature": "Tanda tangan tidak valid",
+  "err_otp_required": "Kode verifikasi wajib diisi",
+  "err_invalid_otp": "Kode verifikasi tidak valid atau sudah kedaluwarsa",
+
+  "email_otp_subject": "Kode verifikasi Recapo Anda",
+  "email_otp_body": "Kode verifikasi Recapo Anda adalah: %s\n\nKode ini akan kedaluwarsa dalam 10 menit.\n\nJika Anda tidak meminta kode ini, abaikan email ini.",
+  "email_reset_otp_subject": "Reset kata sandi Recapo Anda",
+  "email_reset_otp_body": "Kode reset kata sandi Recapo Anda adalah: %s\n\nKode ini akan kedaluwarsa dalam 10 menit.\n\nJika Anda tidak meminta reset kata sandi, abaikan email ini."
 }
