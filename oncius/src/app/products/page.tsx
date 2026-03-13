@@ -8,6 +8,7 @@ import Layout from '@/components/Layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
+import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { Share2, Check, Package, X, Pencil, Trash2, ImageIcon } from 'lucide-react'
 
 type Product = {
@@ -287,7 +288,7 @@ export default function ProductsPage() {
 
         {/* Scrollable body */}
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: '24px', bgcolor: 'grey.50' }}>
-          {isLoading && <Box>{t('loading')}</Box>}
+          {isLoading && <PageLoadingSkeleton />}
           {isError && (
             <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Box>
           )}

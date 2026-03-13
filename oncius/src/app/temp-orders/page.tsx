@@ -7,6 +7,7 @@ import { Box, Button, Container, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
 import { ClipboardList } from 'lucide-react'
 import SearchInput from '@/components/ui/SearchInput'
+import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
 
 type TempOrderItem = {
@@ -225,7 +226,7 @@ export default function TempOrdersPage() {
     <Layout>
       <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
-          {isLoading && <Box>{t('loading')}</Box>}
+          {isLoading && <PageLoadingSkeleton />}
           {isError && (
             <Box sx={{ color: 'error.main' }}>
               {(error as Error)?.message || tErrors('loadingError', { resource: tTemp('title') })}

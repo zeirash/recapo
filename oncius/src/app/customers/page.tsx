@@ -8,6 +8,7 @@ import Layout from '@/components/Layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import { api } from '@/utils/api'
+import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { Phone, MapPin, User, Pencil, Trash2 } from 'lucide-react'
 
 type Customer = {
@@ -156,7 +157,7 @@ export default function CustomersPage() {
 
         {/* Scrollable body */}
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: '24px', pb: '24px' }}>
-          {isLoading && <Box>Loading...</Box>}
+          {isLoading && <PageLoadingSkeleton />}
           {isError && (
             <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || 'Error loading customers'}</Box>
           )}

@@ -4,6 +4,7 @@ import { useQuery } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Paper, Typography } from '@mui/material'
 import Layout from '@/components/Layout'
+import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
 
 type PurchaseProduct = {
@@ -37,7 +38,7 @@ export default function PurchasePage() {
         </Box>
 
         {isLoading ? (
-          <Box sx={{ color: 'grey.500' }}>{t('loading')}</Box>
+          <PageLoadingSkeleton />
         ) : isError ? (
           <Box sx={{ color: 'error.main' }}>
             {(error as Error)?.message || tErrors('loadingError', { resource: tPurchase('title') })}

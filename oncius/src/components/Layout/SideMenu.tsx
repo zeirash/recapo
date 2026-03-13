@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 import { Box, Button, Tooltip } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
@@ -43,6 +43,10 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     { id: 'customers', label: t('customers'), icon: Users, path: '/customers' },
     { id: 'subscription', label: t('subscription'), icon: CreditCard, path: '/subscription' },
   ]
+
+  useEffect(() => {
+    menuItems.forEach(item => router.prefetch(item.path))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMenuClick = (item: typeof menuItems[0]) => {
     onMenuSelect(item.id)

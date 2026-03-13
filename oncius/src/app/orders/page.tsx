@@ -10,6 +10,7 @@ import AddButton from '@/components/ui/AddButton'
 import CustomerSearchSelect from '@/components/ui/CustomerSearchSelect'
 import ProductSearchSelect from '@/components/ui/ProductSearchSelect'
 import { api, ApiError } from '@/utils/api'
+import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { ClipboardList, Download, Info, Pencil, Trash2 } from 'lucide-react'
 
 type OrderItem = {
@@ -461,7 +462,7 @@ export default function OrdersPage() {
     <Layout>
       <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
-          {isLoading && <Box>{t('loading')}</Box>}
+          {isLoading && <PageLoadingSkeleton />}
           {isError && (
             <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || tErrors('loadingError', { resource: to('title') })}</Box>
           )}

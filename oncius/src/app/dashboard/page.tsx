@@ -7,6 +7,7 @@ import { Box, Button, Paper, Typography } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
+import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
 import { Package, DollarSign, Users, ClipboardList, type LucideIcon } from 'lucide-react'
 
@@ -154,7 +155,7 @@ const DashboardPage = () => {
         </Typography>
 
         {ordersLoading ? (
-          <Box sx={{ color: 'grey.500' }}>{t('common.loading')}</Box>
+          <PageLoadingSkeleton />
         ) : (
           <>
             {/* Stat cards */}
