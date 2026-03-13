@@ -67,7 +67,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     >
       {/* Top Section */}
       <Box sx={{ p: '16px', borderBottom: '1px solid', borderColor: 'grey.200' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => router.push('/dashboard')}>
           {/* Logo/Icon */}
           <RecapoLogo />
         </Box>
