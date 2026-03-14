@@ -6,6 +6,7 @@ import { Box, Typography, Button, Paper, Chip, CircularProgress, Dialog, DialogT
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Users, Crown, Info } from 'lucide-react'
 import Layout from '@/components/Layout'
+import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
 import type { Plan, Subscription } from '@/types'
 
@@ -135,9 +136,7 @@ export default function SubscriptionPage() {
         )}
 
         {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: '48px' }}>
-            <CircularProgress />
-          </Box>
+          <PageLoadingSkeleton />
         ) : (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
             {plans.map((plan) => {
