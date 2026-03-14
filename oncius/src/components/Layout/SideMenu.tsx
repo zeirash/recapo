@@ -265,9 +265,9 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               <Button
                 variant="contained"
                 disableElevation
-                onClick={() => {
+                onClick={async () => {
                   setShowLogoutDialog(false)
-                  logout()
+                  await logout()
                 }}
               >
                 {t('logout')}

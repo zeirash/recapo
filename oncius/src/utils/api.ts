@@ -251,7 +251,12 @@ export const api = {
     }, true)
   },
 
-  logout: () => {
+  logout: async () => {
+    try {
+      await apiRequest<ApiResponse>('/logout', { method: 'POST' })
+    } catch {
+      // best-effort: ignore errors so local cleanup always runs
+    }
     removeAuthToken()
     removeRefreshToken()
   },

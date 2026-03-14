@@ -156,8 +156,8 @@ export const useAuth = () => {
   )
 
   // Logout function
-  const logout = () => {
-    api.logout()
+  const logout = async () => {
+    await api.logout()
     queryClient.clear()
     router.push('/login')
   }
