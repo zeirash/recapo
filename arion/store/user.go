@@ -19,6 +19,8 @@ type (
 		GetUsers() ([]model.User, error)
 		CreateUser(tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
 		UpdateUser(id int, input UpdateUserInput) (*model.User, error)
+		SetSessionToken(userID int, sessionToken string) error
+		ClearSessionToken(userID int) error
 		Roles() []string
 		IsValidRole(role string) bool
 	}
@@ -47,12 +49,12 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 	resp := model.User{}
 
 	q := `
-		SELECT id, shop_id, name, email, password, role, created_at, updated_at
+		SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
 
-	err := u.db.QueryRow(q, userID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
+	err := u.db.QueryRow(q, userID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -67,12 +69,12 @@ func (u *user) GetUserByShopID(shopID int) (*model.User, error) {
 	resp := model.User{}
 
 	q := `
-		SELECT id, shop_id, name, email, password, role, created_at, updated_at
+		SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at
 		FROM users
 		WHERE shop_id = $1
 	`
 
-	err := u.db.QueryRow(q, shopID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
+	err := u.db.QueryRow(q, shopID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -86,12 +88,12 @@ func (u *user) GetUserByShopID(shopID int) (*model.User, error) {
 func (u *user) GetUserByEmail(email string) (*model.User, error) {
 	resp := model.User{}
 	q := `
-		SELECT id, shop_id,name, email, password, role, created_at, updated_at
+		SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
 
-	err := u.db.QueryRow(q, email).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
+	err := u.db.QueryRow(q, email).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -190,6 +192,18 @@ func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (u *user) SetSessionToken(userID int, sessionToken string) error {
+	q := `UPDATE users SET session_token = $1 WHERE id = $2`
+	_, err := u.db.Exec(q, sessionToken, userID)
+	return err
+}
+
+func (u *user) ClearSessionToken(userID int) error {
+	q := `UPDATE users SET session_token = NULL WHERE id = $1`
+	_, err := u.db.Exec(q, userID)
+	return err
 }
 
 func (u *user) Roles() []string {

@@ -29,6 +29,7 @@
   "err_no_system_access": "Tidak memiliki akses mode sistem",
   "err_missing_shop_context": "Konteks toko tidak ditemukan",
   "err_subscription_required": "Diperlukan langganan aktif",
+  "err_session_invalid": "Sesi telah berakhir. Silakan masuk kembali.",
   "err_unsupported_image_type": "Tipe gambar tidak didukung; diizinkan: jpeg, png, webp",
   "err_invalid_image_url": "URL gambar tidak valid",
   "err_user_not_found": "Pengguna tidak ditemukan",

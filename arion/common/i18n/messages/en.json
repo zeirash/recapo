@@ -29,6 +29,7 @@
   "err_no_system_access": "Doesn't have system mode access",
   "err_missing_shop_context": "Missing shop context",
   "err_subscription_required": "Subscription required",
+  "err_session_invalid": "Session expired. Please log in again.",
   "err_unsupported_image_type": "Unsupported image type; allowed: jpeg, png, webp",
   "err_invalid_image_url": "Invalid image URL",
   "err_user_not_found": "User not found",

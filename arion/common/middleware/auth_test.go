@@ -2,6 +2,7 @@ package middleware_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -16,6 +17,10 @@ import (
 	"github.com/zeirash/recapo/arion/store"
 )
 
+func sqlNullString(s string) sql.NullString {
+	return sql.NullString{String: s, Valid: true}
+}
+
 func TestAuthentication(t *testing.T) {
 	nextCalled := false
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,17 +29,21 @@ func TestAuthentication(t *testing.T) {
 	})
 
 	tests := []struct {
-		name           string
-		authHeader     string
-		mockSetup      func(ctrl *gomock.Controller) *mock_store.MockTokenStore
-		wantStatus     int
-		wantNextCalled bool
+		name              string
+		authHeader        string
+		tokenStoreMockFn  func(ctrl *gomock.Controller) *mock_store.MockTokenStore
+		userStoreMockFn   func(ctrl *gomock.Controller) *mock_store.MockUserStore
+		wantStatus        int
+		wantNextCalled    bool
 	}{
 		{
 			name:       "missing Authorization header returns 401",
 			authHeader: "",
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				return mock_store.NewMockTokenStore(ctrl)
+			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				return mock_store.NewMockUserStore(ctrl)
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantNextCalled: false,
@@ -42,8 +51,11 @@ func TestAuthentication(t *testing.T) {
 		{
 			name:       "single token without Bearer prefix returns 401",
 			authHeader: "sometoken",
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				return mock_store.NewMockTokenStore(ctrl)
+			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				return mock_store.NewMockUserStore(ctrl)
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantNextCalled: false,
@@ -51,8 +63,11 @@ func TestAuthentication(t *testing.T) {
 		{
 			name:       "too many parts in header returns 401",
 			authHeader: "Bearer token extra",
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				return mock_store.NewMockTokenStore(ctrl)
+			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				return mock_store.NewMockUserStore(ctrl)
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantNextCalled: false,
@@ -60,12 +75,15 @@ func TestAuthentication(t *testing.T) {
 		{
 			name:       "IsAuthorized returns error returns 401",
 			authHeader: "Bearer sometoken",
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
 					IsAuthorized("sometoken", gomock.Any()).
 					Return(false, errors.New("token expired"))
 				return mock
+			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				return mock_store.NewMockUserStore(ctrl)
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantNextCalled: false,
@@ -73,12 +91,15 @@ func TestAuthentication(t *testing.T) {
 		{
 			name:       "IsAuthorized returns false returns 401",
 			authHeader: "Bearer sometoken",
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
 					IsAuthorized("sometoken", gomock.Any()).
 					Return(false, nil)
 				return mock
+			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				return mock_store.NewMockUserStore(ctrl)
 			},
 			wantStatus:     http.StatusUnauthorized,
 			wantNextCalled: false,
@@ -86,7 +107,7 @@ func TestAuthentication(t *testing.T) {
 		{
 			name:       "ExtractDataFromToken returns error returns 500",
 			authHeader: "Bearer sometoken",
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
 					IsAuthorized("sometoken", gomock.Any()).
@@ -96,13 +117,16 @@ func TestAuthentication(t *testing.T) {
 					Return(model.TokenData{}, errors.New("malformed claims"))
 				return mock
 			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				return mock_store.NewMockUserStore(ctrl)
+			},
 			wantStatus:     http.StatusInternalServerError,
 			wantNextCalled: false,
 		},
 		{
-			name:       "valid token passes through to next handler",
+			name:       "valid token with null session_token passes through",
 			authHeader: "Bearer sometoken",
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
 					IsAuthorized("sometoken", gomock.Any()).
@@ -112,8 +136,89 @@ func TestAuthentication(t *testing.T) {
 					Return(model.TokenData{UserID: 10, ShopID: 3, SystemMode: false}, nil)
 				return mock
 			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByID(10).
+					Return(&model.User{ID: 10}, nil)
+				return mock
+			},
 			wantStatus:     http.StatusOK,
 			wantNextCalled: true,
+		},
+		{
+			name:       "valid token with matching session_token passes through",
+			authHeader: "Bearer sometoken",
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+				mock := mock_store.NewMockTokenStore(ctrl)
+				mock.EXPECT().
+					IsAuthorized("sometoken", gomock.Any()).
+					Return(true, nil)
+				mock.EXPECT().
+					ExtractDataFromToken("sometoken", gomock.Any()).
+					Return(model.TokenData{UserID: 10, ShopID: 3, SystemMode: false, SessionToken: "abc123"}, nil)
+				return mock
+			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				dbUser := &model.User{ID: 10, SessionToken: sqlNullString("abc123")}
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByID(10).
+					Return(dbUser, nil)
+				return mock
+			},
+			wantStatus:     http.StatusOK,
+			wantNextCalled: true,
+		},
+		{
+			name:       "session token mismatch returns 401",
+			authHeader: "Bearer sometoken",
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+				mock := mock_store.NewMockTokenStore(ctrl)
+				mock.EXPECT().
+					IsAuthorized("sometoken", gomock.Any()).
+					Return(true, nil)
+				mock.EXPECT().
+					ExtractDataFromToken("sometoken", gomock.Any()).
+					Return(model.TokenData{UserID: 10, ShopID: 3, SystemMode: false, SessionToken: "old_token"}, nil)
+				return mock
+			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				dbUser := model.User{
+					ID:           10,
+					SessionToken: sqlNullString("new_token"),
+				}
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByID(10).
+					Return(&dbUser, nil)
+				return mock
+			},
+			wantStatus:     http.StatusUnauthorized,
+			wantNextCalled: false,
+		},
+		{
+			name:       "GetUserByID returns error returns 401",
+			authHeader: "Bearer sometoken",
+			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
+				mock := mock_store.NewMockTokenStore(ctrl)
+				mock.EXPECT().
+					IsAuthorized("sometoken", gomock.Any()).
+					Return(true, nil)
+				mock.EXPECT().
+					ExtractDataFromToken("sometoken", gomock.Any()).
+					Return(model.TokenData{UserID: 10, ShopID: 3, SystemMode: false}, nil)
+				return mock
+			},
+			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByID(10).
+					Return(nil, errors.New("db error"))
+				return mock
+			},
+			wantStatus:     http.StatusUnauthorized,
+			wantNextCalled: false,
 		},
 	}
 
@@ -124,11 +229,17 @@ func TestAuthentication(t *testing.T) {
 
 			nextCalled = false
 
-			oldFn := middleware.NewTokenStoreFunc
-			defer func() { middleware.NewTokenStoreFunc = oldFn }()
+			oldTokenFn := middleware.NewTokenStoreFunc
+			oldUserFn := middleware.NewUserStoreFunc
+			defer func() {
+				middleware.NewTokenStoreFunc = oldTokenFn
+				middleware.NewUserStoreFunc = oldUserFn
+			}()
 
-			mockTS := tt.mockSetup(ctrl)
+			mockTS := tt.tokenStoreMockFn(ctrl)
 			middleware.NewTokenStoreFunc = func() store.TokenStore { return mockTS }
+			mockUS := tt.userStoreMockFn(ctrl)
+			middleware.NewUserStoreFunc = func() store.UserStore { return mockUS }
 
 			r := httptest.NewRequest(http.MethodGet, "/", nil)
 			if tt.authHeader != "" {

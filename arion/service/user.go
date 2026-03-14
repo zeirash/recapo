@@ -1,6 +1,9 @@
 package service
 
 import (
+	"crypto/rand"
+	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -27,6 +30,7 @@ type (
 		SendOTP(email, lang string) error
 		ForgotPassword(email, lang string) error
 		ResetPassword(email, otp, newPassword string) error
+		Logout(userID int) error
 	}
 
 	uservice struct{}
@@ -61,6 +65,14 @@ func NewUserService() UserService {
 	return &uservice{}
 }
 
+func generateSessionToken() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
 func (u *uservice) UserLogin(email, password string) (response.TokenResponse, error) {
 	user, err := userStore.GetUserByEmail(email)
 	if err != nil {
@@ -74,6 +86,16 @@ func (u *uservice) UserLogin(email, password string) (response.TokenResponse, er
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
 		return response.TokenResponse{}, errors.New(apierr.ErrPasswordIncorrect)
 	}
+
+	sessionToken, err := generateSessionToken()
+	if err != nil {
+		return response.TokenResponse{}, err
+	}
+
+	if err := userStore.SetSessionToken(user.ID, sessionToken); err != nil {
+		return response.TokenResponse{}, err
+	}
+	user.SessionToken = sql.NullString{String: sessionToken, Valid: true}
 
 	accessToken, err := tokenStore.CreateAccessToken(user, cfg.SecretKey, 2)
 	if err != nil {
@@ -107,6 +129,21 @@ func (u *uservice) RefreshToken(refreshToken string) (response.TokenResponse, er
 	if user == nil {
 		return response.TokenResponse{}, errors.New(apierr.ErrUserNotFound)
 	}
+
+	// Validate session token: if DB has a valid session token, it must match the token's claim
+	if user.SessionToken.Valid && user.SessionToken.String != tokenData.SessionToken {
+		return response.TokenResponse{}, errors.New(apierr.ErrInvalidRefreshToken)
+	}
+
+	sessionToken, err := generateSessionToken()
+	if err != nil {
+		return response.TokenResponse{}, err
+	}
+
+	if err := userStore.SetSessionToken(user.ID, sessionToken); err != nil {
+		return response.TokenResponse{}, err
+	}
+	user.SessionToken = sql.NullString{String: sessionToken, Valid: true}
 
 	// Generate new tokens
 	accessToken, err := tokenStore.CreateAccessToken(user, cfg.SecretKey, 2)
@@ -170,6 +207,16 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 		logger.WithError(trialErr).Error("failed to create trial subscription")
 	}
 
+	sessionToken, err := generateSessionToken()
+	if err != nil {
+		return response.TokenResponse{}, err
+	}
+
+	if err := userStore.SetSessionToken(newUser.ID, sessionToken); err != nil {
+		return response.TokenResponse{}, err
+	}
+	newUser.SessionToken = sql.NullString{String: sessionToken, Valid: true}
+
 	accessToken, err := tokenStore.CreateAccessToken(newUser, cfg.SecretKey, 2)
 	if err != nil {
 		return response.TokenResponse{}, err
@@ -184,6 +231,10 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func (u *uservice) Logout(userID int) error {
+	return userStore.ClearSessionToken(userID)
 }
 
 func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) {

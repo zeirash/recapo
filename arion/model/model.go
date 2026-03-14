@@ -10,25 +10,28 @@ import (
 /********************* Token ************************/
 type (
 	JwtCustomClaims struct {
-		Name       string `json:"name"`
-		UserID     int    `json:"user_id"`
-		ShopID     int    `json:"shop_id"`
-		SystemMode bool   `json:"system_mode"`
+		Name         string `json:"name"`
+		UserID       int    `json:"user_id"`
+		ShopID       int    `json:"shop_id"`
+		SystemMode   bool   `json:"system_mode"`
+		SessionToken string `json:"session_token"`
 		jwt.RegisteredClaims
 	}
 
 	JwtCustomRefreshClaims struct {
-		UserID     int  `json:"user_id"`
-		ShopID     int  `json:"shop_id"`
-		SystemMode bool `json:"system_mode"`
+		UserID       int    `json:"user_id"`
+		ShopID       int    `json:"shop_id"`
+		SystemMode   bool   `json:"system_mode"`
+		SessionToken string `json:"session_token"`
 		jwt.RegisteredClaims
 	}
 
 	TokenData struct {
-		Name       string `json:"name"`
-		UserID     int    `json:"user_id"`
-		ShopID     int    `json:"shop_id"`
-		SystemMode bool   `json:"system_mode"`
+		Name         string `json:"name"`
+		UserID       int    `json:"user_id"`
+		ShopID       int    `json:"shop_id"`
+		SystemMode   bool   `json:"system_mode"`
+		SessionToken string `json:"session_token"`
 	}
 
 	/****************** Shared filter *****************/
@@ -40,14 +43,15 @@ type (
 
 	/********************* User ************************/
 	User struct {
-		ID        int          `db:"id"`
-		ShopID    int          `db:"shop_id"`
-		Name      string       `db:"name"`
-		Email     string       `db:"email"`
-		Password  string       `db:"password"`
-		Role      string       `db:"role"`
-		CreatedAt time.Time    `db:"created_at"`
-		UpdatedAt sql.NullTime `db:"updated_at"`
+		ID           int            `db:"id"`
+		ShopID       int            `db:"shop_id"`
+		Name         string         `db:"name"`
+		Email        string         `db:"email"`
+		Password     string         `db:"password"`
+		Role         string         `db:"role"`
+		SessionToken sql.NullString `db:"session_token"`
+		CreatedAt    time.Time      `db:"created_at"`
+		UpdatedAt    sql.NullTime   `db:"updated_at"`
 	}
 
 	/********************* Shop ************************/

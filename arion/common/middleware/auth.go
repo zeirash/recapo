@@ -17,6 +17,10 @@ import (
 // Overridable in tests to inject a mock.
 var NewTokenStoreFunc = func() store.TokenStore { return store.NewTokenStore() }
 
+// NewUserStoreFunc is the factory used to create a UserStore for session validation.
+// Overridable in tests to inject a mock.
+var NewUserStoreFunc = func() store.UserStore { return store.NewUserStore() }
+
 // ChainMiddleware takes Handler funcs and chains them to the main handler.
 func ChainMiddleware(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(final http.Handler) http.Handler {
@@ -56,6 +60,18 @@ func Authentication(next http.Handler) http.Handler {
 		tokenData, err := tokenStore.ExtractDataFromToken(authToken, secret)
 		if err != nil {
 			handler.WriteErrorJson(w, r, http.StatusInternalServerError, err, "extract_data")
+			return
+		}
+
+		// Session token check: if DB user has a session token, it must match the JWT claim
+		userStore := NewUserStoreFunc()
+		dbUser, err := userStore.GetUserByID(tokenData.UserID)
+		if err != nil || dbUser == nil {
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New(apierr.ErrSessionInvalid), "unauthorized")
+			return
+		}
+		if dbUser.SessionToken.Valid && dbUser.SessionToken.String != tokenData.SessionToken {
+			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New(apierr.ErrSessionInvalid), "unauthorized")
 			return
 		}
 

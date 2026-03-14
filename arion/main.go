@@ -76,6 +76,7 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/refresh", handler.RefreshHandler).Methods("POST")
 	r.HandleFunc("/forgot_password", handler.ForgotPasswordHandler).Methods("POST")
 	r.HandleFunc("/reset_password", handler.ResetPasswordHandler).Methods("POST")
+	r.Handle("/logout", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.LogoutHandler))).Methods("POST")
 
 	// Subscription
 	r.HandleFunc("/webhook/midtrans", handler.MidtransWebhookHandler).Methods("POST")

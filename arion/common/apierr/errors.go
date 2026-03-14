@@ -29,11 +29,12 @@ const (
 	ErrOrderItemsRequired     = "err_order_items_required"
 
 	// Auth / Middleware
-	ErrInvalidTokenFormat  = "err_invalid_token_format"
-	ErrNotAuthorized       = "err_not_authorized"
-	ErrNoSystemAccess      = "err_no_system_access"
-	ErrMissingShopContext  = "err_missing_shop_context"
+	ErrInvalidTokenFormat   = "err_invalid_token_format"
+	ErrNotAuthorized        = "err_not_authorized"
+	ErrNoSystemAccess       = "err_no_system_access"
+	ErrMissingShopContext   = "err_missing_shop_context"
 	ErrSubscriptionRequired = "err_subscription_required"
+	ErrSessionInvalid       = "err_session_invalid"
 
 	// Image
 	ErrUnsupportedImageType = "err_unsupported_image_type"

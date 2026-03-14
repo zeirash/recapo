@@ -25,9 +25,9 @@ func Test_user_GetUserByID(t *testing.T) {
 			name:   "get user by ID",
 			userID: 1,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", "john@example.com", "hashedpass", "admin", fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE id = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "session_token", "created_at", "updated_at"}).
+					AddRow(1, 10, "John Doe", "john@example.com", "hashedpass", "admin", nil, fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE id = \$1`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
@@ -46,7 +46,7 @@ func Test_user_GetUserByID(t *testing.T) {
 			name:   "get non-existent user returns nil",
 			userID: 9999,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE id = \$1`).
 					WithArgs(9999).
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -57,7 +57,7 @@ func Test_user_GetUserByID(t *testing.T) {
 			name:   "get user returns error on database failure",
 			userID: 1,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE id = \$1`).
 					WithArgs(1).
 					WillReturnError(errors.New("database error"))
 			},
@@ -110,9 +110,9 @@ func Test_user_GetUserByEmail(t *testing.T) {
 			name:  "get user by email",
 			email: "john@example.com",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", "john@example.com", "hashedpass", "admin", fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id,name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE email = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "session_token", "created_at", "updated_at"}).
+					AddRow(1, 10, "John Doe", "john@example.com", "hashedpass", "admin", nil, fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE email = \$1`).
 					WithArgs("john@example.com").
 					WillReturnRows(rows)
 			},
@@ -131,7 +131,7 @@ func Test_user_GetUserByEmail(t *testing.T) {
 			name:  "get non-existent email returns nil",
 			email: "notfound@example.com",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id,name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE email = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE email = \$1`).
 					WithArgs("notfound@example.com").
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -142,7 +142,7 @@ func Test_user_GetUserByEmail(t *testing.T) {
 			name:  "get user by email returns error on database failure",
 			email: "john@example.com",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id,name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE email = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE email = \$1`).
 					WithArgs("john@example.com").
 					WillReturnError(errors.New("database error"))
 			},
@@ -504,6 +504,107 @@ func Test_user_UpdateUser(t *testing.T) {
 	}
 }
 
+func Test_user_SetSessionToken(t *testing.T) {
+	tests := []struct {
+		name      string
+		userID    int
+		token     string
+		mockSetup func(mock sqlmock.Sqlmock)
+		wantErr   bool
+	}{
+		{
+			name:   "set session token successfully",
+			userID: 1,
+			token:  "abc123",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE users SET session_token = \$1 WHERE id = \$2`).
+					WithArgs("abc123", 1).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:   "set session token returns error on database failure",
+			userID: 1,
+			token:  "abc123",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE users SET session_token = \$1 WHERE id = \$2`).
+					WithArgs("abc123", 1).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewUserStoreWithDB(db)
+
+			gotErr := store.SetSessionToken(tt.userID, tt.token)
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("SetSessionToken() error = %v, wantErr %v", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_user_ClearSessionToken(t *testing.T) {
+	tests := []struct {
+		name      string
+		userID    int
+		mockSetup func(mock sqlmock.Sqlmock)
+		wantErr   bool
+	}{
+		{
+			name:   "clear session token successfully",
+			userID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE users SET session_token = NULL WHERE id = \$1`).
+					WithArgs(1).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:   "clear session token returns error on database failure",
+			userID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE users SET session_token = NULL WHERE id = \$1`).
+					WithArgs(1).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewUserStoreWithDB(db)
+
+			gotErr := store.ClearSessionToken(tt.userID)
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("ClearSessionToken() error = %v, wantErr %v", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
 func Test_user_IsValidRole(t *testing.T) {
 	tests := []struct {
 		name string
@@ -568,9 +669,9 @@ func Test_user_GetUserByShopID(t *testing.T) {
 			name:   "get user by shop ID",
 			shopID: 10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", "john@example.com", "hashedpass", "admin", fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "session_token", "created_at", "updated_at"}).
+					AddRow(1, 10, "John Doe", "john@example.com", "hashedpass", "admin", nil, fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
 					WithArgs(10).
 					WillReturnRows(rows)
 			},
@@ -589,7 +690,7 @@ func Test_user_GetUserByShopID(t *testing.T) {
 			name:   "get non-existent shop ID returns nil",
 			shopID: 9999,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
 					WithArgs(9999).
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -600,7 +701,7 @@ func Test_user_GetUserByShopID(t *testing.T) {
 			name:   "get user by shop ID returns error on database failure",
 			shopID: 10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
 					WithArgs(10).
 					WillReturnError(errors.New("database error"))
 			},

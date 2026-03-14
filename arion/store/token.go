@@ -30,10 +30,11 @@ func (t *token) CreateAccessToken(user *model.User, secret string, expiry int) (
 	}
 
 	claim := &model.JwtCustomClaims{
-		Name:       user.Name,
-		UserID:     user.ID,
-		ShopID:     user.ShopID,
-		SystemMode: user.Role == constant.RoleSystem,
+		Name:         user.Name,
+		UserID:       user.ID,
+		ShopID:       user.ShopID,
+		SystemMode:   user.Role == constant.RoleSystem,
+		SessionToken: user.SessionToken.String,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: exp,
 		},
@@ -53,9 +54,10 @@ func (t *token) CreateRefreshToken(user *model.User, secret string, expiry int) 
 		Time: time.Now().Add(time.Hour * time.Duration(expiry)),
 	}
 	claimsRefresh := &model.JwtCustomRefreshClaims{
-		UserID:     user.ID,
-		ShopID:     user.ShopID,
-		SystemMode: user.Role == constant.RoleSystem,
+		UserID:       user.ID,
+		ShopID:       user.ShopID,
+		SystemMode:   user.Role == constant.RoleSystem,
+		SessionToken: user.SessionToken.String,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: exp,
 		},
@@ -108,9 +110,12 @@ func (t *token) ExtractDataFromToken(requestToken, secret string) (model.TokenDa
 		SystemMode: claims["system_mode"].(bool),
 	}
 
-	// Handle optional fields (not present in refresh token)
+	// Handle optional fields (not present in all token types)
 	if name, ok := claims["name"].(string); ok {
 		tokenData.Name = name
+	}
+	if sessionToken, ok := claims["session_token"].(string); ok {
+		tokenData.SessionToken = sessionToken
 	}
 
 	return tokenData, nil

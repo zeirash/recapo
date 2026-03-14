@@ -153,3 +153,31 @@ func (mr *MockUserStoreMockRecorder) UpdateUser(id, input interface{}) *gomock.C
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUserStore)(nil).UpdateUser), id, input)
 }
+
+// SetSessionToken mocks base method.
+func (m *MockUserStore) SetSessionToken(userID int, sessionToken string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetSessionToken", userID, sessionToken)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetSessionToken indicates an expected call of SetSessionToken.
+func (mr *MockUserStoreMockRecorder) SetSessionToken(userID, sessionToken interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSessionToken", reflect.TypeOf((*MockUserStore)(nil).SetSessionToken), userID, sessionToken)
+}
+
+// ClearSessionToken mocks base method.
+func (m *MockUserStore) ClearSessionToken(userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClearSessionToken", userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClearSessionToken indicates an expected call of ClearSessionToken.
+func (mr *MockUserStoreMockRecorder) ClearSessionToken(userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSessionToken", reflect.TypeOf((*MockUserStore)(nil).ClearSessionToken), userID)
+}

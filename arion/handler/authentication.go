@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/mail"
 
+	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/i18n"
 	"github.com/zeirash/recapo/arion/common/logger"
@@ -270,6 +271,25 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	WriteJson(w, http.StatusOK, nil)
+}
+
+// LogoutHandler godoc
+//
+//	@Summary		Logout
+//	@Description	Invalidate the current session. Requires authentication.
+//	@Tags			auth
+//	@Produce		json
+//	@Success		200	{object}	ApiResponse
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/logout [post]
+//	@Security		BearerAuth
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(common.UserIDKey).(int)
+	if err := userService.Logout(userID); err != nil {
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "logout")
+		return
+	}
 	WriteJson(w, http.StatusOK, nil)
 }
 

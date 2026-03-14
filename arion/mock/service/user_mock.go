@@ -166,3 +166,17 @@ func (mr *MockUserServiceMockRecorder) UserRegister(name, email, password interf
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserRegister", reflect.TypeOf((*MockUserService)(nil).UserRegister), name, email, password)
 }
+
+// Logout mocks base method.
+func (m *MockUserService) Logout(userID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Logout", userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Logout indicates an expected call of Logout.
+func (mr *MockUserServiceMockRecorder) Logout(userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logout", reflect.TypeOf((*MockUserService)(nil).Logout), userID)
+}

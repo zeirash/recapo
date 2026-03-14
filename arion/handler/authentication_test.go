@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/otp"
 	"github.com/zeirash/recapo/arion/common/response"
@@ -743,6 +745,66 @@ func TestRefreshHandler(t *testing.T) {
 			}
 			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
 				t.Errorf("RefreshHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+		})
+	}
+}
+func TestLogoutHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	handler.SetUserService(mockUserService)
+
+	tests := []struct {
+		name        string
+		userID      interface{}
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name:   "successfully logout",
+			userID: 1,
+			mockSetup: func() {
+				mockUserService.EXPECT().Logout(1).Return(nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:   "logout returns 500 on service error",
+			userID: 1,
+			mockSetup: func() {
+				mockUserService.EXPECT().Logout(1).Return(errors.New("db error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := httptest.NewRequest("POST", "/logout", nil)
+			ctx := context.WithValue(req.Context(), common.UserIDKey, tt.userID)
+			req = req.WithContext(ctx)
+			rec := httptest.NewRecorder()
+
+			handler.LogoutHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("LogoutHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("LogoutHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
 			}
 		})
 	}

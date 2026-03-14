@@ -81,6 +81,10 @@ func Test_uservice_UserLogin(t *testing.T) {
 					GetUserByEmail("john@example.com").
 					Return(user, nil)
 
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
+
 				mockToken.EXPECT().
 					CreateAccessToken(user, gomock.Any(), 2).
 					Return("access_token_123", nil)
@@ -178,6 +182,10 @@ func Test_uservice_UserLogin(t *testing.T) {
 					GetUserByEmail("john@example.com").
 					Return(user, nil)
 
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
+
 				mockToken.EXPECT().
 					CreateAccessToken(user, gomock.Any(), 2).
 					Return("", errors.New("token error"))
@@ -206,6 +214,10 @@ func Test_uservice_UserLogin(t *testing.T) {
 				mockUser.EXPECT().
 					GetUserByEmail("john@example.com").
 					Return(user, nil)
+
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
 
 				mockToken.EXPECT().
 					CreateAccessToken(user, gomock.Any(), 2).
@@ -289,6 +301,10 @@ func Test_uservice_RefreshToken(t *testing.T) {
 					GetUserByID(1).
 					Return(user, nil)
 
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
+
 				mockToken.EXPECT().
 					CreateAccessToken(user, gomock.Any(), 2).
 					Return("new_access_token", nil)
@@ -304,6 +320,30 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				RefreshToken: "new_refresh_token",
 			},
 			wantErr: false,
+		},
+		{
+			name:         "refresh token with mismatched session returns error",
+			refreshToken: "valid_refresh_token",
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockUserStore, *mock_store.MockTokenStore) {
+				mockUser := mock_store.NewMockUserStore(ctrl)
+				mockToken := mock_store.NewMockTokenStore(ctrl)
+
+				mockToken.EXPECT().
+					ExtractDataFromToken("valid_refresh_token", gomock.Any()).
+					Return(model.TokenData{UserID: 1, ShopID: 10, SessionToken: "old_token"}, nil)
+
+				mockUser.EXPECT().
+					GetUserByID(1).
+					Return(&model.User{
+						ID:           1,
+						ShopID:       10,
+						SessionToken: sql.NullString{String: "new_token", Valid: true},
+					}, nil)
+
+				return mockUser, mockToken
+			},
+			wantResult: response.TokenResponse{},
+			wantErr:    true,
 		},
 		{
 			name:         "refresh token with invalid token returns error",
@@ -381,6 +421,10 @@ func Test_uservice_RefreshToken(t *testing.T) {
 					GetUserByID(1).
 					Return(user, nil)
 
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
+
 				mockToken.EXPECT().
 					CreateAccessToken(user, gomock.Any(), 2).
 					Return("", errors.New("token error"))
@@ -409,6 +453,10 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				mockUser.EXPECT().
 					GetUserByID(1).
 					Return(user, nil)
+
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
 
 				mockToken.EXPECT().
 					CreateAccessToken(user, gomock.Any(), 2).
@@ -653,6 +701,9 @@ func Test_uservice_UserRegister(t *testing.T) {
 				mockUser.EXPECT().
 					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
 				userStore = mockUser
 
 				mockDB := mock_database.NewMockDB(ctrl)
@@ -695,6 +746,9 @@ func Test_uservice_UserRegister(t *testing.T) {
 				mockUser.EXPECT().
 					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
 				userStore = mockUser
 
 				mockDB := mock_database.NewMockDB(ctrl)
@@ -740,6 +794,9 @@ func Test_uservice_UserRegister(t *testing.T) {
 				mockUser.EXPECT().
 					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
 				userStore = mockUser
 
 				mockDB := mock_database.NewMockDB(ctrl)
@@ -788,6 +845,9 @@ func Test_uservice_UserRegister(t *testing.T) {
 				mockUser.EXPECT().
 					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
+				mockUser.EXPECT().
+					SetSessionToken(1, gomock.Any()).
+					Return(nil)
 				userStore = mockUser
 
 				mockDB := mock_database.NewMockDB(ctrl)
@@ -1417,6 +1477,58 @@ func Test_uservice_ResetPassword(t *testing.T) {
 
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("ResetPassword() error = %v, wantErr %v", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_uservice_Logout(t *testing.T) {
+	tests := []struct {
+		name      string
+		userID    int
+		mockSetup func(ctrl *gomock.Controller) *mock_store.MockUserStore
+		wantErr   bool
+	}{
+		{
+			name:   "successfully logout user",
+			userID: 1,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mockUser := mock_store.NewMockUserStore(ctrl)
+				mockUser.EXPECT().
+					ClearSessionToken(1).
+					Return(nil)
+				return mockUser
+			},
+			wantErr: false,
+		},
+		{
+			name:   "logout returns error when ClearSessionToken fails",
+			userID: 1,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mockUser := mock_store.NewMockUserStore(ctrl)
+				mockUser.EXPECT().
+					ClearSessionToken(1).
+					Return(errors.New("db error"))
+				return mockUser
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldStore := userStore
+			defer func() { userStore = oldStore }()
+			userStore = tt.mockSetup(ctrl)
+
+			var u uservice
+			gotErr := u.Logout(tt.userID)
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("Logout() error = %v, wantErr %v", gotErr, tt.wantErr)
 			}
 		})
 	}
