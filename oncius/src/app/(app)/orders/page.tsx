@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, NativeSelect, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
-import Layout from '@/components/Layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import CustomerSearchSelect from '@/components/ui/CustomerSearchSelect'
@@ -459,8 +458,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <Layout>
-      <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
           {isLoading && <PageLoadingSkeleton />}
           {isError && (
@@ -1183,6 +1181,5 @@ export default function OrdersPage() {
         </Dialog>
 
       </Container>
-    </Layout>
   )
 }

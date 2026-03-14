@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Container, Paper, Typography } from '@mui/material'
-import Layout from '@/components/Layout'
 import { ClipboardList } from 'lucide-react'
 import SearchInput from '@/components/ui/SearchInput'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
@@ -223,7 +222,7 @@ export default function TempOrdersPage() {
   }, [selectedTempOrder, tTemp, queryClient, debouncedSearch, statusFilter])
 
   return (
-    <Layout>
+    <>
       <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
           {isLoading && <PageLoadingSkeleton />}
@@ -682,6 +681,6 @@ export default function TempOrdersPage() {
           </Paper>
         </Box>
       )}
-    </Layout>
+    </>
   )
 }

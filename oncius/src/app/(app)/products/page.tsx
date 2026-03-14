@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
-import Layout from '@/components/Layout'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
@@ -238,8 +237,7 @@ export default function ProductsPage() {
   const products = productsRes || []
 
   return (
-    <Layout>
-      <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+    <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
         {/* Top bar */}
         <Box sx={{ p: '24px', flexShrink: 0 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
@@ -470,6 +468,5 @@ export default function ProductsPage() {
           </Box>
         </Dialog>
       </Container>
-    </Layout>
   )
 }

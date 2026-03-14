@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { Box, Typography, Button, Paper, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Users, Crown, Info } from 'lucide-react'
-import Layout from '@/components/Layout'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
 import type { Plan, Subscription } from '@/types'
@@ -55,7 +54,7 @@ export default function SubscriptionPage() {
   const isLoading = plansLoading || subLoading
 
   return (
-    <Layout>
+    <>
       <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: '16px', sm: '24px' }, py: '32px' }}>
         <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
           {t('subscription.title')}
@@ -235,6 +234,6 @@ export default function SubscriptionPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Layout>
+    </>
   )
 }

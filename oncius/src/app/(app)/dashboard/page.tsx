@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { Box, Button, Paper, Typography } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
-import Layout from '@/components/Layout'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
 import { Package, DollarSign, Users, ClipboardList, type LucideIcon } from 'lucide-react'
@@ -139,17 +138,14 @@ const DashboardPage = () => {
 
   if (!isAuthenticated) {
     return (
-      <Layout>
-        <Box sx={{ p: '24px', textAlign: 'center' }}>
-          <Box>{t('dashboard.loginRequired')}</Box>
-        </Box>
-      </Layout>
+      <Box sx={{ p: '24px', textAlign: 'center' }}>
+        <Box>{t('dashboard.loginRequired')}</Box>
+      </Box>
     )
   }
 
   return (
-    <Layout>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
         <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
           {t('nav.dashboard')}
         </Typography>
@@ -363,7 +359,6 @@ const DashboardPage = () => {
           </>
         )}
       </Box>
-    </Layout>
   )
 }
 

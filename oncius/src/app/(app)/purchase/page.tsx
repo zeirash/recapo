@@ -3,7 +3,6 @@
 import { useQuery } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Paper, Typography } from '@mui/material'
-import Layout from '@/components/Layout'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
 
@@ -28,8 +27,7 @@ export default function PurchasePage() {
   )
 
   return (
-    <Layout>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
         <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
           {tPurchase('title')}
         </Typography>
@@ -117,6 +115,5 @@ export default function PurchasePage() {
           </Paper>
         )}
       </Box>
-    </Layout>
   )
 }

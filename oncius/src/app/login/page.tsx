@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Box, Container, Typography, OutlinedInput, Button, Alert } from '@mui/material'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
-import Layout from '@/components/Layout'
+import AuthLayout from '@/components/Layout/AuthLayout'
 
 const LoginPage = () => {
   const t = useTranslations()
@@ -48,7 +48,7 @@ const LoginPage = () => {
   }
 
   return (
-    <Layout>
+    <AuthLayout>
       <Container maxWidth="xs">
         <Box sx={{ bgcolor: 'white', p: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <Typography component="h1" sx={{ textAlign: 'center', mb: '24px' }}>
@@ -138,7 +138,7 @@ const LoginPage = () => {
           </Box>
         </Box>
       </Container>
-    </Layout>
+    </AuthLayout>
   )
 }
 

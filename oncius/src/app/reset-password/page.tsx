@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { Box, Container, Typography, OutlinedInput, Button, Alert } from '@mui/material'
 import { KeyRound } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import Layout from '@/components/Layout'
+import AuthLayout from '@/components/Layout/AuthLayout'
 import { useAuth } from '@/hooks/useAuth'
 
 const ResetPasswordPage = () => {
@@ -57,7 +57,7 @@ const ResetPasswordPage = () => {
   }
 
   return (
-    <Layout>
+    <AuthLayout>
       <Container maxWidth="xs">
         <Box sx={{ bgcolor: 'white', p: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: '16px' }}>
@@ -186,7 +186,7 @@ const ResetPasswordPage = () => {
           </Box>
         </Box>
       </Container>
-    </Layout>
+    </AuthLayout>
   )
 }
 
