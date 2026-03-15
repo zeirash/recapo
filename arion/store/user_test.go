@@ -517,7 +517,7 @@ func Test_user_SetSessionToken(t *testing.T) {
 			userID: 1,
 			token:  "abc123",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(`UPDATE users SET session_token = \$1 WHERE id = \$2`).
+				mock.ExpectExec(`UPDATE users SET session_token = \$1, updated_at = now\(\) WHERE id = \$2`).
 					WithArgs("abc123", 1).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
@@ -528,7 +528,7 @@ func Test_user_SetSessionToken(t *testing.T) {
 			userID: 1,
 			token:  "abc123",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(`UPDATE users SET session_token = \$1 WHERE id = \$2`).
+				mock.ExpectExec(`UPDATE users SET session_token = \$1, updated_at = now\(\) WHERE id = \$2`).
 					WithArgs("abc123", 1).
 					WillReturnError(errors.New("database error"))
 			},
@@ -567,7 +567,7 @@ func Test_user_ClearSessionToken(t *testing.T) {
 			name:   "clear session token successfully",
 			userID: 1,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(`UPDATE users SET session_token = NULL WHERE id = \$1`).
+				mock.ExpectExec(`UPDATE users SET session_token = NULL, updated_at = now\(\) WHERE id = \$1`).
 					WithArgs(1).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
@@ -577,7 +577,7 @@ func Test_user_ClearSessionToken(t *testing.T) {
 			name:   "clear session token returns error on database failure",
 			userID: 1,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectExec(`UPDATE users SET session_token = NULL WHERE id = \$1`).
+				mock.ExpectExec(`UPDATE users SET session_token = NULL, updated_at = now\(\) WHERE id = \$1`).
 					WithArgs(1).
 					WillReturnError(errors.New("database error"))
 			},

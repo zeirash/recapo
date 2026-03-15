@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
 import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, MessageSquare, LogOut, User, type LucideIcon } from 'lucide-react'
 import RecapoLogo from '@/components/ui/RecapoLogo'
+import FeedbackDialog from '@/components/ui/FeedbackDialog'
 import { api } from '@/utils/api'
 import type { Subscription } from '@/types'
 
@@ -23,6 +24,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const { user, logout } = useAuth()
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const router = useRouter()
   const locale = useLocale()
   const changeLocale = useChangeLocale()
@@ -191,7 +193,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
             }}
           >
             <Box
-              onClick={() => setShowDropdown(false)}
+              onClick={() => { setShowDropdown(false); setShowFeedbackDialog(true) }}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -227,6 +229,9 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
           </Box>
         </>
       )}
+
+      {/* Feedback Dialog */}
+      <FeedbackDialog open={showFeedbackDialog} onClose={() => setShowFeedbackDialog(false)} />
 
       {/* Logout Dialog */}
       {showLogoutDialog && (

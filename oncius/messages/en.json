@@ -18,7 +18,8 @@
     "status": "Status",
     "customer": "Customer",
     "product": "Product",
-    "items": "Items"
+    "items": "Items",
+    "close": "Close"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -320,6 +321,21 @@
     "note": "Note: Quantities shown are based on order items from orders with status 'Created' or 'In Progress'.",
     "fetchFailed": "Failed to load purchase list",
     "empty": "No products need to be purchased at this time"
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "typeLabel": "Type",
+    "typeBug": "Bug Report",
+    "typeEnhancement": "Feature Request",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Briefly describe the issue or idea",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Provide more details...",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "errorMessage": "Failed to submit feedback. Please try again.",
+    "successTitle": "Feedback submitted!",
+    "successMessage": "Thank you for your feedback. We'll review it and kindly ask you to wait for further updates."
   },
   "subscription": {
     "title": "Subscription",

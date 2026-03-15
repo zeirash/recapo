@@ -11,11 +11,12 @@ import (
 
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/constant"
+	"github.com/zeirash/recapo/arion/store"
 )
 
 type (
 	FeedbackService interface {
-		CreateFeedback(feedbackType, title, description string) error
+		CreateFeedback(userID int, feedbackType, title, description string) error
 	}
 
 	sfeedback struct{}
@@ -32,10 +33,13 @@ type (
 var githubAPIFunc = callGithubAPI
 
 func NewFeedbackService() FeedbackService {
+	if userStore == nil {
+		userStore = store.NewUserStore()
+	}
 	return &sfeedback{}
 }
 
-func (s *sfeedback) CreateFeedback(feedbackType, title, description string) error {
+func (s *sfeedback) CreateFeedback(userID int, feedbackType, title, description string) error {
 	if title == "" {
 		return errors.New(apierr.ErrFeedbackTitleRequired)
 	}
@@ -43,8 +47,13 @@ func (s *sfeedback) CreateFeedback(feedbackType, title, description string) erro
 		return errors.New(apierr.ErrFeedbackTypeInvalid)
 	}
 
+	user, err := userStore.GetUserByID(userID)
+	if err != nil || user == nil {
+		return errors.New(apierr.ErrUserNotFound)
+	}
+
 	reqBody := githubIssueRequest{
-		Title:  title,
+		Title:  fmt.Sprintf("[%s] %s", user.Email, title),
 		Body:   description,
 		Labels: []string{feedbackType, constant.GithubLabelUser},
 	}

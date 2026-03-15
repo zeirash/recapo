@@ -554,6 +554,14 @@ export const api = {
     return apiRequest<ApiResponse>('/subscription/cancel', { method: 'POST' })
   },
 
+  // Feedback
+  createFeedback: (data: { type: string; title: string; description?: string }) => {
+    return apiRequest<ApiResponse>('/feedback', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
   // Health check
   health: () => {
     return apiRequest<ApiResponse>('/health')

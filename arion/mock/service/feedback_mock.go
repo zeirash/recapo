@@ -34,15 +34,15 @@ func (m *MockFeedbackService) EXPECT() *MockFeedbackServiceMockRecorder {
 }
 
 // CreateFeedback mocks base method.
-func (m *MockFeedbackService) CreateFeedback(feedbackType, title, description string) error {
+func (m *MockFeedbackService) CreateFeedback(userID int, feedbackType, title, description string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateFeedback", feedbackType, title, description)
+	ret := m.ctrl.Call(m, "CreateFeedback", userID, feedbackType, title, description)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateFeedback indicates an expected call of CreateFeedback.
-func (mr *MockFeedbackServiceMockRecorder) CreateFeedback(feedbackType, title, description interface{}) *gomock.Call {
+func (mr *MockFeedbackServiceMockRecorder) CreateFeedback(userID, feedbackType, title, description interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFeedback", reflect.TypeOf((*MockFeedbackService)(nil).CreateFeedback), feedbackType, title, description)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFeedback", reflect.TypeOf((*MockFeedbackService)(nil).CreateFeedback), userID, feedbackType, title, description)
 }

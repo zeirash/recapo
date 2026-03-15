@@ -18,7 +18,8 @@
     "status": "Status",
     "customer": "Pelanggan",
     "product": "Produk",
-    "items": "Item"
+    "items": "Item",
+    "close": "Tutup"
   },
   "nav": {
     "dashboard": "Dasbor",
@@ -320,6 +321,21 @@
     "note": "Catatan: Jumlah yang ditampilkan berdasarkan item pesanan dari pesanan dengan status 'Dibuat' atau 'Diproses'.",
     "fetchFailed": "Gagal memuat daftar pembelian",
     "empty": "Tidak ada produk yang perlu dibeli saat ini"
+  },
+  "feedback": {
+    "title": "Kirim Masukan",
+    "typeLabel": "Jenis",
+    "typeBug": "Laporan Bug",
+    "typeEnhancement": "Permintaan Fitur",
+    "titleLabel": "Judul",
+    "titlePlaceholder": "Jelaskan masalah atau ide secara singkat",
+    "descriptionLabel": "Deskripsi (opsional)",
+    "descriptionPlaceholder": "Berikan detail lebih lanjut...",
+    "submit": "Kirim",
+    "submitting": "Mengirim...",
+    "errorMessage": "Gagal mengirim masukan. Silakan coba lagi.",
+    "successTitle": "Masukan terkirim!",
+    "successMessage": "Terima kasih atas masukan Anda. Kami akan meninjaunya dan mohon Anda menunggu pembaruan lebih lanjut."
   },
   "subscription": {
     "title": "Langganan",

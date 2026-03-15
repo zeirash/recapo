@@ -1,7 +1,6 @@
 package handler_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -14,11 +13,9 @@ import (
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
 )
 
-func newFeedbackRequest(body interface{}) *http.Request {
+func newFeedbackRequest(body interface{}, userID int) *http.Request {
 	b, _ := json.Marshal(body)
-	req := httptest.NewRequest(http.MethodPost, "/feedback", bytes.NewReader(b))
-	req.Header.Set("Content-Type", "application/json")
-	return req
+	return newRequestWithUserID(http.MethodPost, "/feedback", b, userID)
 }
 
 func TestCreateFeedbackHandler(t *testing.T) {
@@ -34,24 +31,27 @@ func TestCreateFeedbackHandler(t *testing.T) {
 	tests := []struct {
 		name        string
 		body        interface{}
+		userID      int
 		mockSetup   func()
 		wantStatus  int
 		wantSuccess bool
 	}{
 		{
-			name: "creates bug report successfully",
-			body: map[string]string{"type": "bug", "title": "Login broken", "description": "Can't log in"},
+			name:   "creates bug report successfully",
+			body:   map[string]string{"type": "bug", "title": "Login broken", "description": "Can't log in"},
+			userID: 1,
 			mockSetup: func() {
-				mockSvc.EXPECT().CreateFeedback("bug", "Login broken", "Can't log in").Return(nil)
+				mockSvc.EXPECT().CreateFeedback(1, "bug", "Login broken", "Can't log in").Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
 		{
-			name: "creates enhancement successfully",
-			body: map[string]string{"type": "enhancement", "title": "Add dark mode"},
+			name:   "creates enhancement successfully",
+			body:   map[string]string{"type": "enhancement", "title": "Add dark mode"},
+			userID: 1,
 			mockSetup: func() {
-				mockSvc.EXPECT().CreateFeedback("enhancement", "Add dark mode", "").Return(nil)
+				mockSvc.EXPECT().CreateFeedback(1, "enhancement", "Add dark mode", "").Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
@@ -59,6 +59,7 @@ func TestCreateFeedbackHandler(t *testing.T) {
 		{
 			name:        "returns 400 when title is empty",
 			body:        map[string]string{"type": "bug", "title": ""},
+			userID:      1,
 			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
@@ -66,6 +67,7 @@ func TestCreateFeedbackHandler(t *testing.T) {
 		{
 			name:        "returns 400 when type is invalid",
 			body:        map[string]string{"type": "invalid", "title": "Some title"},
+			userID:      1,
 			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
@@ -73,6 +75,7 @@ func TestCreateFeedbackHandler(t *testing.T) {
 		{
 			name:        "returns 400 when type is missing",
 			body:        map[string]string{"title": "Some title"},
+			userID:      1,
 			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
@@ -80,15 +83,17 @@ func TestCreateFeedbackHandler(t *testing.T) {
 		{
 			name:        "returns 400 when invalid json",
 			body:        "invalid json",
+			userID:      1,
 			mockSetup:   func() {},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
 		},
 		{
-			name: "returns 500 on service error",
-			body: map[string]string{"type": "bug", "title": "Crash on load"},
+			name:   "returns 500 on service error",
+			body:   map[string]string{"type": "bug", "title": "Crash on load"},
+			userID: 1,
 			mockSetup: func() {
-				mockSvc.EXPECT().CreateFeedback("bug", "Crash on load", "").Return(errors.New(apierr.ErrFeedbackFailed))
+				mockSvc.EXPECT().CreateFeedback(1, "bug", "Crash on load", "").Return(errors.New(apierr.ErrFeedbackFailed))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,
@@ -98,7 +103,7 @@ func TestCreateFeedbackHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			req := newFeedbackRequest(tt.body)
+			req := newFeedbackRequest(tt.body, tt.userID)
 			w := httptest.NewRecorder()
 			handler.CreateFeedbackHandler(w, req)
 

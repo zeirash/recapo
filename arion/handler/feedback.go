@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/logger"
 )
@@ -43,7 +44,9 @@ func CreateFeedbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := feedbackService.CreateFeedback(inp.Type, inp.Title, inp.Description); err != nil {
+	userID := r.Context().Value(common.UserIDKey).(int)
+
+	if err := feedbackService.CreateFeedback(userID, inp.Type, inp.Title, inp.Description); err != nil {
 		logger.WithError(err).Error("create_feedback_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_feedback")
 		return

@@ -195,13 +195,13 @@ func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 }
 
 func (u *user) SetSessionToken(userID int, sessionToken string) error {
-	q := `UPDATE users SET session_token = $1 WHERE id = $2`
+	q := `UPDATE users SET session_token = $1, updated_at = now() WHERE id = $2`
 	_, err := u.db.Exec(q, sessionToken, userID)
 	return err
 }
 
 func (u *user) ClearSessionToken(userID int) error {
-	q := `UPDATE users SET session_token = NULL WHERE id = $1`
+	q := `UPDATE users SET session_token = NULL, updated_at = now() WHERE id = $1`
 	_, err := u.db.Exec(q, userID)
 	return err
 }
