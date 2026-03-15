@@ -44,6 +44,11 @@ type Config struct {
 	R2SecretAccessKey string `env:"R2_SECRET_ACCESS_KEY"`
 	R2BucketName      string `env:"R2_BUCKET_NAME"`
 	R2PublicURL       string `env:"R2_PUBLIC_URL"`
+
+	// GitHub (for feedback issues)
+	GitHubToken     string `env:"GITHUB_TOKEN"`
+	GitHubRepoOwner string `env:"GITHUB_REPO_OWNER"`
+	GitHubRepoName  string `env:"GITHUB_REPO_NAME"`
 }
 
 var cfg Config

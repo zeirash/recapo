@@ -66,4 +66,9 @@ const (
 	// OTP
 	ErrOTPRequired = "err_otp_required"
 	ErrInvalidOTP  = "err_invalid_otp"
+
+	// Feedback
+	ErrFeedbackTitleRequired = "err_feedback_title_required"
+	ErrFeedbackTypeInvalid   = "err_feedback_type_invalid"
+	ErrFeedbackFailed        = "err_feedback_failed"
 )

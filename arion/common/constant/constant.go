@@ -6,6 +6,11 @@ const (
 	RoleOwner  = "owner"
 	RoleAdmin  = "admin"
 
+	// Github label constants
+	GithubLabelUser = "user"
+	GithubLabelBug  = "bug"
+	GithubLabelEnhancement = "enhancement"
+
 	// Subscription status constants
 	SubStatusTrialing  = "trialing"
 	SubStatusActive    = "active"

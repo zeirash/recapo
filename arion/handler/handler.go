@@ -35,6 +35,7 @@ var (
 	orderService        service.OrderService
 	shopService         service.ShopService
 	subscriptionService service.SubscriptionService
+	feedbackService     service.FeedbackService
 )
 
 func Init() {
@@ -61,6 +62,20 @@ func Init() {
 	if subscriptionService == nil {
 		subscriptionService = service.NewSubscriptionService()
 	}
+
+	if feedbackService == nil {
+		feedbackService = service.NewFeedbackService()
+	}
+}
+
+// SetFeedbackService sets the feedback service (for testing)
+func SetFeedbackService(s service.FeedbackService) {
+	feedbackService = s
+}
+
+// GetFeedbackService returns the current feedback service (for testing).
+func GetFeedbackService() service.FeedbackService {
+	return feedbackService
 }
 
 // SetSubscriptionService sets the subscription service (for testing)
