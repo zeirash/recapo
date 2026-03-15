@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, OutlinedInput, Typography } from '@mui/material'
-import { Bug, CheckCircle, Lightbulb } from 'lucide-react'
+import { Bug, CheckCircle, ImagePlus, Lightbulb, X } from 'lucide-react'
 import { api } from '@/utils/api'
 
 interface FeedbackDialogProps {
@@ -21,16 +21,44 @@ const FeedbackDialog = ({ open, onClose }: FeedbackDialogProps) => {
   const [type, setType] = useState<FeedbackType>('bug')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const resetForm = () => {
     setType('bug')
     setTitle('')
     setDescription('')
+    setImage(null)
+    setImagePreview(null)
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    setImage(file)
+    if (file) {
+      setImagePreview(URL.createObjectURL(file))
+    } else {
+      setImagePreview(null)
+    }
+    // reset so same file can be re-selected after removal
+    e.target.value = ''
+  }
+
+  const removeImage = () => {
+    setImage(null)
+    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    setImagePreview(null)
   }
 
   const mutation = useMutation(
     async () => {
-      const res = await api.createFeedback({ type, title, description: description || undefined })
+      const res = await api.createFeedback({
+        type,
+        title,
+        description: description || undefined,
+        image: image ?? undefined,
+      })
       if (!res.success) throw new Error(res.message || t('errorMessage'))
       return res
     }
@@ -147,6 +175,71 @@ const FeedbackDialog = ({ open, onClose }: FeedbackDialogProps) => {
                 placeholder={t('descriptionPlaceholder')}
                 disabled={mutation.isLoading}
               />
+            </Box>
+
+            {/* Image upload */}
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                {t('imageLabel')}
+              </Typography>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={handleImageChange}
+              />
+              {imagePreview ? (
+                <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                  <Box
+                    component="img"
+                    src={imagePreview}
+                    alt="preview"
+                    sx={{ maxWidth: '100%', maxHeight: 160, borderRadius: '8px', border: '1px solid', borderColor: 'grey.200', display: 'block' }}
+                  />
+                  <Box
+                    onClick={removeImage}
+                    sx={{
+                      position: 'absolute',
+                      top: 4,
+                      right: 4,
+                      bgcolor: 'rgba(0,0,0,0.55)',
+                      borderRadius: '50%',
+                      width: 22,
+                      height: 22,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      color: 'white',
+                      '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
+                    }}
+                  >
+                    <X size={13} />
+                  </Box>
+                </Box>
+              ) : (
+                <Box
+                  onClick={() => !mutation.isLoading && fileInputRef.current?.click()}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2,
+                    py: 1,
+                    borderRadius: '8px',
+                    border: '1px dashed',
+                    borderColor: 'grey.300',
+                    color: 'text.secondary',
+                    cursor: mutation.isLoading ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    '&:hover': mutation.isLoading ? {} : { borderColor: 'primary.main', color: 'primary.main' },
+                  }}
+                >
+                  <ImagePlus size={16} />
+                  {t('imageChoose')}
+                </Box>
+              )}
             </Box>
 
             {mutation.isError && (

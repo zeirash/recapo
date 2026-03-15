@@ -555,11 +555,23 @@ export const api = {
   },
 
   // Feedback
-  createFeedback: (data: { type: string; title: string; description?: string }) => {
-    return apiRequest<ApiResponse>('/feedback', {
+  createFeedback: async (data: { type: string; title: string; description?: string; image?: File }) => {
+    const formData = new FormData()
+    formData.append('type', data.type)
+    formData.append('title', data.title)
+    if (data.description) formData.append('description', data.description)
+    if (data.image) formData.append('image', data.image)
+
+    const token = getAuthToken()
+    const response = await fetch(`${API_BASE_URL}/feedback`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      headers: {
+        'Accept-Language': getApiLocale(),
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
     })
+    return response.json() as Promise<ApiResponse>
   },
 
   // Health check

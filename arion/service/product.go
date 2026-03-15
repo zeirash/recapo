@@ -1,13 +1,10 @@
 package service
 
 import (
-	"bytes"
 	"context"
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -235,62 +232,7 @@ func (p *pservice) GetPurchaseListProducts(shopID int) ([]response.PurchaseListP
 }
 
 func (p *pservice) UploadProductImage(file io.Reader) (string, error) {
-	buf := make([]byte, 512)
-	n, err := file.Read(buf)
-	if err != nil && err != io.EOF {
-		return "", err
-	}
-	contentType := http.DetectContentType(buf[:n])
-
-	var ext string
-	switch contentType {
-	case "image/jpeg":
-		ext = ".jpg"
-	case "image/png":
-		ext = ".png"
-	case "image/webp":
-		ext = ".webp"
-	default:
-		return "", errors.New(apierr.ErrUnsupportedImageType)
-	}
-
-	randBytes := make([]byte, 16)
-	if _, err := rand.Read(randBytes); err != nil {
-		return "", err
-	}
-	filename := fmt.Sprintf("%x%s", randBytes, ext)
-
-	// Reconstruct the full file content from the already-read header bytes plus remainder.
-	fullReader := io.MultiReader(bytes.NewReader(buf[:n]), file)
-
-	// Cloud path: upload to Cloudflare R2.
-	if cfg.R2BucketName != "" {
-		objectKey := "products/" + filename
-		if err := r2UploadFunc(objectKey, fullReader, contentType); err != nil {
-			return "", err
-		}
-		return cfg.R2PublicURL + "/" + objectKey, nil
-	}
-
-	// Local filesystem path.
-	uploadDir := filepath.Join(cfg.UploadDir, "products")
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
-		return "", err
-	}
-
-	filePath := filepath.Join(uploadDir, filename)
-	dst, err := os.Create(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, fullReader); err != nil {
-		os.Remove(filePath)
-		return "", err
-	}
-
-	return "/uploads/products/" + filename, nil
+	return uploadImage(file, "products")
 }
 
 func (p *pservice) DeleteProductImage(imageURL string) error {

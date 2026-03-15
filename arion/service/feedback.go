@@ -16,7 +16,8 @@ import (
 
 type (
 	FeedbackService interface {
-		CreateFeedback(userID int, feedbackType, title, description string) error
+		UploadFeedbackImage(file io.Reader) (string, error)
+		CreateFeedback(userID int, feedbackType, title, description, imageURL string) error
 	}
 
 	sfeedback struct{}
@@ -39,7 +40,11 @@ func NewFeedbackService() FeedbackService {
 	return &sfeedback{}
 }
 
-func (s *sfeedback) CreateFeedback(userID int, feedbackType, title, description string) error {
+func (s *sfeedback) UploadFeedbackImage(file io.Reader) (string, error) {
+	return uploadImage(file, "feedback")
+}
+
+func (s *sfeedback) CreateFeedback(userID int, feedbackType, title, description, imageURL string) error {
 	if title == "" {
 		return errors.New(apierr.ErrFeedbackTitleRequired)
 	}
@@ -52,9 +57,17 @@ func (s *sfeedback) CreateFeedback(userID int, feedbackType, title, description 
 		return errors.New(apierr.ErrUserNotFound)
 	}
 
+	body := description
+	if imageURL != "" {
+		if body != "" {
+			body += "\n\n"
+		}
+		body += fmt.Sprintf("![screenshot](%s)", imageURL)
+	}
+
 	reqBody := githubIssueRequest{
 		Title:  fmt.Sprintf("[%s] %s", user.Email, title),
-		Body:   description,
+		Body:   body,
 		Labels: []string{feedbackType, constant.GithubLabelUser},
 	}
 

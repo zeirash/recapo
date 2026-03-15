@@ -1,0 +1,75 @@
+package service
+
+import (
+	"bytes"
+	"crypto/rand"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+
+	"github.com/zeirash/recapo/arion/common/apierr"
+)
+
+// uploadImage detects the content type, generates a random filename, and uploads
+// the image to R2 (or the local filesystem in dev). pathPrefix is the directory
+// segment used both as the R2 object key prefix and the local upload sub-directory
+// (e.g. "products", "feedback").
+func uploadImage(file io.Reader, pathPrefix string) (string, error) {
+	buf := make([]byte, 512)
+	n, err := file.Read(buf)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	contentType := http.DetectContentType(buf[:n])
+
+	var ext string
+	switch contentType {
+	case "image/jpeg":
+		ext = ".jpg"
+	case "image/png":
+		ext = ".png"
+	case "image/webp":
+		ext = ".webp"
+	default:
+		return "", errors.New(apierr.ErrUnsupportedImageType)
+	}
+
+	randBytes := make([]byte, 16)
+	if _, err := rand.Read(randBytes); err != nil {
+		return "", err
+	}
+	filename := fmt.Sprintf("%x%s", randBytes, ext)
+	fullReader := io.MultiReader(bytes.NewReader(buf[:n]), file)
+
+	// Cloud path: upload to Cloudflare R2.
+	if cfg.R2BucketName != "" {
+		objectKey := pathPrefix + "/" + filename
+		if err := r2UploadFunc(objectKey, fullReader, contentType); err != nil {
+			return "", err
+		}
+		return cfg.R2PublicURL + "/" + objectKey, nil
+	}
+
+	// Local filesystem path.
+	uploadDir := filepath.Join(cfg.UploadDir, pathPrefix)
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return "", err
+	}
+
+	filePath := filepath.Join(uploadDir, filename)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, fullReader); err != nil {
+		os.Remove(filePath)
+		return "", err
+	}
+
+	return "/uploads/" + pathPrefix + "/" + filename, nil
+}

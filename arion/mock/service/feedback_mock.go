@@ -5,6 +5,7 @@
 package mock_service
 
 import (
+	io "io"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -33,16 +34,31 @@ func (m *MockFeedbackService) EXPECT() *MockFeedbackServiceMockRecorder {
 	return m.recorder
 }
 
-// CreateFeedback mocks base method.
-func (m *MockFeedbackService) CreateFeedback(userID int, feedbackType, title, description string) error {
+// UploadFeedbackImage mocks base method.
+func (m *MockFeedbackService) UploadFeedbackImage(file io.Reader) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateFeedback", userID, feedbackType, title, description)
+	ret := m.ctrl.Call(m, "UploadFeedbackImage", file)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UploadFeedbackImage indicates an expected call of UploadFeedbackImage.
+func (mr *MockFeedbackServiceMockRecorder) UploadFeedbackImage(file interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFeedbackImage", reflect.TypeOf((*MockFeedbackService)(nil).UploadFeedbackImage), file)
+}
+
+// CreateFeedback mocks base method.
+func (m *MockFeedbackService) CreateFeedback(userID int, feedbackType, title, description, imageURL string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateFeedback", userID, feedbackType, title, description, imageURL)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateFeedback indicates an expected call of CreateFeedback.
-func (mr *MockFeedbackServiceMockRecorder) CreateFeedback(userID, feedbackType, title, description interface{}) *gomock.Call {
+func (mr *MockFeedbackServiceMockRecorder) CreateFeedback(userID, feedbackType, title, description, imageURL interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFeedback", reflect.TypeOf((*MockFeedbackService)(nil).CreateFeedback), userID, feedbackType, title, description)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFeedback", reflect.TypeOf((*MockFeedbackService)(nil).CreateFeedback), userID, feedbackType, title, description, imageURL)
 }

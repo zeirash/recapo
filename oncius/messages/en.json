@@ -334,6 +334,8 @@
     "submit": "Submit",
     "submitting": "Submitting...",
     "errorMessage": "Failed to submit feedback. Please try again.",
+    "imageLabel": "Screenshot (optional)",
+    "imageChoose": "Attach image",
     "successTitle": "Feedback submitted!",
     "successMessage": "Thank you for your feedback. We'll review it and kindly ask you to wait for further updates."
   },

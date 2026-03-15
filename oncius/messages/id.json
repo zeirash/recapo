@@ -334,6 +334,8 @@
     "submit": "Kirim",
     "submitting": "Mengirim...",
     "errorMessage": "Gagal mengirim masukan. Silakan coba lagi.",
+    "imageLabel": "Screenshot (opsional)",
+    "imageChoose": "Lampirkan gambar",
     "successTitle": "Masukan terkirim!",
     "successMessage": "Terima kasih atas masukan Anda. Kami akan meninjaunya dan mohon Anda menunggu pembaruan lebih lanjut."
   },

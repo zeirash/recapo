@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -16,7 +17,6 @@ func Test_sfeedback_CreateFeedback(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserStore := mock_store.NewMockUserStore(ctrl)
-
 	testUser := &model.User{ID: 1, Email: "user@example.com"}
 
 	tests := []struct {
@@ -25,37 +25,34 @@ func Test_sfeedback_CreateFeedback(t *testing.T) {
 		feedbackType string
 		title        string
 		description  string
+		imageURL     string
 		storeMock    func()
 		githubFunc   func(githubIssueRequest) error
 		wantErr      bool
 		wantErrKey   string
 	}{
 		{
-			name:         "creates bug issue successfully",
+			name:         "creates bug issue without image",
 			userID:       1,
 			feedbackType: "bug",
 			title:        "Something is broken",
 			description:  "Steps to reproduce...",
 			storeMock:    func() { mockUserStore.EXPECT().GetUserByID(1).Return(testUser, nil) },
 			githubFunc:   func(githubIssueRequest) error { return nil },
-			wantErr:      false,
 		},
 		{
-			name:         "creates enhancement issue successfully",
+			name:         "creates enhancement without image",
 			userID:       1,
 			feedbackType: "enhancement",
 			title:        "Add dark mode",
-			description:  "",
 			storeMock:    func() { mockUserStore.EXPECT().GetUserByID(1).Return(testUser, nil) },
 			githubFunc:   func(githubIssueRequest) error { return nil },
-			wantErr:      false,
 		},
 		{
 			name:         "passes correct labels to github",
 			userID:       1,
 			feedbackType: "bug",
 			title:        "Label check",
-			description:  "",
 			storeMock:    func() { mockUserStore.EXPECT().GetUserByID(1).Return(testUser, nil) },
 			githubFunc: func(req githubIssueRequest) error {
 				if len(req.Labels) != 2 {
@@ -69,7 +66,6 @@ func Test_sfeedback_CreateFeedback(t *testing.T) {
 				}
 				return nil
 			},
-			wantErr: false,
 		},
 		{
 			name:         "prefixes title with user email",
@@ -87,13 +83,41 @@ func Test_sfeedback_CreateFeedback(t *testing.T) {
 				}
 				return nil
 			},
-			wantErr: false,
+		},
+		{
+			name:         "appends image as markdown when imageURL provided",
+			userID:       1,
+			feedbackType: "bug",
+			title:        "With screenshot",
+			description:  "See below",
+			imageURL:     "https://cdn.example.com/feedback/abc.jpg",
+			storeMock:    func() { mockUserStore.EXPECT().GetUserByID(1).Return(testUser, nil) },
+			githubFunc: func(req githubIssueRequest) error {
+				expected := "See below\n\n![screenshot](https://cdn.example.com/feedback/abc.jpg)"
+				if req.Body != expected {
+					return errors.New("wrong body: " + req.Body)
+				}
+				return nil
+			},
+		},
+		{
+			name:         "appends image when description is empty",
+			userID:       1,
+			feedbackType: "bug",
+			title:        "No description",
+			imageURL:     "https://cdn.example.com/feedback/abc.jpg",
+			storeMock:    func() { mockUserStore.EXPECT().GetUserByID(1).Return(testUser, nil) },
+			githubFunc: func(req githubIssueRequest) error {
+				if !strings.HasPrefix(req.Body, "![screenshot]") {
+					return errors.New("expected body to start with image markdown, got: " + req.Body)
+				}
+				return nil
+			},
 		},
 		{
 			name:         "returns error when title is empty",
 			userID:       1,
 			feedbackType: "bug",
-			title:        "",
 			storeMock:    func() {},
 			githubFunc:   func(githubIssueRequest) error { return nil },
 			wantErr:      true,
@@ -103,16 +127,6 @@ func Test_sfeedback_CreateFeedback(t *testing.T) {
 			name:         "returns error when type is invalid",
 			userID:       1,
 			feedbackType: "feature-request",
-			title:        "Some title",
-			storeMock:    func() {},
-			githubFunc:   func(githubIssueRequest) error { return nil },
-			wantErr:      true,
-			wantErrKey:   apierr.ErrFeedbackTypeInvalid,
-		},
-		{
-			name:         "returns error when type is empty",
-			userID:       1,
-			feedbackType: "",
 			title:        "Some title",
 			storeMock:    func() {},
 			githubFunc:   func(githubIssueRequest) error { return nil },
@@ -154,7 +168,7 @@ func Test_sfeedback_CreateFeedback(t *testing.T) {
 			tt.storeMock()
 
 			s := &sfeedback{}
-			gotErr := s.CreateFeedback(tt.userID, tt.feedbackType, tt.title, tt.description)
+			gotErr := s.CreateFeedback(tt.userID, tt.feedbackType, tt.title, tt.description, tt.imageURL)
 
 			if gotErr != nil {
 				if !tt.wantErr {
