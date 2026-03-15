@@ -154,6 +154,8 @@
     "sortNameDesc": "Name: Z → A",
     "sortPriceAsc": "Price: Low → High",
     "sortPriceDesc": "Price: High → Low",
+    "sortCreatedAtDesc": "Date: Newest First",
+    "sortCreatedAtAsc": "Date: Oldest First",
     "image": "Product Image",
     "chooseImage": "Choose Image",
     "removeImage": "Remove Image",

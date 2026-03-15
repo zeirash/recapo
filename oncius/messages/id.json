@@ -154,6 +154,8 @@
     "sortNameDesc": "Nama: Z → A",
     "sortPriceAsc": "Harga: Rendah → Tinggi",
     "sortPriceDesc": "Harga: Tinggi → Rendah",
+    "sortCreatedAtDesc": "Tanggal: Terbaru",
+    "sortCreatedAtAsc": "Tanggal: Terlama",
     "image": "Gambar Produk",
     "chooseImage": "Pilih Gambar",
     "removeImage": "Hapus Gambar",
