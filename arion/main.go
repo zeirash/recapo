@@ -26,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
+	promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/database"
@@ -60,6 +61,10 @@ func NewRouter() *mux.Router {
 	// Global middleware
 	r.Use(middleware.Recovery)
 	r.Use(middleware.RequestLogger)
+	r.Use(middleware.Metrics)
+
+	// Metrics endpoint (unauthenticated)
+	r.Handle("/metrics", promhttp.Handler())
 
 	// Swagger UI (WrapHandler is http.HandlerFunc; doc is served from swag registry)
 	r.PathPrefix("/swagger/").HandlerFunc(httpSwagger.WrapHandler)
@@ -160,6 +165,7 @@ func main() {
 	// init database
 	database.InitDB()
 	defer database.CloseDB()
+	database.RegisterDBMetrics(database.GetDB())
 
 	// ensure upload directory exists
 	os.MkdirAll(config.GetConfig().UploadDir+"/products", 0755)
