@@ -1,12 +1,14 @@
 "use client"
 
+import React, { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Box, Typography, Button, Paper, Skeleton } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
 import { useQuery } from 'react-query'
 import { useAuth } from '@/hooks/useAuth'
 import Header from '@/components/Layout/Header'
-import { Package, Tag, Users, BarChart2, Check, type LucideIcon } from 'lucide-react'
+import { Package, Tag, Users, BarChart2, Check, LayoutDashboard, ClipboardList, type LucideIcon } from 'lucide-react'
 import { api } from '@/utils/api'
 import type { Plan } from '@/types'
 
@@ -91,6 +93,164 @@ const FEATURES: { titleKey: string; descKey: string; icon: LucideIcon }[] = [
   { titleKey: 'landing.featureCustomerDatabase', descKey: 'landing.featureCustomerDatabaseDesc', icon: Users },
   { titleKey: 'landing.featureDashboardReports', descKey: 'landing.featureDashboardReportsDesc', icon: BarChart2 },
 ]
+
+type ScreenshotItem = {
+  tabKey: string
+  descKey: string
+  src: string
+  icon: LucideIcon
+}
+
+const SCREENSHOTS: ScreenshotItem[] = [
+  { tabKey: 'landing.screenshotDashboard', descKey: 'landing.screenshotDashboardDesc', src: '/screenshots/dashboard.png', icon: LayoutDashboard },
+  { tabKey: 'landing.screenshotOrders',    descKey: 'landing.screenshotOrdersDesc',    src: '/screenshots/orders.png',    icon: ClipboardList },
+  { tabKey: 'landing.screenshotProducts',  descKey: 'landing.screenshotProductsDesc',  src: '/screenshots/products.png',  icon: Tag },
+  { tabKey: 'landing.screenshotCustomers', descKey: 'landing.screenshotCustomersDesc', src: '/screenshots/customers.png', icon: Users },
+]
+
+const ScreenshotsSection = () => {
+  const [active, setActive] = useState(0)
+  const t = useTranslations()
+  const current = SCREENSHOTS[active]
+
+  return (
+    <Box sx={{ py: '64px' }}>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: '16px', sm: '24px' } }}>
+        <Typography
+          component="h3"
+          sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, textAlign: 'center', mb: '8px', color: 'grey.800' }}
+        >
+          {t('landing.screenshotsTitle')}
+        </Typography>
+        <Box sx={{ fontSize: { xs: '14px', sm: '16px' }, color: 'grey.500', textAlign: 'center', mb: '40px' }}>
+          {t('landing.screenshotsSubtitle')}
+        </Box>
+
+        {/* Tab buttons */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: '8px', mb: '32px', flexWrap: 'wrap' }}>
+          {SCREENSHOTS.map((s, i) => {
+            const Icon = s.icon
+            const isActive = i === active
+            return (
+              <Box
+                key={s.tabKey}
+                component="button"
+                onClick={() => setActive(i)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  px: '20px',
+                  py: '10px',
+                  zIndex: 1,
+                  borderRadius: '8px',
+                  border: '2px solid',
+                  borderColor: isActive ? 'primary.main' : 'grey.200',
+                  bgcolor: isActive ? 'primary.main' : 'white',
+                  color: isActive ? 'white' : 'grey.600',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  transition: 'all 0.15s',
+                  '&:hover': { borderColor: 'primary.main', color: isActive ? 'white' : 'primary.main' },
+                }}
+              >
+                <Icon size={16} />
+                {t(s.tabKey)}
+              </Box>
+            )
+          })}
+        </Box>
+
+        {/* Screenshot + description */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: '40px',
+            alignItems: { xs: 'stretch', md: 'center' },
+          }}
+        >
+          {/* Browser-frame screenshot */}
+          <Box
+            sx={{
+              flex: 1,
+              borderRadius: '12px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+              border: '1px solid',
+              borderColor: 'grey.200',
+              bgcolor: 'grey.100',
+              zIndex: 1,
+            }}
+          >
+            {/* Fake browser chrome */}
+            <Box
+              sx={{
+                bgcolor: 'grey.100',
+                borderBottom: '1px solid',
+                borderColor: 'grey.200',
+                px: '16px',
+                py: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              {['#FF5F57', '#FFBD2E', '#28C840'].map((c) => (
+                <Box key={c} sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: c }} />
+              ))}
+              <Box
+                sx={{
+                  ml: '12px',
+                  flex: 1,
+                  bgcolor: 'white',
+                  borderRadius: '4px',
+                  height: '24px',
+                  maxWidth: 300,
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                }}
+              />
+            </Box>
+            <Image
+              key={current.src}
+              src={current.src}
+              alt={t(current.tabKey)}
+              width={1440}
+              height={900}
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+            />
+          </Box>
+
+          {/* Description */}
+          <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, zIndex: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', mb: '16px' }}>
+              <Box
+                sx={{
+                  p: '10px',
+                  borderRadius: '10px',
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <current.icon size={24} />
+              </Box>
+              <Typography component="h4" sx={{ fontSize: '20px', fontWeight: 700, color: 'grey.800' }}>
+                {t(current.tabKey)}
+              </Typography>
+            </Box>
+            <Box sx={{ fontSize: '16px', color: 'grey.600', lineHeight: 1.7 }}>
+              {t(current.descKey)}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  )
+}
 
 const formatPriceIDR = (price: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price)
@@ -202,7 +362,7 @@ export default function HomePage() {
                 </Button>
               </Link>
               <Link href="#pricing">
-                <Button variant="outlined" sx={{ px: '32px', py: '16px', fontSize: '16px' }}>
+                <Button variant="outlined" sx={{ px: '32px', py: '16px', fontSize: '16px', bgcolor: '#f8fafc', '&:hover': { bgcolor: '#f1f5f9' } }}>
                   {t('landing.viewPricing')}
                 </Button>
               </Link>
@@ -276,6 +436,9 @@ export default function HomePage() {
           </Box>
         </Box>
       </Box>
+
+      {/* Screenshots showcase */}
+      <ScreenshotsSection />
 
       {/* Pricing */}
       <Box

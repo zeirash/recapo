@@ -4,7 +4,6 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { QueryClient, QueryClientProvider } from 'react-query'
-import { ReactQueryDevtools } from 'react-query/devtools'
 import { NextIntlClientProvider } from 'next-intl'
 import '@/styles/globals.css'
 import { useEffect, useState } from 'react'
@@ -66,7 +65,6 @@ export default function RootLayout({
             <ThemeProvider theme={theme}>
               <CssBaseline />
               {children}
-              <ReactQueryDevtools initialIsOpen={false} />
             </ThemeProvider>
           </QueryClientProvider>
         </NextIntlClientProvider>
