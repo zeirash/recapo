@@ -36,7 +36,7 @@ import (
 
 	_ "github.com/zeirash/recapo/arion/docs" // swagger docs
 )
-
+// test comment
 func initSentry() {
 	cfg := config.GetConfig()
 	if cfg.SentryDSN == "" {
