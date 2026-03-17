@@ -53,9 +53,9 @@ func (p *product) GetProductByID(ctx context.Context, productID int, shopID ...i
 	criteria := []interface{}{productID}
 
 	q := `
-		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
+		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at, deleted_at
 		FROM products
-		WHERE id = $1
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	if len(shopID) > 0 {
@@ -64,7 +64,7 @@ func (p *product) GetProductByID(ctx context.Context, productID int, shopID ...i
 	}
 
 	var product model.Product
-	err := p.db.QueryRowContext(ctx, q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRowContext(ctx, q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -77,9 +77,9 @@ func (p *product) GetProductByID(ctx context.Context, productID int, shopID ...i
 
 func (p *product) GetProductsByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]model.Product, error) {
 	q := `
-		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
+		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at, deleted_at
 		FROM products
-		WHERE shop_id = $1
+		WHERE shop_id = $1 AND deleted_at IS NULL
 	`
 	args := []interface{}{shopID}
 
@@ -112,7 +112,7 @@ func (p *product) GetProductsByShopID(ctx context.Context, shopID int, filter mo
 	products := []model.Product{}
 	for rows.Next() {
 		var product model.Product
-		err := rows.Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
+		err := rows.Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -209,8 +209,9 @@ func (p *product) UpdateProduct(ctx context.Context, productID int, input Update
 
 func (p *product) DeleteProductByID(ctx context.Context, productID int) error {
 	q := `
-		DELETE FROM products
-		WHERE id = $1
+		UPDATE products
+		SET deleted_at = now()
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	_, err := p.db.ExecContext(ctx, q, productID)

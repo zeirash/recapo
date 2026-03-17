@@ -171,6 +171,7 @@
     "noCustomers": "Tidak ada pelanggan",
     "selectCustomer": "Pilih pelanggan untuk melihat detail",
     "deleteConfirm": "Hapus pelanggan ini?",
+    "deleteActiveOrderWarning": "Pelanggan ini memiliki pesanan aktif (#{id}). Pesanan akan tetap ada setelah penghapusan.",
     "fetchFailed": "Gagal memuat pelanggan",
     "createFailed": "Gagal membuat pelanggan",
     "updateFailed": "Gagal memperbarui pelanggan",
@@ -242,7 +243,8 @@
     "addPaymentFailed": "Gagal menambah pembayaran",
     "updatePaymentFailed": "Gagal memperbarui pembayaran",
     "deletePaymentFailed": "Gagal menghapus pembayaran",
-    "amount": "Jumlah"
+    "amount": "Jumlah",
+    "customerDeleted": "Dihapus"
   },
   "paymentStatus": {
     "outstanding": "Terutang",

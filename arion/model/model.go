@@ -72,6 +72,7 @@ type (
 		Address   string       `db:"address"`
 		CreatedAt time.Time    `db:"created_at"`
 		UpdatedAt sql.NullTime `db:"updated_at"`
+		DeletedAt sql.NullTime `db:"deleted_at"`
 	}
 
 	/******************* Product *********************/
@@ -85,6 +86,7 @@ type (
 		ImageURL      string       `db:"image_url"`
 		CreatedAt     time.Time    `db:"created_at"`
 		UpdatedAt     sql.NullTime `db:"updated_at"`
+		DeletedAt     sql.NullTime `db:"deleted_at"`
 	}
 
 	PurchaseProduct struct {
@@ -106,15 +108,16 @@ type (
 	}
 
 	Order struct {
-		ID            int          `db:"id"`
-		ShopID        int          `db:"shop_id"`
-		CustomerName  string       `db:"customer_name"`
-		TotalPrice    int          `db:"total_price"`
-		Status        string       `db:"status"`
-		PaymentStatus string       `db:"payment_status"`
-		Notes         string       `db:"notes"`
-		CreatedAt     time.Time    `db:"created_at"`
-		UpdatedAt     sql.NullTime `db:"updated_at"`
+		ID                int          `db:"id"`
+		ShopID            int          `db:"shop_id"`
+		CustomerName      string       `db:"customer_name"`
+		IsCustomerDeleted bool         `db:"is_customer_deleted"`
+		TotalPrice        int          `db:"total_price"`
+		Status            string       `db:"status"`
+		PaymentStatus     string       `db:"payment_status"`
+		Notes             string       `db:"notes"`
+		CreatedAt         time.Time    `db:"created_at"`
+		UpdatedAt         sql.NullTime `db:"updated_at"`
 	}
 
 	OrderItem struct {

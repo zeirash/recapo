@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import { api } from '@/utils/api'
@@ -29,6 +29,7 @@ const emptyForm: FormState = { name: '', phone: '', address: '' }
 
 export default function CustomersPage() {
   const tc = useTranslations('customers')
+  const t = useTranslations('common')
   const queryClient = useQueryClient()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
@@ -36,6 +37,9 @@ export default function CustomersPage() {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortValue, setSortValue] = useState<string>('')
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
+  const [deleteActiveOrderId, setDeleteActiveOrderId] = useState<number | null>(null)
+  const [checkingActiveOrder, setCheckingActiveOrder] = useState(false)
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {
@@ -121,6 +125,29 @@ export default function CustomersPage() {
     } else {
       createMutation.mutate(form)
     }
+  }
+
+  async function handleDeleteClick(customer: Customer) {
+    setCheckingActiveOrder(true)
+    setCustomerToDelete(customer)
+    try {
+      const res = await api.checkActiveOrder({ phone: customer.phone, name: customer.name })
+      setDeleteActiveOrderId(res.data?.active_order_id ?? null)
+    } catch {
+      setDeleteActiveOrderId(null)
+    } finally {
+      setCheckingActiveOrder(false)
+    }
+  }
+
+  function closeDeleteDialog() {
+    setCustomerToDelete(null)
+    setDeleteActiveOrderId(null)
+  }
+
+  function confirmDelete() {
+    if (customerToDelete) deleteMutation.mutate(customerToDelete.id)
+    closeDeleteDialog()
   }
 
   const customers = customersRes || []
@@ -232,10 +259,11 @@ export default function CustomersPage() {
                         <Pencil size={16} />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Delete">
+                    <Tooltip title={t('delete')}>
                       <IconButton
                         size="small"
-                        onClick={() => { if (confirm('Delete this customer?')) deleteMutation.mutate(c.id) }}
+                        onClick={() => handleDeleteClick(c)}
+                        disabled={checkingActiveOrder && customerToDelete?.id === c.id}
                         sx={{ color: 'error.main', '&:hover': { bgcolor: 'error.light' } }}
                       >
                         <Trash2 size={16} />
@@ -247,6 +275,31 @@ export default function CustomersPage() {
             </Box>
           )}
         </Box>
+
+        <Dialog open={!!customerToDelete && !checkingActiveOrder} onClose={closeDeleteDialog}>
+          <DialogTitle>{tc('deleteConfirm')}</DialogTitle>
+          {deleteActiveOrderId ? (
+            <DialogContent>
+              <DialogContentText sx={{ color: 'warning.dark', fontSize: '14px' }}>
+                {tc('deleteActiveOrderWarning', { id: deleteActiveOrderId })}
+              </DialogContentText>
+            </DialogContent>
+          ) : null}
+          <DialogActions sx={{ px: '24px', pb: '16px', gap: '8px' }}>
+            <Button variant="outlined" onClick={closeDeleteDialog}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              disableElevation
+              disabled={deleteMutation.isLoading}
+              onClick={confirmDelete}
+            >
+              {t('delete')}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Dialog open={isFormOpen} onClose={closeForm} fullWidth maxWidth="sm">
           <Box component="form" onSubmit={submitForm}>

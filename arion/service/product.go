@@ -96,6 +96,14 @@ func NewProductService() ProductService {
 		productStore = store.NewProductStore()
 	}
 
+	if orderItemStore == nil {
+		orderItemStore = store.NewOrderItemStore()
+	}
+
+	if orderStore == nil {
+		orderStore = store.NewOrderStore()
+	}
+
 	return &pservice{}
 }
 
@@ -205,12 +213,36 @@ func (p *pservice) UpdateProduct(ctx context.Context, input UpdateProductInput) 
 }
 
 func (p *pservice) DeleteProductByID(ctx context.Context, id int) error {
-	err := productStore.DeleteProductByID(ctx, id)
+	orderTotals, err := orderItemStore.GetOrderTotalsExcludingProduct(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	if len(orderTotals) > 0 {
+		db := dbGetter()
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		if err := orderItemStore.DeleteOrderItemsByProductID(ctx, tx, id); err != nil {
+			return err
+		}
+
+		for orderID, newTotal := range orderTotals {
+			total := newTotal
+			if _, err := orderStore.UpdateOrder(ctx, tx, orderID, store.UpdateOrderInput{TotalPrice: &total}); err != nil {
+				return err
+			}
+		}
+
+		if err := tx.Commit(); err != nil {
+			return err
+		}
+	}
+
+	return productStore.DeleteProductByID(ctx, id)
 }
 
 func (p *pservice) GetPurchaseListProducts(ctx context.Context, shopID int) ([]response.PurchaseListProductData, error) {

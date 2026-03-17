@@ -19,7 +19,9 @@ type (
 		UpdateOrderItemByID(ctx context.Context, tx database.Tx, id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error)
 		DeleteOrderItemByID(ctx context.Context, id, orderID int) error
 		DeleteOrderItemsByOrderID(ctx context.Context, tx database.Tx, orderID int) error
+		DeleteOrderItemsByProductID(ctx context.Context, tx database.Tx, productID int) error
 		GetOrderItemByProductID(ctx context.Context, productID int, orderID int) (*model.OrderItem, error)
+		GetOrderTotalsExcludingProduct(ctx context.Context, productID int) (map[int]int, error)
 
 		CreateTempOrderItem(ctx context.Context, tx database.Tx, tempOrderID, productID, qty int) (*model.TempOrderItem, error)
 		GetTempOrderItemsByTempOrderID(ctx context.Context, tempOrderID int) ([]model.TempOrderItem, error)
@@ -194,6 +196,45 @@ func (o *orderitem) DeleteOrderItemsByOrderID(ctx context.Context, tx database.T
 	}
 
 	return nil
+}
+
+func (o *orderitem) DeleteOrderItemsByProductID(ctx context.Context, tx database.Tx, productID int) error {
+	q := `
+		DELETE FROM order_items
+		WHERE product_id = $1
+	`
+
+	_, err := tx.ExecContext(ctx, q, productID)
+	return err
+}
+
+func (o *orderitem) GetOrderTotalsExcludingProduct(ctx context.Context, productID int) (map[int]int, error) {
+	q := `
+		SELECT
+			affected.order_id,
+			COALESCE(SUM(p.price * oi.qty), 0) AS new_total
+		FROM (SELECT DISTINCT order_id FROM order_items WHERE product_id = $1) affected
+		LEFT JOIN order_items oi ON oi.order_id = affected.order_id AND oi.product_id != $1
+		LEFT JOIN products p ON oi.product_id = p.id
+		GROUP BY affected.order_id
+	`
+
+	rows, err := o.db.QueryContext(ctx, q, productID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	totals := make(map[int]int)
+	for rows.Next() {
+		var orderID, newTotal int
+		if err := rows.Scan(&orderID, &newTotal); err != nil {
+			return nil, err
+		}
+		totals[orderID] = newTotal
+	}
+
+	return totals, nil
 }
 
 func (o *orderitem) CreateTempOrderItem(ctx context.Context, tx database.Tx, tempOrderID, productID, qty int) (*model.TempOrderItem, error) {

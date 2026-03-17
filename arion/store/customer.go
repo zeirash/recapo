@@ -59,9 +59,9 @@ func (c *customer) GetCustomerByID(ctx context.Context, id int, shopID ...int) (
 	criteria := []interface{}{id}
 
 	q := `
-		SELECT id, name, phone, address, created_at, updated_at
+		SELECT id, name, phone, address, created_at, updated_at, deleted_at
 		FROM customers
-		WHERE id = $1
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	if len(shopID) > 0 {
@@ -70,7 +70,7 @@ func (c *customer) GetCustomerByID(ctx context.Context, id int, shopID ...int) (
 	}
 
 	var customer model.Customer
-	err := c.db.QueryRowContext(ctx, q, criteria...).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := c.db.QueryRowContext(ctx, q, criteria...).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt, &customer.DeletedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -83,12 +83,12 @@ func (c *customer) GetCustomerByID(ctx context.Context, id int, shopID ...int) (
 
 func (c *customer) GetCustomerByPhone(ctx context.Context, phone string, shopID int) (*model.Customer, error) {
 	q := `
-		SELECT id, name, phone, address, created_at, updated_at
+		SELECT id, name, phone, address, created_at, updated_at, deleted_at
 		FROM customers
-		WHERE phone = $1 AND shop_id = $2
+		WHERE phone = $1 AND shop_id = $2 AND deleted_at IS NULL
 	`
 	var customer model.Customer
-	err := c.db.QueryRowContext(ctx, q, phone, shopID).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := c.db.QueryRowContext(ctx, q, phone, shopID).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt, &customer.DeletedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -100,9 +100,9 @@ func (c *customer) GetCustomerByPhone(ctx context.Context, phone string, shopID 
 
 func (c *customer) GetCustomersByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]model.Customer, error) {
 	q := `
-		SELECT id, name, phone, address, created_at, updated_at
+		SELECT id, name, phone, address, created_at, updated_at, deleted_at
 		FROM customers
-		WHERE shop_id = $1
+		WHERE shop_id = $1 AND deleted_at IS NULL
 	`
 	args := []interface{}{shopID}
 
@@ -135,7 +135,7 @@ func (c *customer) GetCustomersByShopID(ctx context.Context, shopID int, filter 
 	customers := []model.Customer{}
 	for rows.Next() {
 		var customer model.Customer
-		err := rows.Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+		err := rows.Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt, &customer.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -218,8 +218,9 @@ func (c *customer) UpdateCustomer(ctx context.Context, id int, input UpdateCusto
 
 func (c *customer) DeleteCustomerByID(ctx context.Context, id int) error {
 	q := `
-		DELETE FROM customers
-		WHERE id = $1
+		UPDATE customers
+		SET deleted_at = now()
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 
 	_, err := c.db.ExecContext(ctx, q, id)

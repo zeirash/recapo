@@ -1,8 +1,8 @@
 package service
 
 import (
-	"context"
 	"bytes"
+	"context"
 	"database/sql"
 	"errors"
 	"io"
@@ -15,7 +15,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/zeirash/recapo/arion/common/apierr"
+	"github.com/zeirash/recapo/arion/common/database"
 	"github.com/zeirash/recapo/arion/common/response"
+	mock_database "github.com/zeirash/recapo/arion/mock/database"
 	mock_store "github.com/zeirash/recapo/arion/mock/store"
 	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
@@ -535,30 +537,153 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 	tests := []struct {
 		name      string
 		id        int
-		mockSetup func(ctrl *gomock.Controller) *mock_store.MockProductStore
+		mockSetup func(ctrl *gomock.Controller) (*mock_store.MockProductStore, *mock_store.MockOrderItemStore, *mock_store.MockOrderStore, *mock_database.MockDB, *mock_database.MockTx)
 		wantErr   bool
 	}{
 		{
-			name: "successfully delete product",
+			name: "successfully delete product with no affected orders",
 			id:   1,
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
-				mock := mock_store.NewMockProductStore(ctrl)
-				mock.EXPECT().
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockProductStore, *mock_store.MockOrderItemStore, *mock_store.MockOrderStore, *mock_database.MockDB, *mock_database.MockTx) {
+				mockOrderItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockOrderItem.EXPECT().
+					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
+					Return(map[int]int{}, nil)
+
+				mockProduct := mock_store.NewMockProductStore(ctrl)
+				mockProduct.EXPECT().
 					DeleteProductByID(gomock.Any(), 1).
 					Return(nil)
-				return mock
+
+				return mockProduct, mockOrderItem, mock_store.NewMockOrderStore(ctrl), nil, nil
 			},
 			wantErr: false,
 		},
 		{
+			name: "successfully delete product with affected orders",
+			id:   1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockProductStore, *mock_store.MockOrderItemStore, *mock_store.MockOrderStore, *mock_database.MockDB, *mock_database.MockTx) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Commit().Return(nil)
+				mockTx.EXPECT().Rollback().Return(nil)
+
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				mockOrderItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockOrderItem.EXPECT().
+					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
+					Return(map[int]int{10: 5000}, nil)
+				mockOrderItem.EXPECT().
+					DeleteOrderItemsByProductID(gomock.Any(), mockTx, 1).
+					Return(nil)
+
+				mockOrder := mock_store.NewMockOrderStore(ctrl)
+				mockOrder.EXPECT().
+					UpdateOrder(gomock.Any(), mockTx, 10, gomock.Any()).
+					Return(&model.Order{ID: 10, TotalPrice: 5000}, nil)
+
+				mockProduct := mock_store.NewMockProductStore(ctrl)
+				mockProduct.EXPECT().
+					DeleteProductByID(gomock.Any(), 1).
+					Return(nil)
+
+				return mockProduct, mockOrderItem, mockOrder, mockDB, mockTx
+			},
+			wantErr: false,
+		},
+		{
+			name: "delete product returns error when getting order totals fails",
+			id:   1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockProductStore, *mock_store.MockOrderItemStore, *mock_store.MockOrderStore, *mock_database.MockDB, *mock_database.MockTx) {
+				mockOrderItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockOrderItem.EXPECT().
+					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
+					Return(nil, errors.New("database error"))
+
+				return mock_store.NewMockProductStore(ctrl), mockOrderItem, mock_store.NewMockOrderStore(ctrl), nil, nil
+			},
+			wantErr: true,
+		},
+		{
+			name: "delete product returns error on db.Begin failure",
+			id:   1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockProductStore, *mock_store.MockOrderItemStore, *mock_store.MockOrderStore, *mock_database.MockDB, *mock_database.MockTx) {
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(nil, errors.New("begin error"))
+
+				mockOrderItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockOrderItem.EXPECT().
+					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
+					Return(map[int]int{10: 0}, nil)
+
+				return mock_store.NewMockProductStore(ctrl), mockOrderItem, mock_store.NewMockOrderStore(ctrl), mockDB, nil
+			},
+			wantErr: true,
+		},
+		{
+			name: "delete product returns error when deleting order items fails",
+			id:   1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockProductStore, *mock_store.MockOrderItemStore, *mock_store.MockOrderStore, *mock_database.MockDB, *mock_database.MockTx) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Rollback().Return(nil)
+
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				mockOrderItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockOrderItem.EXPECT().
+					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
+					Return(map[int]int{10: 0}, nil)
+				mockOrderItem.EXPECT().
+					DeleteOrderItemsByProductID(gomock.Any(), mockTx, 1).
+					Return(errors.New("delete error"))
+
+				return mock_store.NewMockProductStore(ctrl), mockOrderItem, mock_store.NewMockOrderStore(ctrl), mockDB, mockTx
+			},
+			wantErr: true,
+		},
+		{
+			name: "delete product returns error when updating order total fails",
+			id:   1,
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockProductStore, *mock_store.MockOrderItemStore, *mock_store.MockOrderStore, *mock_database.MockDB, *mock_database.MockTx) {
+				mockTx := mock_database.NewMockTx(ctrl)
+				mockTx.EXPECT().Rollback().Return(nil)
+
+				mockDB := mock_database.NewMockDB(ctrl)
+				mockDB.EXPECT().Begin().Return(mockTx, nil)
+
+				mockOrderItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockOrderItem.EXPECT().
+					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
+					Return(map[int]int{10: 5000}, nil)
+				mockOrderItem.EXPECT().
+					DeleteOrderItemsByProductID(gomock.Any(), mockTx, 1).
+					Return(nil)
+
+				mockOrder := mock_store.NewMockOrderStore(ctrl)
+				mockOrder.EXPECT().
+					UpdateOrder(gomock.Any(), mockTx, 10, gomock.Any()).
+					Return(nil, errors.New("update error"))
+
+				return mock_store.NewMockProductStore(ctrl), mockOrderItem, mockOrder, mockDB, mockTx
+			},
+			wantErr: true,
+		},
+		{
 			name: "delete product returns error on database failure",
 			id:   1,
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
-				mock := mock_store.NewMockProductStore(ctrl)
-				mock.EXPECT().
+			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockProductStore, *mock_store.MockOrderItemStore, *mock_store.MockOrderStore, *mock_database.MockDB, *mock_database.MockTx) {
+				mockOrderItem := mock_store.NewMockOrderItemStore(ctrl)
+				mockOrderItem.EXPECT().
+					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
+					Return(map[int]int{}, nil)
+
+				mockProduct := mock_store.NewMockProductStore(ctrl)
+				mockProduct.EXPECT().
 					DeleteProductByID(gomock.Any(), 1).
 					Return(errors.New("database error"))
-				return mock
+
+				return mockProduct, mockOrderItem, mock_store.NewMockOrderStore(ctrl), nil, nil
 			},
 			wantErr: true,
 		},
@@ -569,9 +694,20 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			oldStore := productStore
-			defer func() { productStore = oldStore }()
-			productStore = tt.mockSetup(ctrl)
+			oldProductStore, oldOrderItemStore, oldOrderStore := productStore, orderItemStore, orderStore
+			oldDBGetter := dbGetter
+			defer func() {
+				productStore, orderItemStore, orderStore = oldProductStore, oldOrderItemStore, oldOrderStore
+				dbGetter = oldDBGetter
+			}()
+
+			mockProduct, mockOrderItem, mockOrder, mockDB, _ := tt.mockSetup(ctrl)
+			productStore = mockProduct
+			orderItemStore = mockOrderItem
+			orderStore = mockOrder
+			if mockDB != nil {
+				dbGetter = func() database.DB { return mockDB }
+			}
 
 			var p pservice
 			gotErr := p.DeleteProductByID(context.Background(), tt.id)

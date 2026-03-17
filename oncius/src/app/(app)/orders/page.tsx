@@ -33,6 +33,7 @@ type OrderPayment = {
 type Order = {
   id: number
   customer_name: string
+  is_customer_deleted?: boolean
   total_price: number
   status: string
   payment_status: string
@@ -563,7 +564,14 @@ export default function OrdersPage() {
                               {toStatus(o.status)}
                             </Box>
                           </Box>
-                          <Box sx={{ fontSize: '12px', color: 'grey.500' }}>{o.customer_name}</Box>
+                          <Box sx={{ fontSize: '12px', color: 'grey.500', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {o.customer_name}
+                            {o.is_customer_deleted && (
+                              <Box component="span" sx={{ fontSize: '10px', px: '4px', py: '1px', borderRadius: '3px', bgcolor: 'grey.200', color: 'grey.600', fontWeight: 500, lineHeight: 1.4 }}>
+                                {to('customerDeleted')}
+                              </Box>
+                            )}
+                          </Box>
                           <Box sx={{ fontSize: '12px', fontWeight: 500 }}>{formatPrice(o.total_price)}</Box>
                         </Box>
                       </Box>
@@ -639,7 +647,14 @@ export default function OrdersPage() {
                       <Box sx={{ flexWrap: 'wrap', gap: { xs: '24px', sm: '32px' }, display: 'flex' }}>
                         <Box sx={{ minWidth: 140 }}>
                           <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('customer')}</Box>
-                          <Box sx={{ fontSize: '14px', fontWeight: 500 }}>{selectedOrder.customer_name}</Box>
+                          <Box sx={{ fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {selectedOrder.customer_name}
+                            {selectedOrder.is_customer_deleted && (
+                              <Box component="span" sx={{ fontSize: '11px', px: '6px', py: '2px', borderRadius: '4px', bgcolor: 'grey.200', color: 'grey.600', fontWeight: 500 }}>
+                                {to('customerDeleted')}
+                              </Box>
+                            )}
+                          </Box>
                         </Box>
                         <Box>
                           <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>

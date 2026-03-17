@@ -161,15 +161,16 @@ func (o *oservice) GetOrderByID(ctx context.Context, id int, shopID ...int) (*re
 	}
 
 	res := response.OrderData{
-		ID:            order.ID,
-		CustomerName:  order.CustomerName,
-		TotalPrice:    order.TotalPrice,
-		Status:        order.Status,
-		PaymentStatus: order.PaymentStatus,
-		Notes:         order.Notes,
-		OrderItems:    orderItemsData,
-		OrderPayments: orderPaymentsData,
-		CreatedAt:     order.CreatedAt,
+		ID:                order.ID,
+		CustomerName:      order.CustomerName,
+		IsCustomerDeleted: order.IsCustomerDeleted,
+		TotalPrice:        order.TotalPrice,
+		Status:            order.Status,
+		PaymentStatus:     order.PaymentStatus,
+		Notes:             order.Notes,
+		OrderItems:        orderItemsData,
+		OrderPayments:     orderPaymentsData,
+		CreatedAt:         order.CreatedAt,
 	}
 
 	if order.UpdatedAt.Valid {
@@ -189,13 +190,14 @@ func (o *oservice) GetOrdersByShopID(ctx context.Context, shopID int, opts model
 	ordersData := []response.OrderData{}
 	for _, order := range orders {
 		res := response.OrderData{
-			ID:            order.ID,
-			CustomerName:  order.CustomerName,
-			TotalPrice:    order.TotalPrice,
-			Status:        order.Status,
-			PaymentStatus: order.PaymentStatus,
-			Notes:         order.Notes,
-			CreatedAt:     order.CreatedAt,
+			ID:                order.ID,
+			CustomerName:      order.CustomerName,
+			IsCustomerDeleted: order.IsCustomerDeleted,
+			TotalPrice:        order.TotalPrice,
+			Status:            order.Status,
+			PaymentStatus:     order.PaymentStatus,
+			Notes:             order.Notes,
+			CreatedAt:         order.CreatedAt,
 		}
 
 		if order.UpdatedAt.Valid {

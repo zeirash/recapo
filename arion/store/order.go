@@ -55,7 +55,7 @@ func (o *order) GetOrderByID(ctx context.Context, id int, shopID ...int) (*model
 	criteria := []interface{}{id}
 
 	q := `
-		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
+		SELECT o.id, o.shop_id, c.name as customer_name, (c.deleted_at IS NOT NULL) as is_customer_deleted, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
 		FROM orders o
 		INNER JOIN customers c ON o.customer_id = c.id
 		WHERE o.id = $1
@@ -67,7 +67,7 @@ func (o *order) GetOrderByID(ctx context.Context, id int, shopID ...int) (*model
 	}
 
 	var order model.Order
-	err := o.db.QueryRowContext(ctx, q, criteria...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+	err := o.db.QueryRowContext(ctx, q, criteria...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.IsCustomerDeleted, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -80,7 +80,7 @@ func (o *order) GetOrderByID(ctx context.Context, id int, shopID ...int) (*model
 
 func (o *order) GetOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]model.Order, error) {
 	q := `
-		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
+		SELECT o.id, o.shop_id, c.name as customer_name, (c.deleted_at IS NOT NULL) as is_customer_deleted, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
 		FROM orders o
 		INNER JOIN customers c ON o.customer_id = c.id
 		WHERE o.shop_id = $1
@@ -129,7 +129,7 @@ func (o *order) GetOrdersByShopID(ctx context.Context, shopID int, opts model.Or
 	orders := []model.Order{}
 	for rows.Next() {
 		var order model.Order
-		err := rows.Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err := rows.Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.IsCustomerDeleted, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -238,7 +238,7 @@ func (o *order) UpdateOrder(ctx context.Context, tx database.Tx, id int, input U
 			WHERE id = $1
 			RETURNING id, shop_id, customer_id, total_price, status, payment_status, notes, created_at, updated_at
 		)
-		SELECT u.id, u.shop_id, c.name as customer_name, u.total_price, u.status, u.payment_status, u.notes, u.created_at, u.updated_at
+		SELECT u.id, u.shop_id, c.name as customer_name, (c.deleted_at IS NOT NULL) as is_customer_deleted, u.total_price, u.status, u.payment_status, u.notes, u.created_at, u.updated_at
 		FROM updated u
 		INNER JOIN customers c ON u.customer_id = c.id
 	`
@@ -247,9 +247,9 @@ func (o *order) UpdateOrder(ctx context.Context, tx database.Tx, id int, input U
 
 	var err error
 	if tx != nil {
-		err = tx.QueryRowContext(ctx, q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err = tx.QueryRowContext(ctx, q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.IsCustomerDeleted, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	} else {
-		err = o.db.QueryRowContext(ctx, q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err = o.db.QueryRowContext(ctx, q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.IsCustomerDeleted, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	}
 	if err != nil {
 		return nil, err

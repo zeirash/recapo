@@ -668,11 +668,11 @@ func Test_orderitem_GetTempOrderItemsByTempOrderID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
 	tests := []struct {
-		name       string
+		name        string
 		tempOrderID int
-		mockSetup  func(mock sqlmock.Sqlmock)
-		wantResult []model.TempOrderItem
-		wantErr    bool
+		mockSetup   func(mock sqlmock.Sqlmock)
+		wantResult  []model.TempOrderItem
+		wantErr     bool
 	}{
 		{
 			name:        "get temp order items by temp order ID returns multiple items",
@@ -827,6 +827,149 @@ func Test_orderitem_GetOrderItemByProductID(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.wantResult) {
 				t.Errorf("GetOrderItemByProductID() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func Test_orderitem_DeleteOrderItemsByProductID(t *testing.T) {
+	tests := []struct {
+		name      string
+		productID int
+		mockSetup func(txMock sqlmock.Sqlmock)
+		wantErr   bool
+	}{
+		{
+			name:      "successfully delete order items by product ID",
+			productID: 5,
+			mockSetup: func(txMock sqlmock.Sqlmock) {
+				txMock.ExpectBegin()
+				txMock.ExpectExec(`DELETE FROM order_items\s+WHERE product_id = \$1`).
+					WithArgs(5).
+					WillReturnResult(sqlmock.NewResult(0, 2))
+			},
+			wantErr: false,
+		},
+		{
+			name:      "returns error on database failure",
+			productID: 5,
+			mockSetup: func(txMock sqlmock.Sqlmock) {
+				txMock.ExpectBegin()
+				txMock.ExpectExec(`DELETE FROM order_items\s+WHERE product_id = \$1`).
+					WithArgs(5).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			txDB, txMock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer txDB.Close()
+
+			tt.mockSetup(txMock)
+
+			tx, err := txDB.Begin()
+			if err != nil {
+				t.Fatalf("failed to begin tx: %v", err)
+			}
+
+			db, _, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			s := NewOrderItemStoreWithDB(db)
+			gotErr := s.DeleteOrderItemsByProductID(context.Background(), tx, tt.productID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("DeleteOrderItemsByProductID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("DeleteOrderItemsByProductID() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
+func Test_orderitem_GetOrderTotalsExcludingProduct(t *testing.T) {
+	tests := []struct {
+		name      string
+		productID int
+		mockSetup func(mock sqlmock.Sqlmock)
+		want      map[int]int
+		wantErr   bool
+	}{
+		{
+			name:      "returns new totals for affected orders",
+			productID: 5,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"order_id", "new_total"}).
+					AddRow(10, 3000).
+					AddRow(20, 0)
+				mock.ExpectQuery(`SELECT\s+affected\.order_id`).
+					WithArgs(5).
+					WillReturnRows(rows)
+			},
+			want:    map[int]int{10: 3000, 20: 0},
+			wantErr: false,
+		},
+		{
+			name:      "returns empty map when no orders are affected",
+			productID: 5,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"order_id", "new_total"})
+				mock.ExpectQuery(`SELECT\s+affected\.order_id`).
+					WithArgs(5).
+					WillReturnRows(rows)
+			},
+			want:    map[int]int{},
+			wantErr: false,
+		},
+		{
+			name:      "returns error on database failure",
+			productID: 5,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT\s+affected\.order_id`).
+					WithArgs(5).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			s := NewOrderItemStoreWithDB(db)
+
+			got, gotErr := s.GetOrderTotalsExcludingProduct(context.Background(), tt.productID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetOrderTotalsExcludingProduct() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetOrderTotalsExcludingProduct() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetOrderTotalsExcludingProduct() = %v, want %v", got, tt.want)
 			}
 		})
 	}

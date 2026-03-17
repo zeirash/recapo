@@ -171,6 +171,7 @@
     "noCustomers": "No customers",
     "selectCustomer": "Select a customer to view details",
     "deleteConfirm": "Delete this customer?",
+    "deleteActiveOrderWarning": "This customer has an active order (#{id}). The order will remain after deletion.",
     "fetchFailed": "Failed to fetch customers",
     "createFailed": "Failed to create customer",
     "updateFailed": "Failed to update customer",
@@ -242,7 +243,8 @@
     "addPaymentFailed": "Failed to add payment",
     "updatePaymentFailed": "Failed to update payment",
     "deletePaymentFailed": "Failed to delete payment",
-    "amount": "Amount"
+    "amount": "Amount",
+    "customerDeleted": "Deleted"
   },
   "paymentStatus": {
     "outstanding": "Outstanding",

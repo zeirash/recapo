@@ -95,6 +95,35 @@ func (mr *MockOrderItemStoreMockRecorder) DeleteOrderItemsByOrderID(ctx, tx, ord
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderItemsByOrderID", reflect.TypeOf((*MockOrderItemStore)(nil).DeleteOrderItemsByOrderID), ctx, tx, orderID)
 }
 
+// DeleteOrderItemsByProductID mocks base method.
+func (m *MockOrderItemStore) DeleteOrderItemsByProductID(ctx context.Context, tx database.Tx, productID int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteOrderItemsByProductID", ctx, tx, productID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteOrderItemsByProductID indicates an expected call of DeleteOrderItemsByProductID.
+func (mr *MockOrderItemStoreMockRecorder) DeleteOrderItemsByProductID(ctx, tx, productID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderItemsByProductID", reflect.TypeOf((*MockOrderItemStore)(nil).DeleteOrderItemsByProductID), ctx, tx, productID)
+}
+
+// GetOrderTotalsExcludingProduct mocks base method.
+func (m *MockOrderItemStore) GetOrderTotalsExcludingProduct(ctx context.Context, productID int) (map[int]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderTotalsExcludingProduct", ctx, productID)
+	ret0, _ := ret[0].(map[int]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderTotalsExcludingProduct indicates an expected call of GetOrderTotalsExcludingProduct.
+func (mr *MockOrderItemStoreMockRecorder) GetOrderTotalsExcludingProduct(ctx, productID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderTotalsExcludingProduct", reflect.TypeOf((*MockOrderItemStore)(nil).GetOrderTotalsExcludingProduct), ctx, productID)
+}
+
 // GetOrderItemByID mocks base method.
 func (m *MockOrderItemStore) GetOrderItemByID(ctx context.Context, id int) (*model.OrderItem, error) {
 	m.ctrl.T.Helper()
