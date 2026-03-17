@@ -141,6 +141,7 @@
     "selectProduct": "Select a product to view details",
     "chooseFromList": "Choose from the list on the left",
     "deleteConfirm": "Delete this product?",
+    "deleteConfirmWarning": "Any orders that include this product will have their total price recalculated.",
     "originalPrice": "Original Price",
     "originalPricePlaceholder": "If empty, will be set the same as price",
     "fetchFailed": "Failed to fetch products",

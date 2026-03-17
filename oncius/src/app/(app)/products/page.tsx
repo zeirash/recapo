@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
@@ -46,6 +46,7 @@ export default function ProductsPage() {
   const [imagePreviewURL, setImagePreviewURL] = useState<string | null>(null)
   const [imageRemoved, setImageRemoved] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
   const justUploadedImageURL = useRef<string | null>(null)
   const pendingDeleteImageURL = useRef<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -373,7 +374,7 @@ export default function ProductsPage() {
                     <Tooltip title={t('delete')}>
                       <IconButton
                         size="small"
-                        onClick={() => { if (confirm(tp('deleteConfirm'))) deleteMutation.mutate(p.id) }}
+                        onClick={() => setProductToDelete(p)}
                         sx={{ color: 'error.main', '&:hover': { bgcolor: 'error.light' } }}
                       >
                         <Trash2 size={16} />
@@ -385,6 +386,32 @@ export default function ProductsPage() {
             </Box>
           )}
         </Box>
+
+        <Dialog open={!!productToDelete} onClose={() => setProductToDelete(null)}>
+          <DialogTitle>{tp('deleteConfirm')}</DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ color: 'warning.dark', fontSize: '14px' }}>
+              {tp('deleteConfirmWarning')}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions sx={{ px: '24px', pb: '16px', gap: '8px' }}>
+            <Button variant="outlined" onClick={() => setProductToDelete(null)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              disableElevation
+              disabled={deleteMutation.isLoading}
+              onClick={() => {
+                if (productToDelete) deleteMutation.mutate(productToDelete.id)
+                setProductToDelete(null)
+              }}
+            >
+              {t('delete')}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Dialog open={isFormOpen} onClose={closeForm} fullWidth maxWidth="sm">
           <Box component="form" onSubmit={submitForm}>

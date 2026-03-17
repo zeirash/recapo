@@ -141,6 +141,7 @@
     "selectProduct": "Pilih produk untuk melihat detail",
     "chooseFromList": "Pilih dari daftar di sebelah kiri",
     "deleteConfirm": "Hapus produk ini?",
+    "deleteConfirmWarning": "Pesanan yang mengandung produk ini akan dihitung ulang total harganya.",
     "originalPrice": "Harga Modal",
     "originalPricePlaceholder": "Jika kosong, akan diisi sama dengan harga",
     "fetchFailed": "Gagal memuat produk",
