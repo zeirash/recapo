@@ -36,7 +36,8 @@
     "feedback": "Feedback",
     "profile": "Profile",
     "welcome": "Welcome, {name}",
-    "subscription": "Billing"
+    "subscription": "Billing",
+    "signedInAs": "Signed in as"
   },
   "home": {
     "title": "Recapo",

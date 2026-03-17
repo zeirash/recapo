@@ -192,6 +192,20 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               overflow: 'hidden',
             }}
           >
+              {/* Email header */}
+            <Box
+              sx={{
+                px: '16px',
+                py: '10px',
+                borderBottom: '1px solid',
+                borderColor: 'grey.100',
+              }}
+            >
+              <Box sx={{ fontSize: '12px', color: 'grey.400', mb: '2px' }}>{t('signedInAs')}</Box>
+              <Box sx={{ fontSize: '13px', fontWeight: 500, color: 'grey.800', wordBreak: 'break-all' }}>
+                {user?.email}
+              </Box>
+            </Box>
             <Box
               onClick={() => { setShowDropdown(false); setShowFeedbackDialog(true) }}
               sx={{

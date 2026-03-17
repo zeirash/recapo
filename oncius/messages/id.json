@@ -36,7 +36,8 @@
     "feedback": "Masukan",
     "profile": "Profil",
     "welcome": "Selamat datang, {name}",
-    "subscription": "Tagihan"
+    "subscription": "Tagihan",
+    "signedInAs": "Masuk sebagai"
   },
   "home": {
     "title": "Recapo",
