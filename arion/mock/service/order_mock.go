@@ -5,6 +5,7 @@
 package mock_service
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -37,126 +38,126 @@ func (m *MockOrderService) EXPECT() *MockOrderServiceMockRecorder {
 }
 
 // CreateOrder mocks base method.
-func (m *MockOrderService) CreateOrder(customerID, shopID int, notes *string) (response.OrderData, error) {
+func (m *MockOrderService) CreateOrder(ctx context.Context, customerID, shopID int, notes *string) (response.OrderData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrder", customerID, shopID, notes)
+	ret := m.ctrl.Call(m, "CreateOrder", ctx, customerID, shopID, notes)
 	ret0, _ := ret[0].(response.OrderData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateOrder indicates an expected call of CreateOrder.
-func (mr *MockOrderServiceMockRecorder) CreateOrder(customerID, shopID, notes interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) CreateOrder(ctx, customerID, shopID, notes interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockOrderService)(nil).CreateOrder), customerID, shopID, notes)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockOrderService)(nil).CreateOrder), ctx, customerID, shopID, notes)
 }
 
 // CreateOrderItem mocks base method.
-func (m *MockOrderService) CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error) {
+func (m *MockOrderService) CreateOrderItem(ctx context.Context, orderID, productID, qty int) (response.OrderItemData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrderItem", orderID, productID, qty)
+	ret := m.ctrl.Call(m, "CreateOrderItem", ctx, orderID, productID, qty)
 	ret0, _ := ret[0].(response.OrderItemData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateOrderItem indicates an expected call of CreateOrderItem.
-func (mr *MockOrderServiceMockRecorder) CreateOrderItem(orderID, productID, qty interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) CreateOrderItem(ctx, orderID, productID, qty interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrderItem", reflect.TypeOf((*MockOrderService)(nil).CreateOrderItem), orderID, productID, qty)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrderItem", reflect.TypeOf((*MockOrderService)(nil).CreateOrderItem), ctx, orderID, productID, qty)
 }
 
 // CreateOrderPayment mocks base method.
-func (m *MockOrderService) CreateOrderPayment(orderID, amount int) (response.OrderPaymentData, error) {
+func (m *MockOrderService) CreateOrderPayment(ctx context.Context, orderID, amount int) (response.OrderPaymentData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrderPayment", orderID, amount)
+	ret := m.ctrl.Call(m, "CreateOrderPayment", ctx, orderID, amount)
 	ret0, _ := ret[0].(response.OrderPaymentData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateOrderPayment indicates an expected call of CreateOrderPayment.
-func (mr *MockOrderServiceMockRecorder) CreateOrderPayment(orderID, amount interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) CreateOrderPayment(ctx, orderID, amount interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrderPayment", reflect.TypeOf((*MockOrderService)(nil).CreateOrderPayment), orderID, amount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrderPayment", reflect.TypeOf((*MockOrderService)(nil).CreateOrderPayment), ctx, orderID, amount)
 }
 
 // CreateTempOrder mocks base method.
-func (m *MockOrderService) CreateTempOrder(customerName, customerPhone, shareToken string, items []service.CreateTempOrderItemInput) (response.TempOrderData, error) {
+func (m *MockOrderService) CreateTempOrder(ctx context.Context, customerName, customerPhone, shareToken string, items []service.CreateTempOrderItemInput) (response.TempOrderData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateTempOrder", customerName, customerPhone, shareToken, items)
+	ret := m.ctrl.Call(m, "CreateTempOrder", ctx, customerName, customerPhone, shareToken, items)
 	ret0, _ := ret[0].(response.TempOrderData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateTempOrder indicates an expected call of CreateTempOrder.
-func (mr *MockOrderServiceMockRecorder) CreateTempOrder(customerName, customerPhone, shareToken, items interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) CreateTempOrder(ctx, customerName, customerPhone, shareToken, items interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTempOrder", reflect.TypeOf((*MockOrderService)(nil).CreateTempOrder), customerName, customerPhone, shareToken, items)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTempOrder", reflect.TypeOf((*MockOrderService)(nil).CreateTempOrder), ctx, customerName, customerPhone, shareToken, items)
 }
 
 // DeleteOrderByID mocks base method.
-func (m *MockOrderService) DeleteOrderByID(id int) error {
+func (m *MockOrderService) DeleteOrderByID(ctx context.Context, id int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOrderByID", id)
+	ret := m.ctrl.Call(m, "DeleteOrderByID", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteOrderByID indicates an expected call of DeleteOrderByID.
-func (mr *MockOrderServiceMockRecorder) DeleteOrderByID(id interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) DeleteOrderByID(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderByID", reflect.TypeOf((*MockOrderService)(nil).DeleteOrderByID), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderByID", reflect.TypeOf((*MockOrderService)(nil).DeleteOrderByID), ctx, id)
 }
 
 // DeleteOrderItemByID mocks base method.
-func (m *MockOrderService) DeleteOrderItemByID(orderItemID, orderID int) error {
+func (m *MockOrderService) DeleteOrderItemByID(ctx context.Context, orderItemID, orderID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOrderItemByID", orderItemID, orderID)
+	ret := m.ctrl.Call(m, "DeleteOrderItemByID", ctx, orderItemID, orderID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteOrderItemByID indicates an expected call of DeleteOrderItemByID.
-func (mr *MockOrderServiceMockRecorder) DeleteOrderItemByID(orderItemID, orderID interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) DeleteOrderItemByID(ctx, orderItemID, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderItemByID", reflect.TypeOf((*MockOrderService)(nil).DeleteOrderItemByID), orderItemID, orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderItemByID", reflect.TypeOf((*MockOrderService)(nil).DeleteOrderItemByID), ctx, orderItemID, orderID)
 }
 
 // DeleteOrderPaymentByID mocks base method.
-func (m *MockOrderService) DeleteOrderPaymentByID(orderPaymentID, orderID int) error {
+func (m *MockOrderService) DeleteOrderPaymentByID(ctx context.Context, orderPaymentID, orderID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOrderPaymentByID", orderPaymentID, orderID)
+	ret := m.ctrl.Call(m, "DeleteOrderPaymentByID", ctx, orderPaymentID, orderID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteOrderPaymentByID indicates an expected call of DeleteOrderPaymentByID.
-func (mr *MockOrderServiceMockRecorder) DeleteOrderPaymentByID(orderPaymentID, orderID interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) DeleteOrderPaymentByID(ctx, orderPaymentID, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderPaymentByID", reflect.TypeOf((*MockOrderService)(nil).DeleteOrderPaymentByID), orderPaymentID, orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderPaymentByID", reflect.TypeOf((*MockOrderService)(nil).DeleteOrderPaymentByID), ctx, orderPaymentID, orderID)
 }
 
 // GenerateOrderInvoice mocks base method.
-func (m *MockOrderService) GenerateOrderInvoice(orderID, shopID int, message string) ([]byte, error) {
+func (m *MockOrderService) GenerateOrderInvoice(ctx context.Context, orderID, shopID int, message string) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateOrderInvoice", orderID, shopID, message)
+	ret := m.ctrl.Call(m, "GenerateOrderInvoice", ctx, orderID, shopID, message)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GenerateOrderInvoice indicates an expected call of GenerateOrderInvoice.
-func (mr *MockOrderServiceMockRecorder) GenerateOrderInvoice(orderID, shopID, message interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GenerateOrderInvoice(ctx, orderID, shopID, message interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOrderInvoice", reflect.TypeOf((*MockOrderService)(nil).GenerateOrderInvoice), orderID, shopID, message)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOrderInvoice", reflect.TypeOf((*MockOrderService)(nil).GenerateOrderInvoice), ctx, orderID, shopID, message)
 }
 
 // GetOrderByID mocks base method.
-func (m *MockOrderService) GetOrderByID(id int, shopID ...int) (*response.OrderData, error) {
+func (m *MockOrderService) GetOrderByID(ctx context.Context, id int, shopID ...int) (*response.OrderData, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{id}
+	varargs := []interface{}{ctx, id}
 	for _, a := range shopID {
 		varargs = append(varargs, a)
 	}
@@ -167,76 +168,76 @@ func (m *MockOrderService) GetOrderByID(id int, shopID ...int) (*response.OrderD
 }
 
 // GetOrderByID indicates an expected call of GetOrderByID.
-func (mr *MockOrderServiceMockRecorder) GetOrderByID(id interface{}, shopID ...interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GetOrderByID(ctx, id interface{}, shopID ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{id}, shopID...)
+	varargs := append([]interface{}{ctx, id}, shopID...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByID", reflect.TypeOf((*MockOrderService)(nil).GetOrderByID), varargs...)
 }
 
 // GetOrderItemByID mocks base method.
-func (m *MockOrderService) GetOrderItemByID(orderItemID, orderID int) (*response.OrderItemData, error) {
+func (m *MockOrderService) GetOrderItemByID(ctx context.Context, orderItemID, orderID int) (*response.OrderItemData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrderItemByID", orderItemID, orderID)
+	ret := m.ctrl.Call(m, "GetOrderItemByID", ctx, orderItemID, orderID)
 	ret0, _ := ret[0].(*response.OrderItemData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrderItemByID indicates an expected call of GetOrderItemByID.
-func (mr *MockOrderServiceMockRecorder) GetOrderItemByID(orderItemID, orderID interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GetOrderItemByID(ctx, orderItemID, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderItemByID", reflect.TypeOf((*MockOrderService)(nil).GetOrderItemByID), orderItemID, orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderItemByID", reflect.TypeOf((*MockOrderService)(nil).GetOrderItemByID), ctx, orderItemID, orderID)
 }
 
 // GetOrderItemsByOrderID mocks base method.
-func (m *MockOrderService) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error) {
+func (m *MockOrderService) GetOrderItemsByOrderID(ctx context.Context, orderID int) ([]response.OrderItemData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrderItemsByOrderID", orderID)
+	ret := m.ctrl.Call(m, "GetOrderItemsByOrderID", ctx, orderID)
 	ret0, _ := ret[0].([]response.OrderItemData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrderItemsByOrderID indicates an expected call of GetOrderItemsByOrderID.
-func (mr *MockOrderServiceMockRecorder) GetOrderItemsByOrderID(orderID interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GetOrderItemsByOrderID(ctx, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderItemsByOrderID", reflect.TypeOf((*MockOrderService)(nil).GetOrderItemsByOrderID), orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderItemsByOrderID", reflect.TypeOf((*MockOrderService)(nil).GetOrderItemsByOrderID), ctx, orderID)
 }
 
 // GetOrderPaymentsByOrderID mocks base method.
-func (m *MockOrderService) GetOrderPaymentsByOrderID(orderID int) ([]response.OrderPaymentData, error) {
+func (m *MockOrderService) GetOrderPaymentsByOrderID(ctx context.Context, orderID int) ([]response.OrderPaymentData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrderPaymentsByOrderID", orderID)
+	ret := m.ctrl.Call(m, "GetOrderPaymentsByOrderID", ctx, orderID)
 	ret0, _ := ret[0].([]response.OrderPaymentData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrderPaymentsByOrderID indicates an expected call of GetOrderPaymentsByOrderID.
-func (mr *MockOrderServiceMockRecorder) GetOrderPaymentsByOrderID(orderID interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GetOrderPaymentsByOrderID(ctx, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderPaymentsByOrderID", reflect.TypeOf((*MockOrderService)(nil).GetOrderPaymentsByOrderID), orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderPaymentsByOrderID", reflect.TypeOf((*MockOrderService)(nil).GetOrderPaymentsByOrderID), ctx, orderID)
 }
 
 // GetOrdersByShopID mocks base method.
-func (m *MockOrderService) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error) {
+func (m *MockOrderService) GetOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrdersByShopID", shopID, opts)
+	ret := m.ctrl.Call(m, "GetOrdersByShopID", ctx, shopID, opts)
 	ret0, _ := ret[0].([]response.OrderData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrdersByShopID indicates an expected call of GetOrdersByShopID.
-func (mr *MockOrderServiceMockRecorder) GetOrdersByShopID(shopID, opts interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GetOrdersByShopID(ctx, shopID, opts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByShopID", reflect.TypeOf((*MockOrderService)(nil).GetOrdersByShopID), shopID, opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByShopID", reflect.TypeOf((*MockOrderService)(nil).GetOrdersByShopID), ctx, shopID, opts)
 }
 
 // GetTempOrderByID mocks base method.
-func (m *MockOrderService) GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error) {
+func (m *MockOrderService) GetTempOrderByID(ctx context.Context, id int, shopID ...int) (*response.TempOrderData, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{id}
+	varargs := []interface{}{ctx, id}
 	for _, a := range shopID {
 		varargs = append(varargs, a)
 	}
@@ -247,98 +248,98 @@ func (m *MockOrderService) GetTempOrderByID(id int, shopID ...int) (*response.Te
 }
 
 // GetTempOrderByID indicates an expected call of GetTempOrderByID.
-func (mr *MockOrderServiceMockRecorder) GetTempOrderByID(id interface{}, shopID ...interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GetTempOrderByID(ctx, id interface{}, shopID ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{id}, shopID...)
+	varargs := append([]interface{}{ctx, id}, shopID...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTempOrderByID", reflect.TypeOf((*MockOrderService)(nil).GetTempOrderByID), varargs...)
 }
 
 // GetTempOrdersByShopID mocks base method.
-func (m *MockOrderService) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error) {
+func (m *MockOrderService) GetTempOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTempOrdersByShopID", shopID, opts)
+	ret := m.ctrl.Call(m, "GetTempOrdersByShopID", ctx, shopID, opts)
 	ret0, _ := ret[0].([]response.TempOrderData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTempOrdersByShopID indicates an expected call of GetTempOrdersByShopID.
-func (mr *MockOrderServiceMockRecorder) GetTempOrdersByShopID(shopID, opts interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) GetTempOrdersByShopID(ctx, shopID, opts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTempOrdersByShopID", reflect.TypeOf((*MockOrderService)(nil).GetTempOrdersByShopID), shopID, opts)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTempOrdersByShopID", reflect.TypeOf((*MockOrderService)(nil).GetTempOrdersByShopID), ctx, shopID, opts)
 }
 
 // MergeTempOrder mocks base method.
-func (m *MockOrderService) MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error) {
+func (m *MockOrderService) MergeTempOrder(ctx context.Context, tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MergeTempOrder", tempOrderID, customerID, shopID, activeOrderID)
+	ret := m.ctrl.Call(m, "MergeTempOrder", ctx, tempOrderID, customerID, shopID, activeOrderID)
 	ret0, _ := ret[0].(*response.OrderData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // MergeTempOrder indicates an expected call of MergeTempOrder.
-func (mr *MockOrderServiceMockRecorder) MergeTempOrder(tempOrderID, customerID, shopID, activeOrderID interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) MergeTempOrder(ctx, tempOrderID, customerID, shopID, activeOrderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MergeTempOrder", reflect.TypeOf((*MockOrderService)(nil).MergeTempOrder), tempOrderID, customerID, shopID, activeOrderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MergeTempOrder", reflect.TypeOf((*MockOrderService)(nil).MergeTempOrder), ctx, tempOrderID, customerID, shopID, activeOrderID)
 }
 
 // RejectTempOrderByID mocks base method.
-func (m *MockOrderService) RejectTempOrderByID(id int) (response.TempOrderData, error) {
+func (m *MockOrderService) RejectTempOrderByID(ctx context.Context, id int) (response.TempOrderData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RejectTempOrderByID", id)
+	ret := m.ctrl.Call(m, "RejectTempOrderByID", ctx, id)
 	ret0, _ := ret[0].(response.TempOrderData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RejectTempOrderByID indicates an expected call of RejectTempOrderByID.
-func (mr *MockOrderServiceMockRecorder) RejectTempOrderByID(id interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) RejectTempOrderByID(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectTempOrderByID", reflect.TypeOf((*MockOrderService)(nil).RejectTempOrderByID), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RejectTempOrderByID", reflect.TypeOf((*MockOrderService)(nil).RejectTempOrderByID), ctx, id)
 }
 
 // UpdateOrderByID mocks base method.
-func (m *MockOrderService) UpdateOrderByID(input service.UpdateOrderInput) (response.OrderData, error) {
+func (m *MockOrderService) UpdateOrderByID(ctx context.Context, input service.UpdateOrderInput) (response.OrderData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateOrderByID", input)
+	ret := m.ctrl.Call(m, "UpdateOrderByID", ctx, input)
 	ret0, _ := ret[0].(response.OrderData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateOrderByID indicates an expected call of UpdateOrderByID.
-func (mr *MockOrderServiceMockRecorder) UpdateOrderByID(input interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) UpdateOrderByID(ctx, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderByID", reflect.TypeOf((*MockOrderService)(nil).UpdateOrderByID), input)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderByID", reflect.TypeOf((*MockOrderService)(nil).UpdateOrderByID), ctx, input)
 }
 
 // UpdateOrderItemByID mocks base method.
-func (m *MockOrderService) UpdateOrderItemByID(input service.UpdateOrderItemInput) (response.OrderItemData, error) {
+func (m *MockOrderService) UpdateOrderItemByID(ctx context.Context, input service.UpdateOrderItemInput) (response.OrderItemData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateOrderItemByID", input)
+	ret := m.ctrl.Call(m, "UpdateOrderItemByID", ctx, input)
 	ret0, _ := ret[0].(response.OrderItemData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateOrderItemByID indicates an expected call of UpdateOrderItemByID.
-func (mr *MockOrderServiceMockRecorder) UpdateOrderItemByID(input interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) UpdateOrderItemByID(ctx, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderItemByID", reflect.TypeOf((*MockOrderService)(nil).UpdateOrderItemByID), input)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderItemByID", reflect.TypeOf((*MockOrderService)(nil).UpdateOrderItemByID), ctx, input)
 }
 
 // UpdateOrderPaymentAmountByID mocks base method.
-func (m *MockOrderService) UpdateOrderPaymentAmountByID(id, orderID, amount int) (response.OrderPaymentData, error) {
+func (m *MockOrderService) UpdateOrderPaymentAmountByID(ctx context.Context, id, orderID, amount int) (response.OrderPaymentData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateOrderPaymentAmountByID", id, orderID, amount)
+	ret := m.ctrl.Call(m, "UpdateOrderPaymentAmountByID", ctx, id, orderID, amount)
 	ret0, _ := ret[0].(response.OrderPaymentData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateOrderPaymentAmountByID indicates an expected call of UpdateOrderPaymentAmountByID.
-func (mr *MockOrderServiceMockRecorder) UpdateOrderPaymentAmountByID(id, orderID, amount interface{}) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) UpdateOrderPaymentAmountByID(ctx, id, orderID, amount interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderPaymentAmountByID", reflect.TypeOf((*MockOrderService)(nil).UpdateOrderPaymentAmountByID), id, orderID, amount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderPaymentAmountByID", reflect.TypeOf((*MockOrderService)(nil).UpdateOrderPaymentAmountByID), ctx, id, orderID, amount)
 }

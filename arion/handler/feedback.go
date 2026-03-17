@@ -26,6 +26,7 @@ import (
 //	@Failure		500			{object}	ErrorApiResponse
 //	@Router			/feedback [post]
 func CreateFeedbackHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if err := r.ParseMultipartForm(5 << 20); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_form")
 		return
@@ -48,7 +49,7 @@ func CreateFeedbackHandler(w http.ResponseWriter, r *http.Request) {
 	file, _, err := r.FormFile("image")
 	if err == nil {
 		defer file.Close()
-		url, err := feedbackService.UploadFeedbackImage(file)
+		url, err := feedbackService.UploadFeedbackImage(ctx, file)
 		if err != nil {
 			logger.WithError(err).Error("upload_feedback_image_error")
 			WriteErrorJson(w, r, http.StatusInternalServerError, err, "upload_feedback_image")
@@ -57,9 +58,9 @@ func CreateFeedbackHandler(w http.ResponseWriter, r *http.Request) {
 		imageURL = url
 	}
 
-	userID := r.Context().Value(common.UserIDKey).(int)
+	userID := ctx.Value(common.UserIDKey).(int)
 
-	if err := feedbackService.CreateFeedback(userID, feedbackType, title, description, imageURL); err != nil {
+	if err := feedbackService.CreateFeedback(ctx, userID, feedbackType, title, description, imageURL); err != nil {
 		logger.WithError(err).Error("create_feedback_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_feedback")
 		return

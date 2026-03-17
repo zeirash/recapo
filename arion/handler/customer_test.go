@@ -49,7 +49,7 @@ func TestCreateCustomerHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					CreateCustomer("John Doe", "08123456789", "123 Main St", 1).
+					CreateCustomer(gomock.Any(), "John Doe", "08123456789", "123 Main St", 1).
 					Return(response.CustomerData{
 						ID:        1,
 						Name:      "John Doe",
@@ -71,7 +71,7 @@ func TestCreateCustomerHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					CreateCustomer("John", "08123456789", "123 Main St", 1).
+					CreateCustomer(gomock.Any(), "John", "08123456789", "123 Main St", 1).
 					Return(response.CustomerData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -184,7 +184,7 @@ func TestGetCustomerHandler(t *testing.T) {
 			shopID:     1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					GetCustomerByID(1, 1).
+					GetCustomerByID(gomock.Any(), 1, 1).
 					Return(&response.CustomerData{
 						ID:        1,
 						Name:      "John Doe",
@@ -210,7 +210,7 @@ func TestGetCustomerHandler(t *testing.T) {
 			shopID:     1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					GetCustomerByID(999, 1).
+					GetCustomerByID(gomock.Any(), 999, 1).
 					Return(nil, errors.New(apierr.ErrCustomerNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
@@ -222,7 +222,7 @@ func TestGetCustomerHandler(t *testing.T) {
 			shopID:     1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					GetCustomerByID(1, 1).
+					GetCustomerByID(gomock.Any(), 1, 1).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -286,7 +286,7 @@ func TestGetCustomersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1, model.FilterOptions{}).
+					GetCustomersByShopID(gomock.Any(), 1, model.FilterOptions{}).
 					Return([]response.CustomerData{
 						{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "123 Main St", CreatedAt: fixedTime},
 						{ID: 2, Name: "Jane Doe", Phone: "08987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
@@ -303,7 +303,7 @@ func TestGetCustomersHandler(t *testing.T) {
 			mockSetup: func() {
 				q := "john"
 				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1, model.FilterOptions{SearchQuery: &q}).
+					GetCustomersByShopID(gomock.Any(), 1, model.FilterOptions{SearchQuery: &q}).
 					Return([]response.CustomerData{
 						{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "123 Main St", CreatedAt: fixedTime},
 					}, nil)
@@ -319,7 +319,7 @@ func TestGetCustomersHandler(t *testing.T) {
 			mockSetup: func() {
 				s := "name,asc"
 				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1, model.FilterOptions{Sort: &s}).
+					GetCustomersByShopID(gomock.Any(), 1, model.FilterOptions{Sort: &s}).
 					Return([]response.CustomerData{
 						{ID: 2, Name: "Jane Doe", Phone: "08987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
 						{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "123 Main St", CreatedAt: fixedTime},
@@ -335,7 +335,7 @@ func TestGetCustomersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					GetCustomersByShopID(1, model.FilterOptions{}).
+					GetCustomersByShopID(gomock.Any(), 1, model.FilterOptions{}).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
@@ -405,7 +405,7 @@ func TestUpdateCustomerHandler(t *testing.T) {
 				phone := "08111111111"
 				address := "Updated Address"
 				mockCustomerService.EXPECT().
-					UpdateCustomer(service.UpdateCustomerInput{
+					UpdateCustomer(gomock.Any(), service.UpdateCustomerInput{
 						ID:      1,
 						Name:    &name,
 						Phone:   &phone,
@@ -446,7 +446,7 @@ func TestUpdateCustomerHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					UpdateCustomer(gomock.Any()).
+					UpdateCustomer(gomock.Any(), gomock.Any()).
 					Return(response.CustomerData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -515,7 +515,7 @@ func TestDeleteCustomerHandler(t *testing.T) {
 			customerID: "1",
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					DeleteCustomerByID(1).
+					DeleteCustomerByID(gomock.Any(), 1).
 					Return(nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -533,7 +533,7 @@ func TestDeleteCustomerHandler(t *testing.T) {
 			customerID: "1",
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					DeleteCustomerByID(1).
+					DeleteCustomerByID(gomock.Any(), 1).
 					Return(errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -598,7 +598,7 @@ func TestCustomerCheckActiveOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					CheckActiveOrderByPhone("08123456789", "John", 1).
+					CheckActiveOrderByPhone(gomock.Any(), "08123456789", "John", 1).
 					Return(response.CustomerCheckActiveOrderByPhone{CustomerID: 1, ActiveOrderID: 1}, nil)
 			},
 			wantStatus:        http.StatusOK,
@@ -612,7 +612,7 @@ func TestCustomerCheckActiveOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					CheckActiveOrderByPhone("08987654321", "Jane", 1).
+					CheckActiveOrderByPhone(gomock.Any(), "08987654321", "Jane", 1).
 					Return(response.CustomerCheckActiveOrderByPhone{CustomerID: 5, ActiveOrderID: 0}, nil)
 			},
 			wantStatus:        http.StatusOK,
@@ -651,7 +651,7 @@ func TestCustomerCheckActiveOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockCustomerService.EXPECT().
-					CheckActiveOrderByPhone("08123456789", "John", 1).
+					CheckActiveOrderByPhone(gomock.Any(), "08123456789", "John", 1).
 					Return(response.CustomerCheckActiveOrderByPhone{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,

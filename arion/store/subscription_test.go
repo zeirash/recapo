@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"testing"
@@ -52,7 +53,7 @@ func Test_subscriptionStore_GetActivePlans(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &subscriptionStore{db: db}
-			got, gotErr := s.GetActivePlans()
+			got, gotErr := s.GetActivePlans(context.Background())
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -129,7 +130,7 @@ func Test_subscriptionStore_GetSubscriptionByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &subscriptionStore{db: db}
-			got, gotErr := s.GetSubscriptionByShopID(tt.shopID)
+			got, gotErr := s.GetSubscriptionByShopID(context.Background(), tt.shopID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -202,7 +203,7 @@ func Test_subscriptionStore_CreateTrialSubscription(t *testing.T) {
 			}
 
 			s := &subscriptionStore{db: db}
-			_, gotErr := s.CreateTrialSubscription(tx, tt.shopID, tt.planID, trialEnd)
+			_, gotErr := s.CreateTrialSubscription(context.Background(), tx, tt.shopID, tt.planID, trialEnd)
 
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("CreateTrialSubscription() error = %v, wantErr %v", gotErr, tt.wantErr)
@@ -272,7 +273,7 @@ func Test_subscriptionStore_GetPlanByID(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &subscriptionStore{db: db}
-			got, gotErr := s.GetPlanByID(tt.planID)
+			got, gotErr := s.GetPlanByID(context.Background(), tt.planID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("GetPlanByID() failed: %v", gotErr)
@@ -361,7 +362,7 @@ func Test_subscriptionStore_UpdateSubscriptionStatus(t *testing.T) {
 			}
 
 			s := &subscriptionStore{db: db}
-			gotErr := s.UpdateSubscriptionStatus(tx, tt.subID, tt.status, tt.periodEnd)
+			gotErr := s.UpdateSubscriptionStatus(context.Background(), tx, tt.subID, tt.status, tt.periodEnd)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("UpdateSubscriptionStatus() failed: %v", gotErr)
@@ -435,7 +436,7 @@ func Test_subscriptionStore_CreatePayment(t *testing.T) {
 			}
 
 			s := &subscriptionStore{db: db}
-			got, gotErr := s.CreatePayment(tx, tt.shopID, tt.subscriptionID, tt.planID, tt.midtransOrderID, tt.amountIDR)
+			got, gotErr := s.CreatePayment(context.Background(), tx, tt.shopID, tt.subscriptionID, tt.planID, tt.midtransOrderID, tt.amountIDR)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("CreatePayment() failed: %v", gotErr)
@@ -511,7 +512,7 @@ func Test_subscriptionStore_GetPaymentByMidtransOrderID(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &subscriptionStore{db: db}
-			got, gotErr := s.GetPaymentByMidtransOrderID(tt.orderID)
+			got, gotErr := s.GetPaymentByMidtransOrderID(context.Background(), tt.orderID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("GetPaymentByMidtransOrderID() failed: %v", gotErr)
@@ -587,7 +588,7 @@ func Test_subscriptionStore_UpdatePaymentSettled(t *testing.T) {
 			}
 
 			s := &subscriptionStore{db: db}
-			gotErr := s.UpdatePaymentSettled(tx, tt.paymentID, tt.midtransTxnID, tt.paidAt)
+			gotErr := s.UpdatePaymentSettled(context.Background(), tx, tt.paymentID, tt.midtransTxnID, tt.paidAt)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("UpdatePaymentSettled() failed: %v", gotErr)
@@ -649,7 +650,7 @@ func Test_subscriptionStore_UpdatePaymentFailed(t *testing.T) {
 			}
 
 			s := &subscriptionStore{db: db}
-			gotErr := s.UpdatePaymentFailed(tx, tt.paymentID, tt.status)
+			gotErr := s.UpdatePaymentFailed(context.Background(), tx, tt.paymentID, tt.status)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("UpdatePaymentFailed() failed: %v", gotErr)
@@ -707,7 +708,7 @@ func Test_subscriptionStore_UpdatePaymentSnapInfo(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &subscriptionStore{db: db}
-			gotErr := s.UpdatePaymentSnapInfo(tt.paymentID, tt.snapToken, tt.redirectURL)
+			gotErr := s.UpdatePaymentSnapInfo(context.Background(), tt.paymentID, tt.snapToken, tt.redirectURL)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("UpdatePaymentSnapInfo() failed: %v", gotErr)
@@ -770,7 +771,7 @@ func Test_subscriptionStore_ExpireSubscriptions(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &subscriptionStore{db: db}
-			got, gotErr := s.ExpireSubscriptions()
+			got, gotErr := s.ExpireSubscriptions(context.Background())
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("ExpireSubscriptions() failed: %v", gotErr)
@@ -832,7 +833,7 @@ func Test_subscriptionStore_CancelSubscription(t *testing.T) {
 			}
 
 			s := &subscriptionStore{db: db}
-			gotErr := s.CancelSubscription(tx, tt.subID)
+			gotErr := s.CancelSubscription(context.Background(), tx, tt.subID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("CancelSubscription() failed: %v", gotErr)

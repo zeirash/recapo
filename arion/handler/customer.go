@@ -28,8 +28,8 @@ type (
 
 	// CheckActiveOrderRequest is the body for POST /customers/check_active_order. Phone required; name and address optional (used when creating customer).
 	CheckActiveOrderRequest struct {
-		Phone   string `json:"phone"`
-		Name    string `json:"name"`
+		Phone string `json:"phone"`
+		Name  string `json:"name"`
 	}
 )
 
@@ -62,7 +62,7 @@ func CreateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := customerService.CreateCustomer(inp.Name, inp.Phone, inp.Address, shopID)
+	res, err := customerService.CreateCustomer(ctx, inp.Name, inp.Phone, inp.Address, shopID)
 	if err != nil {
 		logger.WithError(err).Error("create_customer_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_customer")
@@ -99,7 +99,7 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	customerIDInt, _ := strconv.Atoi(params["customer_id"])
 
-	res, err := customerService.GetCustomerByID(customerIDInt, shopID)
+	res, err := customerService.GetCustomerByID(ctx, customerIDInt, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrCustomerNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -139,7 +139,7 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 		filter.Sort = &sort
 	}
 
-	res, err := customerService.GetCustomersByShopID(int(shopID), filter)
+	res, err := customerService.GetCustomersByShopID(ctx, int(shopID), filter)
 	if err != nil {
 		logger.WithError(err).Error("get_customers_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_customers")
@@ -165,6 +165,7 @@ func GetCustomersHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/customers/{customer_id} [patch]
 func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateCustomerID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -179,7 +180,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := customerService.UpdateCustomer(service.UpdateCustomerInput{
+	res, err := customerService.UpdateCustomer(ctx, service.UpdateCustomerInput{
 		ID:      customerIDInt,
 		Name:    inp.Name,
 		Phone:   inp.Phone,
@@ -209,6 +210,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/customers/{customer_id} [delete]
 func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateCustomerID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -217,7 +219,7 @@ func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	customerIDInt, _ := strconv.Atoi(params["customer_id"])
 
-	err := customerService.DeleteCustomerByID(customerIDInt)
+	err := customerService.DeleteCustomerByID(ctx, customerIDInt)
 	if err != nil {
 		logger.WithError(err).Error("delete_customer_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_customer")
@@ -255,7 +257,7 @@ func CustomerCheckActiveOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := customerService.CheckActiveOrderByPhone(inp.Phone, inp.Name, shopID)
+	res, err := customerService.CheckActiveOrderByPhone(ctx, inp.Phone, inp.Name, shopID)
 	if err != nil {
 		logger.WithError(err).Error("check_active_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "check_active_order")

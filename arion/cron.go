@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/zeirash/recapo/arion/common/logger"
@@ -25,7 +26,7 @@ func runDailyCron() {
 }
 
 func runExpireSubscriptions(svc service.SubscriptionService) {
-	if err := svc.ExpireSubscriptions(); err != nil {
+	if err := svc.ExpireSubscriptions(context.Background()); err != nil {
 		logger.WithError(err).Error("expire_subscriptions_cron_error")
 	}
 }

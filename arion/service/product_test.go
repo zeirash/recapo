@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"bytes"
 	"database/sql"
 	"errors"
@@ -53,7 +54,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product A", strPtr("A great product"), 1000, 10, nil, nil).
+					CreateProduct(gomock.Any(), "Product A", strPtr("A great product"), 1000, 10, nil, nil).
 					Return(&model.Product{
 						ID:            1,
 						Name:          "Product A",
@@ -86,7 +87,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product B", nil, 500, 10, nil, nil).
+					CreateProduct(gomock.Any(), "Product B", nil, 500, 10, nil, nil).
 					Return(&model.Product{
 						ID:            2,
 						Name:          "Product B",
@@ -117,7 +118,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					CreateProduct("Product A", nil, 1000, 10, nil, nil).
+					CreateProduct(gomock.Any(), "Product A", nil, 1000, 10, nil, nil).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -136,7 +137,7 @@ func Test_pservice_CreateProduct(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			got, gotErr := p.CreateProduct(tt.input.shopID, tt.input.name, tt.input.description, tt.input.price, tt.input.originalPrice, tt.input.imageURL)
+			got, gotErr := p.CreateProduct(context.Background(), tt.input.shopID, tt.input.name, tt.input.description, tt.input.price, tt.input.originalPrice, tt.input.imageURL)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -179,7 +180,7 @@ func Test_pservice_GetProductByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductByID(1).
+					GetProductByID(gomock.Any(), 1).
 					Return(&model.Product{
 						ID:            1,
 						Name:          "Product A",
@@ -211,7 +212,7 @@ func Test_pservice_GetProductByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductByID(1, 10).
+					GetProductByID(gomock.Any(), 1, 10).
 					Return(&model.Product{
 						ID:            1,
 						Name:          "Product A",
@@ -241,7 +242,7 @@ func Test_pservice_GetProductByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductByID(9999).
+					GetProductByID(gomock.Any(), 9999).
 					Return(nil, nil)
 				return mock
 			},
@@ -257,7 +258,7 @@ func Test_pservice_GetProductByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductByID(1).
+					GetProductByID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -276,7 +277,7 @@ func Test_pservice_GetProductByID(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			got, gotErr := p.GetProductByID(tt.input.productID, tt.input.shopID...)
+			got, gotErr := p.GetProductByID(context.Background(), tt.input.productID, tt.input.shopID...)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -315,7 +316,7 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsByShopID(10, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 10, model.FilterOptions{}).
 					Return([]model.Product{
 						{ID: 1, Name: "Product A", Description: "Desc A", Price: 1000, OriginalPrice: 800, CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
 						{ID: 2, Name: "Product B", Price: 500, OriginalPrice: 500, CreatedAt: fixedTime},
@@ -335,7 +336,7 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsByShopID(10, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 10, model.FilterOptions{}).
 					Return([]model.Product{}, nil)
 				return mock
 			},
@@ -349,7 +350,7 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsByShopID(10, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 10, model.FilterOptions{}).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -363,7 +364,7 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsByShopID(10, model.FilterOptions{SearchQuery: strPtr("widget")}).
+					GetProductsByShopID(gomock.Any(), 10, model.FilterOptions{SearchQuery: strPtr("widget")}).
 					Return([]model.Product{
 						{ID: 1, Name: "Widget A", Description: "A useful widget", Price: 1000, OriginalPrice: 800, CreatedAt: fixedTime},
 					}, nil)
@@ -386,7 +387,7 @@ func Test_pservice_GetProductsByShopID(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			got, gotErr := p.GetProductsByShopID(tt.shopID, tt.filter)
+			got, gotErr := p.GetProductsByShopID(context.Background(), tt.shopID, tt.filter)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -428,7 +429,7 @@ func Test_pservice_UpdateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					UpdateProduct(1, store.UpdateProductInput{Name: strPtr("Updated Product")}).
+					UpdateProduct(gomock.Any(), 1, store.UpdateProductInput{Name: strPtr("Updated Product")}).
 					Return(&model.Product{
 						ID:            1,
 						Name:          "Updated Product",
@@ -460,7 +461,7 @@ func Test_pservice_UpdateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					UpdateProduct(1, store.UpdateProductInput{Price: intPtr(2000)}).
+					UpdateProduct(gomock.Any(), 1, store.UpdateProductInput{Price: intPtr(2000)}).
 					Return(&model.Product{
 						ID:            1,
 						Name:          "Product A",
@@ -492,7 +493,7 @@ func Test_pservice_UpdateProduct(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					UpdateProduct(1, store.UpdateProductInput{Name: strPtr("Updated")}).
+					UpdateProduct(gomock.Any(), 1, store.UpdateProductInput{Name: strPtr("Updated")}).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -511,7 +512,7 @@ func Test_pservice_UpdateProduct(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			got, gotErr := p.UpdateProduct(tt.input)
+			got, gotErr := p.UpdateProduct(context.Background(), tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -543,7 +544,7 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					DeleteProductByID(1).
+					DeleteProductByID(gomock.Any(), 1).
 					Return(nil)
 				return mock
 			},
@@ -555,7 +556,7 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					DeleteProductByID(1).
+					DeleteProductByID(gomock.Any(), 1).
 					Return(errors.New("database error"))
 				return mock
 			},
@@ -573,7 +574,7 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			gotErr := p.DeleteProductByID(tt.id)
+			gotErr := p.DeleteProductByID(context.Background(), tt.id)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -654,7 +655,7 @@ func Test_pservice_UploadProductImage(t *testing.T) {
 			}
 
 			var p pservice
-			got, gotErr := p.UploadProductImage(bytes.NewReader(tt.fileContent))
+			got, gotErr := p.UploadProductImage(context.Background(), bytes.NewReader(tt.fileContent))
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -757,7 +758,7 @@ func Test_pservice_DeleteProductImage(t *testing.T) {
 			}
 
 			var p pservice
-			gotErr := p.DeleteProductImage(tt.imageURL(t))
+			gotErr := p.DeleteProductImage(context.Background(), tt.imageURL(t))
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -789,7 +790,7 @@ func Test_pservice_GetPurchaseListProducts(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsListByActiveOrders(10).
+					GetProductsListByActiveOrders(gomock.Any(), 10).
 					Return([]model.PurchaseProduct{
 						{ProductName: "Product A", Price: 1000, Qty: 5},
 						{ProductName: "Product B", Price: 2000, Qty: 3},
@@ -808,7 +809,7 @@ func Test_pservice_GetPurchaseListProducts(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsListByActiveOrders(20).
+					GetProductsListByActiveOrders(gomock.Any(), 20).
 					Return([]model.PurchaseProduct{}, nil)
 				return mock
 			},
@@ -821,7 +822,7 @@ func Test_pservice_GetPurchaseListProducts(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockProductStore {
 				mock := mock_store.NewMockProductStore(ctrl)
 				mock.EXPECT().
-					GetProductsListByActiveOrders(10).
+					GetProductsListByActiveOrders(gomock.Any(), 10).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -839,7 +840,7 @@ func Test_pservice_GetPurchaseListProducts(t *testing.T) {
 			productStore = tt.mockSetup(ctrl)
 
 			var p pservice
-			got, gotErr := p.GetPurchaseListProducts(tt.shopID)
+			got, gotErr := p.GetPurchaseListProducts(context.Background(), tt.shopID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("GetPurchaseListProducts() error = %v, wantErr %v", gotErr, tt.wantErr)

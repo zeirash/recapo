@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -10,18 +11,18 @@ import (
 
 type (
 	SubscriptionStore interface {
-		GetActivePlans() ([]model.Plan, error)
-		GetPlanByID(planID int) (*model.Plan, error)
-		GetSubscriptionByShopID(shopID int) (*model.Subscription, error)
-		CreateTrialSubscription(tx database.Tx, shopID, planID int, trialEndsAt time.Time) (*model.Subscription, error)
-		UpdateSubscriptionStatus(tx database.Tx, subID int, status string, periodEnd *time.Time) error
-		CreatePayment(tx database.Tx, shopID, subscriptionID, planID int, midtransOrderID string, amountIDR int) (*model.Payment, error)
-		GetPaymentByMidtransOrderID(orderID string) (*model.Payment, error)
-		UpdatePaymentSettled(tx database.Tx, paymentID int, midtransTxnID string, paidAt time.Time) error
-		UpdatePaymentFailed(tx database.Tx, paymentID int, status string) error
-		UpdatePaymentSnapInfo(paymentID int, snapToken, redirectURL string) error
-		CancelSubscription(tx database.Tx, subID int) error
-		ExpireSubscriptions() (int64, error)
+		GetActivePlans(ctx context.Context) ([]model.Plan, error)
+		GetPlanByID(ctx context.Context, planID int) (*model.Plan, error)
+		GetSubscriptionByShopID(ctx context.Context, shopID int) (*model.Subscription, error)
+		CreateTrialSubscription(ctx context.Context, tx database.Tx, shopID, planID int, trialEndsAt time.Time) (*model.Subscription, error)
+		UpdateSubscriptionStatus(ctx context.Context, tx database.Tx, subID int, status string, periodEnd *time.Time) error
+		CreatePayment(ctx context.Context, tx database.Tx, shopID, subscriptionID, planID int, midtransOrderID string, amountIDR int) (*model.Payment, error)
+		GetPaymentByMidtransOrderID(ctx context.Context, orderID string) (*model.Payment, error)
+		UpdatePaymentSettled(ctx context.Context, tx database.Tx, paymentID int, midtransTxnID string, paidAt time.Time) error
+		UpdatePaymentFailed(ctx context.Context, tx database.Tx, paymentID int, status string) error
+		UpdatePaymentSnapInfo(ctx context.Context, paymentID int, snapToken, redirectURL string) error
+		CancelSubscription(ctx context.Context, tx database.Tx, subID int) error
+		ExpireSubscriptions(ctx context.Context) (int64, error)
 	}
 
 	subscriptionStore struct {
@@ -37,14 +38,14 @@ func NewSubscriptionStoreWithDB(db *sql.DB) SubscriptionStore {
 	return &subscriptionStore{db: db}
 }
 
-func (s *subscriptionStore) GetActivePlans() ([]model.Plan, error) {
+func (s *subscriptionStore) GetActivePlans(ctx context.Context) ([]model.Plan, error) {
 	q := `
 		SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at
 		FROM plans
 		WHERE is_active = TRUE
 		ORDER BY price_idr ASC
 	`
-	rows, err := s.db.Query(q)
+	rows, err := s.db.QueryContext(ctx, q)
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +62,14 @@ func (s *subscriptionStore) GetActivePlans() ([]model.Plan, error) {
 	return plans, rows.Err()
 }
 
-func (s *subscriptionStore) GetPlanByID(planID int) (*model.Plan, error) {
+func (s *subscriptionStore) GetPlanByID(ctx context.Context, planID int) (*model.Plan, error) {
 	q := `
 		SELECT id, name, display_name, description_en, description_id, price_idr, max_users, is_active, created_at, updated_at
 		FROM plans
 		WHERE id = $1
 	`
 	var p model.Plan
-	err := s.db.QueryRow(q, planID).Scan(&p.ID, &p.Name, &p.DisplayName, &p.DescriptionEN, &p.DescriptionID, &p.PriceIDR, &p.MaxUsers, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+	err := s.db.QueryRowContext(ctx, q, planID).Scan(&p.ID, &p.Name, &p.DisplayName, &p.DescriptionEN, &p.DescriptionID, &p.PriceIDR, &p.MaxUsers, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -78,7 +79,7 @@ func (s *subscriptionStore) GetPlanByID(planID int) (*model.Plan, error) {
 	return &p, nil
 }
 
-func (s *subscriptionStore) GetSubscriptionByShopID(shopID int) (*model.Subscription, error) {
+func (s *subscriptionStore) GetSubscriptionByShopID(ctx context.Context, shopID int) (*model.Subscription, error) {
 	q := `
 		SELECT id, shop_id, plan_id, status, trial_ends_at, current_period_start, current_period_end, cancelled_at, created_at, updated_at
 		FROM subscriptions
@@ -87,7 +88,7 @@ func (s *subscriptionStore) GetSubscriptionByShopID(shopID int) (*model.Subscrip
 		LIMIT 1
 	`
 	var sub model.Subscription
-	err := s.db.QueryRow(q, shopID).Scan(
+	err := s.db.QueryRowContext(ctx, q, shopID).Scan(
 		&sub.ID, &sub.ShopID, &sub.PlanID, &sub.Status,
 		&sub.TrialEndsAt, &sub.CurrentPeriodStart, &sub.CurrentPeriodEnd,
 		&sub.CancelledAt, &sub.CreatedAt, &sub.UpdatedAt,
@@ -101,7 +102,7 @@ func (s *subscriptionStore) GetSubscriptionByShopID(shopID int) (*model.Subscrip
 	return &sub, nil
 }
 
-func (s *subscriptionStore) CreateTrialSubscription(tx database.Tx, shopID, planID int, trialEndsAt time.Time) (*model.Subscription, error) {
+func (s *subscriptionStore) CreateTrialSubscription(ctx context.Context, tx database.Tx, shopID, planID int, trialEndsAt time.Time) (*model.Subscription, error) {
 	now := time.Now()
 	q := `
 		INSERT INTO subscriptions (shop_id, plan_id, status, trial_ends_at, current_period_start, current_period_end, created_at)
@@ -109,7 +110,7 @@ func (s *subscriptionStore) CreateTrialSubscription(tx database.Tx, shopID, plan
 		RETURNING id
 	`
 	var id int
-	err := tx.QueryRow(q, shopID, planID, trialEndsAt, now, trialEndsAt, now).Scan(&id)
+	err := tx.QueryRowContext(ctx, q, shopID, planID, trialEndsAt, now, trialEndsAt, now).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -125,19 +126,19 @@ func (s *subscriptionStore) CreateTrialSubscription(tx database.Tx, shopID, plan
 	}, nil
 }
 
-func (s *subscriptionStore) UpdateSubscriptionStatus(tx database.Tx, subID int, status string, periodEnd *time.Time) error {
+func (s *subscriptionStore) UpdateSubscriptionStatus(ctx context.Context, tx database.Tx, subID int, status string, periodEnd *time.Time) error {
 	now := time.Now()
 	if periodEnd != nil {
 		q := `UPDATE subscriptions SET status = $1, current_period_start = $2, current_period_end = $3, updated_at = $2 WHERE id = $4`
-		_, err := tx.Exec(q, status, now, *periodEnd, subID)
+		_, err := tx.ExecContext(ctx, q, status, now, *periodEnd, subID)
 		return err
 	}
 	q := `UPDATE subscriptions SET status = $1, updated_at = $2 WHERE id = $3`
-	_, err := tx.Exec(q, status, now, subID)
+	_, err := tx.ExecContext(ctx, q, status, now, subID)
 	return err
 }
 
-func (s *subscriptionStore) CreatePayment(tx database.Tx, shopID, subscriptionID, planID int, midtransOrderID string, amountIDR int) (*model.Payment, error) {
+func (s *subscriptionStore) CreatePayment(ctx context.Context, tx database.Tx, shopID, subscriptionID, planID int, midtransOrderID string, amountIDR int) (*model.Payment, error) {
 	now := time.Now()
 	q := `
 		INSERT INTO payments (shop_id, subscription_id, plan_id, midtrans_order_id, amount_idr, status, created_at)
@@ -145,7 +146,7 @@ func (s *subscriptionStore) CreatePayment(tx database.Tx, shopID, subscriptionID
 		RETURNING id
 	`
 	var id int
-	err := tx.QueryRow(q, shopID, subscriptionID, planID, midtransOrderID, amountIDR, now).Scan(&id)
+	err := tx.QueryRowContext(ctx, q, shopID, subscriptionID, planID, midtransOrderID, amountIDR, now).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +162,7 @@ func (s *subscriptionStore) CreatePayment(tx database.Tx, shopID, subscriptionID
 	}, nil
 }
 
-func (s *subscriptionStore) GetPaymentByMidtransOrderID(orderID string) (*model.Payment, error) {
+func (s *subscriptionStore) GetPaymentByMidtransOrderID(ctx context.Context, orderID string) (*model.Payment, error) {
 	q := `
 		SELECT id, shop_id, subscription_id, plan_id, midtrans_order_id, COALESCE(midtrans_txn_id, ''),
 		       amount_idr, status, COALESCE(snap_token, ''), COALESCE(redirect_url, ''), paid_at, created_at, updated_at
@@ -169,7 +170,7 @@ func (s *subscriptionStore) GetPaymentByMidtransOrderID(orderID string) (*model.
 		WHERE midtrans_order_id = $1
 	`
 	var p model.Payment
-	err := s.db.QueryRow(q, orderID).Scan(
+	err := s.db.QueryRowContext(ctx, q, orderID).Scan(
 		&p.ID, &p.ShopID, &p.SubscriptionID, &p.PlanID, &p.MidtransOrderID, &p.MidtransTxnID,
 		&p.AmountIDR, &p.Status, &p.SnapToken, &p.RedirectURL, &p.PaidAt, &p.CreatedAt, &p.UpdatedAt,
 	)
@@ -182,44 +183,44 @@ func (s *subscriptionStore) GetPaymentByMidtransOrderID(orderID string) (*model.
 	return &p, nil
 }
 
-func (s *subscriptionStore) UpdatePaymentSettled(tx database.Tx, paymentID int, midtransTxnID string, paidAt time.Time) error {
+func (s *subscriptionStore) UpdatePaymentSettled(ctx context.Context, tx database.Tx, paymentID int, midtransTxnID string, paidAt time.Time) error {
 	now := time.Now()
 	q := `UPDATE payments SET status = 'settlement', midtrans_txn_id = $1, paid_at = $2, updated_at = $3 WHERE id = $4`
-	_, err := tx.Exec(q, midtransTxnID, paidAt, now, paymentID)
+	_, err := tx.ExecContext(ctx, q, midtransTxnID, paidAt, now, paymentID)
 	return err
 }
 
-func (s *subscriptionStore) UpdatePaymentFailed(tx database.Tx, paymentID int, status string) error {
+func (s *subscriptionStore) UpdatePaymentFailed(ctx context.Context, tx database.Tx, paymentID int, status string) error {
 	now := time.Now()
 	q := `UPDATE payments SET status = $1, updated_at = $2 WHERE id = $3`
-	_, err := tx.Exec(q, status, now, paymentID)
+	_, err := tx.ExecContext(ctx, q, status, now, paymentID)
 	return err
 }
 
-func (s *subscriptionStore) ExpireSubscriptions() (int64, error) {
+func (s *subscriptionStore) ExpireSubscriptions(ctx context.Context) (int64, error) {
 	now := time.Now()
 	q := `
 		UPDATE subscriptions
 		SET status = 'expired', updated_at = $1
 		WHERE status = 'active' AND current_period_end < $1
 	`
-	res, err := s.db.Exec(q, now)
+	res, err := s.db.ExecContext(ctx, q, now)
 	if err != nil {
 		return 0, err
 	}
 	return res.RowsAffected()
 }
 
-func (s *subscriptionStore) CancelSubscription(tx database.Tx, subID int) error {
+func (s *subscriptionStore) CancelSubscription(ctx context.Context, tx database.Tx, subID int) error {
 	now := time.Now()
 	q := `UPDATE subscriptions SET status = 'cancelled', cancelled_at = $1, updated_at = $1 WHERE id = $2`
-	_, err := tx.Exec(q, now, subID)
+	_, err := tx.ExecContext(ctx, q, now, subID)
 	return err
 }
 
-func (s *subscriptionStore) UpdatePaymentSnapInfo(paymentID int, snapToken, redirectURL string) error {
+func (s *subscriptionStore) UpdatePaymentSnapInfo(ctx context.Context, paymentID int, snapToken, redirectURL string) error {
 	now := time.Now()
 	q := `UPDATE payments SET snap_token = $1, redirect_url = $2, updated_at = $3 WHERE id = $4`
-	_, err := s.db.Exec(q, snapToken, redirectURL, now, paymentID)
+	_, err := s.db.ExecContext(ctx, q, snapToken, redirectURL, now, paymentID)
 	return err
 }

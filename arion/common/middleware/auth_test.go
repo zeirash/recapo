@@ -78,7 +78,7 @@ func TestAuthentication(t *testing.T) {
 			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
-					IsAuthorized("sometoken", gomock.Any()).
+					IsAuthorized(gomock.Any(), "sometoken", gomock.Any()).
 					Return(false, errors.New("token expired"))
 				return mock
 			},
@@ -94,7 +94,7 @@ func TestAuthentication(t *testing.T) {
 			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
-					IsAuthorized("sometoken", gomock.Any()).
+					IsAuthorized(gomock.Any(), "sometoken", gomock.Any()).
 					Return(false, nil)
 				return mock
 			},
@@ -110,10 +110,10 @@ func TestAuthentication(t *testing.T) {
 			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
-					IsAuthorized("sometoken", gomock.Any()).
+					IsAuthorized(gomock.Any(), "sometoken", gomock.Any()).
 					Return(true, nil)
 				mock.EXPECT().
-					ExtractDataFromToken("sometoken", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "sometoken", gomock.Any()).
 					Return(model.TokenData{}, errors.New("malformed claims"))
 				return mock
 			},
@@ -129,17 +129,17 @@ func TestAuthentication(t *testing.T) {
 			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
-					IsAuthorized("sometoken", gomock.Any()).
+					IsAuthorized(gomock.Any(), "sometoken", gomock.Any()).
 					Return(true, nil)
 				mock.EXPECT().
-					ExtractDataFromToken("sometoken", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "sometoken", gomock.Any()).
 					Return(model.TokenData{UserID: 10, ShopID: 3, SystemMode: false}, nil)
 				return mock
 			},
 			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(10).
+					GetUserByID(gomock.Any(), 10).
 					Return(&model.User{ID: 10}, nil)
 				return mock
 			},
@@ -152,10 +152,10 @@ func TestAuthentication(t *testing.T) {
 			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
-					IsAuthorized("sometoken", gomock.Any()).
+					IsAuthorized(gomock.Any(), "sometoken", gomock.Any()).
 					Return(true, nil)
 				mock.EXPECT().
-					ExtractDataFromToken("sometoken", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "sometoken", gomock.Any()).
 					Return(model.TokenData{UserID: 10, ShopID: 3, SystemMode: false, SessionToken: "abc123"}, nil)
 				return mock
 			},
@@ -163,7 +163,7 @@ func TestAuthentication(t *testing.T) {
 				dbUser := &model.User{ID: 10, SessionToken: sqlNullString("abc123")}
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(10).
+					GetUserByID(gomock.Any(), 10).
 					Return(dbUser, nil)
 				return mock
 			},
@@ -176,10 +176,10 @@ func TestAuthentication(t *testing.T) {
 			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
-					IsAuthorized("sometoken", gomock.Any()).
+					IsAuthorized(gomock.Any(), "sometoken", gomock.Any()).
 					Return(true, nil)
 				mock.EXPECT().
-					ExtractDataFromToken("sometoken", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "sometoken", gomock.Any()).
 					Return(model.TokenData{UserID: 10, ShopID: 3, SystemMode: false, SessionToken: "old_token"}, nil)
 				return mock
 			},
@@ -190,7 +190,7 @@ func TestAuthentication(t *testing.T) {
 				}
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(10).
+					GetUserByID(gomock.Any(), 10).
 					Return(&dbUser, nil)
 				return mock
 			},
@@ -203,17 +203,17 @@ func TestAuthentication(t *testing.T) {
 			tokenStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockTokenStore {
 				mock := mock_store.NewMockTokenStore(ctrl)
 				mock.EXPECT().
-					IsAuthorized("sometoken", gomock.Any()).
+					IsAuthorized(gomock.Any(), "sometoken", gomock.Any()).
 					Return(true, nil)
 				mock.EXPECT().
-					ExtractDataFromToken("sometoken", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "sometoken", gomock.Any()).
 					Return(model.TokenData{UserID: 10, ShopID: 3, SystemMode: false}, nil)
 				return mock
 			},
 			userStoreMockFn: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(10).
+					GetUserByID(gomock.Any(), 10).
 					Return(nil, errors.New("db error"))
 				return mock
 			},

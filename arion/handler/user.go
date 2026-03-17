@@ -21,7 +21,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := ctx.Value(common.UserIDKey).(int)
 
-	res, err := userService.GetUserByID(int(userID))
+	res, err := userService.GetUserByID(ctx, int(userID))
 	if err != nil {
 		if err.Error() == apierr.ErrUserNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -48,7 +48,8 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/users [get]
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	res, err := userService.GetUsers()
+	ctx := r.Context()
+	res, err := userService.GetUsers(ctx)
 	if err != nil {
 		logger.WithError(err).Error("get_users_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_users")
@@ -82,7 +83,7 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := userService.UpdateUser(service.UpdateUserInput{
+	res, err := userService.UpdateUser(ctx, service.UpdateUserInput{
 		ID:       int(userID),
 		Name:     inp.Name,
 		Email:    inp.Email,

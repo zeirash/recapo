@@ -5,6 +5,7 @@
 package mock_store
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -36,74 +37,74 @@ func (m *MockOrderPaymentStore) EXPECT() *MockOrderPaymentStoreMockRecorder {
 }
 
 // CreateOrderPayment mocks base method.
-func (m *MockOrderPaymentStore) CreateOrderPayment(tx database.Tx, orderID, amount int) (*model.OrderPayment, error) {
+func (m *MockOrderPaymentStore) CreateOrderPayment(ctx context.Context, tx database.Tx, orderID, amount int) (*model.OrderPayment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrderPayment", tx, orderID, amount)
+	ret := m.ctrl.Call(m, "CreateOrderPayment", ctx, tx, orderID, amount)
 	ret0, _ := ret[0].(*model.OrderPayment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateOrderPayment indicates an expected call of CreateOrderPayment.
-func (mr *MockOrderPaymentStoreMockRecorder) CreateOrderPayment(tx, orderID, amount interface{}) *gomock.Call {
+func (mr *MockOrderPaymentStoreMockRecorder) CreateOrderPayment(ctx, tx, orderID, amount interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrderPayment", reflect.TypeOf((*MockOrderPaymentStore)(nil).CreateOrderPayment), tx, orderID, amount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrderPayment", reflect.TypeOf((*MockOrderPaymentStore)(nil).CreateOrderPayment), ctx, tx, orderID, amount)
 }
 
 // DeleteOrderPaymentByID mocks base method.
-func (m *MockOrderPaymentStore) DeleteOrderPaymentByID(id, orderID int) error {
+func (m *MockOrderPaymentStore) DeleteOrderPaymentByID(ctx context.Context, id, orderID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOrderPaymentByID", id, orderID)
+	ret := m.ctrl.Call(m, "DeleteOrderPaymentByID", ctx, id, orderID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteOrderPaymentByID indicates an expected call of DeleteOrderPaymentByID.
-func (mr *MockOrderPaymentStoreMockRecorder) DeleteOrderPaymentByID(id, orderID interface{}) *gomock.Call {
+func (mr *MockOrderPaymentStoreMockRecorder) DeleteOrderPaymentByID(ctx, id, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderPaymentByID", reflect.TypeOf((*MockOrderPaymentStore)(nil).DeleteOrderPaymentByID), id, orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderPaymentByID", reflect.TypeOf((*MockOrderPaymentStore)(nil).DeleteOrderPaymentByID), ctx, id, orderID)
 }
 
 // DeleteOrderPaymentsByOrderID mocks base method.
-func (m *MockOrderPaymentStore) DeleteOrderPaymentsByOrderID(tx database.Tx, orderID int) error {
+func (m *MockOrderPaymentStore) DeleteOrderPaymentsByOrderID(ctx context.Context, tx database.Tx, orderID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOrderPaymentsByOrderID", tx, orderID)
+	ret := m.ctrl.Call(m, "DeleteOrderPaymentsByOrderID", ctx, tx, orderID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteOrderPaymentsByOrderID indicates an expected call of DeleteOrderPaymentsByOrderID.
-func (mr *MockOrderPaymentStoreMockRecorder) DeleteOrderPaymentsByOrderID(tx, orderID interface{}) *gomock.Call {
+func (mr *MockOrderPaymentStoreMockRecorder) DeleteOrderPaymentsByOrderID(ctx, tx, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderPaymentsByOrderID", reflect.TypeOf((*MockOrderPaymentStore)(nil).DeleteOrderPaymentsByOrderID), tx, orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOrderPaymentsByOrderID", reflect.TypeOf((*MockOrderPaymentStore)(nil).DeleteOrderPaymentsByOrderID), ctx, tx, orderID)
 }
 
 // GetOrderPaymentsByOrderID mocks base method.
-func (m *MockOrderPaymentStore) GetOrderPaymentsByOrderID(orderID int) ([]model.OrderPayment, error) {
+func (m *MockOrderPaymentStore) GetOrderPaymentsByOrderID(ctx context.Context, orderID int) ([]model.OrderPayment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrderPaymentsByOrderID", orderID)
+	ret := m.ctrl.Call(m, "GetOrderPaymentsByOrderID", ctx, orderID)
 	ret0, _ := ret[0].([]model.OrderPayment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrderPaymentsByOrderID indicates an expected call of GetOrderPaymentsByOrderID.
-func (mr *MockOrderPaymentStoreMockRecorder) GetOrderPaymentsByOrderID(orderID interface{}) *gomock.Call {
+func (mr *MockOrderPaymentStoreMockRecorder) GetOrderPaymentsByOrderID(ctx, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderPaymentsByOrderID", reflect.TypeOf((*MockOrderPaymentStore)(nil).GetOrderPaymentsByOrderID), orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderPaymentsByOrderID", reflect.TypeOf((*MockOrderPaymentStore)(nil).GetOrderPaymentsByOrderID), ctx, orderID)
 }
 
 // UpdateOrderPaymentAmountByID mocks base method.
-func (m *MockOrderPaymentStore) UpdateOrderPaymentAmountByID(tx database.Tx, id, orderID, amount int) (*model.OrderPayment, error) {
+func (m *MockOrderPaymentStore) UpdateOrderPaymentAmountByID(ctx context.Context, tx database.Tx, id, orderID, amount int) (*model.OrderPayment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateOrderPaymentAmountByID", tx, id, orderID, amount)
+	ret := m.ctrl.Call(m, "UpdateOrderPaymentAmountByID", ctx, tx, id, orderID, amount)
 	ret0, _ := ret[0].(*model.OrderPayment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateOrderPaymentAmountByID indicates an expected call of UpdateOrderPaymentAmountByID.
-func (mr *MockOrderPaymentStoreMockRecorder) UpdateOrderPaymentAmountByID(tx, id, orderID, amount interface{}) *gomock.Call {
+func (mr *MockOrderPaymentStoreMockRecorder) UpdateOrderPaymentAmountByID(ctx, tx, id, orderID, amount interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderPaymentAmountByID", reflect.TypeOf((*MockOrderPaymentStore)(nil).UpdateOrderPaymentAmountByID), tx, id, orderID, amount)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderPaymentAmountByID", reflect.TypeOf((*MockOrderPaymentStore)(nil).UpdateOrderPaymentAmountByID), ctx, tx, id, orderID, amount)
 }

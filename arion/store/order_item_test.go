@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -76,7 +77,7 @@ func Test_orderitem_GetOrderItemByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderItemStoreWithDB(db)
 
-			got, gotErr := store.GetOrderItemByID(tt.id)
+			got, gotErr := store.GetOrderItemByID(context.Background(), tt.id)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -172,7 +173,7 @@ func Test_orderitem_GetOrderItemsByOrderID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderItemStoreWithDB(db)
 
-			got, gotErr := store.GetOrderItemsByOrderID(tt.orderID)
+			got, gotErr := store.GetOrderItemsByOrderID(context.Background(), tt.orderID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -294,9 +295,9 @@ func Test_orderitem_CreateOrderItem(t *testing.T) {
 					t.Fatalf("failed to begin tx: %v", err)
 				}
 				defer tx.Rollback()
-				got, gotErr = store.CreateOrderItem(tx, tt.input.orderID, tt.input.productID, tt.input.qty)
+				got, gotErr = store.CreateOrderItem(context.Background(), tx, tt.input.orderID, tt.input.productID, tt.input.qty)
 			} else {
-				got, gotErr = store.CreateOrderItem(nil, tt.input.orderID, tt.input.productID, tt.input.qty)
+				got, gotErr = store.CreateOrderItem(context.Background(), nil, tt.input.orderID, tt.input.productID, tt.input.qty)
 			}
 
 			if gotErr != nil {
@@ -426,7 +427,7 @@ func Test_orderitem_UpdateOrderItemByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderItemStoreWithDB(db)
 
-			got, gotErr := store.UpdateOrderItemByID(nil, tt.id, tt.orderID, tt.input)
+			got, gotErr := store.UpdateOrderItemByID(context.Background(), nil, tt.id, tt.orderID, tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -499,7 +500,7 @@ func Test_orderitem_DeleteOrderItemByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderItemStoreWithDB(db)
 
-			gotErr := store.DeleteOrderItemByID(tt.id, tt.orderID)
+			gotErr := store.DeleteOrderItemByID(context.Background(), tt.id, tt.orderID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -561,7 +562,7 @@ func Test_orderitem_DeleteOrderItemsByOrderID(t *testing.T) {
 			}
 
 			var o orderitem
-			gotErr := o.DeleteOrderItemsByOrderID(tx, tt.orderID)
+			gotErr := o.DeleteOrderItemsByOrderID(context.Background(), tx, tt.orderID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -644,7 +645,7 @@ func Test_orderitem_CreateTempOrderItem(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			got, gotErr := store.CreateTempOrderItem(tx, tt.tempOrderID, tt.productID, tt.qty)
+			got, gotErr := store.CreateTempOrderItem(context.Background(), tx, tt.tempOrderID, tt.productID, tt.qty)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -726,7 +727,7 @@ func Test_orderitem_GetTempOrderItemsByTempOrderID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderItemStoreWithDB(db)
 
-			got, gotErr := store.GetTempOrderItemsByTempOrderID(tt.tempOrderID)
+			got, gotErr := store.GetTempOrderItemsByTempOrderID(context.Background(), tt.tempOrderID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -813,7 +814,7 @@ func Test_orderitem_GetOrderItemByProductID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderItemStoreWithDB(db)
 
-			got, gotErr := store.GetOrderItemByProductID(tt.productID, tt.orderID)
+			got, gotErr := store.GetOrderItemByProductID(context.Background(), tt.productID, tt.orderID)
 
 			if gotErr != nil {
 				if !tt.wantErr {

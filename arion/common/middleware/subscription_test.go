@@ -40,7 +40,7 @@ func TestSubscriptionCheck(t *testing.T) {
 			name:   "active subscription passes through",
 			shopID: 1,
 			mockSetup: func(m *mock_service.MockSubscriptionService) {
-				m.EXPECT().IsSubscriptionActive(1).Return(true, nil)
+				m.EXPECT().IsSubscriptionActive(gomock.Any(), 1).Return(true, nil)
 			},
 			wantStatus:     http.StatusOK,
 			wantNextCalled: true,
@@ -49,7 +49,7 @@ func TestSubscriptionCheck(t *testing.T) {
 			name:   "inactive subscription returns 402",
 			shopID: 2,
 			mockSetup: func(m *mock_service.MockSubscriptionService) {
-				m.EXPECT().IsSubscriptionActive(2).Return(false, nil)
+				m.EXPECT().IsSubscriptionActive(gomock.Any(), 2).Return(false, nil)
 			},
 			wantStatus:     http.StatusPaymentRequired,
 			wantNextCalled: false,
@@ -58,7 +58,7 @@ func TestSubscriptionCheck(t *testing.T) {
 			name:   "service error returns 500",
 			shopID: 3,
 			mockSetup: func(m *mock_service.MockSubscriptionService) {
-				m.EXPECT().IsSubscriptionActive(3).Return(false, errors.New("db error"))
+				m.EXPECT().IsSubscriptionActive(gomock.Any(), 3).Return(false, errors.New("db error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
 			wantNextCalled: false,

@@ -20,7 +20,8 @@ import (
 //	@Failure		500	{object}	ErrorApiResponse
 //	@Router			/plans [get]
 func GetPlansHandler(w http.ResponseWriter, r *http.Request) {
-	plans, err := subscriptionService.GetActivePlans()
+	ctx := r.Context()
+	plans, err := subscriptionService.GetActivePlans(ctx)
 	if err != nil {
 		logger.WithError(err).Error("get_plans_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_plans")
@@ -44,7 +45,7 @@ func GetSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
-	sub, err := subscriptionService.GetSubscriptionByShopID(shopID)
+	sub, err := subscriptionService.GetSubscriptionByShopID(ctx, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrSubscriptionNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -91,7 +92,7 @@ func CheckoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := subscriptionService.Checkout(shopID, inp.PlanID)
+	data, err := subscriptionService.Checkout(ctx, shopID, inp.PlanID)
 	if err != nil {
 		if err.Error() == apierr.ErrPlanNotFound || err.Error() == apierr.ErrSubscriptionNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -121,7 +122,7 @@ func CancelSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
-	if err := subscriptionService.CancelSubscription(shopID); err != nil {
+	if err := subscriptionService.CancelSubscription(ctx, shopID); err != nil {
 		if err.Error() == apierr.ErrSubscriptionNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return
@@ -150,13 +151,14 @@ func CancelSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse
 //	@Router			/webhook/midtrans [post]
 func MidtransWebhookHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	payload := service.MidtransWebhookPayload{}
 	if err := ParseJson(r.Body, &payload); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
 		return
 	}
 
-	if err := subscriptionService.HandleMidtransWebhook(payload); err != nil {
+	if err := subscriptionService.HandleMidtransWebhook(ctx, payload); err != nil {
 		if err.Error() == apierr.ErrInvalidSignature {
 			WriteErrorJson(w, r, http.StatusBadRequest, err, "invalid_signature")
 			return

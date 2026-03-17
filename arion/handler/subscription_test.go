@@ -56,7 +56,7 @@ func TestGetPlansHandler(t *testing.T) {
 		{
 			name: "returns active plans",
 			mockSetup: func() {
-				mockSvc.EXPECT().GetActivePlans().Return([]response.PlanData{
+				mockSvc.EXPECT().GetActivePlans(gomock.Any()).Return([]response.PlanData{
 					{ID: 1, Name: "starter", DisplayName: "Starter", PriceIDR: 149000, MaxUsers: 1},
 				}, nil)
 			},
@@ -66,7 +66,7 @@ func TestGetPlansHandler(t *testing.T) {
 		{
 			name: "returns 500 on service error",
 			mockSetup: func() {
-				mockSvc.EXPECT().GetActivePlans().Return(nil, errors.New("db error"))
+				mockSvc.EXPECT().GetActivePlans(gomock.Any()).Return(nil, errors.New("db error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,
@@ -116,7 +116,7 @@ func TestGetSubscriptionHandler(t *testing.T) {
 			name:   "returns subscription",
 			shopID: 1,
 			mockSetup: func() {
-				mockSvc.EXPECT().GetSubscriptionByShopID(1).Return(&response.SubscriptionData{
+				mockSvc.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&response.SubscriptionData{
 					ID:                 1,
 					Status:             "trialing",
 					Plan:               response.PlanData{ID: 1, Name: "starter"},
@@ -131,7 +131,7 @@ func TestGetSubscriptionHandler(t *testing.T) {
 			name:   "returns 404 when subscription not found",
 			shopID: 2,
 			mockSetup: func() {
-				mockSvc.EXPECT().GetSubscriptionByShopID(2).Return(nil, errors.New(apierr.ErrSubscriptionNotFound))
+				mockSvc.EXPECT().GetSubscriptionByShopID(gomock.Any(), 2).Return(nil, errors.New(apierr.ErrSubscriptionNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
@@ -140,7 +140,7 @@ func TestGetSubscriptionHandler(t *testing.T) {
 			name:   "returns 500 on service error",
 			shopID: 3,
 			mockSetup: func() {
-				mockSvc.EXPECT().GetSubscriptionByShopID(3).Return(nil, errors.New("unexpected error"))
+				mockSvc.EXPECT().GetSubscriptionByShopID(gomock.Any(), 3).Return(nil, errors.New("unexpected error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,
@@ -190,7 +190,7 @@ func TestCheckoutHandler(t *testing.T) {
 			shopID: 1,
 			body:   map[string]int{"plan_id": 1},
 			mockSetup: func() {
-				mockSvc.EXPECT().Checkout(1, 1).Return(&response.CheckoutData{
+				mockSvc.EXPECT().Checkout(gomock.Any(), 1, 1).Return(&response.CheckoutData{
 					OrderID:     "recapo-1-12345",
 					RedirectURL: "https://app.sandbox.midtrans.com/snap/v2/vtweb/token",
 					SnapToken:   "some-snap-token",
@@ -212,7 +212,7 @@ func TestCheckoutHandler(t *testing.T) {
 			shopID: 1,
 			body:   map[string]int{"plan_id": 99},
 			mockSetup: func() {
-				mockSvc.EXPECT().Checkout(1, 99).Return(nil, errors.New(apierr.ErrPlanNotFound))
+				mockSvc.EXPECT().Checkout(gomock.Any(), 1, 99).Return(nil, errors.New(apierr.ErrPlanNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
@@ -267,7 +267,7 @@ func TestMidtransWebhookHandler(t *testing.T) {
 				"transaction_id":     "txn-123",
 			},
 			mockSetup: func() {
-				mockSvc.EXPECT().HandleMidtransWebhook(gomock.Any()).Return(nil)
+				mockSvc.EXPECT().HandleMidtransWebhook(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
@@ -279,7 +279,7 @@ func TestMidtransWebhookHandler(t *testing.T) {
 				"signature_key": "bad",
 			},
 			mockSetup: func() {
-				mockSvc.EXPECT().HandleMidtransWebhook(gomock.Any()).Return(errors.New(apierr.ErrInvalidSignature))
+				mockSvc.EXPECT().HandleMidtransWebhook(gomock.Any(), gomock.Any()).Return(errors.New(apierr.ErrInvalidSignature))
 			},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
@@ -327,7 +327,7 @@ func TestCancelSubscriptionHandler(t *testing.T) {
 			name:   "successfully cancels subscription",
 			shopID: 1,
 			mockSetup: func() {
-				mockSvc.EXPECT().CancelSubscription(1).Return(nil)
+				mockSvc.EXPECT().CancelSubscription(gomock.Any(), 1).Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
@@ -336,7 +336,7 @@ func TestCancelSubscriptionHandler(t *testing.T) {
 			name:   "returns 404 when subscription not found",
 			shopID: 1,
 			mockSetup: func() {
-				mockSvc.EXPECT().CancelSubscription(1).Return(errors.New(apierr.ErrSubscriptionNotFound))
+				mockSvc.EXPECT().CancelSubscription(gomock.Any(), 1).Return(errors.New(apierr.ErrSubscriptionNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
 			wantSuccess: false,
@@ -345,7 +345,7 @@ func TestCancelSubscriptionHandler(t *testing.T) {
 			name:   "returns 400 when subscription is not active",
 			shopID: 1,
 			mockSetup: func() {
-				mockSvc.EXPECT().CancelSubscription(1).Return(errors.New(apierr.ErrSubscriptionNotActive))
+				mockSvc.EXPECT().CancelSubscription(gomock.Any(), 1).Return(errors.New(apierr.ErrSubscriptionNotActive))
 			},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
@@ -354,7 +354,7 @@ func TestCancelSubscriptionHandler(t *testing.T) {
 			name:   "returns 500 on unexpected service error",
 			shopID: 1,
 			mockSetup: func() {
-				mockSvc.EXPECT().CancelSubscription(1).Return(errors.New("unexpected error"))
+				mockSvc.EXPECT().CancelSubscription(gomock.Any(), 1).Return(errors.New("unexpected error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,

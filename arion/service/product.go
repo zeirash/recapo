@@ -22,14 +22,14 @@ import (
 
 type (
 	ProductService interface {
-		CreateProduct(shopID int, name string, description *string, price int, originalPrice *int, imageURL *string) (response.ProductData, error)
-		GetProductByID(productID int, shopID ...int) (*response.ProductData, error)
-		GetProductsByShopID(shopID int, filter model.FilterOptions) ([]response.ProductData, error)
-		UpdateProduct(input UpdateProductInput) (response.ProductData, error)
-		DeleteProductByID(id int) error
-		GetPurchaseListProducts(shopID int) ([]response.PurchaseListProductData, error)
-		UploadProductImage(file io.Reader) (string, error)
-		DeleteProductImage(imageURL string) error
+		CreateProduct(ctx context.Context, shopID int, name string, description *string, price int, originalPrice *int, imageURL *string) (response.ProductData, error)
+		GetProductByID(ctx context.Context, productID int, shopID ...int) (*response.ProductData, error)
+		GetProductsByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]response.ProductData, error)
+		UpdateProduct(ctx context.Context, input UpdateProductInput) (response.ProductData, error)
+		DeleteProductByID(ctx context.Context, id int) error
+		GetPurchaseListProducts(ctx context.Context, shopID int) ([]response.PurchaseListProductData, error)
+		UploadProductImage(ctx context.Context, file io.Reader) (string, error)
+		DeleteProductImage(ctx context.Context, imageURL string) error
 	}
 
 	pservice struct{}
@@ -99,8 +99,8 @@ func NewProductService() ProductService {
 	return &pservice{}
 }
 
-func (p *pservice) CreateProduct(shopID int, name string, description *string, price int, originalPrice *int, imageURL *string) (response.ProductData, error) {
-	product, err := productStore.CreateProduct(name, description, price, shopID, originalPrice, imageURL)
+func (p *pservice) CreateProduct(ctx context.Context, shopID int, name string, description *string, price int, originalPrice *int, imageURL *string) (response.ProductData, error) {
+	product, err := productStore.CreateProduct(ctx, name, description, price, shopID, originalPrice, imageURL)
 	if err != nil {
 		return response.ProductData{}, err
 	}
@@ -118,8 +118,8 @@ func (p *pservice) CreateProduct(shopID int, name string, description *string, p
 	return res, nil
 }
 
-func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.ProductData, error) {
-	product, err := productStore.GetProductByID(productID, shopID...)
+func (p *pservice) GetProductByID(ctx context.Context, productID int, shopID ...int) (*response.ProductData, error) {
+	product, err := productStore.GetProductByID(ctx, productID, shopID...)
 	if err != nil {
 		return nil, err
 	}
@@ -145,8 +145,8 @@ func (p *pservice) GetProductByID(productID int, shopID ...int) (*response.Produ
 	return &res, nil
 }
 
-func (p *pservice) GetProductsByShopID(shopID int, filter model.FilterOptions) ([]response.ProductData, error) {
-	products, err := productStore.GetProductsByShopID(shopID, filter)
+func (p *pservice) GetProductsByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]response.ProductData, error) {
+	products, err := productStore.GetProductsByShopID(ctx, shopID, filter)
 	if err != nil {
 		return []response.ProductData{}, err
 	}
@@ -174,7 +174,7 @@ func (p *pservice) GetProductsByShopID(shopID int, filter model.FilterOptions) (
 	return productsData, nil
 }
 
-func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData, error) {
+func (p *pservice) UpdateProduct(ctx context.Context, input UpdateProductInput) (response.ProductData, error) {
 	updateData := store.UpdateProductInput{
 		Name:          input.Name,
 		Description:   input.Description,
@@ -182,7 +182,7 @@ func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData
 		OriginalPrice: input.OriginalPrice,
 		ImageURL:      input.ImageURL,
 	}
-	productData, err := productStore.UpdateProduct(input.ID, updateData)
+	productData, err := productStore.UpdateProduct(ctx, input.ID, updateData)
 	if err != nil {
 		return response.ProductData{}, err
 	}
@@ -204,8 +204,8 @@ func (p *pservice) UpdateProduct(input UpdateProductInput) (response.ProductData
 	return res, nil
 }
 
-func (p *pservice) DeleteProductByID(id int) error {
-	err := productStore.DeleteProductByID(id)
+func (p *pservice) DeleteProductByID(ctx context.Context, id int) error {
+	err := productStore.DeleteProductByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -213,8 +213,8 @@ func (p *pservice) DeleteProductByID(id int) error {
 	return nil
 }
 
-func (p *pservice) GetPurchaseListProducts(shopID int) ([]response.PurchaseListProductData, error) {
-	products, err := productStore.GetProductsListByActiveOrders(shopID)
+func (p *pservice) GetPurchaseListProducts(ctx context.Context, shopID int) ([]response.PurchaseListProductData, error) {
+	products, err := productStore.GetProductsListByActiveOrders(ctx, shopID)
 	if err != nil {
 		return []response.PurchaseListProductData{}, err
 	}
@@ -231,11 +231,11 @@ func (p *pservice) GetPurchaseListProducts(shopID int) ([]response.PurchaseListP
 	return productsData, nil
 }
 
-func (p *pservice) UploadProductImage(file io.Reader) (string, error) {
+func (p *pservice) UploadProductImage(ctx context.Context, file io.Reader) (string, error) {
 	return uploadImage(file, "products")
 }
 
-func (p *pservice) DeleteProductImage(imageURL string) error {
+func (p *pservice) DeleteProductImage(ctx context.Context, imageURL string) error {
 	// Cloud path: delete from Cloudflare R2.
 	if cfg.R2BucketName != "" && cfg.R2PublicURL != "" && strings.HasPrefix(imageURL, cfg.R2PublicURL) {
 		objectKey := strings.TrimPrefix(imageURL, cfg.R2PublicURL+"/")

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -10,11 +11,11 @@ import (
 
 type (
 	OrderPaymentStore interface {
-		CreateOrderPayment(tx database.Tx, orderID int, amount int) (*model.OrderPayment, error)
-		GetOrderPaymentsByOrderID(orderID int) ([]model.OrderPayment, error)
-		UpdateOrderPaymentAmountByID(tx database.Tx, id, orderID, amount int) (*model.OrderPayment, error)
-		DeleteOrderPaymentByID(id, orderID int) error
-		DeleteOrderPaymentsByOrderID(tx database.Tx, orderID int) error
+		CreateOrderPayment(ctx context.Context, tx database.Tx, orderID int, amount int) (*model.OrderPayment, error)
+		GetOrderPaymentsByOrderID(ctx context.Context, orderID int) ([]model.OrderPayment, error)
+		UpdateOrderPaymentAmountByID(ctx context.Context, tx database.Tx, id, orderID, amount int) (*model.OrderPayment, error)
+		DeleteOrderPaymentByID(ctx context.Context, id, orderID int) error
+		DeleteOrderPaymentsByOrderID(ctx context.Context, tx database.Tx, orderID int) error
 	}
 
 	orderpayment struct {
@@ -36,7 +37,7 @@ func NewOrderPaymentStoreWithDB(db *sql.DB) OrderPaymentStore {
 	return &orderpayment{db: db}
 }
 
-func (o *orderpayment) CreateOrderPayment(tx database.Tx, orderID int, amount int) (*model.OrderPayment, error) {
+func (o *orderpayment) CreateOrderPayment(ctx context.Context, tx database.Tx, orderID int, amount int) (*model.OrderPayment, error) {
 	now := time.Now()
 	q := `
 		INSERT INTO order_payments (order_id, amount, created_at)
@@ -47,9 +48,9 @@ func (o *orderpayment) CreateOrderPayment(tx database.Tx, orderID int, amount in
 	var err error
 	args := []interface{}{orderID, amount, now}
 	if tx != nil {
-		err = tx.QueryRow(q, args...).Scan(&id)
+		err = tx.QueryRowContext(ctx, q, args...).Scan(&id)
 	} else {
-		err = o.db.QueryRow(q, args...).Scan(&id)
+		err = o.db.QueryRowContext(ctx, q, args...).Scan(&id)
 	}
 	if err != nil {
 		return nil, err
@@ -63,13 +64,13 @@ func (o *orderpayment) CreateOrderPayment(tx database.Tx, orderID int, amount in
 	}, nil
 }
 
-func (o *orderpayment) GetOrderPaymentsByOrderID(orderID int) ([]model.OrderPayment, error) {
+func (o *orderpayment) GetOrderPaymentsByOrderID(ctx context.Context, orderID int) ([]model.OrderPayment, error) {
 	q := `
 		SELECT id, order_id, amount, created_at, updated_at
 		FROM order_payments
 		WHERE order_id = $1
 	`
-	rows, err := o.db.Query(q, orderID)
+	rows, err := o.db.QueryContext(ctx, q, orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +89,7 @@ func (o *orderpayment) GetOrderPaymentsByOrderID(orderID int) ([]model.OrderPaym
 	return orderPayments, nil
 }
 
-func (o *orderpayment) UpdateOrderPaymentAmountByID(tx database.Tx, id, orderID, amount int) (*model.OrderPayment, error) {
+func (o *orderpayment) UpdateOrderPaymentAmountByID(ctx context.Context, tx database.Tx, id, orderID, amount int) (*model.OrderPayment, error) {
 	now := time.Now()
 	var orderPayment model.OrderPayment
 
@@ -101,9 +102,9 @@ func (o *orderpayment) UpdateOrderPaymentAmountByID(tx database.Tx, id, orderID,
 
 	var err error
 	if tx != nil {
-		err = tx.QueryRow(q, amount, now, id, orderID).Scan(&orderPayment.ID, &orderPayment.OrderID, &orderPayment.Amount, &orderPayment.CreatedAt, &orderPayment.UpdatedAt)
+		err = tx.QueryRowContext(ctx, q, amount, now, id, orderID).Scan(&orderPayment.ID, &orderPayment.OrderID, &orderPayment.Amount, &orderPayment.CreatedAt, &orderPayment.UpdatedAt)
 	} else {
-		err = o.db.QueryRow(q, amount, now, id, orderID).Scan(&orderPayment.ID, &orderPayment.OrderID, &orderPayment.Amount, &orderPayment.CreatedAt, &orderPayment.UpdatedAt)
+		err = o.db.QueryRowContext(ctx, q, amount, now, id, orderID).Scan(&orderPayment.ID, &orderPayment.OrderID, &orderPayment.Amount, &orderPayment.CreatedAt, &orderPayment.UpdatedAt)
 	}
 	if err != nil {
 		return nil, err
@@ -111,13 +112,13 @@ func (o *orderpayment) UpdateOrderPaymentAmountByID(tx database.Tx, id, orderID,
 	return &orderPayment, nil
 }
 
-func (o *orderpayment) DeleteOrderPaymentByID(id, orderID int) error {
+func (o *orderpayment) DeleteOrderPaymentByID(ctx context.Context, id, orderID int) error {
 	q := `
 		DELETE FROM order_payments
 		WHERE id = $1 AND order_id = $2
 	`
 
-	_, err := o.db.Exec(q, id, orderID)
+	_, err := o.db.ExecContext(ctx, q, id, orderID)
 	if err != nil {
 		return err
 	}
@@ -125,13 +126,13 @@ func (o *orderpayment) DeleteOrderPaymentByID(id, orderID int) error {
 	return nil
 }
 
-func (o *orderpayment) DeleteOrderPaymentsByOrderID(tx database.Tx, orderID int) error {
+func (o *orderpayment) DeleteOrderPaymentsByOrderID(ctx context.Context, tx database.Tx, orderID int) error {
 	q := `
 		DELETE FROM order_payments
 		WHERE order_id = $1
 	`
 
-	_, err := tx.Exec(q, orderID)
+	_, err := tx.ExecContext(ctx, q, orderID)
 	if err != nil {
 		return err
 	}

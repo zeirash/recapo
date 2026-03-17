@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/zeirash/recapo/arion/common/apierr"
@@ -12,12 +13,12 @@ import (
 
 type (
 	CustomerService interface {
-		CreateCustomer(name, phone, address string, shopID int) (response.CustomerData, error)
-		GetCustomerByID(customerID int, shopID ...int) (*response.CustomerData, error)
-		GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]response.CustomerData, error)
-		UpdateCustomer(input UpdateCustomerInput) (response.CustomerData, error)
-		DeleteCustomerByID(id int) error
-		CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error)
+		CreateCustomer(ctx context.Context, name, phone, address string, shopID int) (response.CustomerData, error)
+		GetCustomerByID(ctx context.Context, customerID int, shopID ...int) (*response.CustomerData, error)
+		GetCustomersByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]response.CustomerData, error)
+		UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (response.CustomerData, error)
+		DeleteCustomerByID(ctx context.Context, id int) error
+		CheckActiveOrderByPhone(ctx context.Context, phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error)
 	}
 
 	cservice struct{}
@@ -40,8 +41,8 @@ func NewCustomerService() CustomerService {
 	return &cservice{}
 }
 
-func (c *cservice) CreateCustomer(name, phone, address string, shopID int) (response.CustomerData, error) {
-	customer, err := customerStore.CreateCustomer(store.CreateCustomerInput{
+func (c *cservice) CreateCustomer(ctx context.Context, name, phone, address string, shopID int) (response.CustomerData, error) {
+	customer, err := customerStore.CreateCustomer(ctx, store.CreateCustomerInput{
 		Name:    name,
 		Phone:   phone,
 		Address: &address,
@@ -62,8 +63,8 @@ func (c *cservice) CreateCustomer(name, phone, address string, shopID int) (resp
 	return res, nil
 }
 
-func (c *cservice) GetCustomerByID(customerID int, shopID ...int) (*response.CustomerData, error) {
-	customer, err := customerStore.GetCustomerByID(customerID, shopID...)
+func (c *cservice) GetCustomerByID(ctx context.Context, customerID int, shopID ...int) (*response.CustomerData, error) {
+	customer, err := customerStore.GetCustomerByID(ctx, customerID, shopID...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,8 +88,8 @@ func (c *cservice) GetCustomerByID(customerID int, shopID ...int) (*response.Cus
 	return &res, nil
 }
 
-func (c *cservice) GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]response.CustomerData, error) {
-	customers, err := customerStore.GetCustomersByShopID(shopID, filter)
+func (c *cservice) GetCustomersByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]response.CustomerData, error) {
+	customers, err := customerStore.GetCustomersByShopID(ctx, shopID, filter)
 	if err != nil {
 		return []response.CustomerData{}, err
 	}
@@ -114,8 +115,8 @@ func (c *cservice) GetCustomersByShopID(shopID int, filter model.FilterOptions) 
 	return customersData, nil
 }
 
-func (c *cservice) UpdateCustomer(input UpdateCustomerInput) (response.CustomerData, error) {
-	customer, err := customerStore.GetCustomerByID(input.ID)
+func (c *cservice) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (response.CustomerData, error) {
+	customer, err := customerStore.GetCustomerByID(ctx, input.ID)
 	if err != nil {
 		return response.CustomerData{}, err
 	}
@@ -130,7 +131,7 @@ func (c *cservice) UpdateCustomer(input UpdateCustomerInput) (response.CustomerD
 		Address: input.Address,
 	}
 
-	customerData, err := customerStore.UpdateCustomer(input.ID, updateData)
+	customerData, err := customerStore.UpdateCustomer(ctx, input.ID, updateData)
 	if err != nil {
 		return response.CustomerData{}, err
 	}
@@ -150,8 +151,8 @@ func (c *cservice) UpdateCustomer(input UpdateCustomerInput) (response.CustomerD
 	return res, nil
 }
 
-func (c *cservice) DeleteCustomerByID(id int) error {
-	err := customerStore.DeleteCustomerByID(id)
+func (c *cservice) DeleteCustomerByID(ctx context.Context, id int) error {
+	err := customerStore.DeleteCustomerByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -159,14 +160,14 @@ func (c *cservice) DeleteCustomerByID(id int) error {
 	return nil
 }
 
-func (c *cservice) CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error) {
-	customer, err := customerStore.GetCustomerByPhone(phone, shopID)
+func (c *cservice) CheckActiveOrderByPhone(ctx context.Context, phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error) {
+	customer, err := customerStore.GetCustomerByPhone(ctx, phone, shopID)
 	if err != nil {
 		return response.CustomerCheckActiveOrderByPhone{}, err
 	}
 
 	if customer == nil {
-		customer, err = customerStore.CreateCustomer(store.CreateCustomerInput{
+		customer, err = customerStore.CreateCustomer(ctx, store.CreateCustomerInput{
 			Name:   name,
 			Phone:  phone,
 			ShopID: shopID,
@@ -177,7 +178,7 @@ func (c *cservice) CheckActiveOrderByPhone(phone, name string, shopID int) (resp
 	}
 
 	activeOrderID := 0
-	activeOrder, err := orderStore.GetActiveOrderByCustomerID(customer.ID, shopID)
+	activeOrder, err := orderStore.GetActiveOrderByCustomerID(ctx, customer.ID, shopID)
 	if err != nil {
 		return response.CustomerCheckActiveOrderByPhone{}, err
 	}

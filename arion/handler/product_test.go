@@ -68,7 +68,7 @@ func TestCreateProductHandler(t *testing.T) {
 				desc := "Test description"
 				orgPrice := 800
 				mockProductService.EXPECT().
-					CreateProduct(1, "Test Product", &desc, 1000, &orgPrice, nil).
+					CreateProduct(gomock.Any(), 1, "Test Product", &desc, 1000, &orgPrice, nil).
 					Return(response.ProductData{
 						ID:            1,
 						Name:          "Test Product",
@@ -90,7 +90,7 @@ func TestCreateProductHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					CreateProduct(1, "Test", nil, 100, nil, nil).
+					CreateProduct(gomock.Any(), 1, "Test", nil, 100, nil, nil).
 					Return(response.ProductData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -189,7 +189,7 @@ func TestGetProductHandler(t *testing.T) {
 			shopID:    1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetProductByID(1, 1).
+					GetProductByID(gomock.Any(), 1, 1).
 					Return(&response.ProductData{
 						ID:          1,
 						Name:        "Product A",
@@ -215,7 +215,7 @@ func TestGetProductHandler(t *testing.T) {
 			shopID:    1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetProductByID(999, 1).
+					GetProductByID(gomock.Any(), 999, 1).
 					Return(nil, errors.New(apierr.ErrProductNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
@@ -227,7 +227,7 @@ func TestGetProductHandler(t *testing.T) {
 			shopID:    1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetProductByID(1, 1).
+					GetProductByID(gomock.Any(), 1, 1).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -291,7 +291,7 @@ func TestGetProductsHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetProductsByShopID(1, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{}).
 					Return([]response.ProductData{
 						{ID: 1, Name: "Product A", Price: 1000, CreatedAt: fixedTime},
 						{ID: 2, Name: "Product B", Price: 500, CreatedAt: fixedTime},
@@ -308,7 +308,7 @@ func TestGetProductsHandler(t *testing.T) {
 			mockSetup: func() {
 				q := "widget"
 				mockProductService.EXPECT().
-					GetProductsByShopID(1, model.FilterOptions{SearchQuery: &q}).
+					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{SearchQuery: &q}).
 					Return([]response.ProductData{
 						{ID: 1, Name: "Widget A", Price: 1000, CreatedAt: fixedTime},
 					}, nil)
@@ -324,7 +324,7 @@ func TestGetProductsHandler(t *testing.T) {
 			mockSetup: func() {
 				s := "name,asc"
 				mockProductService.EXPECT().
-					GetProductsByShopID(1, model.FilterOptions{Sort: &s}).
+					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{Sort: &s}).
 					Return([]response.ProductData{
 						{ID: 1, Name: "Widget A", Price: 1000, CreatedAt: fixedTime},
 					}, nil)
@@ -339,7 +339,7 @@ func TestGetProductsHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetProductsByShopID(1, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{}).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
@@ -408,7 +408,7 @@ func TestUpdateProductHandler(t *testing.T) {
 				name := "Updated Product"
 				price := 2000
 				mockProductService.EXPECT().
-					UpdateProduct(service.UpdateProductInput{
+					UpdateProduct(gomock.Any(), service.UpdateProductInput{
 						ID:            1,
 						Name:          &name,
 						Price:         &price,
@@ -449,7 +449,7 @@ func TestUpdateProductHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					UpdateProduct(gomock.Any()).
+					UpdateProduct(gomock.Any(), gomock.Any()).
 					Return(response.ProductData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -510,7 +510,7 @@ func TestDeleteProductHandler(t *testing.T) {
 			productID: "1",
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					DeleteProductByID(1).
+					DeleteProductByID(gomock.Any(), 1).
 					Return(nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -528,7 +528,7 @@ func TestDeleteProductHandler(t *testing.T) {
 			productID: "1",
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					DeleteProductByID(1).
+					DeleteProductByID(gomock.Any(), 1).
 					Return(errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -589,7 +589,7 @@ func TestPurchaseListProductHandler(t *testing.T) {
 			shopID: 10,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetPurchaseListProducts(10).
+					GetPurchaseListProducts(gomock.Any(), 10).
 					Return([]response.PurchaseListProductData{
 						{ProductName: "Product A", Price: 1000, Qty: 5},
 						{ProductName: "Product B", Price: 2000, Qty: 3},
@@ -604,7 +604,7 @@ func TestPurchaseListProductHandler(t *testing.T) {
 			shopID: 20,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetPurchaseListProducts(20).
+					GetPurchaseListProducts(gomock.Any(), 20).
 					Return([]response.PurchaseListProductData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -616,7 +616,7 @@ func TestPurchaseListProductHandler(t *testing.T) {
 			shopID: 10,
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					GetPurchaseListProducts(10).
+					GetPurchaseListProducts(gomock.Any(), 10).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -698,7 +698,7 @@ func TestUploadProductImageHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					UploadProductImage(gomock.Any()).
+					UploadProductImage(gomock.Any(), gomock.Any()).
 					Return("/uploads/products/abc123.jpg", nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -726,7 +726,7 @@ func TestUploadProductImageHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					UploadProductImage(gomock.Any()).
+					UploadProductImage(gomock.Any(), gomock.Any()).
 					Return("", errors.New(apierr.ErrUnsupportedImageType))
 			},
 			wantStatus:  http.StatusBadRequest,
@@ -739,7 +739,7 @@ func TestUploadProductImageHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					UploadProductImage(gomock.Any()).
+					UploadProductImage(gomock.Any(), gomock.Any()).
 					Return("", errors.New("failed to save file"))
 			},
 			wantStatus:  http.StatusInternalServerError,
@@ -803,7 +803,7 @@ func TestDeleteProductImageHandler(t *testing.T) {
 			body: map[string]interface{}{"image_url": "/uploads/products/abc123.jpg"},
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					DeleteProductImage("/uploads/products/abc123.jpg").
+					DeleteProductImage(gomock.Any(), "/uploads/products/abc123.jpg").
 					Return(nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -828,7 +828,7 @@ func TestDeleteProductImageHandler(t *testing.T) {
 			body: map[string]interface{}{"image_url": "/other/path/image.jpg"},
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					DeleteProductImage("/other/path/image.jpg").
+					DeleteProductImage(gomock.Any(), "/other/path/image.jpg").
 					Return(errors.New(apierr.ErrInvalidImageURL))
 			},
 			wantStatus:  http.StatusBadRequest,
@@ -839,7 +839,7 @@ func TestDeleteProductImageHandler(t *testing.T) {
 			body: map[string]interface{}{"image_url": "/uploads/products/missing.jpg"},
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					DeleteProductImage("/uploads/products/missing.jpg").
+					DeleteProductImage(gomock.Any(), "/uploads/products/missing.jpg").
 					Return(errors.New(apierr.ErrImageNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
@@ -850,7 +850,7 @@ func TestDeleteProductImageHandler(t *testing.T) {
 			body: map[string]interface{}{"image_url": "/uploads/products/abc123.jpg"},
 			mockSetup: func() {
 				mockProductService.EXPECT().
-					DeleteProductImage("/uploads/products/abc123.jpg").
+					DeleteProductImage(gomock.Any(), "/uploads/products/abc123.jpg").
 					Return(errors.New("permission denied"))
 			},
 			wantStatus:     http.StatusInternalServerError,

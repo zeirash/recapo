@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -112,7 +113,7 @@ func Test_customer_GetCustomerByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewCustomerStoreWithDB(db)
 
-			got, gotErr := store.GetCustomerByID(tt.id, tt.shopID...)
+			got, gotErr := store.GetCustomerByID(context.Background(), tt.id, tt.shopID...)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -276,7 +277,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewCustomerStoreWithDB(db)
 
-			got, gotErr := store.GetCustomersByShopID(tt.shopID, tt.filter)
+			got, gotErr := store.GetCustomersByShopID(context.Background(), tt.shopID, tt.filter)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -392,7 +393,7 @@ func Test_customer_CreateCustomer(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewCustomerStoreWithDB(db)
 
-			got, gotErr := store.CreateCustomer(tt.input)
+			got, gotErr := store.CreateCustomer(context.Background(), tt.input)
 
 			if tt.wantErr != nil {
 				if gotErr == nil {
@@ -539,7 +540,7 @@ func Test_customer_UpdateCustomer(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewCustomerStoreWithDB(db)
 
-			got, gotErr := store.UpdateCustomer(tt.id, tt.input)
+			got, gotErr := store.UpdateCustomer(context.Background(), tt.id, tt.input)
 
 			if tt.wantErr != nil {
 				if gotErr == nil {
@@ -611,7 +612,7 @@ func Test_customer_DeleteCustomerByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewCustomerStoreWithDB(db)
 
-			gotErr := store.DeleteCustomerByID(tt.id)
+			gotErr := store.DeleteCustomerByID(context.Background(), tt.id)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -694,7 +695,7 @@ func Test_customer_GetCustomerByPhone(t *testing.T) {
 			tt.mockSetup(mock)
 			s := NewCustomerStoreWithDB(db)
 
-			got, gotErr := s.GetCustomerByPhone(tt.phone, tt.shopID)
+			got, gotErr := s.GetCustomerByPhone(context.Background(), tt.phone, tt.shopID)
 
 			if gotErr != nil {
 				if !tt.wantErr {

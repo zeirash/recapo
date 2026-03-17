@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
@@ -21,16 +22,16 @@ import (
 
 type (
 	UserService interface {
-		UserLogin(email, password string) (response.TokenResponse, error)
-		UserRegister(name, email, password string) (response.TokenResponse, error)
-		RefreshToken(refreshToken string) (response.TokenResponse, error)
-		UpdateUser(input UpdateUserInput) (response.UserData, error)
-		GetUserByID(userID int) (*response.UserData, error)
-		GetUsers() ([]response.UserData, error)
-		SendOTP(email, lang string) error
-		ForgotPassword(email, lang string) error
-		ResetPassword(email, otp, newPassword string) error
-		Logout(userID int) error
+		UserLogin(ctx context.Context, email, password string) (response.TokenResponse, error)
+		UserRegister(ctx context.Context, name, email, password string) (response.TokenResponse, error)
+		RefreshToken(ctx context.Context, refreshToken string) (response.TokenResponse, error)
+		UpdateUser(ctx context.Context, input UpdateUserInput) (response.UserData, error)
+		GetUserByID(ctx context.Context, userID int) (*response.UserData, error)
+		GetUsers(ctx context.Context) ([]response.UserData, error)
+		SendOTP(ctx context.Context, email, lang string) error
+		ForgotPassword(ctx context.Context, email, lang string) error
+		ResetPassword(ctx context.Context, email, otp, newPassword string) error
+		Logout(ctx context.Context, userID int) error
 	}
 
 	uservice struct{}
@@ -73,8 +74,8 @@ func generateSessionToken() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func (u *uservice) UserLogin(email, password string) (response.TokenResponse, error) {
-	user, err := userStore.GetUserByEmail(email)
+func (u *uservice) UserLogin(ctx context.Context, email, password string) (response.TokenResponse, error) {
+	user, err := userStore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -92,17 +93,17 @@ func (u *uservice) UserLogin(email, password string) (response.TokenResponse, er
 		return response.TokenResponse{}, err
 	}
 
-	if err := userStore.SetSessionToken(user.ID, sessionToken); err != nil {
+	if err := userStore.SetSessionToken(ctx, user.ID, sessionToken); err != nil {
 		return response.TokenResponse{}, err
 	}
 	user.SessionToken = sql.NullString{String: sessionToken, Valid: true}
 
-	accessToken, err := tokenStore.CreateAccessToken(user, cfg.SecretKey, 2)
+	accessToken, err := tokenStore.CreateAccessToken(ctx, user, cfg.SecretKey, 2)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
 
-	refreshToken, err := tokenStore.CreateRefreshToken(user, cfg.SecretKey, 168)
+	refreshToken, err := tokenStore.CreateRefreshToken(ctx, user, cfg.SecretKey, 168)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -113,15 +114,15 @@ func (u *uservice) UserLogin(email, password string) (response.TokenResponse, er
 	}, nil
 }
 
-func (u *uservice) RefreshToken(refreshToken string) (response.TokenResponse, error) {
+func (u *uservice) RefreshToken(ctx context.Context, refreshToken string) (response.TokenResponse, error) {
 	// Validate and extract data from refresh token
-	tokenData, err := tokenStore.ExtractDataFromToken(refreshToken, cfg.SecretKey)
+	tokenData, err := tokenStore.ExtractDataFromToken(ctx, refreshToken, cfg.SecretKey)
 	if err != nil {
 		return response.TokenResponse{}, errors.New(apierr.ErrInvalidRefreshToken)
 	}
 
 	// Get user from database
-	user, err := userStore.GetUserByID(tokenData.UserID)
+	user, err := userStore.GetUserByID(ctx, tokenData.UserID)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -140,18 +141,18 @@ func (u *uservice) RefreshToken(refreshToken string) (response.TokenResponse, er
 		return response.TokenResponse{}, err
 	}
 
-	if err := userStore.SetSessionToken(user.ID, sessionToken); err != nil {
+	if err := userStore.SetSessionToken(ctx, user.ID, sessionToken); err != nil {
 		return response.TokenResponse{}, err
 	}
 	user.SessionToken = sql.NullString{String: sessionToken, Valid: true}
 
 	// Generate new tokens
-	accessToken, err := tokenStore.CreateAccessToken(user, cfg.SecretKey, 2)
+	accessToken, err := tokenStore.CreateAccessToken(ctx, user, cfg.SecretKey, 2)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
 
-	newRefreshToken, err := tokenStore.CreateRefreshToken(user, cfg.SecretKey, 168)
+	newRefreshToken, err := tokenStore.CreateRefreshToken(ctx, user, cfg.SecretKey, 168)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -162,8 +163,8 @@ func (u *uservice) RefreshToken(refreshToken string) (response.TokenResponse, er
 	}, nil
 }
 
-func (u *uservice) UserRegister(name, email, password string) (response.TokenResponse, error) {
-	existUser, err := userStore.GetUserByEmail(email)
+func (u *uservice) UserRegister(ctx context.Context, name, email, password string) (response.TokenResponse, error) {
+	existUser, err := userStore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -189,12 +190,12 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 	defer tx.Rollback()
 
 	shopName := fmt.Sprintf("%s's Shop", name)
-	shop, err := shopStore.CreateShop(tx, shopName)
+	shop, err := shopStore.CreateShop(ctx, tx, shopName)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
 
-	newUser, err := userStore.CreateUser(tx, name, email, string(encryptedPassword), constant.RoleOwner, shop.ID)
+	newUser, err := userStore.CreateUser(ctx, tx, name, email, string(encryptedPassword), constant.RoleOwner, shop.ID)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -203,7 +204,7 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 		return response.TokenResponse{}, err
 	}
 
-	if trialErr := subscriptionService.CreateTrialSubscription(shop.ID); trialErr != nil {
+	if trialErr := subscriptionService.CreateTrialSubscription(ctx, shop.ID); trialErr != nil {
 		logger.WithError(trialErr).Error("failed to create trial subscription")
 	}
 
@@ -212,17 +213,17 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 		return response.TokenResponse{}, err
 	}
 
-	if err := userStore.SetSessionToken(newUser.ID, sessionToken); err != nil {
+	if err := userStore.SetSessionToken(ctx, newUser.ID, sessionToken); err != nil {
 		return response.TokenResponse{}, err
 	}
 	newUser.SessionToken = sql.NullString{String: sessionToken, Valid: true}
 
-	accessToken, err := tokenStore.CreateAccessToken(newUser, cfg.SecretKey, 2)
+	accessToken, err := tokenStore.CreateAccessToken(ctx, newUser, cfg.SecretKey, 2)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
 
-	refreshToken, err := tokenStore.CreateRefreshToken(newUser, cfg.SecretKey, 168)
+	refreshToken, err := tokenStore.CreateRefreshToken(ctx, newUser, cfg.SecretKey, 168)
 	if err != nil {
 		return response.TokenResponse{}, err
 	}
@@ -233,12 +234,12 @@ func (u *uservice) UserRegister(name, email, password string) (response.TokenRes
 	}, nil
 }
 
-func (u *uservice) Logout(userID int) error {
-	return userStore.ClearSessionToken(userID)
+func (u *uservice) Logout(ctx context.Context, userID int) error {
+	return userStore.ClearSessionToken(ctx, userID)
 }
 
-func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) {
-	user, err := userStore.GetUserByID(input.ID)
+func (u *uservice) UpdateUser(ctx context.Context, input UpdateUserInput) (response.UserData, error) {
+	user, err := userStore.GetUserByID(ctx, input.ID)
 	if err != nil {
 		return response.UserData{}, err
 	}
@@ -268,7 +269,7 @@ func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) 
 		updateData.Password = &password
 	}
 
-	userData, err := userStore.UpdateUser(input.ID, updateData)
+	userData, err := userStore.UpdateUser(ctx, input.ID, updateData)
 	if err != nil {
 		return response.UserData{}, err
 	}
@@ -287,8 +288,8 @@ func (u *uservice) UpdateUser(input UpdateUserInput) (response.UserData, error) 
 	return res, nil
 }
 
-func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
-	user, err := userStore.GetUserByID(userID)
+func (u *uservice) GetUserByID(ctx context.Context, userID int) (*response.UserData, error) {
+	user, err := userStore.GetUserByID(ctx, userID)
 	if err != nil {
 		return &response.UserData{}, err
 	}
@@ -311,8 +312,8 @@ func (u *uservice) GetUserByID(userID int) (*response.UserData, error) {
 	return &res, nil
 }
 
-func (u *uservice) SendOTP(email, lang string) error {
-	existUser, err := userStore.GetUserByEmail(email)
+func (u *uservice) SendOTP(ctx context.Context, email, lang string) error {
+	existUser, err := userStore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err
 	}
@@ -331,8 +332,8 @@ func resetOTPKey(email string) string {
 	return "reset:" + email
 }
 
-func (u *uservice) ForgotPassword(email, lang string) error {
-	user, err := userStore.GetUserByEmail(email)
+func (u *uservice) ForgotPassword(ctx context.Context, email, lang string) error {
+	user, err := userStore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err
 	}
@@ -346,12 +347,12 @@ func (u *uservice) ForgotPassword(email, lang string) error {
 	return emailPkg.SendPasswordResetOTP(email, code, lang)
 }
 
-func (u *uservice) ResetPassword(email, otpCode, newPassword string) error {
+func (u *uservice) ResetPassword(ctx context.Context, email, otpCode, newPassword string) error {
 	if !otpPkg.Verify(resetOTPKey(email), otpCode) {
 		return errors.New(apierr.ErrInvalidOTP)
 	}
 
-	user, err := userStore.GetUserByEmail(email)
+	user, err := userStore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err
 	}
@@ -366,7 +367,7 @@ func (u *uservice) ResetPassword(email, otpCode, newPassword string) error {
 	}
 
 	hashed := string(encryptedPassword)
-	_, err = userStore.UpdateUser(user.ID, store.UpdateUserInput{Password: &hashed})
+	_, err = userStore.UpdateUser(ctx, user.ID, store.UpdateUserInput{Password: &hashed})
 	if err != nil {
 		return err
 	}
@@ -375,8 +376,8 @@ func (u *uservice) ResetPassword(email, otpCode, newPassword string) error {
 	return nil
 }
 
-func (u *uservice) GetUsers() ([]response.UserData, error) {
-	users, err := userStore.GetUsers()
+func (u *uservice) GetUsers(ctx context.Context) ([]response.UserData, error) {
+	users, err := userStore.GetUsers(ctx)
 	if err != nil {
 		return []response.UserData{}, err
 	}

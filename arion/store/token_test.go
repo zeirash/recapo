@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -44,7 +45,7 @@ func Test_token_CreateAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var to token
-			got, gotErr := to.CreateAccessToken(tt.user, tt.secret, tt.expiry)
+			got, gotErr := to.CreateAccessToken(context.Background(), tt.user, tt.secret, tt.expiry)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -62,7 +63,7 @@ func Test_token_CreateAccessToken(t *testing.T) {
 			}
 
 			// Verify the token is valid and can be authorized
-			authorized, err := to.IsAuthorized(got, tt.secret)
+			authorized, err := to.IsAuthorized(context.Background(), got, tt.secret)
 			if err != nil {
 				t.Errorf("Created token is not valid: %v", err)
 			}
@@ -110,7 +111,7 @@ func Test_token_CreateRefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var to token
-			got, gotErr := to.CreateRefreshToken(tt.user, tt.secret, tt.expiry)
+			got, gotErr := to.CreateRefreshToken(context.Background(), tt.user, tt.secret, tt.expiry)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -128,7 +129,7 @@ func Test_token_CreateRefreshToken(t *testing.T) {
 			}
 
 			// Verify the token is valid and can be authorized
-			authorized, err := to.IsAuthorized(got, tt.secret)
+			authorized, err := to.IsAuthorized(context.Background(), got, tt.secret)
 			if err != nil {
 				t.Errorf("Created token is not valid: %v", err)
 			}
@@ -148,7 +149,7 @@ func Test_token_IsAuthorized(t *testing.T) {
 		Name:   "John Doe",
 		Role:   "admin",
 	}
-	validToken, _ := to.CreateAccessToken(user, "testsecret", 1)
+	validToken, _ := to.CreateAccessToken(context.Background(), user, "testsecret", 1)
 
 	tests := []struct {
 		name         string
@@ -189,7 +190,7 @@ func Test_token_IsAuthorized(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := to.IsAuthorized(tt.requestToken, tt.secret)
+			got, gotErr := to.IsAuthorized(context.Background(), tt.requestToken, tt.secret)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -224,9 +225,9 @@ func Test_token_ExtractDataFromToken(t *testing.T) {
 		Name:   "System User",
 		Role:   "system",
 	}
-	validAccessToken, _ := to.CreateAccessToken(adminUser, "testsecret", 1)
-	systemAccessToken, _ := to.CreateAccessToken(systemUser, "testsecret", 1)
-	validRefreshToken, _ := to.CreateRefreshToken(adminUser, "testsecret", 168)
+	validAccessToken, _ := to.CreateAccessToken(context.Background(), adminUser, "testsecret", 1)
+	systemAccessToken, _ := to.CreateAccessToken(context.Background(), systemUser, "testsecret", 1)
+	validRefreshToken, _ := to.CreateRefreshToken(context.Background(), adminUser, "testsecret", 168)
 
 	tests := []struct {
 		name         string
@@ -289,7 +290,7 @@ func Test_token_ExtractDataFromToken(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := to.ExtractDataFromToken(tt.requestToken, tt.secret)
+			got, gotErr := to.ExtractDataFromToken(context.Background(), tt.requestToken, tt.secret)
 
 			if gotErr != nil {
 				if !tt.wantErr {

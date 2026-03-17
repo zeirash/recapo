@@ -59,6 +59,7 @@ type (
 //	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	inp := LoginRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		logger.WithError(err).Error("login_error")
@@ -71,7 +72,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := userService.UserLogin(inp.Email, inp.Password)
+	res, err := userService.UserLogin(ctx, inp.Email, inp.Password)
 	if err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == apierr.ErrPasswordIncorrect {
@@ -98,6 +99,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/send_otp [post]
 func SendOTPHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	inp := SendOTPRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
@@ -114,7 +116,7 @@ func SendOTPHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := userService.SendOTP(inp.Email, i18n.GetLangFromRequest(r)); err != nil {
+	if err := userService.SendOTP(ctx, inp.Email, i18n.GetLangFromRequest(r)); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == apierr.ErrUserAlreadyExists {
 			status = http.StatusBadRequest
@@ -140,6 +142,7 @@ func SendOTPHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/register [post]
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	inp := RegisterRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
@@ -156,7 +159,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := userService.UserRegister(inp.Name, inp.Email, inp.Password)
+	res, err := userService.UserRegister(ctx, inp.Name, inp.Email, inp.Password)
 	if err != nil {
 		logger.WithError(err).Error("user_register_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "user_register")
@@ -181,6 +184,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401		{object}	ErrorApiResponse	"Invalid or expired refresh token"
 //	@Router			/refresh [post]
 func RefreshHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	inp := RefreshRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
@@ -192,7 +196,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := userService.RefreshToken(inp.RefreshToken)
+	res, err := userService.RefreshToken(ctx, inp.RefreshToken)
 	if err != nil {
 		WriteErrorJson(w, r, http.StatusUnauthorized, err, "refresh_token")
 		return
@@ -214,6 +218,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/forgot_password [post]
 func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	inp := ForgotPasswordRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
@@ -230,7 +235,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := userService.ForgotPassword(inp.Email, i18n.GetLangFromRequest(r)); err != nil {
+	if err := userService.ForgotPassword(ctx, inp.Email, i18n.GetLangFromRequest(r)); err != nil {
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "forgot_password")
 		return
 	}
@@ -251,6 +256,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/reset_password [post]
 func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	inp := ResetPasswordRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
@@ -262,7 +268,7 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := userService.ResetPassword(inp.Email, inp.OTP, inp.Password); err != nil {
+	if err := userService.ResetPassword(ctx, inp.Email, inp.OTP, inp.Password); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == apierr.ErrInvalidOTP {
 			status = http.StatusBadRequest
@@ -285,8 +291,9 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 //	@Router			/logout [post]
 //	@Security		BearerAuth
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(common.UserIDKey).(int)
-	if err := userService.Logout(userID); err != nil {
+	ctx := r.Context()
+	userID := ctx.Value(common.UserIDKey).(int)
+	if err := userService.Logout(ctx, userID); err != nil {
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "logout")
 		return
 	}

@@ -63,7 +63,7 @@ func TestCreateFeedbackHandler(t *testing.T) {
 				}, nil)
 			},
 			mockSetup: func() {
-				mockSvc.EXPECT().CreateFeedback(1, "bug", "Login broken", "Can't log in", "").Return(nil)
+				mockSvc.EXPECT().CreateFeedback(gomock.Any(), 1,"bug", "Login broken", "Can't log in", "").Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
@@ -76,8 +76,8 @@ func TestCreateFeedbackHandler(t *testing.T) {
 				}, jpegBytes)
 			},
 			mockSetup: func() {
-				mockSvc.EXPECT().UploadFeedbackImage(gomock.Any()).Return("https://cdn.example.com/feedback/abc.jpg", nil)
-				mockSvc.EXPECT().CreateFeedback(1, "bug", "Visual glitch", "", "https://cdn.example.com/feedback/abc.jpg").Return(nil)
+				mockSvc.EXPECT().UploadFeedbackImage(gomock.Any(), gomock.Any()).Return("https://cdn.example.com/feedback/abc.jpg", nil)
+				mockSvc.EXPECT().CreateFeedback(gomock.Any(), 1,"bug", "Visual glitch", "", "https://cdn.example.com/feedback/abc.jpg").Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
@@ -90,7 +90,7 @@ func TestCreateFeedbackHandler(t *testing.T) {
 				}, nil)
 			},
 			mockSetup: func() {
-				mockSvc.EXPECT().CreateFeedback(1, "enhancement", "Add dark mode", "", "").Return(nil)
+				mockSvc.EXPECT().CreateFeedback(gomock.Any(), 1,"enhancement", "Add dark mode", "", "").Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
@@ -119,7 +119,7 @@ func TestCreateFeedbackHandler(t *testing.T) {
 				return buildFeedbackRequest(1, map[string]string{"type": "bug", "title": "Crash"}, jpegBytes)
 			},
 			mockSetup: func() {
-				mockSvc.EXPECT().UploadFeedbackImage(gomock.Any()).Return("", errors.New(apierr.ErrFeedbackFailed))
+				mockSvc.EXPECT().UploadFeedbackImage(gomock.Any(), gomock.Any()).Return("", errors.New(apierr.ErrFeedbackFailed))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,
@@ -130,7 +130,7 @@ func TestCreateFeedbackHandler(t *testing.T) {
 				return buildFeedbackRequest(1, map[string]string{"type": "bug", "title": "Crash"}, nil)
 			},
 			mockSetup: func() {
-				mockSvc.EXPECT().CreateFeedback(1, "bug", "Crash", "", "").Return(errors.New(apierr.ErrFeedbackFailed))
+				mockSvc.EXPECT().CreateFeedback(gomock.Any(), 1,"bug", "Crash", "", "").Return(errors.New(apierr.ErrFeedbackFailed))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,

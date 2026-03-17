@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/sha512"
 	"database/sql"
 	"errors"
@@ -28,7 +29,7 @@ func Test_subscriptionService_GetActivePlans(t *testing.T) {
 			name: "returns active plans",
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetActivePlans().Return([]model.Plan{
+				m.EXPECT().GetActivePlans(gomock.Any()).Return([]model.Plan{
 					{ID: 1, Name: "starter", DisplayName: "Starter", PriceIDR: 149000, MaxUsers: 1, CreatedAt: fixedTime},
 				}, nil)
 				return m
@@ -40,7 +41,7 @@ func Test_subscriptionService_GetActivePlans(t *testing.T) {
 			name: "returns error",
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetActivePlans().Return(nil, errors.New("db error"))
+				m.EXPECT().GetActivePlans(gomock.Any()).Return(nil, errors.New("db error"))
 				return m
 			},
 			wantLen: 0,
@@ -55,7 +56,7 @@ func Test_subscriptionService_GetActivePlans(t *testing.T) {
 
 			subscriptionStore = tt.mockSetup(ctrl)
 			svc := &ssubscription{}
-			got, err := svc.GetActivePlans()
+			got, err := svc.GetActivePlans(context.Background())
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetActivePlans() error = %v, wantErr %v", err, tt.wantErr)
@@ -85,7 +86,7 @@ func Test_subscriptionService_IsSubscriptionActive(t *testing.T) {
 			shopID: 1,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{
 					ID:                 1,
 					ShopID:             1,
 					Status:             "active",
@@ -102,7 +103,7 @@ func Test_subscriptionService_IsSubscriptionActive(t *testing.T) {
 			shopID: 1,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{
 					ID:                 1,
 					ShopID:             1,
 					Status:             "active",
@@ -119,7 +120,7 @@ func Test_subscriptionService_IsSubscriptionActive(t *testing.T) {
 			shopID: 2,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(2).Return(&model.Subscription{
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 2).Return(&model.Subscription{
 					ID:                 2,
 					ShopID:             2,
 					Status:             "trialing",
@@ -137,7 +138,7 @@ func Test_subscriptionService_IsSubscriptionActive(t *testing.T) {
 			shopID: 2,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(2).Return(&model.Subscription{
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 2).Return(&model.Subscription{
 					ID:                 2,
 					ShopID:             2,
 					Status:             "trialing",
@@ -155,7 +156,7 @@ func Test_subscriptionService_IsSubscriptionActive(t *testing.T) {
 			shopID: 3,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(3).Return(nil, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 3).Return(nil, nil)
 				return m
 			},
 			want:    false,
@@ -170,7 +171,7 @@ func Test_subscriptionService_IsSubscriptionActive(t *testing.T) {
 
 			subscriptionStore = tt.mockSetup(ctrl)
 			svc := &ssubscription{}
-			got, err := svc.IsSubscriptionActive(tt.shopID)
+			got, err := svc.IsSubscriptionActive(context.Background(), tt.shopID)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsSubscriptionActive() error = %v, wantErr %v", err, tt.wantErr)
@@ -198,12 +199,12 @@ func Test_subscriptionService_CreateTrialSubscription(t *testing.T) {
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
 
-				subMock.EXPECT().GetActivePlans().Return([]model.Plan{
+				subMock.EXPECT().GetActivePlans(gomock.Any()).Return([]model.Plan{
 					{ID: 1, Name: "starter", PriceIDR: 149000, MaxUsers: 1},
 				}, nil)
 
 				dbMock.EXPECT().Begin().Return(txMock, nil)
-				subMock.EXPECT().CreateTrialSubscription(txMock, 1, 1, gomock.Any()).Return(&model.Subscription{ID: 1}, nil)
+				subMock.EXPECT().CreateTrialSubscription(gomock.Any(), txMock, 1, 1, gomock.Any()).Return(&model.Subscription{ID: 1}, nil)
 				txMock.EXPECT().Commit().Return(nil)
 				txMock.EXPECT().Rollback().Return(nil)
 
@@ -218,7 +219,7 @@ func Test_subscriptionService_CreateTrialSubscription(t *testing.T) {
 				subMock := mock_store.NewMockSubscriptionStore(ctrl)
 				dbMock := mock_database.NewMockDB(ctrl)
 
-				subMock.EXPECT().GetActivePlans().Return([]model.Plan{}, nil)
+				subMock.EXPECT().GetActivePlans(gomock.Any()).Return([]model.Plan{}, nil)
 
 				return subMock, dbMock
 			},
@@ -238,7 +239,7 @@ func Test_subscriptionService_CreateTrialSubscription(t *testing.T) {
 			dbGetter = func() database.DB { return dbMock }
 
 			svc := &ssubscription{}
-			err := svc.CreateTrialSubscription(tt.shopID)
+			err := svc.CreateTrialSubscription(context.Background(), tt.shopID)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateTrialSubscription() error = %v, wantErr %v", err, tt.wantErr)
@@ -263,7 +264,7 @@ func Test_ssubscription_GetSubscriptionByShopID(t *testing.T) {
 			shopID: 1,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{
 					ID:                 1,
 					ShopID:             1,
 					PlanID:             1,
@@ -272,7 +273,7 @@ func Test_ssubscription_GetSubscriptionByShopID(t *testing.T) {
 					CurrentPeriodStart: now,
 					CurrentPeriodEnd:   trialEnd,
 				}, nil)
-				m.EXPECT().GetPlanByID(1).Return(&model.Plan{
+				m.EXPECT().GetPlanByID(gomock.Any(), 1).Return(&model.Plan{
 					ID: 1, Name: "starter", DisplayName: "Starter", PriceIDR: 149000, MaxUsers: 1,
 				}, nil)
 				return m
@@ -285,7 +286,7 @@ func Test_ssubscription_GetSubscriptionByShopID(t *testing.T) {
 			shopID: 2,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(2).Return(nil, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 2).Return(nil, nil)
 				return m
 			},
 			wantNil: false,
@@ -296,10 +297,10 @@ func Test_ssubscription_GetSubscriptionByShopID(t *testing.T) {
 			shopID: 1,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{
 					ID: 1, ShopID: 1, PlanID: 99,
 				}, nil)
-				m.EXPECT().GetPlanByID(99).Return(nil, nil)
+				m.EXPECT().GetPlanByID(gomock.Any(), 99).Return(nil, nil)
 				return m
 			},
 			wantNil: false,
@@ -310,7 +311,7 @@ func Test_ssubscription_GetSubscriptionByShopID(t *testing.T) {
 			shopID: 1,
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(nil, errors.New("db error"))
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(nil, errors.New("db error"))
 				return m
 			},
 			wantNil: false,
@@ -325,7 +326,7 @@ func Test_ssubscription_GetSubscriptionByShopID(t *testing.T) {
 
 			subscriptionStore = tt.mockSetup(ctrl)
 			svc := &ssubscription{}
-			got, gotErr := svc.GetSubscriptionByShopID(tt.shopID)
+			got, gotErr := svc.GetSubscriptionByShopID(context.Background(), tt.shopID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("GetSubscriptionByShopID() failed: %v", gotErr)
@@ -351,7 +352,7 @@ func Test_ssubscription_Checkout(t *testing.T) {
 		shopID    int
 		planID    int
 		mockSetup func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB)
-		snapFunc  func(string, int, int) (*midtransSnapResponse, error)
+		snapFunc  func(context.Context, string, int, int) (*midtransSnapResponse, error)
 		wantErr   bool
 	}{
 		{
@@ -360,7 +361,7 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			planID: 99,
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPlanByID(99).Return(nil, nil)
+				m.EXPECT().GetPlanByID(gomock.Any(), 99).Return(nil, nil)
 				return m, mock_database.NewMockDB(ctrl)
 			},
 			wantErr: true,
@@ -371,8 +372,8 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			planID: 1,
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(nil, nil)
+				m.EXPECT().GetPlanByID(gomock.Any(), 1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(nil, nil)
 				return m, mock_database.NewMockDB(ctrl)
 			},
 			wantErr: true,
@@ -383,8 +384,8 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			planID: 1,
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().GetPlanByID(gomock.Any(), 1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				dbMock.EXPECT().Begin().Return(nil, errors.New("begin error"))
@@ -398,9 +399,9 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			planID: 1,
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
-				m.EXPECT().CreatePayment(gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(nil, errors.New("db error"))
+				m.EXPECT().GetPlanByID(gomock.Any(), 1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().CreatePayment(gomock.Any(), gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(nil, errors.New("db error"))
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -416,9 +417,9 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			planID: 1,
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
-				m.EXPECT().CreatePayment(gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
+				m.EXPECT().GetPlanByID(gomock.Any(), 1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().CreatePayment(gomock.Any(), gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -435,9 +436,9 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			planID: 1,
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
-				m.EXPECT().CreatePayment(gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
+				m.EXPECT().GetPlanByID(gomock.Any(), 1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().CreatePayment(gomock.Any(), gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -446,7 +447,7 @@ func Test_ssubscription_Checkout(t *testing.T) {
 				txMock.EXPECT().Rollback().Return(nil)
 				return m, dbMock
 			},
-			snapFunc: func(string, int, int) (*midtransSnapResponse, error) {
+			snapFunc: func(context.Context, string, int, int) (*midtransSnapResponse, error) {
 				return nil, errors.New("midtrans unavailable")
 			},
 			wantErr: true,
@@ -457,10 +458,10 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			planID: 1,
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
-				m.EXPECT().CreatePayment(gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
-				m.EXPECT().UpdatePaymentSnapInfo(1, "snap-token", "https://snap.example.com").Return(errors.New("db error"))
+				m.EXPECT().GetPlanByID(gomock.Any(), 1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().CreatePayment(gomock.Any(), gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
+				m.EXPECT().UpdatePaymentSnapInfo(gomock.Any(), 1, "snap-token", "https://snap.example.com").Return(errors.New("db error"))
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -469,7 +470,7 @@ func Test_ssubscription_Checkout(t *testing.T) {
 				txMock.EXPECT().Rollback().Return(nil)
 				return m, dbMock
 			},
-			snapFunc: func(string, int, int) (*midtransSnapResponse, error) {
+			snapFunc: func(context.Context, string, int, int) (*midtransSnapResponse, error) {
 				return &midtransSnapResponse{Token: "snap-token", RedirectURL: "https://snap.example.com"}, nil
 			},
 			wantErr: false,
@@ -480,10 +481,10 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			planID: 1,
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPlanByID(1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
-				m.EXPECT().GetSubscriptionByShopID(1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
-				m.EXPECT().CreatePayment(gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
-				m.EXPECT().UpdatePaymentSnapInfo(1, "snap-token", "https://snap.example.com").Return(nil)
+				m.EXPECT().GetPlanByID(gomock.Any(), 1).Return(&model.Plan{ID: 1, PriceIDR: 149000}, nil)
+				m.EXPECT().GetSubscriptionByShopID(gomock.Any(), 1).Return(&model.Subscription{ID: 1, ShopID: 1, PlanID: 1}, nil)
+				m.EXPECT().CreatePayment(gomock.Any(), gomock.Any(), 1, 1, 1, gomock.Any(), 149000).Return(&model.Payment{ID: 1}, nil)
+				m.EXPECT().UpdatePaymentSnapInfo(gomock.Any(), 1, "snap-token", "https://snap.example.com").Return(nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -492,7 +493,7 @@ func Test_ssubscription_Checkout(t *testing.T) {
 				txMock.EXPECT().Rollback().Return(nil)
 				return m, dbMock
 			},
-			snapFunc: func(string, int, int) (*midtransSnapResponse, error) {
+			snapFunc: func(context.Context, string, int, int) (*midtransSnapResponse, error) {
 				return &midtransSnapResponse{Token: "snap-token", RedirectURL: "https://snap.example.com"}, nil
 			},
 			wantErr: false,
@@ -517,7 +518,7 @@ func Test_ssubscription_Checkout(t *testing.T) {
 			}
 
 			svc := &ssubscription{}
-			got, gotErr := svc.Checkout(tt.shopID, tt.planID)
+			got, gotErr := svc.Checkout(context.Background(), tt.shopID, tt.planID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("Checkout() failed: %v", gotErr)
@@ -573,7 +574,7 @@ func Test_ssubscription_HandleMidtransWebhook(t *testing.T) {
 			},
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPaymentByMidtransOrderID("recapo-1-111").Return(nil, nil)
+				m.EXPECT().GetPaymentByMidtransOrderID(gomock.Any(), "recapo-1-111").Return(nil, nil)
 				return m, mock_database.NewMockDB(ctrl)
 			},
 			wantErr: true,
@@ -590,9 +591,9 @@ func Test_ssubscription_HandleMidtransWebhook(t *testing.T) {
 			},
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPaymentByMidtransOrderID("recapo-1-111").Return(&model.Payment{ID: 1, SubscriptionID: 1}, nil)
-				m.EXPECT().UpdatePaymentSettled(gomock.Any(), 1, "txn-abc", gomock.Any()).Return(nil)
-				m.EXPECT().UpdateSubscriptionStatus(gomock.Any(), 1, "active", gomock.Any()).Return(nil)
+				m.EXPECT().GetPaymentByMidtransOrderID(gomock.Any(), "recapo-1-111").Return(&model.Payment{ID: 1, SubscriptionID: 1}, nil)
+				m.EXPECT().UpdatePaymentSettled(gomock.Any(), gomock.Any(), 1, "txn-abc", gomock.Any()).Return(nil)
+				m.EXPECT().UpdateSubscriptionStatus(gomock.Any(), gomock.Any(), 1, "active", gomock.Any()).Return(nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -616,9 +617,9 @@ func Test_ssubscription_HandleMidtransWebhook(t *testing.T) {
 			},
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPaymentByMidtransOrderID("recapo-1-111").Return(&model.Payment{ID: 1, SubscriptionID: 1}, nil)
-				m.EXPECT().UpdatePaymentSettled(gomock.Any(), 1, "txn-abc", gomock.Any()).Return(nil)
-				m.EXPECT().UpdateSubscriptionStatus(gomock.Any(), 1, "active", gomock.Any()).Return(nil)
+				m.EXPECT().GetPaymentByMidtransOrderID(gomock.Any(), "recapo-1-111").Return(&model.Payment{ID: 1, SubscriptionID: 1}, nil)
+				m.EXPECT().UpdatePaymentSettled(gomock.Any(), gomock.Any(), 1, "txn-abc", gomock.Any()).Return(nil)
+				m.EXPECT().UpdateSubscriptionStatus(gomock.Any(), gomock.Any(), 1, "active", gomock.Any()).Return(nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -641,7 +642,7 @@ func Test_ssubscription_HandleMidtransWebhook(t *testing.T) {
 			},
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPaymentByMidtransOrderID("recapo-1-111").Return(&model.Payment{ID: 1}, nil)
+				m.EXPECT().GetPaymentByMidtransOrderID(gomock.Any(), "recapo-1-111").Return(&model.Payment{ID: 1}, nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -663,8 +664,8 @@ func Test_ssubscription_HandleMidtransWebhook(t *testing.T) {
 			},
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().GetPaymentByMidtransOrderID("recapo-1-111").Return(&model.Payment{ID: 1}, nil)
-				m.EXPECT().UpdatePaymentFailed(gomock.Any(), 1, "deny").Return(nil)
+				m.EXPECT().GetPaymentByMidtransOrderID(gomock.Any(), "recapo-1-111").Return(&model.Payment{ID: 1}, nil)
+				m.EXPECT().UpdatePaymentFailed(gomock.Any(), gomock.Any(), 1, "deny").Return(nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
 				txMock := mock_database.NewMockTx(ctrl)
@@ -690,7 +691,7 @@ func Test_ssubscription_HandleMidtransWebhook(t *testing.T) {
 			cfg.MidtransServerKey = testServerKey
 
 			svc := &ssubscription{}
-			gotErr := svc.HandleMidtransWebhook(tt.payload)
+			gotErr := svc.HandleMidtransWebhook(context.Background(), tt.payload)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("HandleMidtransWebhook() failed: %v", gotErr)
@@ -714,7 +715,7 @@ func Test_ssubscription_ExpireSubscriptions(t *testing.T) {
 			name: "successfully expires active subscriptions",
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().ExpireSubscriptions().Return(int64(3), nil)
+				m.EXPECT().ExpireSubscriptions(gomock.Any()).Return(int64(3), nil)
 				return m
 			},
 			wantErr: false,
@@ -723,7 +724,7 @@ func Test_ssubscription_ExpireSubscriptions(t *testing.T) {
 			name: "returns nil error when no subscriptions to expire",
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().ExpireSubscriptions().Return(int64(0), nil)
+				m.EXPECT().ExpireSubscriptions(gomock.Any()).Return(int64(0), nil)
 				return m
 			},
 			wantErr: false,
@@ -732,7 +733,7 @@ func Test_ssubscription_ExpireSubscriptions(t *testing.T) {
 			name: "returns error on store failure",
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSubscriptionStore {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
-				m.EXPECT().ExpireSubscriptions().Return(int64(0), errors.New("database error"))
+				m.EXPECT().ExpireSubscriptions(gomock.Any()).Return(int64(0), errors.New("database error"))
 				return m
 			},
 			wantErr: true,
@@ -746,7 +747,7 @@ func Test_ssubscription_ExpireSubscriptions(t *testing.T) {
 			subscriptionStore = tt.mockSetup(ctrl)
 
 			svc := &ssubscription{}
-			gotErr := svc.ExpireSubscriptions()
+			gotErr := svc.ExpireSubscriptions(context.Background())
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("ExpireSubscriptions() failed: %v", gotErr)
@@ -773,10 +774,10 @@ func Test_ssubscription_CancelSubscription(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
 				m.EXPECT().
-					GetSubscriptionByShopID(1).
+					GetSubscriptionByShopID(gomock.Any(), 1).
 					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "active"}, nil)
 				m.EXPECT().
-					CancelSubscription(gomock.Any(), 5).
+					CancelSubscription(gomock.Any(), gomock.Any(), 5).
 					Return(nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
@@ -794,7 +795,7 @@ func Test_ssubscription_CancelSubscription(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
 				m.EXPECT().
-					GetSubscriptionByShopID(1).
+					GetSubscriptionByShopID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 				return m, mock_database.NewMockDB(ctrl)
 			},
@@ -806,7 +807,7 @@ func Test_ssubscription_CancelSubscription(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
 				m.EXPECT().
-					GetSubscriptionByShopID(1).
+					GetSubscriptionByShopID(gomock.Any(), 1).
 					Return(nil, nil)
 				return m, mock_database.NewMockDB(ctrl)
 			},
@@ -818,7 +819,7 @@ func Test_ssubscription_CancelSubscription(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
 				m.EXPECT().
-					GetSubscriptionByShopID(1).
+					GetSubscriptionByShopID(gomock.Any(), 1).
 					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "trialing"}, nil)
 				return m, mock_database.NewMockDB(ctrl)
 			},
@@ -830,7 +831,7 @@ func Test_ssubscription_CancelSubscription(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
 				m.EXPECT().
-					GetSubscriptionByShopID(1).
+					GetSubscriptionByShopID(gomock.Any(), 1).
 					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "active"}, nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
@@ -845,10 +846,10 @@ func Test_ssubscription_CancelSubscription(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
 				m.EXPECT().
-					GetSubscriptionByShopID(1).
+					GetSubscriptionByShopID(gomock.Any(), 1).
 					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "active"}, nil)
 				m.EXPECT().
-					CancelSubscription(gomock.Any(), 5).
+					CancelSubscription(gomock.Any(), gomock.Any(), 5).
 					Return(errors.New("database error"))
 
 				dbMock := mock_database.NewMockDB(ctrl)
@@ -865,10 +866,10 @@ func Test_ssubscription_CancelSubscription(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockSubscriptionStore, *mock_database.MockDB) {
 				m := mock_store.NewMockSubscriptionStore(ctrl)
 				m.EXPECT().
-					GetSubscriptionByShopID(1).
+					GetSubscriptionByShopID(gomock.Any(), 1).
 					Return(&model.Subscription{ID: 5, ShopID: 1, Status: "active"}, nil)
 				m.EXPECT().
-					CancelSubscription(gomock.Any(), 5).
+					CancelSubscription(gomock.Any(), gomock.Any(), 5).
 					Return(nil)
 
 				dbMock := mock_database.NewMockDB(ctrl)
@@ -893,7 +894,7 @@ func Test_ssubscription_CancelSubscription(t *testing.T) {
 			dbGetter = func() database.DB { return dbMock }
 
 			svc := &ssubscription{}
-			gotErr := svc.CancelSubscription(tt.shopID)
+			gotErr := svc.CancelSubscription(context.Background(), tt.shopID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("CancelSubscription() failed: %v", gotErr)

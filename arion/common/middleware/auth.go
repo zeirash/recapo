@@ -46,7 +46,8 @@ func Authentication(next http.Handler) http.Handler {
 		}
 
 		authToken := t[1]
-		authorized, err := tokenStore.IsAuthorized(authToken, secret)
+		ctx := r.Context()
+		authorized, err := tokenStore.IsAuthorized(ctx, authToken, secret)
 		if err != nil {
 			handler.WriteErrorJson(w, r, http.StatusUnauthorized, err, "unauthorized")
 			return
@@ -57,7 +58,7 @@ func Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		tokenData, err := tokenStore.ExtractDataFromToken(authToken, secret)
+		tokenData, err := tokenStore.ExtractDataFromToken(ctx, authToken, secret)
 		if err != nil {
 			handler.WriteErrorJson(w, r, http.StatusInternalServerError, err, "extract_data")
 			return
@@ -65,7 +66,7 @@ func Authentication(next http.Handler) http.Handler {
 
 		// Session token check: if DB user has a session token, it must match the JWT claim
 		userStore := NewUserStoreFunc()
-		dbUser, err := userStore.GetUserByID(tokenData.UserID)
+		dbUser, err := userStore.GetUserByID(ctx, tokenData.UserID)
 		if err != nil || dbUser == nil {
 			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New(apierr.ErrSessionInvalid), "unauthorized")
 			return
@@ -75,7 +76,7 @@ func Authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), common.UserIDKey, tokenData.UserID)
+		ctx = context.WithValue(ctx, common.UserIDKey, tokenData.UserID)
 		ctx = context.WithValue(ctx, common.ShopIDKey, tokenData.ShopID)
 		ctx = context.WithValue(ctx, common.SystemModeKey, tokenData.SystemMode)
 		r = r.WithContext(ctx)

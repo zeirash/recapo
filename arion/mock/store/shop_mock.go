@@ -5,6 +5,7 @@
 package mock_store
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -36,46 +37,46 @@ func (m *MockShopStore) EXPECT() *MockShopStoreMockRecorder {
 }
 
 // CreateShop mocks base method.
-func (m *MockShopStore) CreateShop(tx database.Tx, name string) (*model.Shop, error) {
+func (m *MockShopStore) CreateShop(ctx context.Context, tx database.Tx, name string) (*model.Shop, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateShop", tx, name)
+	ret := m.ctrl.Call(m, "CreateShop", ctx, tx, name)
 	ret0, _ := ret[0].(*model.Shop)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateShop indicates an expected call of CreateShop.
-func (mr *MockShopStoreMockRecorder) CreateShop(tx, name interface{}) *gomock.Call {
+func (mr *MockShopStoreMockRecorder) CreateShop(ctx, tx, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateShop", reflect.TypeOf((*MockShopStore)(nil).CreateShop), tx, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateShop", reflect.TypeOf((*MockShopStore)(nil).CreateShop), ctx, tx, name)
 }
 
 // GetShareTokenByID mocks base method.
-func (m *MockShopStore) GetShareTokenByID(shopID int) (string, error) {
+func (m *MockShopStore) GetShareTokenByID(ctx context.Context, shopID int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetShareTokenByID", shopID)
+	ret := m.ctrl.Call(m, "GetShareTokenByID", ctx, shopID)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetShareTokenByID indicates an expected call of GetShareTokenByID.
-func (mr *MockShopStoreMockRecorder) GetShareTokenByID(shopID interface{}) *gomock.Call {
+func (mr *MockShopStoreMockRecorder) GetShareTokenByID(ctx, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShareTokenByID", reflect.TypeOf((*MockShopStore)(nil).GetShareTokenByID), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShareTokenByID", reflect.TypeOf((*MockShopStore)(nil).GetShareTokenByID), ctx, shopID)
 }
 
 // GetShopByShareToken mocks base method.
-func (m *MockShopStore) GetShopByShareToken(shareToken string) (*model.Shop, error) {
+func (m *MockShopStore) GetShopByShareToken(ctx context.Context, shareToken string) (*model.Shop, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetShopByShareToken", shareToken)
+	ret := m.ctrl.Call(m, "GetShopByShareToken", ctx, shareToken)
 	ret0, _ := ret[0].(*model.Shop)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetShopByShareToken indicates an expected call of GetShopByShareToken.
-func (mr *MockShopStoreMockRecorder) GetShopByShareToken(shareToken interface{}) *gomock.Call {
+func (mr *MockShopStoreMockRecorder) GetShopByShareToken(ctx, shareToken interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShopByShareToken", reflect.TypeOf((*MockShopStore)(nil).GetShopByShareToken), shareToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShopByShareToken", reflect.TypeOf((*MockShopStore)(nil).GetShopByShareToken), ctx, shareToken)
 }

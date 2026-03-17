@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"time"
@@ -14,9 +15,9 @@ const shareTokenLength = 12
 
 type (
 	ShopStore interface {
-		CreateShop(tx database.Tx, name string) (*model.Shop, error)
-		GetShareTokenByID(shopID int) (string, error)
-		GetShopByShareToken(shareToken string) (*model.Shop, error)
+		CreateShop(ctx context.Context, tx database.Tx, name string) (*model.Shop, error)
+		GetShareTokenByID(ctx context.Context, shopID int) (string, error)
+		GetShopByShareToken(ctx context.Context, shareToken string) (*model.Shop, error)
 	}
 
 	shop struct {
@@ -45,7 +46,7 @@ func generateShareToken() (string, error) {
 	return string(b), nil
 }
 
-func (s *shop) CreateShop(tx database.Tx, name string) (*model.Shop, error) {
+func (s *shop) CreateShop(ctx context.Context, tx database.Tx, name string) (*model.Shop, error) {
 	shareToken, err := generateShareToken()
 	if err != nil {
 		return nil, err
@@ -60,7 +61,7 @@ func (s *shop) CreateShop(tx database.Tx, name string) (*model.Shop, error) {
 		RETURNING id
 	`
 
-	err = tx.QueryRow(q, name, shareToken, now).Scan(&id)
+	err = tx.QueryRowContext(ctx, q, name, shareToken, now).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +74,11 @@ func (s *shop) CreateShop(tx database.Tx, name string) (*model.Shop, error) {
 	}, nil
 }
 
-func (s *shop) GetShareTokenByID(shopID int) (string, error) {
+func (s *shop) GetShareTokenByID(ctx context.Context, shopID int) (string, error) {
 	q := `SELECT share_token FROM shops WHERE id = $1`
 
 	var token string
-	err := s.db.QueryRow(q, shopID).Scan(&token)
+	err := s.db.QueryRowContext(ctx, q, shopID).Scan(&token)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return "", nil
@@ -88,7 +89,7 @@ func (s *shop) GetShareTokenByID(shopID int) (string, error) {
 	return token, nil
 }
 
-func (s *shop) GetShopByShareToken(shareToken string) (*model.Shop, error) {
+func (s *shop) GetShopByShareToken(ctx context.Context, shareToken string) (*model.Shop, error) {
 	q := `
 		SELECT id, name, share_token, created_at, updated_at
 		FROM shops
@@ -96,7 +97,7 @@ func (s *shop) GetShopByShareToken(shareToken string) (*model.Shop, error) {
 	`
 
 	var sh model.Shop
-	err := s.db.QueryRow(q, shareToken).Scan(&sh.ID, &sh.Name, &sh.ShareToken, &sh.CreatedAt, &sh.UpdatedAt)
+	err := s.db.QueryRowContext(ctx, q, shareToken).Scan(&sh.ID, &sh.Name, &sh.ShareToken, &sh.CreatedAt, &sh.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

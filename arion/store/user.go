@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -13,14 +14,14 @@ import (
 
 type (
 	UserStore interface {
-		GetUserByID(userID int) (*model.User, error)
-		GetUserByShopID(shopID int) (*model.User, error)
-		GetUserByEmail(email string) (*model.User, error)
-		GetUsers() ([]model.User, error)
-		CreateUser(tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
-		UpdateUser(id int, input UpdateUserInput) (*model.User, error)
-		SetSessionToken(userID int, sessionToken string) error
-		ClearSessionToken(userID int) error
+		GetUserByID(ctx context.Context, userID int) (*model.User, error)
+		GetUserByShopID(ctx context.Context, shopID int) (*model.User, error)
+		GetUserByEmail(ctx context.Context, email string) (*model.User, error)
+		GetUsers(ctx context.Context) ([]model.User, error)
+		CreateUser(ctx context.Context, tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
+		UpdateUser(ctx context.Context, id int, input UpdateUserInput) (*model.User, error)
+		SetSessionToken(ctx context.Context, userID int, sessionToken string) error
+		ClearSessionToken(ctx context.Context, userID int) error
 		Roles() []string
 		IsValidRole(role string) bool
 	}
@@ -45,7 +46,7 @@ func NewUserStoreWithDB(db *sql.DB) UserStore {
 	return &user{db: db}
 }
 
-func (u *user) GetUserByID(userID int) (*model.User, error) {
+func (u *user) GetUserByID(ctx context.Context, userID int) (*model.User, error) {
 	resp := model.User{}
 
 	q := `
@@ -54,7 +55,7 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 		WHERE id = $1
 	`
 
-	err := u.db.QueryRow(q, userID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
+	err := u.db.QueryRowContext(ctx, q, userID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -65,7 +66,7 @@ func (u *user) GetUserByID(userID int) (*model.User, error) {
 	return &resp, nil
 }
 
-func (u *user) GetUserByShopID(shopID int) (*model.User, error) {
+func (u *user) GetUserByShopID(ctx context.Context, shopID int) (*model.User, error) {
 	resp := model.User{}
 
 	q := `
@@ -74,7 +75,7 @@ func (u *user) GetUserByShopID(shopID int) (*model.User, error) {
 		WHERE shop_id = $1
 	`
 
-	err := u.db.QueryRow(q, shopID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
+	err := u.db.QueryRowContext(ctx, q, shopID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -85,7 +86,7 @@ func (u *user) GetUserByShopID(shopID int) (*model.User, error) {
 	return &resp, nil
 }
 
-func (u *user) GetUserByEmail(email string) (*model.User, error) {
+func (u *user) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	resp := model.User{}
 	q := `
 		SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at
@@ -93,7 +94,7 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 		WHERE email = $1
 	`
 
-	err := u.db.QueryRow(q, email).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
+	err := u.db.QueryRowContext(ctx, q, email).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -104,13 +105,13 @@ func (u *user) GetUserByEmail(email string) (*model.User, error) {
 	return &resp, nil
 }
 
-func (u *user) GetUsers() ([]model.User, error) {
+func (u *user) GetUsers(ctx context.Context) ([]model.User, error) {
 	q := `
 		SELECT id, name, email, password, role, created_at, updated_at
 		FROM users
 	`
 
-	rows, err := u.db.Query(q)
+	rows, err := u.db.QueryContext(ctx, q)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -132,7 +133,7 @@ func (u *user) GetUsers() ([]model.User, error) {
 	return users, nil
 }
 
-func (u *user) CreateUser(tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
+func (u *user) CreateUser(ctx context.Context, tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
 	now := time.Now()
 	var id int
 
@@ -142,7 +143,7 @@ func (u *user) CreateUser(tx database.Tx, name, email, hashPassword, role string
 		RETURNING id
 	`
 
-	err := tx.QueryRow(q, name, email, hashPassword, role, shop_id, now).Scan(&id)
+	err := tx.QueryRowContext(ctx, q, name, email, hashPassword, role, shop_id, now).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +158,7 @@ func (u *user) CreateUser(tx database.Tx, name, email, hashPassword, role string
 	}, nil
 }
 
-func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
+func (u *user) UpdateUser(ctx context.Context, id int, input UpdateUserInput) (*model.User, error) {
 	set := []string{}
 	var user model.User
 
@@ -186,7 +187,7 @@ func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := u.db.QueryRow(q, id).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	err := u.db.QueryRowContext(ctx, q, id).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -194,15 +195,15 @@ func (u *user) UpdateUser(id int, input UpdateUserInput) (*model.User, error) {
 	return &user, nil
 }
 
-func (u *user) SetSessionToken(userID int, sessionToken string) error {
+func (u *user) SetSessionToken(ctx context.Context, userID int, sessionToken string) error {
 	q := `UPDATE users SET session_token = $1, updated_at = now() WHERE id = $2`
-	_, err := u.db.Exec(q, sessionToken, userID)
+	_, err := u.db.ExecContext(ctx, q, sessionToken, userID)
 	return err
 }
 
-func (u *user) ClearSessionToken(userID int) error {
+func (u *user) ClearSessionToken(ctx context.Context, userID int) error {
 	q := `UPDATE users SET session_token = NULL, updated_at = now() WHERE id = $1`
-	_, err := u.db.Exec(q, userID)
+	_, err := u.db.ExecContext(ctx, q, userID)
 	return err
 }
 

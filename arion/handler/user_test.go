@@ -54,7 +54,7 @@ func TestGetUserHandler(t *testing.T) {
 			userID: 1,
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(&response.UserData{
 						ID:        1,
 						Name:      "John Doe",
@@ -70,7 +70,7 @@ func TestGetUserHandler(t *testing.T) {
 			userID: 999,
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					GetUserByID(999).
+					GetUserByID(gomock.Any(), 999).
 					Return(nil, errors.New(apierr.ErrUserNotFound))
 			},
 			wantStatus:  http.StatusNotFound,
@@ -82,7 +82,7 @@ func TestGetUserHandler(t *testing.T) {
 			userID: 1,
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -139,7 +139,7 @@ func TestGetUsersHandler(t *testing.T) {
 			name: "successfully get users list",
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					GetUsers().
+					GetUsers(gomock.Any()).
 					Return([]response.UserData{
 						{ID: 1, Name: "John Doe", Email: "john@example.com", CreatedAt: fixedTime},
 						{ID: 2, Name: "Jane Doe", Email: "jane@example.com", CreatedAt: fixedTime},
@@ -153,7 +153,7 @@ func TestGetUsersHandler(t *testing.T) {
 			name: "get users returns 500 on service error",
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					GetUsers().
+					GetUsers(gomock.Any()).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
@@ -221,7 +221,7 @@ func TestUpdateUserHandler(t *testing.T) {
 				name := "Updated Name"
 				email := "updated@example.com"
 				mockUserService.EXPECT().
-					UpdateUser(service.UpdateUserInput{
+					UpdateUser(gomock.Any(), service.UpdateUserInput{
 						ID:    1,
 						Name:  &name,
 						Email: &email,
@@ -252,7 +252,7 @@ func TestUpdateUserHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					UpdateUser(gomock.Any()).
+					UpdateUser(gomock.Any(), gomock.Any()).
 					Return(response.UserData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,

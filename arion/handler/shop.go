@@ -39,7 +39,7 @@ type (
 func GetShopShareTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
-	token, err := shopService.GetShareTokenByID(shopID)
+	token, err := shopService.GetShareTokenByID(ctx, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrShopNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -67,6 +67,7 @@ func GetShopShareTokenHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/public/shops/{share_token}/products [get]
 func GetShopProductsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	shareToken := params["share_token"]
 
@@ -75,7 +76,7 @@ func GetShopProductsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	products, err := shopService.GetPublicProducts(shareToken)
+	products, err := shopService.GetPublicProducts(ctx, shareToken)
 	if err != nil {
 		if err.Error() == apierr.ErrShopNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -104,6 +105,7 @@ func GetShopProductsHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/public/shops/{share_token}/orders [post]
 func CreateShopTempOrderHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	shareToken := params["share_token"]
 
@@ -130,7 +132,7 @@ func CreateShopTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 			Qty:       item.Qty,
 		})
 	}
-	res, err := orderService.CreateTempOrder(inp.CustomerName, inp.CustomerPhone, shareToken, items)
+	res, err := orderService.CreateTempOrder(ctx, inp.CustomerName, inp.CustomerPhone, shareToken, items)
 	if err != nil {
 		logger.WithError(err).Error("create_shop_temp_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_shop_temp_order")

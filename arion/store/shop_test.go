@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -63,7 +64,7 @@ func Test_shop_GetShopByShareToken(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &shop{db: db}
-			got, gotErr := s.GetShopByShareToken(tt.shareToken)
+			got, gotErr := s.GetShopByShareToken(context.Background(), tt.shareToken)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -137,7 +138,7 @@ func Test_shop_CreateShop(t *testing.T) {
 			}
 
 			var s shop
-			got, gotErr := s.CreateShop(tx, tt.shopName)
+			got, gotErr := s.CreateShop(context.Background(), tx, tt.shopName)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -214,7 +215,7 @@ func Test_shop_GetShareTokenByID(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &shop{db: db}
-			got, gotErr := s.GetShareTokenByID(tt.shopID)
+			got, gotErr := s.GetShareTokenByID(context.Background(), tt.shopID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("GetShareTokenByID() error = %v, wantErr %v", gotErr, tt.wantErr)

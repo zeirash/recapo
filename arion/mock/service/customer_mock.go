@@ -5,6 +5,7 @@
 package mock_service
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -37,53 +38,53 @@ func (m *MockCustomerService) EXPECT() *MockCustomerServiceMockRecorder {
 }
 
 // CheckActiveOrderByPhone mocks base method.
-func (m *MockCustomerService) CheckActiveOrderByPhone(phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error) {
+func (m *MockCustomerService) CheckActiveOrderByPhone(ctx context.Context, phone, name string, shopID int) (response.CustomerCheckActiveOrderByPhone, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckActiveOrderByPhone", phone, name, shopID)
+	ret := m.ctrl.Call(m, "CheckActiveOrderByPhone", ctx, phone, name, shopID)
 	ret0, _ := ret[0].(response.CustomerCheckActiveOrderByPhone)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CheckActiveOrderByPhone indicates an expected call of CheckActiveOrderByPhone.
-func (mr *MockCustomerServiceMockRecorder) CheckActiveOrderByPhone(phone, name, shopID interface{}) *gomock.Call {
+func (mr *MockCustomerServiceMockRecorder) CheckActiveOrderByPhone(ctx, phone, name, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckActiveOrderByPhone", reflect.TypeOf((*MockCustomerService)(nil).CheckActiveOrderByPhone), phone, name, shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckActiveOrderByPhone", reflect.TypeOf((*MockCustomerService)(nil).CheckActiveOrderByPhone), ctx, phone, name, shopID)
 }
 
 // CreateCustomer mocks base method.
-func (m *MockCustomerService) CreateCustomer(name, phone, address string, shopID int) (response.CustomerData, error) {
+func (m *MockCustomerService) CreateCustomer(ctx context.Context, name, phone, address string, shopID int) (response.CustomerData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCustomer", name, phone, address, shopID)
+	ret := m.ctrl.Call(m, "CreateCustomer", ctx, name, phone, address, shopID)
 	ret0, _ := ret[0].(response.CustomerData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateCustomer indicates an expected call of CreateCustomer.
-func (mr *MockCustomerServiceMockRecorder) CreateCustomer(name, phone, address, shopID interface{}) *gomock.Call {
+func (mr *MockCustomerServiceMockRecorder) CreateCustomer(ctx, name, phone, address, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomer", reflect.TypeOf((*MockCustomerService)(nil).CreateCustomer), name, phone, address, shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomer", reflect.TypeOf((*MockCustomerService)(nil).CreateCustomer), ctx, name, phone, address, shopID)
 }
 
 // DeleteCustomerByID mocks base method.
-func (m *MockCustomerService) DeleteCustomerByID(id int) error {
+func (m *MockCustomerService) DeleteCustomerByID(ctx context.Context, id int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteCustomerByID", id)
+	ret := m.ctrl.Call(m, "DeleteCustomerByID", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteCustomerByID indicates an expected call of DeleteCustomerByID.
-func (mr *MockCustomerServiceMockRecorder) DeleteCustomerByID(id interface{}) *gomock.Call {
+func (mr *MockCustomerServiceMockRecorder) DeleteCustomerByID(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCustomerByID", reflect.TypeOf((*MockCustomerService)(nil).DeleteCustomerByID), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCustomerByID", reflect.TypeOf((*MockCustomerService)(nil).DeleteCustomerByID), ctx, id)
 }
 
 // GetCustomerByID mocks base method.
-func (m *MockCustomerService) GetCustomerByID(customerID int, shopID ...int) (*response.CustomerData, error) {
+func (m *MockCustomerService) GetCustomerByID(ctx context.Context, customerID int, shopID ...int) (*response.CustomerData, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{customerID}
+	varargs := []interface{}{ctx, customerID}
 	for _, a := range shopID {
 		varargs = append(varargs, a)
 	}
@@ -94,38 +95,38 @@ func (m *MockCustomerService) GetCustomerByID(customerID int, shopID ...int) (*r
 }
 
 // GetCustomerByID indicates an expected call of GetCustomerByID.
-func (mr *MockCustomerServiceMockRecorder) GetCustomerByID(customerID interface{}, shopID ...interface{}) *gomock.Call {
+func (mr *MockCustomerServiceMockRecorder) GetCustomerByID(ctx, customerID interface{}, shopID ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{customerID}, shopID...)
+	varargs := append([]interface{}{ctx, customerID}, shopID...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomerByID", reflect.TypeOf((*MockCustomerService)(nil).GetCustomerByID), varargs...)
 }
 
 // GetCustomersByShopID mocks base method.
-func (m *MockCustomerService) GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]response.CustomerData, error) {
+func (m *MockCustomerService) GetCustomersByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]response.CustomerData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCustomersByShopID", shopID, filter)
+	ret := m.ctrl.Call(m, "GetCustomersByShopID", ctx, shopID, filter)
 	ret0, _ := ret[0].([]response.CustomerData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetCustomersByShopID indicates an expected call of GetCustomersByShopID.
-func (mr *MockCustomerServiceMockRecorder) GetCustomersByShopID(shopID, filter interface{}) *gomock.Call {
+func (mr *MockCustomerServiceMockRecorder) GetCustomersByShopID(ctx, shopID, filter interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomersByShopID", reflect.TypeOf((*MockCustomerService)(nil).GetCustomersByShopID), shopID, filter)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomersByShopID", reflect.TypeOf((*MockCustomerService)(nil).GetCustomersByShopID), ctx, shopID, filter)
 }
 
 // UpdateCustomer mocks base method.
-func (m *MockCustomerService) UpdateCustomer(input service.UpdateCustomerInput) (response.CustomerData, error) {
+func (m *MockCustomerService) UpdateCustomer(ctx context.Context, input service.UpdateCustomerInput) (response.CustomerData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateCustomer", input)
+	ret := m.ctrl.Call(m, "UpdateCustomer", ctx, input)
 	ret0, _ := ret[0].(response.CustomerData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateCustomer indicates an expected call of UpdateCustomer.
-func (mr *MockCustomerServiceMockRecorder) UpdateCustomer(input interface{}) *gomock.Call {
+func (mr *MockCustomerServiceMockRecorder) UpdateCustomer(ctx, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCustomer", reflect.TypeOf((*MockCustomerService)(nil).UpdateCustomer), input)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCustomer", reflect.TypeOf((*MockCustomerService)(nil).UpdateCustomer), ctx, input)
 }

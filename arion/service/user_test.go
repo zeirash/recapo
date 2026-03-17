@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -24,20 +25,20 @@ type noopSubscriptionService struct{}
 
 type errTrialSubscriptionService struct{ noopSubscriptionService }
 
-func (e *errTrialSubscriptionService) CreateTrialSubscription(int) error {
+func (e *errTrialSubscriptionService) CreateTrialSubscription(context.Context, int) error {
 	return errors.New("trial error")
 }
 
-func (n *noopSubscriptionService) GetActivePlans() ([]response.PlanData, error) { return nil, nil }
-func (n *noopSubscriptionService) GetSubscriptionByShopID(int) (*response.SubscriptionData, error) {
+func (n *noopSubscriptionService) GetActivePlans(context.Context) ([]response.PlanData, error) { return nil, nil }
+func (n *noopSubscriptionService) GetSubscriptionByShopID(context.Context, int) (*response.SubscriptionData, error) {
 	return nil, nil
 }
-func (n *noopSubscriptionService) CreateTrialSubscription(int) error             { return nil }
-func (n *noopSubscriptionService) Checkout(int, int) (*response.CheckoutData, error) { return nil, nil }
-func (n *noopSubscriptionService) HandleMidtransWebhook(MidtransWebhookPayload) error { return nil }
-func (n *noopSubscriptionService) IsSubscriptionActive(int) (bool, error)        { return false, nil }
-func (n *noopSubscriptionService) CancelSubscription(int) error                  { return nil }
-func (n *noopSubscriptionService) ExpireSubscriptions() error                    { return nil }
+func (n *noopSubscriptionService) CreateTrialSubscription(context.Context, int) error             { return nil }
+func (n *noopSubscriptionService) Checkout(context.Context, int, int) (*response.CheckoutData, error) { return nil, nil }
+func (n *noopSubscriptionService) HandleMidtransWebhook(context.Context, MidtransWebhookPayload) error { return nil }
+func (n *noopSubscriptionService) IsSubscriptionActive(context.Context, int) (bool, error)        { return false, nil }
+func (n *noopSubscriptionService) CancelSubscription(context.Context, int) error                  { return nil }
+func (n *noopSubscriptionService) ExpireSubscriptions(context.Context) error                    { return nil }
 
 func Test_uservice_UserLogin(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
@@ -78,19 +79,19 @@ func Test_uservice_UserLogin(t *testing.T) {
 				}
 
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(user, nil)
 
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 
 				mockToken.EXPECT().
-					CreateAccessToken(user, gomock.Any(), 2).
+					CreateAccessToken(gomock.Any(), user, gomock.Any(), 2).
 					Return("access_token_123", nil)
 
 				mockToken.EXPECT().
-					CreateRefreshToken(user, gomock.Any(), 168).
+					CreateRefreshToken(gomock.Any(), user, gomock.Any(), 168).
 					Return("refresh_token_123", nil)
 
 				return mockUser, mockToken
@@ -112,7 +113,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 
 				mockUser.EXPECT().
-					GetUserByEmail("notfound@example.com").
+					GetUserByEmail(gomock.Any(), "notfound@example.com").
 					Return(nil, nil)
 
 				return mockUser, mockToken
@@ -131,7 +132,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(&model.User{
 						ID:       1,
 						Email:    "john@example.com",
@@ -154,7 +155,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, errors.New("database error"))
 
 				return mockUser, mockToken
@@ -179,15 +180,15 @@ func Test_uservice_UserLogin(t *testing.T) {
 				}
 
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(user, nil)
 
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 
 				mockToken.EXPECT().
-					CreateAccessToken(user, gomock.Any(), 2).
+					CreateAccessToken(gomock.Any(), user, gomock.Any(), 2).
 					Return("", errors.New("token error"))
 
 				return mockUser, mockToken
@@ -212,19 +213,19 @@ func Test_uservice_UserLogin(t *testing.T) {
 				}
 
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(user, nil)
 
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 
 				mockToken.EXPECT().
-					CreateAccessToken(user, gomock.Any(), 2).
+					CreateAccessToken(gomock.Any(), user, gomock.Any(), 2).
 					Return("access_token_123", nil)
 
 				mockToken.EXPECT().
-					CreateRefreshToken(user, gomock.Any(), 168).
+					CreateRefreshToken(gomock.Any(), user, gomock.Any(), 168).
 					Return("", errors.New("refresh token error"))
 
 				return mockUser, mockToken
@@ -248,7 +249,7 @@ func Test_uservice_UserLogin(t *testing.T) {
 			cfg = config.Config{SecretKey: "testsecret"}
 
 			var u uservice
-			got, gotErr := u.UserLogin(tt.input.email, tt.input.password)
+			got, gotErr := u.UserLogin(context.Background(), tt.input.email, tt.input.password)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -294,23 +295,23 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				}
 
 				mockToken.EXPECT().
-					ExtractDataFromToken("valid_refresh_token", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "valid_refresh_token", gomock.Any()).
 					Return(model.TokenData{UserID: 1, ShopID: 10}, nil)
 
 				mockUser.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(user, nil)
 
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 
 				mockToken.EXPECT().
-					CreateAccessToken(user, gomock.Any(), 2).
+					CreateAccessToken(gomock.Any(), user, gomock.Any(), 2).
 					Return("new_access_token", nil)
 
 				mockToken.EXPECT().
-					CreateRefreshToken(user, gomock.Any(), 168).
+					CreateRefreshToken(gomock.Any(), user, gomock.Any(), 168).
 					Return("new_refresh_token", nil)
 
 				return mockUser, mockToken
@@ -329,11 +330,11 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 
 				mockToken.EXPECT().
-					ExtractDataFromToken("valid_refresh_token", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "valid_refresh_token", gomock.Any()).
 					Return(model.TokenData{UserID: 1, ShopID: 10, SessionToken: "old_token"}, nil)
 
 				mockUser.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(&model.User{
 						ID:           1,
 						ShopID:       10,
@@ -353,7 +354,7 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 
 				mockToken.EXPECT().
-					ExtractDataFromToken("invalid_token", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "invalid_token", gomock.Any()).
 					Return(model.TokenData{}, errors.New("invalid token"))
 
 				return mockUser, mockToken
@@ -369,11 +370,11 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 
 				mockToken.EXPECT().
-					ExtractDataFromToken("valid_refresh_token", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "valid_refresh_token", gomock.Any()).
 					Return(model.TokenData{UserID: 9999, ShopID: 10}, nil)
 
 				mockUser.EXPECT().
-					GetUserByID(9999).
+					GetUserByID(gomock.Any(), 9999).
 					Return(nil, nil)
 
 				return mockUser, mockToken
@@ -389,11 +390,11 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 
 				mockToken.EXPECT().
-					ExtractDataFromToken("valid_refresh_token", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "valid_refresh_token", gomock.Any()).
 					Return(model.TokenData{UserID: 1, ShopID: 10}, nil)
 
 				mockUser.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 
 				return mockUser, mockToken
@@ -414,19 +415,19 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				}
 
 				mockToken.EXPECT().
-					ExtractDataFromToken("valid_refresh_token", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "valid_refresh_token", gomock.Any()).
 					Return(model.TokenData{UserID: 1, ShopID: 10}, nil)
 
 				mockUser.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(user, nil)
 
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 
 				mockToken.EXPECT().
-					CreateAccessToken(user, gomock.Any(), 2).
+					CreateAccessToken(gomock.Any(), user, gomock.Any(), 2).
 					Return("", errors.New("token error"))
 
 				return mockUser, mockToken
@@ -447,23 +448,23 @@ func Test_uservice_RefreshToken(t *testing.T) {
 				}
 
 				mockToken.EXPECT().
-					ExtractDataFromToken("valid_refresh_token", gomock.Any()).
+					ExtractDataFromToken(gomock.Any(), "valid_refresh_token", gomock.Any()).
 					Return(model.TokenData{UserID: 1, ShopID: 10}, nil)
 
 				mockUser.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(user, nil)
 
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 
 				mockToken.EXPECT().
-					CreateAccessToken(user, gomock.Any(), 2).
+					CreateAccessToken(gomock.Any(), user, gomock.Any(), 2).
 					Return("new_access_token", nil)
 
 				mockToken.EXPECT().
-					CreateRefreshToken(user, gomock.Any(), 168).
+					CreateRefreshToken(gomock.Any(), user, gomock.Any(), 168).
 					Return("", errors.New("refresh token error"))
 
 				return mockUser, mockToken
@@ -487,7 +488,7 @@ func Test_uservice_RefreshToken(t *testing.T) {
 			cfg = config.Config{SecretKey: "testsecret"}
 
 			var u uservice
-			got, gotErr := u.RefreshToken(tt.refreshToken)
+			got, gotErr := u.RefreshToken(context.Background(), tt.refreshToken)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -532,7 +533,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) {
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(&model.User{ID: 1, Email: "john@example.com"}, nil)
 				userStore = mockUser
 			},
@@ -549,7 +550,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) {
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, errors.New("database error"))
 				userStore = mockUser
 			},
@@ -566,7 +567,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) {
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, nil)
 				userStore = mockUser
 
@@ -589,7 +590,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) {
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, nil)
 				userStore = mockUser
 
@@ -604,7 +605,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockShop := mock_store.NewMockShopStore(ctrl)
 				mockShop.EXPECT().
-					CreateShop(mockTx, "John Doe's Shop").
+					CreateShop(gomock.Any(), mockTx, "John Doe's Shop").
 					Return(nil, errors.New("shop creation error"))
 				shopStore = mockShop
 			},
@@ -624,10 +625,10 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, nil)
 				mockUser.EXPECT().
-					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
+					CreateUser(gomock.Any(), mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(nil, errors.New("user creation error"))
 				userStore = mockUser
 
@@ -639,7 +640,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockShop := mock_store.NewMockShopStore(ctrl)
 				mockShop.EXPECT().
-					CreateShop(mockTx, "John Doe's Shop").
+					CreateShop(gomock.Any(), mockTx, "John Doe's Shop").
 					Return(&model.Shop{ID: 1, Name: "John Doe's Shop", CreatedAt: fixedTime}, nil)
 				shopStore = mockShop
 			},
@@ -660,10 +661,10 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, nil)
 				mockUser.EXPECT().
-					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
+					CreateUser(gomock.Any(), mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
 				userStore = mockUser
 
@@ -675,7 +676,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockShop := mock_store.NewMockShopStore(ctrl)
 				mockShop.EXPECT().
-					CreateShop(mockTx, "John Doe's Shop").
+					CreateShop(gomock.Any(), mockTx, "John Doe's Shop").
 					Return(&model.Shop{ID: 1, Name: "John Doe's Shop", CreatedAt: fixedTime}, nil)
 				shopStore = mockShop
 			},
@@ -696,13 +697,13 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, nil)
 				mockUser.EXPECT().
-					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
+					CreateUser(gomock.Any(), mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 				userStore = mockUser
 
@@ -714,13 +715,13 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockShop := mock_store.NewMockShopStore(ctrl)
 				mockShop.EXPECT().
-					CreateShop(mockTx, "John Doe's Shop").
+					CreateShop(gomock.Any(), mockTx, "John Doe's Shop").
 					Return(&model.Shop{ID: 1, Name: "John Doe's Shop", CreatedAt: fixedTime}, nil)
 				shopStore = mockShop
 
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 				mockToken.EXPECT().
-					CreateAccessToken(gomock.Any(), "testsecret", 2).
+					CreateAccessToken(gomock.Any(), gomock.Any(), "testsecret", 2).
 					Return("", errors.New("token error"))
 				tokenStore = mockToken
 			},
@@ -741,13 +742,13 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, nil)
 				mockUser.EXPECT().
-					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
+					CreateUser(gomock.Any(), mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 				userStore = mockUser
 
@@ -759,16 +760,16 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockShop := mock_store.NewMockShopStore(ctrl)
 				mockShop.EXPECT().
-					CreateShop(mockTx, "John Doe's Shop").
+					CreateShop(gomock.Any(), mockTx, "John Doe's Shop").
 					Return(&model.Shop{ID: 1, Name: "John Doe's Shop", CreatedAt: fixedTime}, nil)
 				shopStore = mockShop
 
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 				mockToken.EXPECT().
-					CreateAccessToken(gomock.Any(), "testsecret", 2).
+					CreateAccessToken(gomock.Any(), gomock.Any(), "testsecret", 2).
 					Return("access-token", nil)
 				mockToken.EXPECT().
-					CreateRefreshToken(gomock.Any(), "testsecret", 168).
+					CreateRefreshToken(gomock.Any(), gomock.Any(), "testsecret", 168).
 					Return("", errors.New("refresh token error"))
 				tokenStore = mockToken
 			},
@@ -789,13 +790,13 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, nil)
 				mockUser.EXPECT().
-					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
+					CreateUser(gomock.Any(), mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 				userStore = mockUser
 
@@ -807,16 +808,16 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockShop := mock_store.NewMockShopStore(ctrl)
 				mockShop.EXPECT().
-					CreateShop(mockTx, "John Doe's Shop").
+					CreateShop(gomock.Any(), mockTx, "John Doe's Shop").
 					Return(&model.Shop{ID: 1, Name: "John Doe's Shop", CreatedAt: fixedTime}, nil)
 				shopStore = mockShop
 
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 				mockToken.EXPECT().
-					CreateAccessToken(gomock.Any(), "testsecret", 2).
+					CreateAccessToken(gomock.Any(), gomock.Any(), "testsecret", 2).
 					Return("access-token", nil)
 				mockToken.EXPECT().
-					CreateRefreshToken(gomock.Any(), "testsecret", 168).
+					CreateRefreshToken(gomock.Any(), gomock.Any(), "testsecret", 168).
 					Return("refresh-token", nil)
 				tokenStore = mockToken
 			},
@@ -840,13 +841,13 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					GetUserByEmail("john@example.com").
+					GetUserByEmail(gomock.Any(), "john@example.com").
 					Return(nil, nil)
 				mockUser.EXPECT().
-					CreateUser(mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
+					CreateUser(gomock.Any(), mockTx, "John Doe", "john@example.com", gomock.Any(), "owner", 1).
 					Return(&model.User{ID: 1, ShopID: 1, Name: "John Doe", Email: "john@example.com", Role: "owner", CreatedAt: fixedTime}, nil)
 				mockUser.EXPECT().
-					SetSessionToken(1, gomock.Any()).
+					SetSessionToken(gomock.Any(), 1, gomock.Any()).
 					Return(nil)
 				userStore = mockUser
 
@@ -858,16 +859,16 @@ func Test_uservice_UserRegister(t *testing.T) {
 
 				mockShop := mock_store.NewMockShopStore(ctrl)
 				mockShop.EXPECT().
-					CreateShop(mockTx, "John Doe's Shop").
+					CreateShop(gomock.Any(), mockTx, "John Doe's Shop").
 					Return(&model.Shop{ID: 1, Name: "John Doe's Shop", CreatedAt: fixedTime}, nil)
 				shopStore = mockShop
 
 				mockToken := mock_store.NewMockTokenStore(ctrl)
 				mockToken.EXPECT().
-					CreateAccessToken(gomock.Any(), "testsecret", 2).
+					CreateAccessToken(gomock.Any(), gomock.Any(), "testsecret", 2).
 					Return("access-token", nil)
 				mockToken.EXPECT().
-					CreateRefreshToken(gomock.Any(), "testsecret", 168).
+					CreateRefreshToken(gomock.Any(), gomock.Any(), "testsecret", 168).
 					Return("refresh-token", nil)
 				tokenStore = mockToken
 
@@ -900,7 +901,7 @@ func Test_uservice_UserRegister(t *testing.T) {
 			cfg = config.Config{SecretKey: "testsecret"}
 
 			var u uservice
-			got, gotErr := u.UserRegister(tt.input.name, tt.input.email, tt.input.password)
+			got, gotErr := u.UserRegister(context.Background(), tt.input.name, tt.input.email, tt.input.password)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -941,10 +942,10 @@ func Test_uservice_UpdateUser(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(&model.User{ID: 1, Name: "John Doe", Email: "john@example.com"}, nil)
 				mock.EXPECT().
-					UpdateUser(1, store.UpdateUserInput{Name: strPtr("Updated Name")}).
+					UpdateUser(gomock.Any(), 1, store.UpdateUserInput{Name: strPtr("Updated Name")}).
 					Return(&model.User{
 						ID:        1,
 						Name:      "Updated Name",
@@ -973,11 +974,11 @@ func Test_uservice_UpdateUser(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(&model.User{ID: 1, Name: "John Doe", Email: "john@example.com"}, nil)
 				// Use gomock.Any() since bcrypt generates different hashes each time
 				mock.EXPECT().
-					UpdateUser(1, gomock.Any()).
+					UpdateUser(gomock.Any(), 1, gomock.Any()).
 					Return(&model.User{
 						ID:        1,
 						Name:      "Updated Name",
@@ -1005,7 +1006,7 @@ func Test_uservice_UpdateUser(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(9999).
+					GetUserByID(gomock.Any(), 9999).
 					Return(nil, nil)
 				return mock
 			},
@@ -1021,7 +1022,7 @@ func Test_uservice_UpdateUser(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -1037,10 +1038,10 @@ func Test_uservice_UpdateUser(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(&model.User{ID: 1, Name: "John Doe"}, nil)
 				mock.EXPECT().
-					UpdateUser(1, store.UpdateUserInput{Name: strPtr("Updated Name")}).
+					UpdateUser(gomock.Any(), 1, store.UpdateUserInput{Name: strPtr("Updated Name")}).
 					Return(nil, errors.New("update error"))
 				return mock
 			},
@@ -1059,7 +1060,7 @@ func Test_uservice_UpdateUser(t *testing.T) {
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice
-			got, gotErr := u.UpdateUser(tt.input)
+			got, gotErr := u.UpdateUser(context.Background(), tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -1095,7 +1096,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(&model.User{
 						ID:        1,
 						Name:      "John Doe",
@@ -1120,7 +1121,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(9999).
+					GetUserByID(gomock.Any(), 9999).
 					Return(nil, nil)
 				return mock
 			},
@@ -1133,7 +1134,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByID(1).
+					GetUserByID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -1152,7 +1153,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice
-			got, gotErr := u.GetUserByID(tt.userID)
+			got, gotErr := u.GetUserByID(context.Background(), tt.userID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -1185,7 +1186,7 @@ func Test_uservice_GetUsers(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUsers().
+					GetUsers(gomock.Any()).
 					Return([]model.User{
 						{ID: 1, Name: "John Doe", Email: "john@example.com", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
 						{ID: 2, Name: "Jane Doe", Email: "jane@example.com", CreatedAt: fixedTime},
@@ -1203,7 +1204,7 @@ func Test_uservice_GetUsers(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUsers().
+					GetUsers(gomock.Any()).
 					Return([]model.User{}, nil)
 				return mock
 			},
@@ -1215,7 +1216,7 @@ func Test_uservice_GetUsers(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUsers().
+					GetUsers(gomock.Any()).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -1234,7 +1235,7 @@ func Test_uservice_GetUsers(t *testing.T) {
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice
-			got, gotErr := u.GetUsers()
+			got, gotErr := u.GetUsers(context.Background())
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -1266,7 +1267,7 @@ func Test_uservice_SendOTP(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("new@example.com").
+					GetUserByEmail(gomock.Any(), "new@example.com").
 					Return(nil, nil)
 				return mock
 			},
@@ -1278,7 +1279,7 @@ func Test_uservice_SendOTP(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("existing@example.com").
+					GetUserByEmail(gomock.Any(), "existing@example.com").
 					Return(&model.User{ID: 1, Email: "existing@example.com"}, nil)
 				return mock
 			},
@@ -1290,7 +1291,7 @@ func Test_uservice_SendOTP(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("new@example.com").
+					GetUserByEmail(gomock.Any(), "new@example.com").
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -1308,7 +1309,7 @@ func Test_uservice_SendOTP(t *testing.T) {
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice
-			gotErr := u.SendOTP(tt.email, "en")
+			gotErr := u.SendOTP(context.Background(), tt.email, "en")
 
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("SendOTP() error = %v, wantErr %v", gotErr, tt.wantErr)
@@ -1330,7 +1331,7 @@ func Test_uservice_ForgotPassword(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("user@example.com").
+					GetUserByEmail(gomock.Any(), "user@example.com").
 					Return(&model.User{ID: 1, Email: "user@example.com"}, nil)
 				return mock
 			},
@@ -1342,7 +1343,7 @@ func Test_uservice_ForgotPassword(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("unknown@example.com").
+					GetUserByEmail(gomock.Any(), "unknown@example.com").
 					Return(nil, nil)
 				return mock
 			},
@@ -1354,7 +1355,7 @@ func Test_uservice_ForgotPassword(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("user@example.com").
+					GetUserByEmail(gomock.Any(), "user@example.com").
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -1372,7 +1373,7 @@ func Test_uservice_ForgotPassword(t *testing.T) {
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice
-			gotErr := u.ForgotPassword(tt.email, "en")
+			gotErr := u.ForgotPassword(context.Background(), tt.email, "en")
 
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("ForgotPassword() error = %v, wantErr %v", gotErr, tt.wantErr)
@@ -1402,10 +1403,10 @@ func Test_uservice_ResetPassword(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("user@example.com").
+					GetUserByEmail(gomock.Any(), "user@example.com").
 					Return(&model.User{ID: 1, Email: "user@example.com", CreatedAt: fixedTime}, nil)
 				mock.EXPECT().
-					UpdateUser(1, gomock.Any()).
+					UpdateUser(gomock.Any(), 1, gomock.Any()).
 					Return(&model.User{ID: 1, Email: "user@example.com", CreatedAt: fixedTime}, nil)
 				return mock
 			},
@@ -1434,7 +1435,7 @@ func Test_uservice_ResetPassword(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("user@example.com").
+					GetUserByEmail(gomock.Any(), "user@example.com").
 					Return(nil, nil)
 				return mock
 			},
@@ -1450,10 +1451,10 @@ func Test_uservice_ResetPassword(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
-					GetUserByEmail("user@example.com").
+					GetUserByEmail(gomock.Any(), "user@example.com").
 					Return(&model.User{ID: 1, Email: "user@example.com", CreatedAt: fixedTime}, nil)
 				mock.EXPECT().
-					UpdateUser(1, gomock.Any()).
+					UpdateUser(gomock.Any(), 1, gomock.Any()).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -1473,7 +1474,7 @@ func Test_uservice_ResetPassword(t *testing.T) {
 			otpCode := tt.otpSetup(tt.email)
 
 			var u uservice
-			gotErr := u.ResetPassword(tt.email, otpCode, tt.password)
+			gotErr := u.ResetPassword(context.Background(), tt.email, otpCode, tt.password)
 
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("ResetPassword() error = %v, wantErr %v", gotErr, tt.wantErr)
@@ -1495,7 +1496,7 @@ func Test_uservice_Logout(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					ClearSessionToken(1).
+					ClearSessionToken(gomock.Any(), 1).
 					Return(nil)
 				return mockUser
 			},
@@ -1507,7 +1508,7 @@ func Test_uservice_Logout(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mockUser := mock_store.NewMockUserStore(ctrl)
 				mockUser.EXPECT().
-					ClearSessionToken(1).
+					ClearSessionToken(gomock.Any(), 1).
 					Return(errors.New("db error"))
 				return mockUser
 			},
@@ -1525,7 +1526,7 @@ func Test_uservice_Logout(t *testing.T) {
 			userStore = tt.mockSetup(ctrl)
 
 			var u uservice
-			gotErr := u.Logout(tt.userID)
+			gotErr := u.Logout(context.Background(), tt.userID)
 
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("Logout() error = %v, wantErr %v", gotErr, tt.wantErr)

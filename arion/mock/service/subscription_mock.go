@@ -5,6 +5,7 @@
 package mock_service
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -36,117 +37,117 @@ func (m *MockSubscriptionService) EXPECT() *MockSubscriptionServiceMockRecorder 
 }
 
 // GetActivePlans mocks base method.
-func (m *MockSubscriptionService) GetActivePlans() ([]response.PlanData, error) {
+func (m *MockSubscriptionService) GetActivePlans(ctx context.Context) ([]response.PlanData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetActivePlans")
+	ret := m.ctrl.Call(m, "GetActivePlans", ctx)
 	ret0, _ := ret[0].([]response.PlanData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetActivePlans indicates an expected call of GetActivePlans.
-func (mr *MockSubscriptionServiceMockRecorder) GetActivePlans() *gomock.Call {
+func (mr *MockSubscriptionServiceMockRecorder) GetActivePlans(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActivePlans", reflect.TypeOf((*MockSubscriptionService)(nil).GetActivePlans))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActivePlans", reflect.TypeOf((*MockSubscriptionService)(nil).GetActivePlans), ctx)
 }
 
 // GetSubscriptionByShopID mocks base method.
-func (m *MockSubscriptionService) GetSubscriptionByShopID(shopID int) (*response.SubscriptionData, error) {
+func (m *MockSubscriptionService) GetSubscriptionByShopID(ctx context.Context, shopID int) (*response.SubscriptionData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSubscriptionByShopID", shopID)
+	ret := m.ctrl.Call(m, "GetSubscriptionByShopID", ctx, shopID)
 	ret0, _ := ret[0].(*response.SubscriptionData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSubscriptionByShopID indicates an expected call of GetSubscriptionByShopID.
-func (mr *MockSubscriptionServiceMockRecorder) GetSubscriptionByShopID(shopID interface{}) *gomock.Call {
+func (mr *MockSubscriptionServiceMockRecorder) GetSubscriptionByShopID(ctx, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptionByShopID", reflect.TypeOf((*MockSubscriptionService)(nil).GetSubscriptionByShopID), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptionByShopID", reflect.TypeOf((*MockSubscriptionService)(nil).GetSubscriptionByShopID), ctx, shopID)
 }
 
 // CreateTrialSubscription mocks base method.
-func (m *MockSubscriptionService) CreateTrialSubscription(shopID int) error {
+func (m *MockSubscriptionService) CreateTrialSubscription(ctx context.Context, shopID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateTrialSubscription", shopID)
+	ret := m.ctrl.Call(m, "CreateTrialSubscription", ctx, shopID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateTrialSubscription indicates an expected call of CreateTrialSubscription.
-func (mr *MockSubscriptionServiceMockRecorder) CreateTrialSubscription(shopID interface{}) *gomock.Call {
+func (mr *MockSubscriptionServiceMockRecorder) CreateTrialSubscription(ctx, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTrialSubscription", reflect.TypeOf((*MockSubscriptionService)(nil).CreateTrialSubscription), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTrialSubscription", reflect.TypeOf((*MockSubscriptionService)(nil).CreateTrialSubscription), ctx, shopID)
 }
 
 // Checkout mocks base method.
-func (m *MockSubscriptionService) Checkout(shopID, planID int) (*response.CheckoutData, error) {
+func (m *MockSubscriptionService) Checkout(ctx context.Context, shopID, planID int) (*response.CheckoutData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Checkout", shopID, planID)
+	ret := m.ctrl.Call(m, "Checkout", ctx, shopID, planID)
 	ret0, _ := ret[0].(*response.CheckoutData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Checkout indicates an expected call of Checkout.
-func (mr *MockSubscriptionServiceMockRecorder) Checkout(shopID, planID interface{}) *gomock.Call {
+func (mr *MockSubscriptionServiceMockRecorder) Checkout(ctx, shopID, planID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checkout", reflect.TypeOf((*MockSubscriptionService)(nil).Checkout), shopID, planID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checkout", reflect.TypeOf((*MockSubscriptionService)(nil).Checkout), ctx, shopID, planID)
 }
 
 // HandleMidtransWebhook mocks base method.
-func (m *MockSubscriptionService) HandleMidtransWebhook(payload service.MidtransWebhookPayload) error {
+func (m *MockSubscriptionService) HandleMidtransWebhook(ctx context.Context, payload service.MidtransWebhookPayload) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HandleMidtransWebhook", payload)
+	ret := m.ctrl.Call(m, "HandleMidtransWebhook", ctx, payload)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // HandleMidtransWebhook indicates an expected call of HandleMidtransWebhook.
-func (mr *MockSubscriptionServiceMockRecorder) HandleMidtransWebhook(payload interface{}) *gomock.Call {
+func (mr *MockSubscriptionServiceMockRecorder) HandleMidtransWebhook(ctx, payload interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleMidtransWebhook", reflect.TypeOf((*MockSubscriptionService)(nil).HandleMidtransWebhook), payload)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleMidtransWebhook", reflect.TypeOf((*MockSubscriptionService)(nil).HandleMidtransWebhook), ctx, payload)
 }
 
 // IsSubscriptionActive mocks base method.
-func (m *MockSubscriptionService) IsSubscriptionActive(shopID int) (bool, error) {
+func (m *MockSubscriptionService) IsSubscriptionActive(ctx context.Context, shopID int) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsSubscriptionActive", shopID)
+	ret := m.ctrl.Call(m, "IsSubscriptionActive", ctx, shopID)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // IsSubscriptionActive indicates an expected call of IsSubscriptionActive.
-func (mr *MockSubscriptionServiceMockRecorder) IsSubscriptionActive(shopID interface{}) *gomock.Call {
+func (mr *MockSubscriptionServiceMockRecorder) IsSubscriptionActive(ctx, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSubscriptionActive", reflect.TypeOf((*MockSubscriptionService)(nil).IsSubscriptionActive), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSubscriptionActive", reflect.TypeOf((*MockSubscriptionService)(nil).IsSubscriptionActive), ctx, shopID)
 }
 
 // ExpireSubscriptions mocks base method.
-func (m *MockSubscriptionService) ExpireSubscriptions() error {
+func (m *MockSubscriptionService) ExpireSubscriptions(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExpireSubscriptions")
+	ret := m.ctrl.Call(m, "ExpireSubscriptions", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ExpireSubscriptions indicates an expected call of ExpireSubscriptions.
-func (mr *MockSubscriptionServiceMockRecorder) ExpireSubscriptions() *gomock.Call {
+func (mr *MockSubscriptionServiceMockRecorder) ExpireSubscriptions(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExpireSubscriptions", reflect.TypeOf((*MockSubscriptionService)(nil).ExpireSubscriptions))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExpireSubscriptions", reflect.TypeOf((*MockSubscriptionService)(nil).ExpireSubscriptions), ctx)
 }
 
 // CancelSubscription mocks base method.
-func (m *MockSubscriptionService) CancelSubscription(shopID int) error {
+func (m *MockSubscriptionService) CancelSubscription(ctx context.Context, shopID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CancelSubscription", shopID)
+	ret := m.ctrl.Call(m, "CancelSubscription", ctx, shopID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CancelSubscription indicates an expected call of CancelSubscription.
-func (mr *MockSubscriptionServiceMockRecorder) CancelSubscription(shopID interface{}) *gomock.Call {
+func (mr *MockSubscriptionServiceMockRecorder) CancelSubscription(ctx, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelSubscription", reflect.TypeOf((*MockSubscriptionService)(nil).CancelSubscription), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelSubscription", reflect.TypeOf((*MockSubscriptionService)(nil).CancelSubscription), ctx, shopID)
 }

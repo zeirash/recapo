@@ -5,6 +5,7 @@
 package mock_store
 
 import (
+	context "context"
 	reflect "reflect"
 	time "time"
 
@@ -37,176 +38,176 @@ func (m *MockSubscriptionStore) EXPECT() *MockSubscriptionStoreMockRecorder {
 }
 
 // ExpireSubscriptions mocks base method.
-func (m *MockSubscriptionStore) ExpireSubscriptions() (int64, error) {
+func (m *MockSubscriptionStore) ExpireSubscriptions(ctx context.Context) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExpireSubscriptions")
+	ret := m.ctrl.Call(m, "ExpireSubscriptions", ctx)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ExpireSubscriptions indicates an expected call of ExpireSubscriptions.
-func (mr *MockSubscriptionStoreMockRecorder) ExpireSubscriptions() *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) ExpireSubscriptions(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExpireSubscriptions", reflect.TypeOf((*MockSubscriptionStore)(nil).ExpireSubscriptions))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExpireSubscriptions", reflect.TypeOf((*MockSubscriptionStore)(nil).ExpireSubscriptions), ctx)
 }
 
 // CancelSubscription mocks base method.
-func (m *MockSubscriptionStore) CancelSubscription(tx database.Tx, subID int) error {
+func (m *MockSubscriptionStore) CancelSubscription(ctx context.Context, tx database.Tx, subID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CancelSubscription", tx, subID)
+	ret := m.ctrl.Call(m, "CancelSubscription", ctx, tx, subID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CancelSubscription indicates an expected call of CancelSubscription.
-func (mr *MockSubscriptionStoreMockRecorder) CancelSubscription(tx, subID interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) CancelSubscription(ctx, tx, subID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelSubscription", reflect.TypeOf((*MockSubscriptionStore)(nil).CancelSubscription), tx, subID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelSubscription", reflect.TypeOf((*MockSubscriptionStore)(nil).CancelSubscription), ctx, tx, subID)
 }
 
 // GetActivePlans mocks base method.
-func (m *MockSubscriptionStore) GetActivePlans() ([]model.Plan, error) {
+func (m *MockSubscriptionStore) GetActivePlans(ctx context.Context) ([]model.Plan, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetActivePlans")
+	ret := m.ctrl.Call(m, "GetActivePlans", ctx)
 	ret0, _ := ret[0].([]model.Plan)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetActivePlans indicates an expected call of GetActivePlans.
-func (mr *MockSubscriptionStoreMockRecorder) GetActivePlans() *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) GetActivePlans(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActivePlans", reflect.TypeOf((*MockSubscriptionStore)(nil).GetActivePlans))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActivePlans", reflect.TypeOf((*MockSubscriptionStore)(nil).GetActivePlans), ctx)
 }
 
 // GetPlanByID mocks base method.
-func (m *MockSubscriptionStore) GetPlanByID(planID int) (*model.Plan, error) {
+func (m *MockSubscriptionStore) GetPlanByID(ctx context.Context, planID int) (*model.Plan, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPlanByID", planID)
+	ret := m.ctrl.Call(m, "GetPlanByID", ctx, planID)
 	ret0, _ := ret[0].(*model.Plan)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPlanByID indicates an expected call of GetPlanByID.
-func (mr *MockSubscriptionStoreMockRecorder) GetPlanByID(planID interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) GetPlanByID(ctx, planID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanByID", reflect.TypeOf((*MockSubscriptionStore)(nil).GetPlanByID), planID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanByID", reflect.TypeOf((*MockSubscriptionStore)(nil).GetPlanByID), ctx, planID)
 }
 
 // GetSubscriptionByShopID mocks base method.
-func (m *MockSubscriptionStore) GetSubscriptionByShopID(shopID int) (*model.Subscription, error) {
+func (m *MockSubscriptionStore) GetSubscriptionByShopID(ctx context.Context, shopID int) (*model.Subscription, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSubscriptionByShopID", shopID)
+	ret := m.ctrl.Call(m, "GetSubscriptionByShopID", ctx, shopID)
 	ret0, _ := ret[0].(*model.Subscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSubscriptionByShopID indicates an expected call of GetSubscriptionByShopID.
-func (mr *MockSubscriptionStoreMockRecorder) GetSubscriptionByShopID(shopID interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) GetSubscriptionByShopID(ctx, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptionByShopID", reflect.TypeOf((*MockSubscriptionStore)(nil).GetSubscriptionByShopID), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptionByShopID", reflect.TypeOf((*MockSubscriptionStore)(nil).GetSubscriptionByShopID), ctx, shopID)
 }
 
 // CreateTrialSubscription mocks base method.
-func (m *MockSubscriptionStore) CreateTrialSubscription(tx database.Tx, shopID, planID int, trialEndsAt time.Time) (*model.Subscription, error) {
+func (m *MockSubscriptionStore) CreateTrialSubscription(ctx context.Context, tx database.Tx, shopID, planID int, trialEndsAt time.Time) (*model.Subscription, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateTrialSubscription", tx, shopID, planID, trialEndsAt)
+	ret := m.ctrl.Call(m, "CreateTrialSubscription", ctx, tx, shopID, planID, trialEndsAt)
 	ret0, _ := ret[0].(*model.Subscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateTrialSubscription indicates an expected call of CreateTrialSubscription.
-func (mr *MockSubscriptionStoreMockRecorder) CreateTrialSubscription(tx, shopID, planID, trialEndsAt interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) CreateTrialSubscription(ctx, tx, shopID, planID, trialEndsAt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTrialSubscription", reflect.TypeOf((*MockSubscriptionStore)(nil).CreateTrialSubscription), tx, shopID, planID, trialEndsAt)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTrialSubscription", reflect.TypeOf((*MockSubscriptionStore)(nil).CreateTrialSubscription), ctx, tx, shopID, planID, trialEndsAt)
 }
 
 // UpdateSubscriptionStatus mocks base method.
-func (m *MockSubscriptionStore) UpdateSubscriptionStatus(tx database.Tx, subID int, status string, periodEnd *time.Time) error {
+func (m *MockSubscriptionStore) UpdateSubscriptionStatus(ctx context.Context, tx database.Tx, subID int, status string, periodEnd *time.Time) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSubscriptionStatus", tx, subID, status, periodEnd)
+	ret := m.ctrl.Call(m, "UpdateSubscriptionStatus", ctx, tx, subID, status, periodEnd)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateSubscriptionStatus indicates an expected call of UpdateSubscriptionStatus.
-func (mr *MockSubscriptionStoreMockRecorder) UpdateSubscriptionStatus(tx, subID, status, periodEnd interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) UpdateSubscriptionStatus(ctx, tx, subID, status, periodEnd interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSubscriptionStatus", reflect.TypeOf((*MockSubscriptionStore)(nil).UpdateSubscriptionStatus), tx, subID, status, periodEnd)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSubscriptionStatus", reflect.TypeOf((*MockSubscriptionStore)(nil).UpdateSubscriptionStatus), ctx, tx, subID, status, periodEnd)
 }
 
 // CreatePayment mocks base method.
-func (m *MockSubscriptionStore) CreatePayment(tx database.Tx, shopID, subscriptionID, planID int, midtransOrderID string, amountIDR int) (*model.Payment, error) {
+func (m *MockSubscriptionStore) CreatePayment(ctx context.Context, tx database.Tx, shopID, subscriptionID, planID int, midtransOrderID string, amountIDR int) (*model.Payment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePayment", tx, shopID, subscriptionID, planID, midtransOrderID, amountIDR)
+	ret := m.ctrl.Call(m, "CreatePayment", ctx, tx, shopID, subscriptionID, planID, midtransOrderID, amountIDR)
 	ret0, _ := ret[0].(*model.Payment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreatePayment indicates an expected call of CreatePayment.
-func (mr *MockSubscriptionStoreMockRecorder) CreatePayment(tx, shopID, subscriptionID, planID, midtransOrderID, amountIDR interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) CreatePayment(ctx, tx, shopID, subscriptionID, planID, midtransOrderID, amountIDR interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePayment", reflect.TypeOf((*MockSubscriptionStore)(nil).CreatePayment), tx, shopID, subscriptionID, planID, midtransOrderID, amountIDR)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePayment", reflect.TypeOf((*MockSubscriptionStore)(nil).CreatePayment), ctx, tx, shopID, subscriptionID, planID, midtransOrderID, amountIDR)
 }
 
 // GetPaymentByMidtransOrderID mocks base method.
-func (m *MockSubscriptionStore) GetPaymentByMidtransOrderID(orderID string) (*model.Payment, error) {
+func (m *MockSubscriptionStore) GetPaymentByMidtransOrderID(ctx context.Context, orderID string) (*model.Payment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPaymentByMidtransOrderID", orderID)
+	ret := m.ctrl.Call(m, "GetPaymentByMidtransOrderID", ctx, orderID)
 	ret0, _ := ret[0].(*model.Payment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPaymentByMidtransOrderID indicates an expected call of GetPaymentByMidtransOrderID.
-func (mr *MockSubscriptionStoreMockRecorder) GetPaymentByMidtransOrderID(orderID interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) GetPaymentByMidtransOrderID(ctx, orderID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByMidtransOrderID", reflect.TypeOf((*MockSubscriptionStore)(nil).GetPaymentByMidtransOrderID), orderID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentByMidtransOrderID", reflect.TypeOf((*MockSubscriptionStore)(nil).GetPaymentByMidtransOrderID), ctx, orderID)
 }
 
 // UpdatePaymentSettled mocks base method.
-func (m *MockSubscriptionStore) UpdatePaymentSettled(tx database.Tx, paymentID int, midtransTxnID string, paidAt time.Time) error {
+func (m *MockSubscriptionStore) UpdatePaymentSettled(ctx context.Context, tx database.Tx, paymentID int, midtransTxnID string, paidAt time.Time) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdatePaymentSettled", tx, paymentID, midtransTxnID, paidAt)
+	ret := m.ctrl.Call(m, "UpdatePaymentSettled", ctx, tx, paymentID, midtransTxnID, paidAt)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdatePaymentSettled indicates an expected call of UpdatePaymentSettled.
-func (mr *MockSubscriptionStoreMockRecorder) UpdatePaymentSettled(tx, paymentID, midtransTxnID, paidAt interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) UpdatePaymentSettled(ctx, tx, paymentID, midtransTxnID, paidAt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePaymentSettled", reflect.TypeOf((*MockSubscriptionStore)(nil).UpdatePaymentSettled), tx, paymentID, midtransTxnID, paidAt)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePaymentSettled", reflect.TypeOf((*MockSubscriptionStore)(nil).UpdatePaymentSettled), ctx, tx, paymentID, midtransTxnID, paidAt)
 }
 
 // UpdatePaymentFailed mocks base method.
-func (m *MockSubscriptionStore) UpdatePaymentFailed(tx database.Tx, paymentID int, status string) error {
+func (m *MockSubscriptionStore) UpdatePaymentFailed(ctx context.Context, tx database.Tx, paymentID int, status string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdatePaymentFailed", tx, paymentID, status)
+	ret := m.ctrl.Call(m, "UpdatePaymentFailed", ctx, tx, paymentID, status)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdatePaymentFailed indicates an expected call of UpdatePaymentFailed.
-func (mr *MockSubscriptionStoreMockRecorder) UpdatePaymentFailed(tx, paymentID, status interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) UpdatePaymentFailed(ctx, tx, paymentID, status interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePaymentFailed", reflect.TypeOf((*MockSubscriptionStore)(nil).UpdatePaymentFailed), tx, paymentID, status)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePaymentFailed", reflect.TypeOf((*MockSubscriptionStore)(nil).UpdatePaymentFailed), ctx, tx, paymentID, status)
 }
 
 // UpdatePaymentSnapInfo mocks base method.
-func (m *MockSubscriptionStore) UpdatePaymentSnapInfo(paymentID int, snapToken, redirectURL string) error {
+func (m *MockSubscriptionStore) UpdatePaymentSnapInfo(ctx context.Context, paymentID int, snapToken, redirectURL string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdatePaymentSnapInfo", paymentID, snapToken, redirectURL)
+	ret := m.ctrl.Call(m, "UpdatePaymentSnapInfo", ctx, paymentID, snapToken, redirectURL)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdatePaymentSnapInfo indicates an expected call of UpdatePaymentSnapInfo.
-func (mr *MockSubscriptionStoreMockRecorder) UpdatePaymentSnapInfo(paymentID, snapToken, redirectURL interface{}) *gomock.Call {
+func (mr *MockSubscriptionStoreMockRecorder) UpdatePaymentSnapInfo(ctx, paymentID, snapToken, redirectURL interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePaymentSnapInfo", reflect.TypeOf((*MockSubscriptionStore)(nil).UpdatePaymentSnapInfo), paymentID, snapToken, redirectURL)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePaymentSnapInfo", reflect.TypeOf((*MockSubscriptionStore)(nil).UpdatePaymentSnapInfo), ctx, paymentID, snapToken, redirectURL)
 }

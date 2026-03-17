@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -105,7 +106,7 @@ func Test_product_GetProductByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewProductStoreWithDB(db)
 
-			got, gotErr := store.GetProductByID(tt.productID, tt.shopID...)
+			got, gotErr := store.GetProductByID(context.Background(), tt.productID, tt.shopID...)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -239,7 +240,7 @@ func Test_product_GetProductsByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewProductStoreWithDB(db)
 
-			got, gotErr := store.GetProductsByShopID(tt.shopID, tt.filter)
+			got, gotErr := store.GetProductsByShopID(context.Background(), tt.shopID, tt.filter)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -376,7 +377,7 @@ func Test_product_CreateProduct(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewProductStoreWithDB(db)
 
-			got, gotErr := store.CreateProduct(tt.input.name, tt.input.description, tt.input.price, tt.input.shopID, tt.input.originalPrice, tt.input.imageURL)
+			got, gotErr := store.CreateProduct(context.Background(), tt.input.name, tt.input.description, tt.input.price, tt.input.shopID, tt.input.originalPrice, tt.input.imageURL)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -554,7 +555,7 @@ func Test_product_UpdateProduct(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewProductStoreWithDB(db)
 
-			got, gotErr := store.UpdateProduct(tt.productID, tt.input)
+			got, gotErr := store.UpdateProduct(context.Background(), tt.productID, tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -623,7 +624,7 @@ func Test_product_DeleteProductByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewProductStoreWithDB(db)
 
-			gotErr := store.DeleteProductByID(tt.productID)
+			gotErr := store.DeleteProductByID(context.Background(), tt.productID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -698,7 +699,7 @@ func Test_product_GetProductsListByActiveOrders(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewProductStoreWithDB(db)
 
-			got, gotErr := store.GetProductsListByActiveOrders(tt.shopID)
+			got, gotErr := store.GetProductsListByActiveOrders(context.Background(), tt.shopID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("GetProductsListByActiveOrders() error = %v, wantErr %v", gotErr, tt.wantErr)

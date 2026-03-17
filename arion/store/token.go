@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -11,10 +12,10 @@ import (
 
 type (
 	TokenStore interface {
-		CreateAccessToken(user *model.User, secret string, expiry int) (string, error)
-		CreateRefreshToken(user *model.User, secret string, expiry int) (string, error)
-		IsAuthorized(requestToken, secret string) (bool, error)
-		ExtractDataFromToken(requestToken, secret string) (model.TokenData, error)
+		CreateAccessToken(ctx context.Context, user *model.User, secret string, expiry int) (string, error)
+		CreateRefreshToken(ctx context.Context, user *model.User, secret string, expiry int) (string, error)
+		IsAuthorized(ctx context.Context, requestToken, secret string) (bool, error)
+		ExtractDataFromToken(ctx context.Context, requestToken, secret string) (model.TokenData, error)
 	}
 
 	token struct{}
@@ -24,7 +25,7 @@ func NewTokenStore() TokenStore {
 	return &token{}
 }
 
-func (t *token) CreateAccessToken(user *model.User, secret string, expiry int) (string, error) {
+func (t *token) CreateAccessToken(ctx context.Context, user *model.User, secret string, expiry int) (string, error) {
 	exp := &jwt.NumericDate{
 		Time: time.Now().Add(time.Hour * time.Duration(expiry)),
 	}
@@ -49,7 +50,7 @@ func (t *token) CreateAccessToken(user *model.User, secret string, expiry int) (
 	return tokenString, nil
 }
 
-func (t *token) CreateRefreshToken(user *model.User, secret string, expiry int) (string, error) {
+func (t *token) CreateRefreshToken(ctx context.Context, user *model.User, secret string, expiry int) (string, error) {
 	exp := &jwt.NumericDate{
 		Time: time.Now().Add(time.Hour * time.Duration(expiry)),
 	}
@@ -72,7 +73,7 @@ func (t *token) CreateRefreshToken(user *model.User, secret string, expiry int) 
 	return tokenString, err
 }
 
-func (t *token) IsAuthorized(requestToken, secret string) (bool, error) {
+func (t *token) IsAuthorized(ctx context.Context, requestToken, secret string) (bool, error) {
 	_, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -86,7 +87,7 @@ func (t *token) IsAuthorized(requestToken, secret string) (bool, error) {
 	return true, nil
 }
 
-func (t *token) ExtractDataFromToken(requestToken, secret string) (model.TokenData, error) {
+func (t *token) ExtractDataFromToken(ctx context.Context, requestToken, secret string) (model.TokenData, error) {
 	token, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

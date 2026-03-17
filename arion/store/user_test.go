@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -77,7 +78,7 @@ func Test_user_GetUserByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewUserStoreWithDB(db)
 
-			got, gotErr := store.GetUserByID(tt.userID)
+			got, gotErr := store.GetUserByID(context.Background(), tt.userID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -162,7 +163,7 @@ func Test_user_GetUserByEmail(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewUserStoreWithDB(db)
 
-			got, gotErr := store.GetUserByEmail(tt.email)
+			got, gotErr := store.GetUserByEmail(context.Background(), tt.email)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -246,7 +247,7 @@ func Test_user_GetUsers(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewUserStoreWithDB(db)
 
-			got, gotErr := store.GetUsers()
+			got, gotErr := store.GetUsers(context.Background())
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -342,7 +343,7 @@ func Test_user_CreateUser(t *testing.T) {
 			}
 
 			var u user
-			got, gotErr := u.CreateUser(tx, tt.input.name, tt.input.email, tt.input.hashPassword, tt.input.role, tt.input.shopID)
+			got, gotErr := u.CreateUser(context.Background(), tx, tt.input.name, tt.input.email, tt.input.hashPassword, tt.input.role, tt.input.shopID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -485,7 +486,7 @@ func Test_user_UpdateUser(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewUserStoreWithDB(db)
 
-			got, gotErr := store.UpdateUser(tt.id, tt.input)
+			got, gotErr := store.UpdateUser(context.Background(), tt.id, tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -547,7 +548,7 @@ func Test_user_SetSessionToken(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewUserStoreWithDB(db)
 
-			gotErr := store.SetSessionToken(tt.userID, tt.token)
+			gotErr := store.SetSessionToken(context.Background(), tt.userID, tt.token)
 
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("SetSessionToken() error = %v, wantErr %v", gotErr, tt.wantErr)
@@ -596,7 +597,7 @@ func Test_user_ClearSessionToken(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewUserStoreWithDB(db)
 
-			gotErr := store.ClearSessionToken(tt.userID)
+			gotErr := store.ClearSessionToken(context.Background(), tt.userID)
 
 			if (gotErr != nil) != tt.wantErr {
 				t.Errorf("ClearSessionToken() error = %v, wantErr %v", gotErr, tt.wantErr)
@@ -721,7 +722,7 @@ func Test_user_GetUserByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewUserStoreWithDB(db)
 
-			got, gotErr := store.GetUserByShopID(tt.shopID)
+			got, gotErr := store.GetUserByShopID(context.Background(), tt.shopID)
 
 			if gotErr != nil {
 				if !tt.wantErr {

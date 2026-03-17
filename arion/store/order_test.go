@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -103,7 +104,7 @@ func Test_order_GetOrderByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.GetOrderByID(tt.id, tt.shopID...)
+			got, gotErr := store.GetOrderByID(context.Background(), tt.id, tt.shopID...)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -325,7 +326,7 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.GetOrdersByShopID(tt.shopID, tt.opts)
+			got, gotErr := store.GetOrdersByShopID(context.Background(), tt.shopID, tt.opts)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -456,9 +457,9 @@ func Test_order_CreateOrder(t *testing.T) {
 					t.Fatalf("failed to begin tx: %v", err)
 				}
 				defer tx.Rollback()
-				got, gotErr = store.CreateOrder(tx, tt.input.customerID, tt.input.shopID, tt.input.notes, tt.input.totalPrice)
+				got, gotErr = store.CreateOrder(context.Background(), tx, tt.input.customerID, tt.input.shopID, tt.input.notes, tt.input.totalPrice)
 			} else {
-				got, gotErr = store.CreateOrder(nil, tt.input.customerID, tt.input.shopID, tt.input.notes, tt.input.totalPrice)
+				got, gotErr = store.CreateOrder(context.Background(), nil, tt.input.customerID, tt.input.shopID, tt.input.notes, tt.input.totalPrice)
 			}
 
 			if gotErr != nil {
@@ -635,7 +636,7 @@ func Test_order_UpdateOrder(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.UpdateOrder(nil, tt.id, tt.input)
+			got, gotErr := store.UpdateOrder(context.Background(), nil, tt.id, tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -701,7 +702,7 @@ func Test_order_DeleteOrderByID(t *testing.T) {
 			}
 
 			var o order
-			gotErr := o.DeleteOrderByID(tx, tt.id)
+			gotErr := o.DeleteOrderByID(context.Background(), tx, tt.id)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -783,7 +784,7 @@ func Test_order_CreateTempOrder(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			got, gotErr := store.CreateTempOrder(tx, tt.customerName, tt.customerPhone, tt.shopID)
+			got, gotErr := store.CreateTempOrder(context.Background(), tx, tt.customerName, tt.customerPhone, tt.shopID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("CreateTempOrder() error = %v, wantErr %v", gotErr, tt.wantErr)
@@ -850,7 +851,7 @@ func Test_order_UpdateTempOrderTotalPrice(t *testing.T) {
 			}
 			defer tx.Rollback()
 
-			gotErr := store.UpdateTempOrderTotalPrice(tx, tt.tempOrderID, tt.totalPrice)
+			gotErr := store.UpdateTempOrderTotalPrice(context.Background(), tx, tt.tempOrderID, tt.totalPrice)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -1001,7 +1002,7 @@ func Test_order_GetTempOrdersByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.GetTempOrdersByShopID(tt.shopID, tt.opts)
+			got, gotErr := store.GetTempOrdersByShopID(context.Background(), tt.shopID, tt.opts)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -1114,7 +1115,7 @@ func Test_order_GetTempOrderByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.GetTempOrderByID(tt.id, tt.shopID...)
+			got, gotErr := store.GetTempOrderByID(context.Background(), tt.id, tt.shopID...)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -1203,7 +1204,7 @@ func Test_order_GetActiveOrderByCustomerID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderStoreWithDB(db)
 
-			got, gotErr := store.GetActiveOrderByCustomerID(tt.customerID, tt.shopID)
+			got, gotErr := store.GetActiveOrderByCustomerID(context.Background(), tt.customerID, tt.shopID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -1300,9 +1301,9 @@ func Test_order_UpdateTempOrderStatus(t *testing.T) {
 					t.Fatalf("failed to begin tx: %v", err)
 				}
 				defer tx.Rollback()
-				gotErr = store.UpdateTempOrderStatus(tx, tt.tempOrderID, tt.status)
+				gotErr = store.UpdateTempOrderStatus(context.Background(), tx, tt.tempOrderID, tt.status)
 			} else {
-				gotErr = store.UpdateTempOrderStatus(nil, tt.tempOrderID, tt.status)
+				gotErr = store.UpdateTempOrderStatus(context.Background(), nil, tt.tempOrderID, tt.status)
 			}
 
 			if gotErr != nil {

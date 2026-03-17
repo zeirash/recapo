@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"strconv"
 
@@ -16,30 +17,30 @@ import (
 
 type (
 	OrderService interface {
-		CreateOrder(customerID int, shopID int, notes *string) (response.OrderData, error)
-		GetOrderByID(id int, shopID ...int) (*response.OrderData, error)
-		GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error)
-		UpdateOrderByID(input UpdateOrderInput) (response.OrderData, error)
-		DeleteOrderByID(id int) error
+		CreateOrder(ctx context.Context, customerID int, shopID int, notes *string) (response.OrderData, error)
+		GetOrderByID(ctx context.Context, id int, shopID ...int) (*response.OrderData, error)
+		GetOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error)
+		UpdateOrderByID(ctx context.Context, input UpdateOrderInput) (response.OrderData, error)
+		DeleteOrderByID(ctx context.Context, id int) error
 
-		CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error)
-		UpdateOrderItemByID(input UpdateOrderItemInput) (response.OrderItemData, error)
-		DeleteOrderItemByID(orderItemID, orderID int) error
-		GetOrderItemByID(orderItemID, orderID int) (*response.OrderItemData, error)
-		GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error)
+		CreateOrderItem(ctx context.Context, orderID, productID, qty int) (response.OrderItemData, error)
+		UpdateOrderItemByID(ctx context.Context, input UpdateOrderItemInput) (response.OrderItemData, error)
+		DeleteOrderItemByID(ctx context.Context, orderItemID, orderID int) error
+		GetOrderItemByID(ctx context.Context, orderItemID, orderID int) (*response.OrderItemData, error)
+		GetOrderItemsByOrderID(ctx context.Context, orderID int) ([]response.OrderItemData, error)
 
-		CreateOrderPayment(orderID, amount int) (response.OrderPaymentData, error)
-		UpdateOrderPaymentAmountByID(id, orderID, amount int) (response.OrderPaymentData, error)
-		GetOrderPaymentsByOrderID(orderID int) ([]response.OrderPaymentData, error)
-		DeleteOrderPaymentByID(orderPaymentID, orderID int) error
+		CreateOrderPayment(ctx context.Context, orderID, amount int) (response.OrderPaymentData, error)
+		UpdateOrderPaymentAmountByID(ctx context.Context, id, orderID, amount int) (response.OrderPaymentData, error)
+		GetOrderPaymentsByOrderID(ctx context.Context, orderID int) ([]response.OrderPaymentData, error)
+		DeleteOrderPaymentByID(ctx context.Context, orderPaymentID, orderID int) error
 
-		GenerateOrderInvoice(orderID, shopID int, message string) ([]byte, error)
+		GenerateOrderInvoice(ctx context.Context, orderID, shopID int, message string) ([]byte, error)
 
-		MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error)
-		CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
-		GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error)
-		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error)
-		RejectTempOrderByID(id int) (response.TempOrderData, error)
+		MergeTempOrder(ctx context.Context, tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error)
+		CreateTempOrder(ctx context.Context, customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error)
+		GetTempOrderByID(ctx context.Context, id int, shopID ...int) (*response.TempOrderData, error)
+		GetTempOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error)
+		RejectTempOrderByID(ctx context.Context, id int) (response.TempOrderData, error)
 	}
 
 	oservice struct{}
@@ -83,8 +84,8 @@ func NewOrderService() OrderService {
 	return &oservice{}
 }
 
-func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (response.OrderData, error) {
-	activeOrder, err := orderStore.GetActiveOrderByCustomerID(customerID, shopID)
+func (o *oservice) CreateOrder(ctx context.Context, customerID int, shopID int, notes *string) (response.OrderData, error) {
+	activeOrder, err := orderStore.GetActiveOrderByCustomerID(ctx, customerID, shopID)
 	if err != nil {
 		return response.OrderData{}, err
 	}
@@ -92,7 +93,7 @@ func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (respo
 		return response.OrderData{}, errors.New(apierr.ErrActiveOrderExists)
 	}
 
-	order, err := orderStore.CreateOrder(nil, customerID, shopID, notes, nil)
+	order, err := orderStore.CreateOrder(ctx, nil, customerID, shopID, notes, nil)
 	if err != nil {
 		return response.OrderData{}, err
 	}
@@ -110,8 +111,8 @@ func (o *oservice) CreateOrder(customerID int, shopID int, notes *string) (respo
 	return res, nil
 }
 
-func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, error) {
-	order, err := orderStore.GetOrderByID(id, shopID...)
+func (o *oservice) GetOrderByID(ctx context.Context, id int, shopID ...int) (*response.OrderData, error) {
+	order, err := orderStore.GetOrderByID(ctx, id, shopID...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +121,7 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 		return nil, errors.New(apierr.ErrOrderNotFound)
 	}
 
-	orderItems, err := orderItemStore.GetOrderItemsByOrderID(order.ID)
+	orderItems, err := orderItemStore.GetOrderItemsByOrderID(ctx, order.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +141,7 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 		}
 	}
 
-	orderPayments, err := orderPaymentStore.GetOrderPaymentsByOrderID(order.ID)
+	orderPayments, err := orderPaymentStore.GetOrderPaymentsByOrderID(ctx, order.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -148,10 +149,10 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 	orderPaymentsData := []response.OrderPaymentData{}
 	for _, orderPayment := range orderPayments {
 		orderPaymentsData = append(orderPaymentsData, response.OrderPaymentData{
-			ID:          orderPayment.ID,
-			OrderID:     orderPayment.OrderID,
-			Amount:      orderPayment.Amount,
-			CreatedAt:   orderPayment.CreatedAt,
+			ID:        orderPayment.ID,
+			OrderID:   orderPayment.OrderID,
+			Amount:    orderPayment.Amount,
+			CreatedAt: orderPayment.CreatedAt,
 		})
 		if orderPayment.UpdatedAt.Valid {
 			t := orderPayment.UpdatedAt.Time
@@ -179,8 +180,8 @@ func (o *oservice) GetOrderByID(id int, shopID ...int) (*response.OrderData, err
 	return &res, nil
 }
 
-func (o *oservice) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error) {
-	orders, err := orderStore.GetOrdersByShopID(shopID, opts)
+func (o *oservice) GetOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error) {
+	orders, err := orderStore.GetOrdersByShopID(ctx, shopID, opts)
 	if err != nil {
 		return []response.OrderData{}, err
 	}
@@ -208,8 +209,8 @@ func (o *oservice) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) 
 	return ordersData, nil
 }
 
-func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, error) {
-	order, err := orderStore.GetOrderByID(input.ID)
+func (o *oservice) UpdateOrderByID(ctx context.Context, input UpdateOrderInput) (response.OrderData, error) {
+	order, err := orderStore.GetOrderByID(ctx, input.ID)
 	if err != nil {
 		return response.OrderData{}, err
 	}
@@ -225,7 +226,7 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 		Notes:         input.Notes,
 	}
 
-	orderData, err := orderStore.UpdateOrder(nil, input.ID, updateData)
+	orderData, err := orderStore.UpdateOrder(ctx, nil, input.ID, updateData)
 	if err != nil {
 		return response.OrderData{}, err
 	}
@@ -247,7 +248,7 @@ func (o *oservice) UpdateOrderByID(input UpdateOrderInput) (response.OrderData, 
 	return res, nil
 }
 
-func (o *oservice) DeleteOrderByID(id int) error {
+func (o *oservice) DeleteOrderByID(ctx context.Context, id int) error {
 	db := dbGetter()
 
 	tx, err := db.Begin()
@@ -256,17 +257,17 @@ func (o *oservice) DeleteOrderByID(id int) error {
 	}
 	defer tx.Rollback()
 
-	err = orderItemStore.DeleteOrderItemsByOrderID(tx, id)
+	err = orderItemStore.DeleteOrderItemsByOrderID(ctx, tx, id)
 	if err != nil {
 		return err
 	}
 
-	err = orderPaymentStore.DeleteOrderPaymentsByOrderID(tx, id)
+	err = orderPaymentStore.DeleteOrderPaymentsByOrderID(ctx, tx, id)
 	if err != nil {
 		return err
 	}
 
-	err = orderStore.DeleteOrderByID(tx, id)
+	err = orderStore.DeleteOrderByID(ctx, tx, id)
 	if err != nil {
 		return err
 	}
@@ -274,8 +275,8 @@ func (o *oservice) DeleteOrderByID(id int) error {
 	return tx.Commit()
 }
 
-func (o *oservice) CreateOrderItem(orderID, productID, qty int) (response.OrderItemData, error) {
-	order, err := orderStore.GetOrderByID(orderID)
+func (o *oservice) CreateOrderItem(ctx context.Context, orderID, productID, qty int) (response.OrderItemData, error) {
+	order, err := orderStore.GetOrderByID(ctx, orderID)
 	if err != nil {
 		return response.OrderItemData{}, err
 	}
@@ -284,7 +285,7 @@ func (o *oservice) CreateOrderItem(orderID, productID, qty int) (response.OrderI
 		return response.OrderItemData{}, errors.New(apierr.ErrOrderNotFound)
 	}
 
-	orderItem, err := orderItemStore.CreateOrderItem(nil, orderID, productID, qty)
+	orderItem, err := orderItemStore.CreateOrderItem(ctx, nil, orderID, productID, qty)
 	if err != nil {
 		return response.OrderItemData{}, err
 	}
@@ -301,8 +302,8 @@ func (o *oservice) CreateOrderItem(orderID, productID, qty int) (response.OrderI
 	return res, nil
 }
 
-func (o *oservice) UpdateOrderItemByID(input UpdateOrderItemInput) (response.OrderItemData, error) {
-	orderItem, err := orderItemStore.GetOrderItemByID(input.OrderItemID)
+func (o *oservice) UpdateOrderItemByID(ctx context.Context, input UpdateOrderItemInput) (response.OrderItemData, error) {
+	orderItem, err := orderItemStore.GetOrderItemByID(ctx, input.OrderItemID)
 	if err != nil {
 		return response.OrderItemData{}, err
 	}
@@ -316,7 +317,7 @@ func (o *oservice) UpdateOrderItemByID(input UpdateOrderItemInput) (response.Ord
 		Qty:       input.Qty,
 	}
 
-	orderItemData, err := orderItemStore.UpdateOrderItemByID(nil, input.OrderItemID, input.OrderID, updateData)
+	orderItemData, err := orderItemStore.UpdateOrderItemByID(ctx, nil, input.OrderItemID, input.OrderID, updateData)
 	if err != nil {
 		return response.OrderItemData{}, err
 	}
@@ -337,8 +338,8 @@ func (o *oservice) UpdateOrderItemByID(input UpdateOrderItemInput) (response.Ord
 	return res, nil
 }
 
-func (o *oservice) DeleteOrderItemByID(orderItemID, orderID int) error {
-	err := orderItemStore.DeleteOrderItemByID(orderItemID, orderID)
+func (o *oservice) DeleteOrderItemByID(ctx context.Context, orderItemID, orderID int) error {
+	err := orderItemStore.DeleteOrderItemByID(ctx, orderItemID, orderID)
 	if err != nil {
 		return err
 	}
@@ -346,8 +347,8 @@ func (o *oservice) DeleteOrderItemByID(orderItemID, orderID int) error {
 	return nil
 }
 
-func (o *oservice) GetOrderItemByID(orderItemID, orderID int) (*response.OrderItemData, error) {
-	orderItem, err := orderItemStore.GetOrderItemByID(orderItemID)
+func (o *oservice) GetOrderItemByID(ctx context.Context, orderItemID, orderID int) (*response.OrderItemData, error) {
+	orderItem, err := orderItemStore.GetOrderItemByID(ctx, orderItemID)
 	if err != nil {
 		return nil, err
 	}
@@ -373,8 +374,8 @@ func (o *oservice) GetOrderItemByID(orderItemID, orderID int) (*response.OrderIt
 	return &res, nil
 }
 
-func (o *oservice) CreateOrderPayment(orderID, amount int) (response.OrderPaymentData, error) {
-	order, err := orderStore.GetOrderByID(orderID)
+func (o *oservice) CreateOrderPayment(ctx context.Context, orderID, amount int) (response.OrderPaymentData, error) {
+	order, err := orderStore.GetOrderByID(ctx, orderID)
 	if err != nil {
 		return response.OrderPaymentData{}, err
 	}
@@ -383,32 +384,32 @@ func (o *oservice) CreateOrderPayment(orderID, amount int) (response.OrderPaymen
 		return response.OrderPaymentData{}, errors.New(apierr.ErrOrderNotFound)
 	}
 
-	orderPayment, err := orderPaymentStore.CreateOrderPayment(nil, orderID, amount)
+	orderPayment, err := orderPaymentStore.CreateOrderPayment(ctx, nil, orderID, amount)
 	if err != nil {
 		return response.OrderPaymentData{}, err
 	}
 
 	res := response.OrderPaymentData{
-		ID:          orderPayment.ID,
-		OrderID:     orderPayment.OrderID,
-		Amount:      orderPayment.Amount,
-		CreatedAt:   orderPayment.CreatedAt,
+		ID:        orderPayment.ID,
+		OrderID:   orderPayment.OrderID,
+		Amount:    orderPayment.Amount,
+		CreatedAt: orderPayment.CreatedAt,
 	}
 
 	return res, nil
 }
 
-func (o *oservice) UpdateOrderPaymentAmountByID(id, orderID, amount int) (response.OrderPaymentData, error) {
-	orderPayment, err := orderPaymentStore.UpdateOrderPaymentAmountByID(nil, id, orderID, amount)
+func (o *oservice) UpdateOrderPaymentAmountByID(ctx context.Context, id, orderID, amount int) (response.OrderPaymentData, error) {
+	orderPayment, err := orderPaymentStore.UpdateOrderPaymentAmountByID(ctx, nil, id, orderID, amount)
 	if err != nil {
 		return response.OrderPaymentData{}, err
 	}
 
 	res := response.OrderPaymentData{
-		ID:          orderPayment.ID,
-		OrderID:     orderPayment.OrderID,
-		Amount:      orderPayment.Amount,
-		CreatedAt:   orderPayment.CreatedAt,
+		ID:        orderPayment.ID,
+		OrderID:   orderPayment.OrderID,
+		Amount:    orderPayment.Amount,
+		CreatedAt: orderPayment.CreatedAt,
 	}
 
 	if orderPayment.UpdatedAt.Valid {
@@ -418,8 +419,8 @@ func (o *oservice) UpdateOrderPaymentAmountByID(id, orderID, amount int) (respon
 	return res, nil
 }
 
-func (o *oservice) GetOrderPaymentsByOrderID(orderID int) ([]response.OrderPaymentData, error) {
-	orderPayments, err := orderPaymentStore.GetOrderPaymentsByOrderID(orderID)
+func (o *oservice) GetOrderPaymentsByOrderID(ctx context.Context, orderID int) ([]response.OrderPaymentData, error) {
+	orderPayments, err := orderPaymentStore.GetOrderPaymentsByOrderID(ctx, orderID)
 	if err != nil {
 		return []response.OrderPaymentData{}, err
 	}
@@ -427,10 +428,10 @@ func (o *oservice) GetOrderPaymentsByOrderID(orderID int) ([]response.OrderPayme
 	orderPaymentsData := []response.OrderPaymentData{}
 	for _, orderPayment := range orderPayments {
 		res := response.OrderPaymentData{
-			ID:          orderPayment.ID,
-			OrderID:     orderPayment.OrderID,
-			Amount:      orderPayment.Amount,
-			CreatedAt:   orderPayment.CreatedAt,
+			ID:        orderPayment.ID,
+			OrderID:   orderPayment.OrderID,
+			Amount:    orderPayment.Amount,
+			CreatedAt: orderPayment.CreatedAt,
 		}
 
 		if orderPayment.UpdatedAt.Valid {
@@ -444,8 +445,8 @@ func (o *oservice) GetOrderPaymentsByOrderID(orderID int) ([]response.OrderPayme
 	return orderPaymentsData, nil
 }
 
-func (o *oservice) DeleteOrderPaymentByID(orderPaymentID, orderID int) error {
-	err := orderPaymentStore.DeleteOrderPaymentByID(orderPaymentID, orderID)
+func (o *oservice) DeleteOrderPaymentByID(ctx context.Context, orderPaymentID, orderID int) error {
+	err := orderPaymentStore.DeleteOrderPaymentByID(ctx, orderPaymentID, orderID)
 	if err != nil {
 		return err
 	}
@@ -453,8 +454,8 @@ func (o *oservice) DeleteOrderPaymentByID(orderPaymentID, orderID int) error {
 	return nil
 }
 
-func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData, error) {
-	orderItems, err := orderItemStore.GetOrderItemsByOrderID(orderID)
+func (o *oservice) GetOrderItemsByOrderID(ctx context.Context, orderID int) ([]response.OrderItemData, error) {
+	orderItems, err := orderItemStore.GetOrderItemsByOrderID(ctx, orderID)
 	if err != nil {
 		return []response.OrderItemData{}, err
 	}
@@ -480,8 +481,8 @@ func (o *oservice) GetOrderItemsByOrderID(orderID int) ([]response.OrderItemData
 	return orderItemsData, nil
 }
 
-func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error) {
-	shop, err := shopStore.GetShopByShareToken(shareToken)
+func (o *oservice) CreateTempOrder(ctx context.Context, customerName, customerPhone, shareToken string, items []CreateTempOrderItemInput) (response.TempOrderData, error) {
+	shop, err := shopStore.GetShopByShareToken(ctx, shareToken)
 	if err != nil {
 		return response.TempOrderData{}, err
 	}
@@ -498,7 +499,7 @@ func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken strin
 	}
 	defer tx.Rollback()
 
-	tempOrder, err := orderStore.CreateTempOrder(tx, customerName, customerPhone, shop.ID)
+	tempOrder, err := orderStore.CreateTempOrder(ctx, tx, customerName, customerPhone, shop.ID)
 	if err != nil {
 		return response.TempOrderData{}, err
 	}
@@ -506,7 +507,7 @@ func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken strin
 	tempOrderItemsData := []response.TempOrderItemData{}
 	totalPrice := 0
 	for _, item := range items {
-		orderItemTemp, err := orderItemStore.CreateTempOrderItem(tx, tempOrder.ID, item.ProductID, item.Qty)
+		orderItemTemp, err := orderItemStore.CreateTempOrderItem(ctx, tx, tempOrder.ID, item.ProductID, item.Qty)
 		if err != nil {
 			return response.TempOrderData{}, err
 		}
@@ -521,7 +522,7 @@ func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken strin
 		totalPrice += item.Qty * orderItemTemp.Price
 	}
 
-	err = orderStore.UpdateTempOrderTotalPrice(tx, tempOrder.ID, totalPrice)
+	err = orderStore.UpdateTempOrderTotalPrice(ctx, tx, tempOrder.ID, totalPrice)
 	if err != nil {
 		return response.TempOrderData{}, err
 	}
@@ -546,8 +547,8 @@ func (o *oservice) CreateTempOrder(customerName, customerPhone, shareToken strin
 	return res, nil
 }
 
-func (o *oservice) GetTempOrderByID(id int, shopID ...int) (*response.TempOrderData, error) {
-	tempOrder, err := orderStore.GetTempOrderByID(id, shopID...)
+func (o *oservice) GetTempOrderByID(ctx context.Context, id int, shopID ...int) (*response.TempOrderData, error) {
+	tempOrder, err := orderStore.GetTempOrderByID(ctx, id, shopID...)
 	if err != nil {
 		return nil, err
 	}
@@ -556,7 +557,7 @@ func (o *oservice) GetTempOrderByID(id int, shopID ...int) (*response.TempOrderD
 		return nil, errors.New(apierr.ErrTempOrderNotFound)
 	}
 
-	tempOrderItems, err := orderItemStore.GetTempOrderItemsByTempOrderID(tempOrder.ID)
+	tempOrderItems, err := orderItemStore.GetTempOrderItemsByTempOrderID(ctx, tempOrder.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -592,8 +593,8 @@ func (o *oservice) GetTempOrderByID(id int, shopID ...int) (*response.TempOrderD
 	return &res, nil
 }
 
-func (o *oservice) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error) {
-	tempOrders, err := orderStore.GetTempOrdersByShopID(shopID, opts)
+func (o *oservice) GetTempOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]response.TempOrderData, error) {
+	tempOrders, err := orderStore.GetTempOrdersByShopID(ctx, shopID, opts)
 	if err != nil {
 		return []response.TempOrderData{}, err
 	}
@@ -601,12 +602,12 @@ func (o *oservice) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptio
 	tempOrdersData := []response.TempOrderData{}
 	for _, tempOrder := range tempOrders {
 		res := response.TempOrderData{
-			ID:             tempOrder.ID,
-			CustomerName:   tempOrder.CustomerName,
-			CustomerPhone:  tempOrder.CustomerPhone,
-			TotalPrice:     tempOrder.TotalPrice,
-			Status:         tempOrder.Status,
-			CreatedAt:      tempOrder.CreatedAt,
+			ID:            tempOrder.ID,
+			CustomerName:  tempOrder.CustomerName,
+			CustomerPhone: tempOrder.CustomerPhone,
+			TotalPrice:    tempOrder.TotalPrice,
+			Status:        tempOrder.Status,
+			CreatedAt:     tempOrder.CreatedAt,
 		}
 
 		if tempOrder.UpdatedAt.Valid {
@@ -620,21 +621,21 @@ func (o *oservice) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptio
 	return tempOrdersData, nil
 }
 
-func (o *oservice) MergeTempOrder(tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error) {
+func (o *oservice) MergeTempOrder(ctx context.Context, tempOrderID, customerID, shopID int, activeOrderID *int) (*response.OrderData, error) {
 	if activeOrderID == nil {
-		return o.createOrderFromTempOrder(tempOrderID, customerID, shopID)
+		return o.createOrderFromTempOrder(ctx, tempOrderID, customerID, shopID)
 	}
 
-	return o.resolveActiveOrderConflict(tempOrderID, shopID, *activeOrderID)
+	return o.resolveActiveOrderConflict(ctx, tempOrderID, shopID, *activeOrderID)
 }
 
-func (o *oservice) RejectTempOrderByID(id int) (response.TempOrderData, error) {
-	tempOrder, err := o.GetTempOrderByID(id)
+func (o *oservice) RejectTempOrderByID(ctx context.Context, id int) (response.TempOrderData, error) {
+	tempOrder, err := o.GetTempOrderByID(ctx, id)
 	if err != nil {
 		return response.TempOrderData{}, err
 	}
 
-	err = orderStore.UpdateTempOrderStatus(nil, id, constant.TempOrderStatusRejected)
+	err = orderStore.UpdateTempOrderStatus(ctx, nil, id, constant.TempOrderStatusRejected)
 	if err != nil {
 		return response.TempOrderData{}, err
 	}
@@ -644,8 +645,8 @@ func (o *oservice) RejectTempOrderByID(id int) (response.TempOrderData, error) {
 	return *tempOrder, nil
 }
 
-func (o *oservice) GenerateOrderInvoice(orderID, shopID int, message string) ([]byte, error) {
-	order, err := o.GetOrderByID(orderID, shopID)
+func (o *oservice) GenerateOrderInvoice(ctx context.Context, orderID, shopID int, message string) ([]byte, error) {
+	order, err := o.GetOrderByID(ctx, orderID, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -723,8 +724,8 @@ func formatRupiah(price int) string {
 	return string(result)
 }
 
-func (o *oservice) createOrderFromTempOrder(tempOrderID, customerID, shopID int) (*response.OrderData, error) {
-	tempOrder, err := o.GetTempOrderByID(tempOrderID, shopID)
+func (o *oservice) createOrderFromTempOrder(ctx context.Context, tempOrderID, customerID, shopID int) (*response.OrderData, error) {
+	tempOrder, err := o.GetTempOrderByID(ctx, tempOrderID, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -736,14 +737,14 @@ func (o *oservice) createOrderFromTempOrder(tempOrderID, customerID, shopID int)
 	}
 	defer tx.Rollback()
 
-	order, err := orderStore.CreateOrder(tx, customerID, shopID, nil, &tempOrder.TotalPrice)
+	order, err := orderStore.CreateOrder(ctx, tx, customerID, shopID, nil, &tempOrder.TotalPrice)
 	if err != nil {
 		return nil, err
 	}
 
 	orderItems := []response.OrderItemData{}
 	for _, tempOrderItem := range tempOrder.TempOrderItems {
-		orderItem, err := orderItemStore.CreateOrderItem(tx, order.ID, tempOrderItem.ProductID, tempOrderItem.Qty)
+		orderItem, err := orderItemStore.CreateOrderItem(ctx, tx, order.ID, tempOrderItem.ProductID, tempOrderItem.Qty)
 		if err != nil {
 			return nil, err
 		}
@@ -757,7 +758,7 @@ func (o *oservice) createOrderFromTempOrder(tempOrderID, customerID, shopID int)
 		})
 	}
 
-	err = orderStore.UpdateTempOrderStatus(tx, tempOrder.ID, constant.TempOrderStatusAccepted)
+	err = orderStore.UpdateTempOrderStatus(ctx, tx, tempOrder.ID, constant.TempOrderStatusAccepted)
 	if err != nil {
 		return nil, err
 	}
@@ -779,14 +780,14 @@ func (o *oservice) createOrderFromTempOrder(tempOrderID, customerID, shopID int)
 	}, nil
 }
 
-func (o *oservice) resolveActiveOrderConflict(tempOrderID, shopID, activeOrderID int) (*response.OrderData, error) {
-	tempOrder, err := o.GetTempOrderByID(tempOrderID, shopID)
+func (o *oservice) resolveActiveOrderConflict(ctx context.Context, tempOrderID, shopID, activeOrderID int) (*response.OrderData, error) {
+	tempOrder, err := o.GetTempOrderByID(ctx, tempOrderID, shopID)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: try to make merge logic more efficient
-	activeOrder, err := o.GetOrderByID(activeOrderID, shopID)
+	activeOrder, err := o.GetOrderByID(ctx, activeOrderID, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -800,14 +801,14 @@ func (o *oservice) resolveActiveOrderConflict(tempOrderID, shopID, activeOrderID
 
 	for _, tempOrderItem := range tempOrder.TempOrderItems {
 		// check if order item in temp order already exists in active order
-		existsOrderItem, err := orderItemStore.GetOrderItemByProductID(tempOrderItem.ProductID, activeOrder.ID)
+		existsOrderItem, err := orderItemStore.GetOrderItemByProductID(ctx, tempOrderItem.ProductID, activeOrder.ID)
 		if err != nil {
 			return nil, err
 		}
 		if existsOrderItem != nil {
 			// update order item quantity
 			qty := existsOrderItem.Qty + tempOrderItem.Qty
-			_, err := orderItemStore.UpdateOrderItemByID(tx, existsOrderItem.ID, activeOrder.ID, store.UpdateOrderItemInput{
+			_, err := orderItemStore.UpdateOrderItemByID(ctx, tx, existsOrderItem.ID, activeOrder.ID, store.UpdateOrderItemInput{
 				Qty: &qty,
 			})
 			if err != nil {
@@ -815,14 +816,14 @@ func (o *oservice) resolveActiveOrderConflict(tempOrderID, shopID, activeOrderID
 			}
 		} else {
 			// create order item
-			_, err := orderItemStore.CreateOrderItem(tx, activeOrder.ID, tempOrderItem.ProductID, tempOrderItem.Qty)
+			_, err := orderItemStore.CreateOrderItem(ctx, tx, activeOrder.ID, tempOrderItem.ProductID, tempOrderItem.Qty)
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	err = orderStore.UpdateTempOrderStatus(tx, tempOrder.ID, constant.TempOrderStatusAccepted)
+	err = orderStore.UpdateTempOrderStatus(ctx, tx, tempOrder.ID, constant.TempOrderStatusAccepted)
 	if err != nil {
 		return nil, err
 	}
@@ -832,7 +833,7 @@ func (o *oservice) resolveActiveOrderConflict(tempOrderID, shopID, activeOrderID
 		return nil, err
 	}
 
-	orderItems, err := o.GetOrderItemsByOrderID(activeOrder.ID)
+	orderItems, err := o.GetOrderItemsByOrderID(ctx, activeOrder.ID)
 	if err != nil {
 		return nil, err
 	}

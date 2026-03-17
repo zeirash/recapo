@@ -44,7 +44,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					UserLogin("user@example.com", "password123").
+					UserLogin(gomock.Any(), "user@example.com", "password123").
 					Return(response.TokenResponse{
 						AccessToken:  "access-token",
 						RefreshToken: "refresh-token",
@@ -61,7 +61,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					UserLogin("user@example.com", "wrongpassword").
+					UserLogin(gomock.Any(), "user@example.com", "wrongpassword").
 					Return(response.TokenResponse{}, errors.New(apierr.ErrPasswordIncorrect))
 			},
 			wantStatus:     http.StatusUnauthorized,
@@ -76,7 +76,7 @@ func TestLoginHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					UserLogin("user@example.com", "password123").
+					UserLogin(gomock.Any(), "user@example.com", "password123").
 					Return(response.TokenResponse{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -166,7 +166,7 @@ func TestSendOTPHandler(t *testing.T) {
 		{
 			name:      "successfully send OTP",
 			body:      map[string]interface{}{"email": "john@example.com"},
-			mockSetup: func() { mockUserService.EXPECT().SendOTP("john@example.com", gomock.Any()).Return(nil) },
+			mockSetup: func() { mockUserService.EXPECT().SendOTP(gomock.Any(), "john@example.com", gomock.Any()).Return(nil) },
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
@@ -174,7 +174,7 @@ func TestSendOTPHandler(t *testing.T) {
 			name:      "returns 400 when email already registered",
 			body:      map[string]interface{}{"email": "existing@example.com"},
 			mockSetup: func() {
-				mockUserService.EXPECT().SendOTP("existing@example.com", gomock.Any()).Return(errors.New(apierr.ErrUserAlreadyExists))
+				mockUserService.EXPECT().SendOTP(gomock.Any(), "existing@example.com", gomock.Any()).Return(errors.New(apierr.ErrUserAlreadyExists))
 			},
 			wantStatus:  http.StatusBadRequest,
 			wantSuccess: false,
@@ -183,7 +183,7 @@ func TestSendOTPHandler(t *testing.T) {
 			name:      "returns 500 on service error",
 			body:      map[string]interface{}{"email": "john@example.com"},
 			mockSetup: func() {
-				mockUserService.EXPECT().SendOTP("john@example.com", gomock.Any()).Return(errors.New("smtp error"))
+				mockUserService.EXPECT().SendOTP(gomock.Any(), "john@example.com", gomock.Any()).Return(errors.New("smtp error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,
@@ -270,7 +270,7 @@ func TestRegisterHandler(t *testing.T) {
 			},
 			mockSetup: func(otpCode string) {
 				mockUserService.EXPECT().
-					UserRegister("John Doe", "john@example.com", "password123").
+					UserRegister(gomock.Any(), "John Doe", "john@example.com", "password123").
 					Return(response.TokenResponse{
 						AccessToken:  "access-token",
 						RefreshToken: "refresh-token",
@@ -295,7 +295,7 @@ func TestRegisterHandler(t *testing.T) {
 			},
 			mockSetup: func(otpCode string) {
 				mockUserService.EXPECT().
-					UserRegister("John Doe", "john@example.com", "password123").
+					UserRegister(gomock.Any(), "John Doe", "john@example.com", "password123").
 					Return(response.TokenResponse{}, errors.New("database error"))
 			},
 			bodyFn: func(otpCode string) []byte {
@@ -464,21 +464,21 @@ func TestForgotPasswordHandler(t *testing.T) {
 		{
 			name:        "successfully sends reset OTP",
 			body:        map[string]interface{}{"email": "user@example.com"},
-			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword("user@example.com", gomock.Any()).Return(nil) },
+			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword(gomock.Any(), "user@example.com", gomock.Any()).Return(nil) },
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
 		{
 			name:        "returns 200 even when user not found (anti-enumeration)",
 			body:        map[string]interface{}{"email": "unknown@example.com"},
-			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword("unknown@example.com", gomock.Any()).Return(nil) },
+			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword(gomock.Any(), "unknown@example.com", gomock.Any()).Return(nil) },
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
 		{
 			name:        "returns 500 on service error",
 			body:        map[string]interface{}{"email": "user@example.com"},
-			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword("user@example.com", gomock.Any()).Return(errors.New("smtp error")) },
+			mockSetup:   func() { mockUserService.EXPECT().ForgotPassword(gomock.Any(), "user@example.com", gomock.Any()).Return(errors.New("smtp error")) },
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,
 		},
@@ -557,7 +557,7 @@ func TestResetPasswordHandler(t *testing.T) {
 			name: "successfully resets password",
 			body: map[string]interface{}{"email": "user@example.com", "otp": "123456", "password": "newpassword"},
 			mockSetup: func() {
-				mockUserService.EXPECT().ResetPassword("user@example.com", "123456", "newpassword").Return(nil)
+				mockUserService.EXPECT().ResetPassword(gomock.Any(), "user@example.com", "123456", "newpassword").Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
@@ -566,7 +566,7 @@ func TestResetPasswordHandler(t *testing.T) {
 			name: "returns 400 on invalid OTP",
 			body: map[string]interface{}{"email": "user@example.com", "otp": "000000", "password": "newpassword"},
 			mockSetup: func() {
-				mockUserService.EXPECT().ResetPassword("user@example.com", "000000", "newpassword").Return(errors.New(apierr.ErrInvalidOTP))
+				mockUserService.EXPECT().ResetPassword(gomock.Any(), "user@example.com", "000000", "newpassword").Return(errors.New(apierr.ErrInvalidOTP))
 			},
 			wantStatus:     http.StatusBadRequest,
 			wantSuccess:    false,
@@ -667,7 +667,7 @@ func TestRefreshHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					RefreshToken("valid-refresh-token").
+					RefreshToken(gomock.Any(), "valid-refresh-token").
 					Return(response.TokenResponse{
 						AccessToken:  "new-access-token",
 						RefreshToken: "new-refresh-token",
@@ -683,7 +683,7 @@ func TestRefreshHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockUserService.EXPECT().
-					RefreshToken("invalid-token").
+					RefreshToken(gomock.Any(), "invalid-token").
 					Return(response.TokenResponse{}, errors.New("token expired"))
 			},
 			wantStatus:     http.StatusUnauthorized,
@@ -770,7 +770,7 @@ func TestLogoutHandler(t *testing.T) {
 			name:   "successfully logout",
 			userID: 1,
 			mockSetup: func() {
-				mockUserService.EXPECT().Logout(1).Return(nil)
+				mockUserService.EXPECT().Logout(gomock.Any(), 1).Return(nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
@@ -779,7 +779,7 @@ func TestLogoutHandler(t *testing.T) {
 			name:   "logout returns 500 on service error",
 			userID: 1,
 			mockSetup: func() {
-				mockUserService.EXPECT().Logout(1).Return(errors.New("db error"))
+				mockUserService.EXPECT().Logout(gomock.Any(), 1).Return(errors.New("db error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,

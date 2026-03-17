@@ -5,6 +5,7 @@
 package mock_store
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -37,78 +38,78 @@ func (m *MockUserStore) EXPECT() *MockUserStoreMockRecorder {
 }
 
 // CreateUser mocks base method.
-func (m *MockUserStore) CreateUser(tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
+func (m *MockUserStore) CreateUser(ctx context.Context, tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUser", tx, name, email, hashPassword, role, shop_id)
+	ret := m.ctrl.Call(m, "CreateUser", ctx, tx, name, email, hashPassword, role, shop_id)
 	ret0, _ := ret[0].(*model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateUser indicates an expected call of CreateUser.
-func (mr *MockUserStoreMockRecorder) CreateUser(tx, name, email, hashPassword, role, shop_id interface{}) *gomock.Call {
+func (mr *MockUserStoreMockRecorder) CreateUser(ctx, tx, name, email, hashPassword, role, shop_id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserStore)(nil).CreateUser), tx, name, email, hashPassword, role, shop_id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserStore)(nil).CreateUser), ctx, tx, name, email, hashPassword, role, shop_id)
 }
 
 // GetUserByEmail mocks base method.
-func (m *MockUserStore) GetUserByEmail(email string) (*model.User, error) {
+func (m *MockUserStore) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByEmail", email)
+	ret := m.ctrl.Call(m, "GetUserByEmail", ctx, email)
 	ret0, _ := ret[0].(*model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserByEmail indicates an expected call of GetUserByEmail.
-func (mr *MockUserStoreMockRecorder) GetUserByEmail(email interface{}) *gomock.Call {
+func (mr *MockUserStoreMockRecorder) GetUserByEmail(ctx, email interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockUserStore)(nil).GetUserByEmail), email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockUserStore)(nil).GetUserByEmail), ctx, email)
 }
 
 // GetUserByID mocks base method.
-func (m *MockUserStore) GetUserByID(userID int) (*model.User, error) {
+func (m *MockUserStore) GetUserByID(ctx context.Context, userID int) (*model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByID", userID)
+	ret := m.ctrl.Call(m, "GetUserByID", ctx, userID)
 	ret0, _ := ret[0].(*model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserByID indicates an expected call of GetUserByID.
-func (mr *MockUserStoreMockRecorder) GetUserByID(userID interface{}) *gomock.Call {
+func (mr *MockUserStoreMockRecorder) GetUserByID(ctx, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockUserStore)(nil).GetUserByID), userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockUserStore)(nil).GetUserByID), ctx, userID)
 }
 
 // GetUserByShopID mocks base method.
-func (m *MockUserStore) GetUserByShopID(shopID int) (*model.User, error) {
+func (m *MockUserStore) GetUserByShopID(ctx context.Context, shopID int) (*model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByShopID", shopID)
+	ret := m.ctrl.Call(m, "GetUserByShopID", ctx, shopID)
 	ret0, _ := ret[0].(*model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserByShopID indicates an expected call of GetUserByShopID.
-func (mr *MockUserStoreMockRecorder) GetUserByShopID(shopID interface{}) *gomock.Call {
+func (mr *MockUserStoreMockRecorder) GetUserByShopID(ctx, shopID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByShopID", reflect.TypeOf((*MockUserStore)(nil).GetUserByShopID), shopID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByShopID", reflect.TypeOf((*MockUserStore)(nil).GetUserByShopID), ctx, shopID)
 }
 
 // GetUsers mocks base method.
-func (m *MockUserStore) GetUsers() ([]model.User, error) {
+func (m *MockUserStore) GetUsers(ctx context.Context) ([]model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUsers")
+	ret := m.ctrl.Call(m, "GetUsers", ctx)
 	ret0, _ := ret[0].([]model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUsers indicates an expected call of GetUsers.
-func (mr *MockUserStoreMockRecorder) GetUsers() *gomock.Call {
+func (mr *MockUserStoreMockRecorder) GetUsers(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockUserStore)(nil).GetUsers))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockUserStore)(nil).GetUsers), ctx)
 }
 
 // IsValidRole mocks base method.
@@ -140,44 +141,44 @@ func (mr *MockUserStoreMockRecorder) Roles() *gomock.Call {
 }
 
 // UpdateUser mocks base method.
-func (m *MockUserStore) UpdateUser(id int, input store.UpdateUserInput) (*model.User, error) {
+func (m *MockUserStore) UpdateUser(ctx context.Context, id int, input store.UpdateUserInput) (*model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUser", id, input)
+	ret := m.ctrl.Call(m, "UpdateUser", ctx, id, input)
 	ret0, _ := ret[0].(*model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateUser indicates an expected call of UpdateUser.
-func (mr *MockUserStoreMockRecorder) UpdateUser(id, input interface{}) *gomock.Call {
+func (mr *MockUserStoreMockRecorder) UpdateUser(ctx, id, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUserStore)(nil).UpdateUser), id, input)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUserStore)(nil).UpdateUser), ctx, id, input)
 }
 
 // SetSessionToken mocks base method.
-func (m *MockUserStore) SetSessionToken(userID int, sessionToken string) error {
+func (m *MockUserStore) SetSessionToken(ctx context.Context, userID int, sessionToken string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetSessionToken", userID, sessionToken)
+	ret := m.ctrl.Call(m, "SetSessionToken", ctx, userID, sessionToken)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetSessionToken indicates an expected call of SetSessionToken.
-func (mr *MockUserStoreMockRecorder) SetSessionToken(userID, sessionToken interface{}) *gomock.Call {
+func (mr *MockUserStoreMockRecorder) SetSessionToken(ctx, userID, sessionToken interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSessionToken", reflect.TypeOf((*MockUserStore)(nil).SetSessionToken), userID, sessionToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSessionToken", reflect.TypeOf((*MockUserStore)(nil).SetSessionToken), ctx, userID, sessionToken)
 }
 
 // ClearSessionToken mocks base method.
-func (m *MockUserStore) ClearSessionToken(userID int) error {
+func (m *MockUserStore) ClearSessionToken(ctx context.Context, userID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ClearSessionToken", userID)
+	ret := m.ctrl.Call(m, "ClearSessionToken", ctx, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ClearSessionToken indicates an expected call of ClearSessionToken.
-func (mr *MockUserStoreMockRecorder) ClearSessionToken(userID interface{}) *gomock.Call {
+func (mr *MockUserStoreMockRecorder) ClearSessionToken(ctx, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSessionToken", reflect.TypeOf((*MockUserStore)(nil).ClearSessionToken), userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearSessionToken", reflect.TypeOf((*MockUserStore)(nil).ClearSessionToken), ctx, userID)
 }

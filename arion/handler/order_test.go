@@ -44,7 +44,7 @@ func TestCreateOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrder(1, 1, nil).
+					CreateOrder(gomock.Any(), 1, 1, nil).
 					Return(response.OrderData{
 						ID:           1,
 						CustomerName: "John Doe",
@@ -66,7 +66,7 @@ func TestCreateOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				notes := "Rush delivery"
 				mockOrderService.EXPECT().
-					CreateOrder(2, 1, &notes).
+					CreateOrder(gomock.Any(), 2, 1, &notes).
 					Return(response.OrderData{
 						ID:           2,
 						CustomerName: "Jane Doe",
@@ -87,7 +87,7 @@ func TestCreateOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrder(1, 1, nil).
+					CreateOrder(gomock.Any(), 1, 1, nil).
 					Return(response.OrderData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -120,7 +120,7 @@ func TestCreateOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrder(1, 1, nil).
+					CreateOrder(gomock.Any(), 1, 1, nil).
 					Return(response.OrderData{}, errors.New(apierr.ErrActiveOrderExists))
 			},
 			wantStatus:     http.StatusConflict,
@@ -184,7 +184,7 @@ func TestGetOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderByID(1, 1).
+					GetOrderByID(gomock.Any(), 1, 1).
 					Return(&response.OrderData{
 						ID:           1,
 						CustomerName: "John Doe",
@@ -202,7 +202,7 @@ func TestGetOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "999"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderByID(999, 1).
+					GetOrderByID(gomock.Any(), 999, 1).
 					Return(nil, errors.New(apierr.ErrOrderNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
@@ -215,7 +215,7 @@ func TestGetOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderByID(1, 1).
+					GetOrderByID(gomock.Any(), 1, 1).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -290,7 +290,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			opts:   queryOpts{status: "all"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).
 					Return([]response.OrderData{
 						{
 							ID:           1,
@@ -309,7 +309,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).
 					Return([]response.OrderData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -320,7 +320,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -334,7 +334,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			mockSetup: func() {
 				q := "john"
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{SearchQuery: &q}).
 					Return([]response.OrderData{
 						{
 							ID:           1,
@@ -355,7 +355,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			mockSetup: func() {
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &df}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df}).
 					Return([]response.OrderData{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
 					}, nil)
@@ -370,7 +370,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			mockSetup: func() {
 				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC) // handler adds 24h for inclusive end of day
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{DateTo: &dt}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateTo: &dt}).
 					Return([]response.OrderData{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
 					}, nil)
@@ -386,7 +386,7 @@ func TestGetOrdersHandler(t *testing.T) {
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &df, DateTo: &dt}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df, DateTo: &dt}).
 					Return([]response.OrderData{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
 					}, nil)
@@ -400,7 +400,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			opts:   queryOpts{status: "created"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{Status: []string{"created"}}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{Status: []string{"created"}}).
 					Return([]response.OrderData{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "created", CreatedAt: time.Now()},
 					}, nil)
@@ -415,7 +415,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			mockSetup: func() {
 				sort := "created_at,desc"
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{Sort: &sort}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{Sort: &sort}).
 					Return([]response.OrderData{
 						{
 							ID:           1,
@@ -436,7 +436,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			mockSetup: func() {
 				ps := "paid"
 				mockOrderService.EXPECT().
-					GetOrdersByShopID(1, model.OrderFilterOptions{PaymentStatus: &ps}).
+					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{PaymentStatus: &ps}).
 					Return([]response.OrderData{
 						{ID: 1, CustomerName: "John Doe", TotalPrice: 10000, Status: "done", CreatedAt: time.Now()},
 					}, nil)
@@ -521,7 +521,7 @@ func TestUpdateOrderHandler(t *testing.T) {
 				status := "done"
 				totalPrice := 15000
 				mockOrderService.EXPECT().
-					UpdateOrderByID(service.UpdateOrderInput{
+					UpdateOrderByID(gomock.Any(), service.UpdateOrderInput{
 						ID:         1,
 						TotalPrice: &totalPrice,
 						Status:     &status,
@@ -544,7 +544,7 @@ func TestUpdateOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				status := "done"
 				mockOrderService.EXPECT().
-					UpdateOrderByID(service.UpdateOrderInput{
+					UpdateOrderByID(gomock.Any(), service.UpdateOrderInput{
 						ID:     1,
 						Status: &status,
 					}).
@@ -627,7 +627,7 @@ func TestDeleteOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					DeleteOrderByID(1).
+					DeleteOrderByID(gomock.Any(), 1).
 					Return(nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -638,7 +638,7 @@ func TestDeleteOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					DeleteOrderByID(1).
+					DeleteOrderByID(gomock.Any(), 1).
 					Return(errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -706,7 +706,7 @@ func TestCreateOrderItemHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrderItem(1, 1, 2).
+					CreateOrderItem(gomock.Any(), 1, 1, 2).
 					Return(response.OrderItemData{
 						ID:          1,
 						OrderID:     1,
@@ -728,7 +728,7 @@ func TestCreateOrderItemHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrderItem(1, 1, 2).
+					CreateOrderItem(gomock.Any(), 1, 1, 2).
 					Return(response.OrderItemData{}, errors.New(apierr.ErrProductNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -835,7 +835,7 @@ func TestUpdateOrderItemHandler(t *testing.T) {
 			mockSetup: func() {
 				qty := 5
 				mockOrderService.EXPECT().
-					UpdateOrderItemByID(service.UpdateOrderItemInput{
+					UpdateOrderItemByID(gomock.Any(), service.UpdateOrderItemInput{
 						OrderID:     1,
 						OrderItemID: 1,
 						Qty:         &qty,
@@ -859,7 +859,7 @@ func TestUpdateOrderItemHandler(t *testing.T) {
 			mockSetup: func() {
 				qty := 5
 				mockOrderService.EXPECT().
-					UpdateOrderItemByID(service.UpdateOrderItemInput{
+					UpdateOrderItemByID(gomock.Any(), service.UpdateOrderItemInput{
 						OrderID:     1,
 						OrderItemID: 1,
 						Qty:         &qty,
@@ -952,7 +952,7 @@ func TestDeleteOrderItemHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1", "item_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					DeleteOrderItemByID(1, 1).
+					DeleteOrderItemByID(gomock.Any(), 1, 1).
 					Return(nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -963,7 +963,7 @@ func TestDeleteOrderItemHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1", "item_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					DeleteOrderItemByID(1, 1).
+					DeleteOrderItemByID(gomock.Any(), 1, 1).
 					Return(errors.New(apierr.ErrOrderItemNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -1036,7 +1036,7 @@ func TestGetOrderItemHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1", "item_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderItemByID(1, 1).
+					GetOrderItemByID(gomock.Any(), 1, 1).
 					Return(&response.OrderItemData{
 						ID:          1,
 						OrderID:     1,
@@ -1054,7 +1054,7 @@ func TestGetOrderItemHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1", "item_id": "999"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderItemByID(999, 1).
+					GetOrderItemByID(gomock.Any(), 999, 1).
 					Return(nil, errors.New(apierr.ErrOrderItemNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -1125,7 +1125,7 @@ func TestGetOrderItemsHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderItemsByOrderID(1).
+					GetOrderItemsByOrderID(gomock.Any(), 1).
 					Return([]response.OrderItemData{
 						{
 							ID:          1,
@@ -1144,7 +1144,7 @@ func TestGetOrderItemsHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderItemsByOrderID(1).
+					GetOrderItemsByOrderID(gomock.Any(), 1).
 					Return([]response.OrderItemData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -1155,7 +1155,7 @@ func TestGetOrderItemsHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderItemsByOrderID(1).
+					GetOrderItemsByOrderID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -1226,7 +1226,7 @@ func TestMergeTempOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					MergeTempOrder(10, 5, 1, (*int)(nil)).
+					MergeTempOrder(gomock.Any(), 10, 5, 1, (*int)(nil)).
 					Return(&response.OrderData{
 						ID:           1,
 						CustomerName: "John Doe",
@@ -1256,7 +1256,7 @@ func TestMergeTempOrderHandler(t *testing.T) {
 			mockSetup: func() {
 				activeOrderID := 7
 				mockOrderService.EXPECT().
-					MergeTempOrder(10, 5, 1, &activeOrderID).
+					MergeTempOrder(gomock.Any(), 10, 5, 1, &activeOrderID).
 					Return(&response.OrderData{
 						ID:           7,
 						CustomerName: "John Doe",
@@ -1316,7 +1316,7 @@ func TestMergeTempOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					MergeTempOrder(10, 5, 1, (*int)(nil)).
+					MergeTempOrder(gomock.Any(), 10, 5, 1, (*int)(nil)).
 					Return(nil, errors.New(apierr.ErrOrderNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
@@ -1332,7 +1332,7 @@ func TestMergeTempOrderHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					MergeTempOrder(10, 5, 1, (*int)(nil)).
+					MergeTempOrder(gomock.Any(), 10, 5, 1, (*int)(nil)).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -1412,7 +1412,7 @@ func TestGetTempOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"temp_order_id": "10"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetTempOrderByID(10, 1).
+					GetTempOrderByID(gomock.Any(), 10, 1).
 					Return(&response.TempOrderData{
 						ID:            10,
 						CustomerName:  "Jane",
@@ -1447,7 +1447,7 @@ func TestGetTempOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"temp_order_id": "999"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetTempOrderByID(999, 1).
+					GetTempOrderByID(gomock.Any(), 999, 1).
 					Return(nil, errors.New(apierr.ErrTempOrderNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
@@ -1460,7 +1460,7 @@ func TestGetTempOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"temp_order_id": "10"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetTempOrderByID(10, 1).
+					GetTempOrderByID(gomock.Any(), 10, 1).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -1542,7 +1542,7 @@ func TestRejectTempOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"temp_order_id": "10"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					RejectTempOrderByID(10).
+					RejectTempOrderByID(gomock.Any(), 10).
 					Return(response.TempOrderData{
 						ID:            10,
 						CustomerName:  "Jane",
@@ -1575,7 +1575,7 @@ func TestRejectTempOrderHandler(t *testing.T) {
 			pathVars: map[string]string{"temp_order_id": "10"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					RejectTempOrderByID(10).
+					RejectTempOrderByID(gomock.Any(), 10).
 					Return(response.TempOrderData{}, errors.New(apierr.ErrTempOrderNotFound))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -1658,7 +1658,7 @@ func TestExportOrderHandler(t *testing.T) {
 			body:     nil,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GenerateOrderInvoice(1, 1, "").
+					GenerateOrderInvoice(gomock.Any(), 1, 1, "").
 					Return(fakePDF, nil)
 			},
 			wantStatus:      http.StatusOK,
@@ -1671,7 +1671,7 @@ func TestExportOrderHandler(t *testing.T) {
 			body:     map[string]interface{}{"message": "Thank you!\nSee you again."},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GenerateOrderInvoice(1, 1, "Thank you!\nSee you again.").
+					GenerateOrderInvoice(gomock.Any(), 1, 1, "Thank you!\nSee you again.").
 					Return(fakePDF, nil)
 			},
 			wantStatus:      http.StatusOK,
@@ -1684,7 +1684,7 @@ func TestExportOrderHandler(t *testing.T) {
 			body:     nil,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GenerateOrderInvoice(999, 1, "").
+					GenerateOrderInvoice(gomock.Any(), 999, 1, "").
 					Return(nil, errors.New(apierr.ErrOrderNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
@@ -1697,7 +1697,7 @@ func TestExportOrderHandler(t *testing.T) {
 			body:     nil,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GenerateOrderInvoice(1, 1, "").
+					GenerateOrderInvoice(gomock.Any(), 1, 1, "").
 					Return(nil, errors.New("pdf generation error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -1794,7 +1794,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1816,7 +1816,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			opts:   queryOpts{status: "accepted,rejected"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{Status: []string{"accepted", "rejected"}}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{Status: []string{"accepted", "rejected"}}).
 					Return([]response.TempOrderData{
 						{
 							ID:            2,
@@ -1837,7 +1837,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).
 					Return([]response.TempOrderData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -1851,7 +1851,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 				mockSetup: func() {
 				q := "john"
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{SearchQuery: &q}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1874,7 +1874,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			mockSetup: func() {
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{DateFrom: &df}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1897,7 +1897,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			mockSetup: func() {
 				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC) // handler adds 24h for inclusive end of day
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{DateTo: &dt}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateTo: &dt}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1922,7 +1922,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{SearchQuery: &q, DateFrom: &df, DateTo: &dt, Status: []string{"rejected"}}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{SearchQuery: &q, DateFrom: &df, DateTo: &dt, Status: []string{"rejected"}}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1945,7 +1945,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			mockSetup: func() {
 				sort := "created_at,desc"
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{Sort: &sort}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{Sort: &sort}).
 					Return([]response.TempOrderData{
 						{
 							ID:            1,
@@ -1966,7 +1966,7 @@ func TestGetTempOrdersHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetTempOrdersByShopID(1, model.OrderFilterOptions{}).
+					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -2051,7 +2051,7 @@ func TestCreateOrderPaymentHandler(t *testing.T) {
 			body:     map[string]interface{}{"amount": 50000},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrderPayment(1, 50000).
+					CreateOrderPayment(gomock.Any(), 1, 50000).
 					Return(response.OrderPaymentData{ID: 1, OrderID: 1, Amount: 50000, CreatedAt: fixedTime}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -2079,7 +2079,7 @@ func TestCreateOrderPaymentHandler(t *testing.T) {
 			body:     map[string]interface{}{"amount": 50000},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateOrderPayment(1, 50000).
+					CreateOrderPayment(gomock.Any(), 1, 50000).
 					Return(response.OrderPaymentData{}, errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
@@ -2142,7 +2142,7 @@ func TestUpdateOrderPaymentAmountHandler(t *testing.T) {
 			body:     map[string]interface{}{"amount": 75000},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					UpdateOrderPaymentAmountByID(1, 10, 75000).
+					UpdateOrderPaymentAmountByID(gomock.Any(), 1, 10, 75000).
 					Return(response.OrderPaymentData{ID: 1, OrderID: 10, Amount: 75000, CreatedAt: fixedTime}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -2178,7 +2178,7 @@ func TestUpdateOrderPaymentAmountHandler(t *testing.T) {
 			body:     map[string]interface{}{"amount": 75000},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					UpdateOrderPaymentAmountByID(1, 10, 75000).
+					UpdateOrderPaymentAmountByID(gomock.Any(), 1, 10, 75000).
 					Return(response.OrderPaymentData{}, errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
@@ -2239,7 +2239,7 @@ func TestGetOrderPaymentsHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderPaymentsByOrderID(1).
+					GetOrderPaymentsByOrderID(gomock.Any(), 1).
 					Return([]response.OrderPaymentData{
 						{ID: 1, OrderID: 1, Amount: 50000, CreatedAt: fixedTime},
 						{ID: 2, OrderID: 1, Amount: 25000, CreatedAt: fixedTime},
@@ -2260,7 +2260,7 @@ func TestGetOrderPaymentsHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					GetOrderPaymentsByOrderID(1).
+					GetOrderPaymentsByOrderID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
@@ -2311,7 +2311,7 @@ func TestDeleteOrderPaymentHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "10", "payment_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					DeleteOrderPaymentByID(1, 10).
+					DeleteOrderPaymentByID(gomock.Any(), 1, 10).
 					Return(nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -2336,7 +2336,7 @@ func TestDeleteOrderPaymentHandler(t *testing.T) {
 			pathVars: map[string]string{"order_id": "10", "payment_id": "1"},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					DeleteOrderPaymentByID(1, 10).
+					DeleteOrderPaymentByID(gomock.Any(), 1, 10).
 					Return(errors.New("database error"))
 			},
 			wantStatus:  http.StatusInternalServerError,

@@ -81,7 +81,7 @@ func CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := orderService.CreateOrder(inp.CustomerID, shopID, inp.Notes)
+	res, err := orderService.CreateOrder(ctx, inp.CustomerID, shopID, inp.Notes)
 	if err != nil {
 		if err.Error() == apierr.ErrActiveOrderExists {
 			WriteErrorJson(w, r, http.StatusConflict, err, "duplicate_customer_order")
@@ -122,7 +122,7 @@ func GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 
-	res, err := orderService.GetOrderByID(orderIDInt, shopID)
+	res, err := orderService.GetOrderByID(ctx, orderIDInt, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -176,7 +176,7 @@ func ExportOrderHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	pdfBytes, err := orderService.GenerateOrderInvoice(orderID, shopID, inp.Message)
+	pdfBytes, err := orderService.GenerateOrderInvoice(ctx, orderID, shopID, inp.Message)
 	if err != nil {
 		if err.Error() == apierr.ErrOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -243,7 +243,7 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		opts.Sort = &sort
 	}
 
-	res, err := orderService.GetOrdersByShopID(shopID, opts)
+	res, err := orderService.GetOrdersByShopID(ctx, shopID, opts)
 	if err != nil {
 		logger.WithError(err).Error("get_orders_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_orders")
@@ -269,6 +269,7 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id} [patch]
 func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -283,7 +284,7 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := orderService.UpdateOrderByID(service.UpdateOrderInput{
+	res, err := orderService.UpdateOrderByID(ctx, service.UpdateOrderInput{
 		ID:            orderIDInt,
 		TotalPrice:    inp.TotalPrice,
 		Status:        inp.Status,
@@ -314,6 +315,7 @@ func UpdateOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id} [delete]
 func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -322,7 +324,7 @@ func DeleteOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 
-	err := orderService.DeleteOrderByID(orderIDInt)
+	err := orderService.DeleteOrderByID(ctx, orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("delete_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order")
@@ -362,7 +364,7 @@ func MergeTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := orderService.MergeTempOrder(inp.TempOrderID, inp.CustomerID, shopID, inp.ActiveOrderID)
+	res, err := orderService.MergeTempOrder(ctx, inp.TempOrderID, inp.CustomerID, shopID, inp.ActiveOrderID)
 	if err != nil {
 		if err.Error() == apierr.ErrOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -392,6 +394,7 @@ func MergeTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id}/item [post]
 func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -411,7 +414,7 @@ func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 
-	res, err := orderService.CreateOrderItem(orderIDInt, inp.ProductID, inp.Qty)
+	res, err := orderService.CreateOrderItem(ctx, orderIDInt, inp.ProductID, inp.Qty)
 	if err != nil {
 		logger.WithError(err).Error("create_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order_item")
@@ -438,6 +441,7 @@ func CreateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id}/items/{item_id} [patch]
 func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -458,7 +462,7 @@ func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 	orderItemIDInt, _ := strconv.Atoi(params["item_id"])
 
-	res, err := orderService.UpdateOrderItemByID(service.UpdateOrderItemInput{
+	res, err := orderService.UpdateOrderItemByID(ctx, service.UpdateOrderItemInput{
 		OrderID:     orderIDInt,
 		OrderItemID: orderItemIDInt,
 		ProductID:   inp.ProductID,
@@ -489,6 +493,7 @@ func UpdateOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id}/items/{item_id} [delete]
 func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -503,7 +508,7 @@ func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 	orderItemIDInt, _ := strconv.Atoi(params["item_id"])
 
-	err := orderService.DeleteOrderItemByID(orderItemIDInt, orderIDInt)
+	err := orderService.DeleteOrderItemByID(ctx, orderItemIDInt, orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("delete_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order_item")
@@ -529,6 +534,7 @@ func DeleteOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id}/items/{item_id} [get]
 func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 
 	if valid, err := validateOrderID(params); !valid {
@@ -544,7 +550,7 @@ func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 	orderItemIDInt, _ := strconv.Atoi(params["item_id"])
 
-	res, err := orderService.GetOrderItemByID(orderItemIDInt, orderIDInt)
+	res, err := orderService.GetOrderItemByID(ctx, orderItemIDInt, orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("get_order_item_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_item")
@@ -569,6 +575,7 @@ func GetOrderItemHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id}/items [get]
 func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 
 	if valid, err := validateOrderID(params); !valid {
@@ -578,7 +585,7 @@ func GetOrderItemsHandler(w http.ResponseWriter, r *http.Request) {
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 
-	res, err := orderService.GetOrderItemsByOrderID(orderIDInt)
+	res, err := orderService.GetOrderItemsByOrderID(ctx, orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("get_order_items_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_items")
@@ -632,7 +639,7 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		opts.Sort = &sort
 	}
 
-	res, err := orderService.GetTempOrdersByShopID(shopID, opts)
+	res, err := orderService.GetTempOrdersByShopID(ctx, shopID, opts)
 	if err != nil {
 		logger.WithError(err).Error("get_temp_orders_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_temp_orders")
@@ -669,7 +676,7 @@ func GetTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	tempOrderIDInt, _ := strconv.Atoi(params["temp_order_id"])
 
-	res, err := orderService.GetTempOrderByID(tempOrderIDInt, shopID)
+	res, err := orderService.GetTempOrderByID(ctx, tempOrderIDInt, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrTempOrderNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -698,6 +705,7 @@ func GetTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/temp_orders/{temp_order_id}/reject [patch]
 func RejectTempOrderHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateTempOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -706,7 +714,7 @@ func RejectTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 	tempOrderIDInt, _ := strconv.Atoi(params["temp_order_id"])
 
-	res, err := orderService.RejectTempOrderByID(tempOrderIDInt)
+	res, err := orderService.RejectTempOrderByID(ctx, tempOrderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("reject_temp_order_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "reject_temp_order")
@@ -725,13 +733,15 @@ func RejectTempOrderHandler(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//  @Param			order_id	path		int	true	"Order ID"
-//  @Param			body		body		OrderPaymentRequest	true	"Order payment data"
-//  @Success		200		{object}	response.OrderPaymentData
-//  @Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON or order_id)"
-//  @Failure		500	{object}	ErrorApiResponse	"Internal server error"
-//  @Router			/orders/{order_id}/payment [post]
+//
+// @Param			order_id	path		int	true	"Order ID"
+// @Param			body		body		OrderPaymentRequest	true	"Order payment data"
+// @Success		200		{object}	response.OrderPaymentData
+// @Failure		400	{object}	ErrorApiResponse	"Bad request (invalid JSON or order_id)"
+// @Failure		500	{object}	ErrorApiResponse	"Internal server error"
+// @Router			/orders/{order_id}/payment [post]
 func CreateOrderPaymentHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -746,7 +756,7 @@ func CreateOrderPaymentHandler(w http.ResponseWriter, r *http.Request) {
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 
-	res, err := orderService.CreateOrderPayment(orderIDInt, inp.Amount)
+	res, err := orderService.CreateOrderPayment(ctx, orderIDInt, inp.Amount)
 	if err != nil {
 		logger.WithError(err).Error("create_order_payment_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_order_payment")
@@ -772,6 +782,7 @@ func CreateOrderPaymentHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id}/payments/{payment_id} [patch]
 func UpdateOrderPaymentAmountHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -792,7 +803,7 @@ func UpdateOrderPaymentAmountHandler(w http.ResponseWriter, r *http.Request) {
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 	paymentIDInt, _ := strconv.Atoi(params["payment_id"])
 
-	res, err := orderService.UpdateOrderPaymentAmountByID(paymentIDInt, orderIDInt, inp.Amount)
+	res, err := orderService.UpdateOrderPaymentAmountByID(ctx, paymentIDInt, orderIDInt, inp.Amount)
 	if err != nil {
 		logger.WithError(err).Error("update_order_payment_amount_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "update_order_payment_amount")
@@ -817,6 +828,7 @@ func UpdateOrderPaymentAmountHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id}/payments [get]
 func GetOrderPaymentsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -825,7 +837,7 @@ func GetOrderPaymentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 
-	res, err := orderService.GetOrderPaymentsByOrderID(orderIDInt)
+	res, err := orderService.GetOrderPaymentsByOrderID(ctx, orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("get_order_payments_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_payments")
@@ -851,6 +863,7 @@ func GetOrderPaymentsHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/orders/{order_id}/payments/{payment_id} [delete]
 func DeleteOrderPaymentHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateOrderID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -865,7 +878,7 @@ func DeleteOrderPaymentHandler(w http.ResponseWriter, r *http.Request) {
 	orderIDInt, _ := strconv.Atoi(params["order_id"])
 	paymentIDInt, _ := strconv.Atoi(params["payment_id"])
 
-	err := orderService.DeleteOrderPaymentByID(paymentIDInt, orderIDInt)
+	err := orderService.DeleteOrderPaymentByID(ctx, paymentIDInt, orderIDInt)
 	if err != nil {
 		logger.WithError(err).Error("delete_order_payment_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order_payment")

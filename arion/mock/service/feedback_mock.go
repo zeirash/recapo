@@ -5,6 +5,7 @@
 package mock_service
 
 import (
+	context "context"
 	io "io"
 	reflect "reflect"
 
@@ -35,30 +36,30 @@ func (m *MockFeedbackService) EXPECT() *MockFeedbackServiceMockRecorder {
 }
 
 // UploadFeedbackImage mocks base method.
-func (m *MockFeedbackService) UploadFeedbackImage(file io.Reader) (string, error) {
+func (m *MockFeedbackService) UploadFeedbackImage(ctx context.Context, file io.Reader) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadFeedbackImage", file)
+	ret := m.ctrl.Call(m, "UploadFeedbackImage", ctx, file)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UploadFeedbackImage indicates an expected call of UploadFeedbackImage.
-func (mr *MockFeedbackServiceMockRecorder) UploadFeedbackImage(file interface{}) *gomock.Call {
+func (mr *MockFeedbackServiceMockRecorder) UploadFeedbackImage(ctx, file interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFeedbackImage", reflect.TypeOf((*MockFeedbackService)(nil).UploadFeedbackImage), file)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFeedbackImage", reflect.TypeOf((*MockFeedbackService)(nil).UploadFeedbackImage), ctx, file)
 }
 
 // CreateFeedback mocks base method.
-func (m *MockFeedbackService) CreateFeedback(userID int, feedbackType, title, description, imageURL string) error {
+func (m *MockFeedbackService) CreateFeedback(ctx context.Context, userID int, feedbackType, title, description, imageURL string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateFeedback", userID, feedbackType, title, description, imageURL)
+	ret := m.ctrl.Call(m, "CreateFeedback", ctx, userID, feedbackType, title, description, imageURL)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateFeedback indicates an expected call of CreateFeedback.
-func (mr *MockFeedbackServiceMockRecorder) CreateFeedback(userID, feedbackType, title, description, imageURL interface{}) *gomock.Call {
+func (mr *MockFeedbackServiceMockRecorder) CreateFeedback(ctx, userID, feedbackType, title, description, imageURL interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFeedback", reflect.TypeOf((*MockFeedbackService)(nil).CreateFeedback), userID, feedbackType, title, description, imageURL)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFeedback", reflect.TypeOf((*MockFeedbackService)(nil).CreateFeedback), ctx, userID, feedbackType, title, description, imageURL)
 }

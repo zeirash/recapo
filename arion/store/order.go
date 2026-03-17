@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -15,18 +16,18 @@ import (
 
 type (
 	OrderStore interface {
-		GetOrderByID(id int, shopID ...int) (*model.Order, error)
-		GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.Order, error)
-		GetActiveOrderByCustomerID(customerID int, shopID int) (*model.Order, error)
-		CreateOrder(tx database.Tx, customerID int, shopID int, notes *string, totalPrice *int) (*model.Order, error)
-		UpdateOrder(tx database.Tx, id int, input UpdateOrderInput) (*model.Order, error)
-		DeleteOrderByID(tx database.Tx, id int) error
+		GetOrderByID(ctx context.Context, id int, shopID ...int) (*model.Order, error)
+		GetOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]model.Order, error)
+		GetActiveOrderByCustomerID(ctx context.Context, customerID int, shopID int) (*model.Order, error)
+		CreateOrder(ctx context.Context, tx database.Tx, customerID int, shopID int, notes *string, totalPrice *int) (*model.Order, error)
+		UpdateOrder(ctx context.Context, tx database.Tx, id int, input UpdateOrderInput) (*model.Order, error)
+		DeleteOrderByID(ctx context.Context, tx database.Tx, id int) error
 
-		CreateTempOrder(tx database.Tx, customerName, customerPhone string, shopID int) (*model.TempOrder, error)
-		UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, totalPrice int) error
-		GetTempOrderByID(id int, shopID ...int) (*model.TempOrder, error)
-		GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error)
-		UpdateTempOrderStatus(tx database.Tx, tempOrderID int, status string) error
+		CreateTempOrder(ctx context.Context, tx database.Tx, customerName, customerPhone string, shopID int) (*model.TempOrder, error)
+		UpdateTempOrderTotalPrice(ctx context.Context, tx database.Tx, tempOrderID int, totalPrice int) error
+		GetTempOrderByID(ctx context.Context, id int, shopID ...int) (*model.TempOrder, error)
+		GetTempOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error)
+		UpdateTempOrderStatus(ctx context.Context, tx database.Tx, tempOrderID int, status string) error
 	}
 
 	order struct {
@@ -50,7 +51,7 @@ func NewOrderStoreWithDB(db *sql.DB) OrderStore {
 	return &order{db: db}
 }
 
-func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
+func (o *order) GetOrderByID(ctx context.Context, id int, shopID ...int) (*model.Order, error) {
 	criteria := []interface{}{id}
 
 	q := `
@@ -66,7 +67,7 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 	}
 
 	var order model.Order
-	err := o.db.QueryRow(q, criteria...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+	err := o.db.QueryRowContext(ctx, q, criteria...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -77,7 +78,7 @@ func (o *order) GetOrderByID(id int, shopID ...int) (*model.Order, error) {
 	return &order, nil
 }
 
-func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.Order, error) {
+func (o *order) GetOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]model.Order, error) {
 	q := `
 		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
 		FROM orders o
@@ -119,7 +120,7 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 		}
 	}
 
-	rows, err := o.db.Query(q, args...)
+	rows, err := o.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +139,7 @@ func (o *order) GetOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]
 	return orders, nil
 }
 
-func (o *order) GetActiveOrderByCustomerID(customerID int, shopID int) (*model.Order, error) {
+func (o *order) GetActiveOrderByCustomerID(ctx context.Context, customerID int, shopID int) (*model.Order, error) {
 	q := `
 		SELECT o.id, o.shop_id, c.name as customer_name, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at
 		FROM orders o
@@ -148,7 +149,7 @@ func (o *order) GetActiveOrderByCustomerID(customerID int, shopID int) (*model.O
 		LIMIT 1
 	`
 	var order model.Order
-	err := o.db.QueryRow(q, customerID, shopID, constant.OrderStatusCreated, constant.OrderStatusInProgress).Scan(
+	err := o.db.QueryRowContext(ctx, q, customerID, shopID, constant.OrderStatusCreated, constant.OrderStatusInProgress).Scan(
 		&order.ID,
 		&order.ShopID,
 		&order.CustomerName,
@@ -168,7 +169,7 @@ func (o *order) GetActiveOrderByCustomerID(customerID int, shopID int) (*model.O
 	return &order, nil
 }
 
-func (o *order) CreateOrder(tx database.Tx, customerID int, shopID int, notes *string, totalPrice *int) (*model.Order, error) {
+func (o *order) CreateOrder(ctx context.Context, tx database.Tx, customerID int, shopID int, notes *string, totalPrice *int) (*model.Order, error) {
 	now := time.Now()
 	var order model.Order
 
@@ -191,11 +192,11 @@ func (o *order) CreateOrder(tx database.Tx, customerID int, shopID int, notes *s
 	args := []interface{}{totalPriceVal, constant.OrderStatusCreated, constant.OrderPaymentStatusOutstanding, customerID, shopID, notes, now}
 	var err error
 	if tx != nil {
-		err = tx.QueryRow(q, args...).Scan(
+		err = tx.QueryRowContext(ctx, q, args...).Scan(
 			&order.ID, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.CustomerName, &order.ShopID, &order.Notes, &order.CreatedAt,
 		)
 	} else {
-		err = o.db.QueryRow(q, args...).Scan(
+		err = o.db.QueryRowContext(ctx, q, args...).Scan(
 			&order.ID, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.CustomerName, &order.ShopID, &order.Notes, &order.CreatedAt,
 		)
 	}
@@ -206,7 +207,7 @@ func (o *order) CreateOrder(tx database.Tx, customerID int, shopID int, notes *s
 	return &order, nil
 }
 
-func (o *order) UpdateOrder(tx database.Tx, id int, input UpdateOrderInput) (*model.Order, error) {
+func (o *order) UpdateOrder(ctx context.Context, tx database.Tx, id int, input UpdateOrderInput) (*model.Order, error) {
 	set := []string{}
 	var order model.Order
 
@@ -246,9 +247,9 @@ func (o *order) UpdateOrder(tx database.Tx, id int, input UpdateOrderInput) (*mo
 
 	var err error
 	if tx != nil {
-		err = tx.QueryRow(q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err = tx.QueryRowContext(ctx, q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	} else {
-		err = o.db.QueryRow(q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err = o.db.QueryRowContext(ctx, q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	}
 	if err != nil {
 		return nil, err
@@ -257,13 +258,13 @@ func (o *order) UpdateOrder(tx database.Tx, id int, input UpdateOrderInput) (*mo
 	return &order, nil
 }
 
-func (o *order) DeleteOrderByID(tx database.Tx, id int) error {
+func (o *order) DeleteOrderByID(ctx context.Context, tx database.Tx, id int) error {
 	q := `
 		DELETE FROM orders
 		WHERE id = $1
 	`
 
-	_, err := tx.Exec(q, id)
+	_, err := tx.ExecContext(ctx, q, id)
 	if err != nil {
 		return err
 	}
@@ -271,7 +272,7 @@ func (o *order) DeleteOrderByID(tx database.Tx, id int) error {
 	return nil
 }
 
-func (o *order) CreateTempOrder(tx database.Tx, customerName, customerPhone string, shopID int) (*model.TempOrder, error) {
+func (o *order) CreateTempOrder(ctx context.Context, tx database.Tx, customerName, customerPhone string, shopID int) (*model.TempOrder, error) {
 	now := time.Now()
 	var tempOrder model.TempOrder
 
@@ -281,7 +282,7 @@ func (o *order) CreateTempOrder(tx database.Tx, customerName, customerPhone stri
 		RETURNING id, customer_name, customer_phone, shop_id, total_price, status, created_at
 	`
 
-	err := tx.QueryRow(q, customerName, customerPhone, constant.TempOrderStatusPending, shopID, now).Scan(&tempOrder.ID, &tempOrder.CustomerName, &tempOrder.CustomerPhone, &tempOrder.ShopID, &tempOrder.TotalPrice, &tempOrder.Status, &tempOrder.CreatedAt)
+	err := tx.QueryRowContext(ctx, q, customerName, customerPhone, constant.TempOrderStatusPending, shopID, now).Scan(&tempOrder.ID, &tempOrder.CustomerName, &tempOrder.CustomerPhone, &tempOrder.ShopID, &tempOrder.TotalPrice, &tempOrder.Status, &tempOrder.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -289,20 +290,20 @@ func (o *order) CreateTempOrder(tx database.Tx, customerName, customerPhone stri
 	return &tempOrder, nil
 }
 
-func (o *order) UpdateTempOrderTotalPrice(tx database.Tx, tempOrderID int, totalPrice int) error {
+func (o *order) UpdateTempOrderTotalPrice(ctx context.Context, tx database.Tx, tempOrderID int, totalPrice int) error {
 	q := `
 		UPDATE temp_orders
 		SET total_price = $1, updated_at = now()
 		WHERE id = $2
 	`
-	_, err := tx.Exec(q, totalPrice, tempOrderID)
+	_, err := tx.ExecContext(ctx, q, totalPrice, tempOrderID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (o *order) GetTempOrderByID(id int, shopID ...int) (*model.TempOrder, error) {
+func (o *order) GetTempOrderByID(ctx context.Context, id int, shopID ...int) (*model.TempOrder, error) {
 	criteria := []interface{}{id}
 
 	q := `
@@ -317,7 +318,7 @@ func (o *order) GetTempOrderByID(id int, shopID ...int) (*model.TempOrder, error
 	}
 
 	var tempOrder model.TempOrder
-	err := o.db.QueryRow(q, criteria...).Scan(&tempOrder.ID, &tempOrder.ShopID, &tempOrder.CustomerName, &tempOrder.CustomerPhone, &tempOrder.TotalPrice, &tempOrder.Status, &tempOrder.CreatedAt, &tempOrder.UpdatedAt)
+	err := o.db.QueryRowContext(ctx, q, criteria...).Scan(&tempOrder.ID, &tempOrder.ShopID, &tempOrder.CustomerName, &tempOrder.CustomerPhone, &tempOrder.TotalPrice, &tempOrder.Status, &tempOrder.CreatedAt, &tempOrder.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -328,7 +329,7 @@ func (o *order) GetTempOrderByID(id int, shopID ...int) (*model.TempOrder, error
 	return &tempOrder, nil
 }
 
-func (o *order) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error) {
+func (o *order) GetTempOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]model.TempOrder, error) {
 	q := `
 		SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at
 		FROM temp_orders
@@ -364,7 +365,7 @@ func (o *order) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions)
 		}
 	}
 
-	rows, err := o.db.Query(q, args...)
+	rows, err := o.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +384,7 @@ func (o *order) GetTempOrdersByShopID(shopID int, opts model.OrderFilterOptions)
 	return tempOrders, nil
 }
 
-func (o *order) UpdateTempOrderStatus(tx database.Tx, tempOrderID int, status string) error {
+func (o *order) UpdateTempOrderStatus(ctx context.Context, tx database.Tx, tempOrderID int, status string) error {
 	q := `
 		UPDATE temp_orders
 		SET status = $1, updated_at = now()
@@ -391,9 +392,9 @@ func (o *order) UpdateTempOrderStatus(tx database.Tx, tempOrderID int, status st
 	`
 	var err error
 	if tx != nil {
-		_, err = tx.Exec(q, status, tempOrderID)
+		_, err = tx.ExecContext(ctx, q, status, tempOrderID)
 	} else {
-		_, err = o.db.Exec(q, status, tempOrderID)
+		_, err = o.db.ExecContext(ctx, q, status, tempOrderID)
 	}
 	if err != nil {
 		return err

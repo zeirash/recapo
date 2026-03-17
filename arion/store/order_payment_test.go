@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -82,9 +83,9 @@ func Test_orderpayment_CreateOrderPayment(t *testing.T) {
 					t.Fatalf("failed to begin tx: %v", err)
 				}
 				defer tx.Rollback()
-				got, gotErr = store.CreateOrderPayment(tx, tt.orderID, tt.amount)
+				got, gotErr = store.CreateOrderPayment(context.Background(), tx, tt.orderID, tt.amount)
 			} else {
-				got, gotErr = store.CreateOrderPayment(nil, tt.orderID, tt.amount)
+				got, gotErr = store.CreateOrderPayment(context.Background(), nil, tt.orderID, tt.amount)
 			}
 
 			if gotErr != nil {
@@ -175,7 +176,7 @@ func Test_orderpayment_GetOrderPaymentsByOrderID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderPaymentStoreWithDB(db)
 
-			got, gotErr := store.GetOrderPaymentsByOrderID(tt.orderID)
+			got, gotErr := store.GetOrderPaymentsByOrderID(context.Background(), tt.orderID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -302,9 +303,9 @@ func Test_orderpayment_UpdateOrderPaymentAmountByID(t *testing.T) {
 					t.Fatalf("failed to begin tx: %v", err)
 				}
 				defer tx.Rollback()
-				got, gotErr = store.UpdateOrderPaymentAmountByID(tx, tt.id, tt.orderID, tt.amount)
+				got, gotErr = store.UpdateOrderPaymentAmountByID(context.Background(), tx, tt.id, tt.orderID, tt.amount)
 			} else {
-				got, gotErr = store.UpdateOrderPaymentAmountByID(nil, tt.id, tt.orderID, tt.amount)
+				got, gotErr = store.UpdateOrderPaymentAmountByID(context.Background(), nil, tt.id, tt.orderID, tt.amount)
 			}
 
 			if gotErr != nil {
@@ -378,7 +379,7 @@ func Test_orderpayment_DeleteOrderPaymentByID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewOrderPaymentStoreWithDB(db)
 
-			gotErr := store.DeleteOrderPaymentByID(tt.id, tt.orderID)
+			gotErr := store.DeleteOrderPaymentByID(context.Background(), tt.id, tt.orderID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -451,7 +452,7 @@ func Test_orderpayment_DeleteOrderPaymentsByOrderID(t *testing.T) {
 			}
 
 			var o orderpayment
-			gotErr := o.DeleteOrderPaymentsByOrderID(tx, tt.orderID)
+			gotErr := o.DeleteOrderPaymentsByOrderID(context.Background(), tx, tt.orderID)
 
 			if gotErr != nil {
 				if !tt.wantErr {

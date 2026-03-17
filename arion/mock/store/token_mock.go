@@ -5,6 +5,7 @@
 package mock_store
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,61 +36,61 @@ func (m *MockTokenStore) EXPECT() *MockTokenStoreMockRecorder {
 }
 
 // CreateAccessToken mocks base method.
-func (m *MockTokenStore) CreateAccessToken(user *model.User, secret string, expiry int) (string, error) {
+func (m *MockTokenStore) CreateAccessToken(ctx context.Context, user *model.User, secret string, expiry int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAccessToken", user, secret, expiry)
+	ret := m.ctrl.Call(m, "CreateAccessToken", ctx, user, secret, expiry)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAccessToken indicates an expected call of CreateAccessToken.
-func (mr *MockTokenStoreMockRecorder) CreateAccessToken(user, secret, expiry interface{}) *gomock.Call {
+func (mr *MockTokenStoreMockRecorder) CreateAccessToken(ctx, user, secret, expiry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAccessToken", reflect.TypeOf((*MockTokenStore)(nil).CreateAccessToken), user, secret, expiry)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAccessToken", reflect.TypeOf((*MockTokenStore)(nil).CreateAccessToken), ctx, user, secret, expiry)
 }
 
 // CreateRefreshToken mocks base method.
-func (m *MockTokenStore) CreateRefreshToken(user *model.User, secret string, expiry int) (string, error) {
+func (m *MockTokenStore) CreateRefreshToken(ctx context.Context, user *model.User, secret string, expiry int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateRefreshToken", user, secret, expiry)
+	ret := m.ctrl.Call(m, "CreateRefreshToken", ctx, user, secret, expiry)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateRefreshToken indicates an expected call of CreateRefreshToken.
-func (mr *MockTokenStoreMockRecorder) CreateRefreshToken(user, secret, expiry interface{}) *gomock.Call {
+func (mr *MockTokenStoreMockRecorder) CreateRefreshToken(ctx, user, secret, expiry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRefreshToken", reflect.TypeOf((*MockTokenStore)(nil).CreateRefreshToken), user, secret, expiry)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRefreshToken", reflect.TypeOf((*MockTokenStore)(nil).CreateRefreshToken), ctx, user, secret, expiry)
 }
 
 // ExtractDataFromToken mocks base method.
-func (m *MockTokenStore) ExtractDataFromToken(requestToken, secret string) (model.TokenData, error) {
+func (m *MockTokenStore) ExtractDataFromToken(ctx context.Context, requestToken, secret string) (model.TokenData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExtractDataFromToken", requestToken, secret)
+	ret := m.ctrl.Call(m, "ExtractDataFromToken", ctx, requestToken, secret)
 	ret0, _ := ret[0].(model.TokenData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ExtractDataFromToken indicates an expected call of ExtractDataFromToken.
-func (mr *MockTokenStoreMockRecorder) ExtractDataFromToken(requestToken, secret interface{}) *gomock.Call {
+func (mr *MockTokenStoreMockRecorder) ExtractDataFromToken(ctx, requestToken, secret interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExtractDataFromToken", reflect.TypeOf((*MockTokenStore)(nil).ExtractDataFromToken), requestToken, secret)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExtractDataFromToken", reflect.TypeOf((*MockTokenStore)(nil).ExtractDataFromToken), ctx, requestToken, secret)
 }
 
 // IsAuthorized mocks base method.
-func (m *MockTokenStore) IsAuthorized(requestToken, secret string) (bool, error) {
+func (m *MockTokenStore) IsAuthorized(ctx context.Context, requestToken, secret string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsAuthorized", requestToken, secret)
+	ret := m.ctrl.Call(m, "IsAuthorized", ctx, requestToken, secret)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // IsAuthorized indicates an expected call of IsAuthorized.
-func (mr *MockTokenStoreMockRecorder) IsAuthorized(requestToken, secret interface{}) *gomock.Call {
+func (mr *MockTokenStoreMockRecorder) IsAuthorized(ctx, requestToken, secret interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAuthorized", reflect.TypeOf((*MockTokenStore)(nil).IsAuthorized), requestToken, secret)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAuthorized", reflect.TypeOf((*MockTokenStore)(nil).IsAuthorized), ctx, requestToken, secret)
 }

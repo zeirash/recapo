@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,8 +17,8 @@ import (
 
 type (
 	FeedbackService interface {
-		UploadFeedbackImage(file io.Reader) (string, error)
-		CreateFeedback(userID int, feedbackType, title, description, imageURL string) error
+		UploadFeedbackImage(ctx context.Context, file io.Reader) (string, error)
+		CreateFeedback(ctx context.Context, userID int, feedbackType, title, description, imageURL string) error
 	}
 
 	sfeedback struct{}
@@ -31,7 +32,7 @@ type (
 
 // githubAPIFunc is the function used to call the GitHub Issues API.
 // Overridable in tests to avoid real HTTP calls.
-var githubAPIFunc = callGithubAPI
+var githubAPIFunc func(context.Context, githubIssueRequest) error = callGithubAPI
 
 func NewFeedbackService() FeedbackService {
 	if userStore == nil {
@@ -40,11 +41,11 @@ func NewFeedbackService() FeedbackService {
 	return &sfeedback{}
 }
 
-func (s *sfeedback) UploadFeedbackImage(file io.Reader) (string, error) {
+func (s *sfeedback) UploadFeedbackImage(ctx context.Context, file io.Reader) (string, error) {
 	return uploadImage(file, "feedback")
 }
 
-func (s *sfeedback) CreateFeedback(userID int, feedbackType, title, description, imageURL string) error {
+func (s *sfeedback) CreateFeedback(ctx context.Context, userID int, feedbackType, title, description, imageURL string) error {
 	if title == "" {
 		return errors.New(apierr.ErrFeedbackTitleRequired)
 	}
@@ -52,7 +53,7 @@ func (s *sfeedback) CreateFeedback(userID int, feedbackType, title, description,
 		return errors.New(apierr.ErrFeedbackTypeInvalid)
 	}
 
-	user, err := userStore.GetUserByID(userID)
+	user, err := userStore.GetUserByID(ctx, userID)
 	if err != nil || user == nil {
 		return errors.New(apierr.ErrUserNotFound)
 	}
@@ -71,10 +72,10 @@ func (s *sfeedback) CreateFeedback(userID int, feedbackType, title, description,
 		Labels: []string{feedbackType, constant.GithubLabelUser},
 	}
 
-	return githubAPIFunc(reqBody)
+	return githubAPIFunc(ctx, reqBody)
 }
 
-func callGithubAPI(reqBody githubIssueRequest) error {
+func callGithubAPI(ctx context.Context, reqBody githubIssueRequest) error {
 	owner := cfg.GitHubRepoOwner
 	repo := cfg.GitHubRepoName
 	token := cfg.GitHubToken
@@ -85,7 +86,7 @@ func callGithubAPI(reqBody githubIssueRequest) error {
 	}
 
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues", owner, repo)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return err
 	}

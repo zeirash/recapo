@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -46,7 +47,7 @@ func Test_cservice_CreateCustomer(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					CreateCustomer(gomock.Eq(store.CreateCustomerInput{
+					CreateCustomer(gomock.Any(), gomock.Eq(store.CreateCustomerInput{
 						Name:    "John Doe",
 						Phone:   "1234567890",
 						Address: strPtr("123 Main St"),
@@ -81,7 +82,7 @@ func Test_cservice_CreateCustomer(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					CreateCustomer(gomock.Eq(store.CreateCustomerInput{
+					CreateCustomer(gomock.Any(), gomock.Eq(store.CreateCustomerInput{
 						Name:    "Jane Doe",
 						Phone:   "0987654321",
 						Address: strPtr(""),
@@ -116,7 +117,7 @@ func Test_cservice_CreateCustomer(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					CreateCustomer(gomock.Eq(store.CreateCustomerInput{
+					CreateCustomer(gomock.Any(), gomock.Eq(store.CreateCustomerInput{
 						Name:    "John Doe",
 						Phone:   "1234567890",
 						Address: strPtr("123 Main St"),
@@ -139,7 +140,7 @@ func Test_cservice_CreateCustomer(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					CreateCustomer(gomock.Eq(store.CreateCustomerInput{
+					CreateCustomer(gomock.Any(), gomock.Eq(store.CreateCustomerInput{
 						Name:    "John Doe",
 						Phone:   "1234567890",
 						Address: strPtr("123 Main St"),
@@ -163,7 +164,7 @@ func Test_cservice_CreateCustomer(t *testing.T) {
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
-			got, gotErr := c.CreateCustomer(tt.input.name, tt.input.phone, tt.input.address, tt.input.shopID)
+			got, gotErr := c.CreateCustomer(context.Background(), tt.input.name, tt.input.phone, tt.input.address, tt.input.shopID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -207,7 +208,7 @@ func Test_cservice_GetCustomerByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomerByID(1).
+					GetCustomerByID(gomock.Any(), 1).
 					Return(&model.Customer{
 						ID:        1,
 						Name:      "John Doe",
@@ -235,7 +236,7 @@ func Test_cservice_GetCustomerByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomerByID(1, 10).
+					GetCustomerByID(gomock.Any(), 1, 10).
 					Return(&model.Customer{
 						ID:        1,
 						Name:      "John Doe",
@@ -265,7 +266,7 @@ func Test_cservice_GetCustomerByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomerByID(9999).
+					GetCustomerByID(gomock.Any(), 9999).
 					Return(nil, nil)
 				return mock
 			},
@@ -281,7 +282,7 @@ func Test_cservice_GetCustomerByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomerByID(1).
+					GetCustomerByID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -300,7 +301,7 @@ func Test_cservice_GetCustomerByID(t *testing.T) {
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
-			got, gotErr := c.GetCustomerByID(tt.input.customerID, tt.input.shopID...)
+			got, gotErr := c.GetCustomerByID(context.Background(), tt.input.customerID, tt.input.shopID...)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -338,7 +339,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomersByShopID(10, model.FilterOptions{}).
+					GetCustomersByShopID(gomock.Any(), 10, model.FilterOptions{}).
 					Return([]model.Customer{
 						{ID: 1, Name: "John Doe", Phone: "1234567890", Address: "123 Main St", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
 						{ID: 2, Name: "Jane Doe", Phone: "0987654321", Address: "456 Oak Ave", CreatedAt: fixedTime},
@@ -358,7 +359,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomersByShopID(10, model.FilterOptions{}).
+					GetCustomersByShopID(gomock.Any(), 10, model.FilterOptions{}).
 					Return([]model.Customer{}, nil)
 				return mock
 			},
@@ -372,7 +373,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomersByShopID(10, model.FilterOptions{}).
+					GetCustomersByShopID(gomock.Any(), 10, model.FilterOptions{}).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -386,7 +387,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomersByShopID(10, gomock.Any()).
+					GetCustomersByShopID(gomock.Any(), 10, gomock.Any()).
 					Return([]model.Customer{
 						{ID: 1, Name: "John Doe", Phone: "1234567890", Address: "123 Main St", CreatedAt: fixedTime},
 					}, nil)
@@ -409,7 +410,7 @@ func Test_cservice_GetCustomersByShopID(t *testing.T) {
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
-			got, gotErr := c.GetCustomersByShopID(tt.shopID, tt.filter)
+			got, gotErr := c.GetCustomersByShopID(context.Background(), tt.shopID, tt.filter)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -450,7 +451,7 @@ func Test_cservice_UpdateCustomer(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomerByID(1).
+					GetCustomerByID(gomock.Any(), 1).
 					Return(&model.Customer{
 						ID:        1,
 						Name:      "John Doe",
@@ -459,7 +460,7 @@ func Test_cservice_UpdateCustomer(t *testing.T) {
 						CreatedAt: fixedTime,
 					}, nil)
 				mock.EXPECT().
-					UpdateCustomer(1, store.UpdateCustomerInput{Name: strPtr("Updated Name")}).
+					UpdateCustomer(gomock.Any(), 1, store.UpdateCustomerInput{Name: strPtr("Updated Name")}).
 					Return(&model.Customer{
 						ID:        1,
 						Name:      "Updated Name",
@@ -489,7 +490,7 @@ func Test_cservice_UpdateCustomer(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomerByID(9999).
+					GetCustomerByID(gomock.Any(), 9999).
 					Return(nil, nil)
 				return mock
 			},
@@ -505,7 +506,7 @@ func Test_cservice_UpdateCustomer(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomerByID(1).
+					GetCustomerByID(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 				return mock
 			},
@@ -521,7 +522,7 @@ func Test_cservice_UpdateCustomer(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					GetCustomerByID(1).
+					GetCustomerByID(gomock.Any(), 1).
 					Return(&model.Customer{
 						ID:        1,
 						Name:      "John Doe",
@@ -530,7 +531,7 @@ func Test_cservice_UpdateCustomer(t *testing.T) {
 						CreatedAt: fixedTime,
 					}, nil)
 				mock.EXPECT().
-					UpdateCustomer(1, store.UpdateCustomerInput{Phone: strPtr("9999999999")}).
+					UpdateCustomer(gomock.Any(), 1, store.UpdateCustomerInput{Phone: strPtr("9999999999")}).
 					Return(nil, store.ErrDuplicatePhone)
 				return mock
 			},
@@ -549,7 +550,7 @@ func Test_cservice_UpdateCustomer(t *testing.T) {
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
-			got, gotErr := c.UpdateCustomer(tt.input)
+			got, gotErr := c.UpdateCustomer(context.Background(), tt.input)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -581,7 +582,7 @@ func Test_cservice_DeleteCustomerByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					DeleteCustomerByID(1).
+					DeleteCustomerByID(gomock.Any(), 1).
 					Return(nil)
 				return mock
 			},
@@ -593,7 +594,7 @@ func Test_cservice_DeleteCustomerByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockCustomerStore {
 				mock := mock_store.NewMockCustomerStore(ctrl)
 				mock.EXPECT().
-					DeleteCustomerByID(1).
+					DeleteCustomerByID(gomock.Any(), 1).
 					Return(errors.New("database error"))
 				return mock
 			},
@@ -611,7 +612,7 @@ func Test_cservice_DeleteCustomerByID(t *testing.T) {
 			customerStore = tt.mockSetup(ctrl)
 
 			var c cservice
-			gotErr := c.DeleteCustomerByID(tt.id)
+			gotErr := c.DeleteCustomerByID(context.Background(), tt.id)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -646,9 +647,9 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockCustomerStore, *mock_store.MockOrderStore) {
 				cust := mock_store.NewMockCustomerStore(ctrl)
 				ord := mock_store.NewMockOrderStore(ctrl)
-				cust.EXPECT().GetCustomerByPhone("08123456789", 1).
+				cust.EXPECT().GetCustomerByPhone(gomock.Any(), "08123456789", 1).
 					Return(&model.Customer{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "", CreatedAt: fixedTime}, nil)
-				ord.EXPECT().GetActiveOrderByCustomerID(1, 1).Return(&model.Order{ID: 1}, nil)
+				ord.EXPECT().GetActiveOrderByCustomerID(gomock.Any(), 1, 1).Return(&model.Order{ID: 1}, nil)
 				return cust, ord
 			},
 			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 1, ActiveOrderID: 1},
@@ -662,9 +663,9 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockCustomerStore, *mock_store.MockOrderStore) {
 				cust := mock_store.NewMockCustomerStore(ctrl)
 				ord := mock_store.NewMockOrderStore(ctrl)
-				cust.EXPECT().GetCustomerByPhone("08987654321", 1).
+				cust.EXPECT().GetCustomerByPhone(gomock.Any(), "08987654321", 1).
 					Return(&model.Customer{ID: 2, Name: "Jane Doe", Phone: "08987654321", Address: "", CreatedAt: fixedTime}, nil)
-				ord.EXPECT().GetActiveOrderByCustomerID(2, 1).Return(nil, nil)
+				ord.EXPECT().GetActiveOrderByCustomerID(gomock.Any(), 2, 1).Return(nil, nil)
 				return cust, ord
 			},
 			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 2, ActiveOrderID: 0},
@@ -678,11 +679,11 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockCustomerStore, *mock_store.MockOrderStore) {
 				cust := mock_store.NewMockCustomerStore(ctrl)
 				ord := mock_store.NewMockOrderStore(ctrl)
-				cust.EXPECT().GetCustomerByPhone("08000000000", 1).Return(nil, nil)
-				cust.EXPECT().CreateCustomer(gomock.Eq(store.CreateCustomerInput{
+				cust.EXPECT().GetCustomerByPhone(gomock.Any(), "08000000000", 1).Return(nil, nil)
+				cust.EXPECT().CreateCustomer(gomock.Any(), gomock.Eq(store.CreateCustomerInput{
 					Name: "New User", Phone: "08000000000", Address: nil, ShopID: 1,
 				})).Return(&model.Customer{ID: 3, Name: "New User", Phone: "08000000000", Address: "", CreatedAt: fixedTime}, nil)
-				ord.EXPECT().GetActiveOrderByCustomerID(3, 1).Return(nil, nil)
+				ord.EXPECT().GetActiveOrderByCustomerID(gomock.Any(), 3, 1).Return(nil, nil)
 				return cust, ord
 			},
 			want:    response.CustomerCheckActiveOrderByPhone{CustomerID: 3, ActiveOrderID: 0},
@@ -696,7 +697,7 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockCustomerStore, *mock_store.MockOrderStore) {
 				cust := mock_store.NewMockCustomerStore(ctrl)
 				ord := mock_store.NewMockOrderStore(ctrl)
-				cust.EXPECT().GetCustomerByPhone("08123456789", 1).Return(nil, errors.New("database error"))
+				cust.EXPECT().GetCustomerByPhone(gomock.Any(), "08123456789", 1).Return(nil, errors.New("database error"))
 				return cust, ord
 			},
 			want:    response.CustomerCheckActiveOrderByPhone{},
@@ -710,8 +711,8 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockCustomerStore, *mock_store.MockOrderStore) {
 				cust := mock_store.NewMockCustomerStore(ctrl)
 				ord := mock_store.NewMockOrderStore(ctrl)
-				cust.EXPECT().GetCustomerByPhone("08000000000", 1).Return(nil, nil)
-				cust.EXPECT().CreateCustomer(gomock.Eq(store.CreateCustomerInput{
+				cust.EXPECT().GetCustomerByPhone(gomock.Any(), "08000000000", 1).Return(nil, nil)
+				cust.EXPECT().CreateCustomer(gomock.Any(), gomock.Eq(store.CreateCustomerInput{
 					Name: "New User", Phone: "08000000000", Address: nil, ShopID: 1,
 				})).Return(nil, store.ErrDuplicatePhone)
 				return cust, ord
@@ -727,9 +728,9 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) (*mock_store.MockCustomerStore, *mock_store.MockOrderStore) {
 				cust := mock_store.NewMockCustomerStore(ctrl)
 				ord := mock_store.NewMockOrderStore(ctrl)
-				cust.EXPECT().GetCustomerByPhone("08123456789", 1).
+				cust.EXPECT().GetCustomerByPhone(gomock.Any(), "08123456789", 1).
 					Return(&model.Customer{ID: 1, Name: "John Doe", Phone: "08123456789", Address: "", CreatedAt: fixedTime}, nil)
-				ord.EXPECT().GetActiveOrderByCustomerID(1, 1).Return(nil, errors.New("database error"))
+				ord.EXPECT().GetActiveOrderByCustomerID(gomock.Any(), 1, 1).Return(nil, errors.New("database error"))
 				return cust, ord
 			},
 			want:    response.CustomerCheckActiveOrderByPhone{},
@@ -749,7 +750,7 @@ func Test_cservice_CheckActiveOrderByPhone(t *testing.T) {
 			orderStore = mockOrder
 
 			var c cservice
-			got, gotErr := c.CheckActiveOrderByPhone(tt.phone, tt.nameParam, tt.shopID)
+			got, gotErr := c.CheckActiveOrderByPhone(context.Background(), tt.phone, tt.nameParam, tt.shopID)
 
 			if gotErr != nil {
 				if !tt.wantErr {

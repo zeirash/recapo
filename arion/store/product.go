@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -18,12 +19,12 @@ var ErrDuplicateProductName = errors.New(apierr.ErrProductNameExists)
 
 type (
 	ProductStore interface {
-		GetProductByID(productID int, shopID ...int) (*model.Product, error)
-		GetProductsByShopID(shopID int, filter model.FilterOptions) ([]model.Product, error)
-		CreateProduct(name string, description *string, price int, shopID int, originalPrice *int, imageURL *string) (*model.Product, error)
-		UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error)
-		DeleteProductByID(productID int) error
-		GetProductsListByActiveOrders(shopID int) ([]model.PurchaseProduct, error)
+		GetProductByID(ctx context.Context, productID int, shopID ...int) (*model.Product, error)
+		GetProductsByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]model.Product, error)
+		CreateProduct(ctx context.Context, name string, description *string, price int, shopID int, originalPrice *int, imageURL *string) (*model.Product, error)
+		UpdateProduct(ctx context.Context, productID int, input UpdateProductInput) (*model.Product, error)
+		DeleteProductByID(ctx context.Context, productID int) error
+		GetProductsListByActiveOrders(ctx context.Context, shopID int) ([]model.PurchaseProduct, error)
 	}
 
 	product struct {
@@ -48,7 +49,7 @@ func NewProductStoreWithDB(db *sql.DB) ProductStore {
 	return &product{db: db}
 }
 
-func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, error) {
+func (p *product) GetProductByID(ctx context.Context, productID int, shopID ...int) (*model.Product, error) {
 	criteria := []interface{}{productID}
 
 	q := `
@@ -63,7 +64,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	}
 
 	var product model.Product
-	err := p.db.QueryRow(q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRowContext(ctx, q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -74,7 +75,7 @@ func (p *product) GetProductByID(productID int, shopID ...int) (*model.Product, 
 	return &product, nil
 }
 
-func (p *product) GetProductsByShopID(shopID int, filter model.FilterOptions) ([]model.Product, error) {
+func (p *product) GetProductsByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]model.Product, error) {
 	q := `
 		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
 		FROM products
@@ -99,7 +100,7 @@ func (p *product) GetProductsByShopID(shopID int, filter model.FilterOptions) ([
 		}
 	}
 
-	rows, err := p.db.Query(q, args...)
+	rows, err := p.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -121,7 +122,7 @@ func (p *product) GetProductsByShopID(shopID int, filter model.FilterOptions) ([
 	return products, nil
 }
 
-func (p *product) CreateProduct(name string, description *string, price int, shopID int, originalPrice *int, imageURL *string) (*model.Product, error) {
+func (p *product) CreateProduct(ctx context.Context, name string, description *string, price int, shopID int, originalPrice *int, imageURL *string) (*model.Product, error) {
 	now := time.Now()
 	origPrice := price
 	if originalPrice != nil {
@@ -138,7 +139,7 @@ func (p *product) CreateProduct(name string, description *string, price int, sho
 		RETURNING id, description, image_url
 	`
 
-	err := p.db.QueryRow(q, name, description, price, origPrice, shopID, imageURL, now).Scan(&id, &desc, &imgURL)
+	err := p.db.QueryRowContext(ctx, q, name, description, price, origPrice, shopID, imageURL, now).Scan(&id, &desc, &imgURL)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName
@@ -158,7 +159,7 @@ func (p *product) CreateProduct(name string, description *string, price int, sho
 	}, nil
 }
 
-func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model.Product, error) {
+func (p *product) UpdateProduct(ctx context.Context, productID int, input UpdateProductInput) (*model.Product, error) {
 	set := []string{}
 	var product model.Product
 
@@ -195,7 +196,7 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := p.db.QueryRow(q, productID).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRowContext(ctx, q, productID).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName
@@ -206,13 +207,13 @@ func (p *product) UpdateProduct(productID int, input UpdateProductInput) (*model
 	return &product, nil
 }
 
-func (p *product) DeleteProductByID(productID int) error {
+func (p *product) DeleteProductByID(ctx context.Context, productID int) error {
 	q := `
 		DELETE FROM products
 		WHERE id = $1
 	`
 
-	_, err := p.db.Exec(q, productID)
+	_, err := p.db.ExecContext(ctx, q, productID)
 	if err != nil {
 		return err
 	}
@@ -220,7 +221,7 @@ func (p *product) DeleteProductByID(productID int) error {
 	return nil
 }
 
-func (p *product) GetProductsListByActiveOrders(shopID int) ([]model.PurchaseProduct, error) {
+func (p *product) GetProductsListByActiveOrders(ctx context.Context, shopID int) ([]model.PurchaseProduct, error) {
 	q := `
 		SELECT p.name, p.price, COALESCE(SUM(oi.qty), 0)::int AS qty
 		FROM products p
@@ -229,7 +230,7 @@ func (p *product) GetProductsListByActiveOrders(shopID int) ([]model.PurchasePro
 		WHERE o.shop_id = $1 AND o.status IN ($2, $3)
 		GROUP BY p.id, p.name, p.price
 	`
-	rows, err := p.db.Query(q, shopID, constant.OrderStatusCreated, constant.OrderStatusInProgress)
+	rows, err := p.db.QueryContext(ctx, q, shopID, constant.OrderStatusCreated, constant.OrderStatusInProgress)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

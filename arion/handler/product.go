@@ -66,7 +66,7 @@ func CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := productService.CreateProduct(shopID, inp.Name, inp.Description, inp.Price, inp.OriginalPrice, inp.ImageURL)
+	res, err := productService.CreateProduct(ctx, shopID, inp.Name, inp.Description, inp.Price, inp.OriginalPrice, inp.ImageURL)
 	if err != nil {
 		logger.WithError(err).Error("create_product_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "create_product")
@@ -104,7 +104,7 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 	productIDInt, _ := strconv.Atoi(params["product_id"])
 	productID := productIDInt
 
-	res, err := productService.GetProductByID(productID, shopID)
+	res, err := productService.GetProductByID(ctx, productID, shopID)
 	if err != nil {
 		if err.Error() == apierr.ErrProductNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
@@ -144,7 +144,7 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 		filter.Sort = &sort
 	}
 
-	res, err := productService.GetProductsByShopID(shopID, filter)
+	res, err := productService.GetProductsByShopID(ctx, shopID, filter)
 	if err != nil {
 		logger.WithError(err).Error("get_products_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_products")
@@ -170,6 +170,7 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/products/{product_id} [patch]
 func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateProductID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -185,7 +186,7 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := productService.UpdateProduct(service.UpdateProductInput{
+	res, err := productService.UpdateProduct(ctx, service.UpdateProductInput{
 		ID:            productID,
 		Name:          inp.Name,
 		Description:   inp.Description,
@@ -217,6 +218,7 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/products/{product_id} [delete]
 func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	params := mux.Vars(r)
 	if valid, err := validateProductID(params); !valid {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -226,7 +228,7 @@ func DeleteProductHandler(w http.ResponseWriter, r *http.Request) {
 	productIDInt, _ := strconv.Atoi(params["product_id"])
 	productID := productIDInt
 
-	err := productService.DeleteProductByID(productID)
+	err := productService.DeleteProductByID(ctx, productID)
 	if err != nil {
 		logger.WithError(err).Error("delete_product_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_product")
@@ -252,7 +254,7 @@ func PurchaseListProductHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	shopID := ctx.Value(common.ShopIDKey).(int)
 
-	res, err := productService.GetPurchaseListProducts(shopID)
+	res, err := productService.GetPurchaseListProducts(ctx, shopID)
 	if err != nil {
 		logger.WithError(err).Error("get_purchase_list_products_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_purchase_list_products")
@@ -277,6 +279,7 @@ func PurchaseListProductHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/products/image [post]
 func UploadProductImageHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if err := r.ParseMultipartForm(5 << 20); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, errors.New(apierr.ErrImageTooLarge), "validation")
 		return
@@ -289,7 +292,7 @@ func UploadProductImageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	imageURL, err := productService.UploadProductImage(file)
+	imageURL, err := productService.UploadProductImage(ctx, file)
 	if err != nil {
 		if err.Error() == apierr.ErrUnsupportedImageType {
 			WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
@@ -319,6 +322,7 @@ func UploadProductImageHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	ErrorApiResponse			"Internal server error"
 //	@Router			/products/image [delete]
 func DeleteProductImageHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	inp := DeleteProductImageRequest{}
 	if err := ParseJson(r.Body, &inp); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
@@ -330,7 +334,7 @@ func DeleteProductImageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := productService.DeleteProductImage(inp.ImageURL); err != nil {
+	if err := productService.DeleteProductImage(ctx, inp.ImageURL); err != nil {
 		if err.Error() == apierr.ErrImageNotFound {
 			WriteErrorJson(w, r, http.StatusNotFound, err, "not_found")
 			return

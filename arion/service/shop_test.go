@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -31,7 +32,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 				productMock := mock_store.NewMockProductStore(ctrl)
 
 				shopMock.EXPECT().
-					GetShopByShareToken("abc123xyz").
+					GetShopByShareToken(gomock.Any(), "abc123xyz").
 					Return(&model.Shop{
 						ID:         5,
 						Name:       "Test Shop",
@@ -40,7 +41,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 					}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(5, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 5, model.FilterOptions{}).
 					Return([]model.Product{
 						{
 							ID:            1,
@@ -78,11 +79,11 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 				productMock := mock_store.NewMockProductStore(ctrl)
 
 				shopMock.EXPECT().
-					GetShopByShareToken("empty123").
+					GetShopByShareToken(gomock.Any(), "empty123").
 					Return(&model.Shop{ID: 1, Name: "Shop", ShareToken: "empty123", CreatedAt: fixedTime}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(1, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{}).
 					Return([]model.Product{}, nil)
 
 				return shopMock, productMock
@@ -97,7 +98,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 				shopMock := mock_store.NewMockShopStore(ctrl)
 
 				shopMock.EXPECT().
-					GetShopByShareToken("invalid").
+					GetShopByShareToken(gomock.Any(), "invalid").
 					Return(nil, nil)
 
 				return shopMock, nil
@@ -112,7 +113,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 				shopMock := mock_store.NewMockShopStore(ctrl)
 
 				shopMock.EXPECT().
-					GetShopByShareToken("token").
+					GetShopByShareToken(gomock.Any(), "token").
 					Return(nil, errors.New("db error"))
 
 				return shopMock, nil
@@ -128,11 +129,11 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 				productMock := mock_store.NewMockProductStore(ctrl)
 
 				shopMock.EXPECT().
-					GetShopByShareToken("token").
+					GetShopByShareToken(gomock.Any(), "token").
 					Return(&model.Shop{ID: 1, ShareToken: "token", CreatedAt: fixedTime}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(1, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{}).
 					Return(nil, errors.New("query failed"))
 
 				return shopMock, productMock
@@ -159,7 +160,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 			productStore = productMock
 
 			var s shopService
-			got, gotErr := s.GetPublicProducts(tt.shareToken)
+			got, gotErr := s.GetPublicProducts(context.Background(), tt.shareToken)
 
 			if gotErr != nil {
 				if !tt.wantErr {
@@ -192,7 +193,7 @@ func Test_shopService_GetShareTokenByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockShopStore {
 				shopMock := mock_store.NewMockShopStore(ctrl)
 				shopMock.EXPECT().
-					GetShareTokenByID(1).
+					GetShareTokenByID(gomock.Any(), 1).
 					Return("abc123xyz789", nil)
 				return shopMock
 			},
@@ -205,7 +206,7 @@ func Test_shopService_GetShareTokenByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockShopStore {
 				shopMock := mock_store.NewMockShopStore(ctrl)
 				shopMock.EXPECT().
-					GetShareTokenByID(999).
+					GetShareTokenByID(gomock.Any(), 999).
 					Return("", nil)
 				return shopMock
 			},
@@ -218,7 +219,7 @@ func Test_shopService_GetShareTokenByID(t *testing.T) {
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockShopStore {
 				shopMock := mock_store.NewMockShopStore(ctrl)
 				shopMock.EXPECT().
-					GetShareTokenByID(1).
+					GetShareTokenByID(gomock.Any(), 1).
 					Return("", errors.New("db error"))
 				return shopMock
 			},
@@ -238,7 +239,7 @@ func Test_shopService_GetShareTokenByID(t *testing.T) {
 			shopStore = shopMock
 
 			var s shopService
-			got, gotErr := s.GetShareTokenByID(tt.shopID)
+			got, gotErr := s.GetShareTokenByID(context.Background(), tt.shopID)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("GetShareTokenByID() error = %v, wantErr %v", gotErr, tt.wantErr)

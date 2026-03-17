@@ -3,6 +3,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -19,12 +20,12 @@ var ErrDuplicatePhone = errors.New(apierr.ErrCustomerPhoneExists)
 
 type (
 	CustomerStore interface {
-		GetCustomerByID(id int, shopID ...int) (*model.Customer, error)
-		GetCustomerByPhone(phone string, shopID int) (*model.Customer, error)
-		GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]model.Customer, error)
-		CreateCustomer(input CreateCustomerInput) (*model.Customer, error)
-		UpdateCustomer(id int, input UpdateCustomerInput) (*model.Customer, error)
-		DeleteCustomerByID(id int) error
+		GetCustomerByID(ctx context.Context, id int, shopID ...int) (*model.Customer, error)
+		GetCustomerByPhone(ctx context.Context, phone string, shopID int) (*model.Customer, error)
+		GetCustomersByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]model.Customer, error)
+		CreateCustomer(ctx context.Context, input CreateCustomerInput) (*model.Customer, error)
+		UpdateCustomer(ctx context.Context, id int, input UpdateCustomerInput) (*model.Customer, error)
+		DeleteCustomerByID(ctx context.Context, id int) error
 	}
 
 	customer struct {
@@ -54,7 +55,7 @@ func NewCustomerStoreWithDB(db *sql.DB) CustomerStore {
 	return &customer{db: db}
 }
 
-func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, error) {
+func (c *customer) GetCustomerByID(ctx context.Context, id int, shopID ...int) (*model.Customer, error) {
 	criteria := []interface{}{id}
 
 	q := `
@@ -69,7 +70,7 @@ func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, erro
 	}
 
 	var customer model.Customer
-	err := c.db.QueryRow(q, criteria...).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := c.db.QueryRowContext(ctx, q, criteria...).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -80,14 +81,14 @@ func (c *customer) GetCustomerByID(id int, shopID ...int) (*model.Customer, erro
 	return &customer, nil
 }
 
-func (c *customer) GetCustomerByPhone(phone string, shopID int) (*model.Customer, error) {
+func (c *customer) GetCustomerByPhone(ctx context.Context, phone string, shopID int) (*model.Customer, error) {
 	q := `
 		SELECT id, name, phone, address, created_at, updated_at
 		FROM customers
 		WHERE phone = $1 AND shop_id = $2
 	`
 	var customer model.Customer
-	err := c.db.QueryRow(q, phone, shopID).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := c.db.QueryRowContext(ctx, q, phone, shopID).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -97,7 +98,7 @@ func (c *customer) GetCustomerByPhone(phone string, shopID int) (*model.Customer
 	return &customer, nil
 }
 
-func (c *customer) GetCustomersByShopID(shopID int, filter model.FilterOptions) ([]model.Customer, error) {
+func (c *customer) GetCustomersByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]model.Customer, error) {
 	q := `
 		SELECT id, name, phone, address, created_at, updated_at
 		FROM customers
@@ -122,7 +123,7 @@ func (c *customer) GetCustomersByShopID(shopID int, filter model.FilterOptions) 
 		}
 	}
 
-	rows, err := c.db.Query(q, args...)
+	rows, err := c.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -144,7 +145,7 @@ func (c *customer) GetCustomersByShopID(shopID int, filter model.FilterOptions) 
 	return customers, nil
 }
 
-func (c *customer) CreateCustomer(input CreateCustomerInput) (*model.Customer, error) {
+func (c *customer) CreateCustomer(ctx context.Context, input CreateCustomerInput) (*model.Customer, error) {
 	now := time.Now()
 	var id int
 
@@ -158,7 +159,7 @@ func (c *customer) CreateCustomer(input CreateCustomerInput) (*model.Customer, e
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
 	`
-	err := c.db.QueryRow(q, input.Name, input.Phone, address, input.ShopID, now).Scan(&id)
+	err := c.db.QueryRowContext(ctx, q, input.Name, input.Phone, address, input.ShopID, now).Scan(&id)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, ErrDuplicatePhone
@@ -175,7 +176,7 @@ func (c *customer) CreateCustomer(input CreateCustomerInput) (*model.Customer, e
 	}, nil
 }
 
-func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Customer, error) {
+func (c *customer) UpdateCustomer(ctx context.Context, id int, input UpdateCustomerInput) (*model.Customer, error) {
 	set := []string{}
 	var customer model.Customer
 
@@ -204,7 +205,7 @@ func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Cus
 
 	q = fmt.Sprintf(q, strings.Join(set, ","))
 
-	err := c.db.QueryRow(q, id).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := c.db.QueryRowContext(ctx, q, id).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, ErrDuplicatePhone
@@ -215,13 +216,13 @@ func (c *customer) UpdateCustomer(id int, input UpdateCustomerInput) (*model.Cus
 	return &customer, nil
 }
 
-func (c *customer) DeleteCustomerByID(id int) error {
+func (c *customer) DeleteCustomerByID(ctx context.Context, id int) error {
 	q := `
 		DELETE FROM customers
 		WHERE id = $1
 	`
 
-	_, err := c.db.Exec(q, id)
+	_, err := c.db.ExecContext(ctx, q, id)
 	if err != nil {
 		return err
 	}

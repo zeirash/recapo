@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
@@ -21,14 +22,14 @@ import (
 
 type (
 	SubscriptionService interface {
-		GetActivePlans() ([]response.PlanData, error)
-		GetSubscriptionByShopID(shopID int) (*response.SubscriptionData, error)
-		CreateTrialSubscription(shopID int) error
-		Checkout(shopID, planID int) (*response.CheckoutData, error)
-		HandleMidtransWebhook(payload MidtransWebhookPayload) error
-		IsSubscriptionActive(shopID int) (bool, error)
-		CancelSubscription(shopID int) error
-		ExpireSubscriptions() error
+		GetActivePlans(ctx context.Context) ([]response.PlanData, error)
+		GetSubscriptionByShopID(ctx context.Context, shopID int) (*response.SubscriptionData, error)
+		CreateTrialSubscription(ctx context.Context, shopID int) error
+		Checkout(ctx context.Context, shopID, planID int) (*response.CheckoutData, error)
+		HandleMidtransWebhook(ctx context.Context, payload MidtransWebhookPayload) error
+		IsSubscriptionActive(ctx context.Context, shopID int) (bool, error)
+		CancelSubscription(ctx context.Context, shopID int) error
+		ExpireSubscriptions(ctx context.Context) error
 	}
 
 	ssubscription struct{}
@@ -86,8 +87,8 @@ func NewSubscriptionService() SubscriptionService {
 	return &ssubscription{}
 }
 
-func (s *ssubscription) GetActivePlans() ([]response.PlanData, error) {
-	plans, err := subscriptionStore.GetActivePlans()
+func (s *ssubscription) GetActivePlans(ctx context.Context) ([]response.PlanData, error) {
+	plans, err := subscriptionStore.GetActivePlans(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +108,8 @@ func (s *ssubscription) GetActivePlans() ([]response.PlanData, error) {
 	return result, nil
 }
 
-func (s *ssubscription) GetSubscriptionByShopID(shopID int) (*response.SubscriptionData, error) {
-	sub, err := subscriptionStore.GetSubscriptionByShopID(shopID)
+func (s *ssubscription) GetSubscriptionByShopID(ctx context.Context, shopID int) (*response.SubscriptionData, error) {
+	sub, err := subscriptionStore.GetSubscriptionByShopID(ctx, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (s *ssubscription) GetSubscriptionByShopID(shopID int) (*response.Subscript
 		return nil, errors.New(apierr.ErrSubscriptionNotFound)
 	}
 
-	plan, err := subscriptionStore.GetPlanByID(sub.PlanID)
+	plan, err := subscriptionStore.GetPlanByID(ctx, sub.PlanID)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +148,8 @@ func (s *ssubscription) GetSubscriptionByShopID(shopID int) (*response.Subscript
 	return data, nil
 }
 
-func (s *ssubscription) CreateTrialSubscription(shopID int) error {
-	plans, err := subscriptionStore.GetActivePlans()
+func (s *ssubscription) CreateTrialSubscription(ctx context.Context, shopID int) error {
+	plans, err := subscriptionStore.GetActivePlans(ctx)
 	if err != nil {
 		return err
 	}
@@ -166,7 +167,7 @@ func (s *ssubscription) CreateTrialSubscription(shopID int) error {
 	}
 	defer tx.Rollback()
 
-	_, err = subscriptionStore.CreateTrialSubscription(tx, shopID, starterPlan.ID, trialEndsAt)
+	_, err = subscriptionStore.CreateTrialSubscription(ctx, tx, shopID, starterPlan.ID, trialEndsAt)
 	if err != nil {
 		return err
 	}
@@ -174,8 +175,8 @@ func (s *ssubscription) CreateTrialSubscription(shopID int) error {
 	return tx.Commit()
 }
 
-func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, error) {
-	plan, err := subscriptionStore.GetPlanByID(planID)
+func (s *ssubscription) Checkout(ctx context.Context, shopID, planID int) (*response.CheckoutData, error) {
+	plan, err := subscriptionStore.GetPlanByID(ctx, planID)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +184,7 @@ func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, er
 		return nil, errors.New(apierr.ErrPlanNotFound)
 	}
 
-	sub, err := subscriptionStore.GetSubscriptionByShopID(shopID)
+	sub, err := subscriptionStore.GetSubscriptionByShopID(ctx, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +201,7 @@ func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, er
 	}
 	defer tx.Rollback()
 
-	payment, err := subscriptionStore.CreatePayment(tx, shopID, sub.ID, planID, orderID, plan.PriceIDR)
+	payment, err := subscriptionStore.CreatePayment(ctx, tx, shopID, sub.ID, planID, orderID, plan.PriceIDR)
 	if err != nil {
 		return nil, err
 	}
@@ -209,12 +210,12 @@ func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, er
 		return nil, err
 	}
 
-	snapResp, err := midtransSnapFunc(orderID, plan.PriceIDR, shopID)
+	snapResp, err := midtransSnapFunc(ctx, orderID, plan.PriceIDR, shopID)
 	if err != nil {
 		return nil, fmt.Errorf("midtrans snap error: %w", err)
 	}
 
-	if err := subscriptionStore.UpdatePaymentSnapInfo(payment.ID, snapResp.Token, snapResp.RedirectURL); err != nil {
+	if err := subscriptionStore.UpdatePaymentSnapInfo(ctx, payment.ID, snapResp.Token, snapResp.RedirectURL); err != nil {
 		logger.WithError(err).Error("failed to update payment snap info")
 	}
 
@@ -225,7 +226,7 @@ func (s *ssubscription) Checkout(shopID, planID int) (*response.CheckoutData, er
 	}, nil
 }
 
-func (s *ssubscription) HandleMidtransWebhook(payload MidtransWebhookPayload) error {
+func (s *ssubscription) HandleMidtransWebhook(ctx context.Context, payload MidtransWebhookPayload) error {
 	// Verify SHA512 signature: sha512(order_id + status_code + gross_amount + server_key)
 	serverKey := cfg.MidtransServerKey
 	raw := payload.OrderID + payload.StatusCode + payload.GrossAmount + serverKey
@@ -235,7 +236,7 @@ func (s *ssubscription) HandleMidtransWebhook(payload MidtransWebhookPayload) er
 		return errors.New(apierr.ErrInvalidSignature)
 	}
 
-	payment, err := subscriptionStore.GetPaymentByMidtransOrderID(payload.OrderID)
+	payment, err := subscriptionStore.GetPaymentByMidtransOrderID(ctx, payload.OrderID)
 	if err != nil {
 		return err
 	}
@@ -257,18 +258,18 @@ func (s *ssubscription) HandleMidtransWebhook(payload MidtransWebhookPayload) er
 			break
 		}
 		paidAt := time.Now()
-		if err := subscriptionStore.UpdatePaymentSettled(tx, payment.ID, payload.TransactionID, paidAt); err != nil {
+		if err := subscriptionStore.UpdatePaymentSettled(ctx, tx, payment.ID, payload.TransactionID, paidAt); err != nil {
 			return err
 		}
 		periodEnd := time.Now().AddDate(0, 1, 0)
-		if err := subscriptionStore.UpdateSubscriptionStatus(tx, payment.SubscriptionID, constant.SubStatusActive, &periodEnd); err != nil {
+		if err := subscriptionStore.UpdateSubscriptionStatus(ctx, tx, payment.SubscriptionID, constant.SubStatusActive, &periodEnd); err != nil {
 			return err
 		}
 	case constant.PaymentStatusDeny,
 		constant.PaymentStatusCancel,
 		constant.PaymentStatusExpire,
 		constant.PaymentStatusFailure:
-		if err := subscriptionStore.UpdatePaymentFailed(tx, payment.ID, payload.TransactionStatus); err != nil {
+		if err := subscriptionStore.UpdatePaymentFailed(ctx, tx, payment.ID, payload.TransactionStatus); err != nil {
 			return err
 		}
 	}
@@ -276,8 +277,8 @@ func (s *ssubscription) HandleMidtransWebhook(payload MidtransWebhookPayload) er
 	return tx.Commit()
 }
 
-func (s *ssubscription) ExpireSubscriptions() error {
-	count, err := subscriptionStore.ExpireSubscriptions()
+func (s *ssubscription) ExpireSubscriptions(ctx context.Context) error {
+	count, err := subscriptionStore.ExpireSubscriptions(ctx)
 	if err != nil {
 		return err
 	}
@@ -287,8 +288,8 @@ func (s *ssubscription) ExpireSubscriptions() error {
 	return nil
 }
 
-func (s *ssubscription) CancelSubscription(shopID int) error {
-	sub, err := subscriptionStore.GetSubscriptionByShopID(shopID)
+func (s *ssubscription) CancelSubscription(ctx context.Context, shopID int) error {
+	sub, err := subscriptionStore.GetSubscriptionByShopID(ctx, shopID)
 	if err != nil {
 		return err
 	}
@@ -306,14 +307,14 @@ func (s *ssubscription) CancelSubscription(shopID int) error {
 	}
 	defer tx.Rollback()
 
-	if err := subscriptionStore.CancelSubscription(tx, sub.ID); err != nil {
+	if err := subscriptionStore.CancelSubscription(ctx, tx, sub.ID); err != nil {
 		return err
 	}
 	return tx.Commit()
 }
 
-func (s *ssubscription) IsSubscriptionActive(shopID int) (bool, error) {
-	sub, err := subscriptionStore.GetSubscriptionByShopID(shopID)
+func (s *ssubscription) IsSubscriptionActive(ctx context.Context, shopID int) (bool, error) {
+	sub, err := subscriptionStore.GetSubscriptionByShopID(ctx, shopID)
 	if err != nil {
 		return false, err
 	}
@@ -336,11 +337,11 @@ func (s *ssubscription) IsSubscriptionActive(shopID int) (bool, error) {
 	}
 }
 
-func callMidtransSnap(orderID string, grossAmount int, shopID int) (*midtransSnapResponse, error) {
+func callMidtransSnap(ctx context.Context, orderID string, grossAmount int, shopID int) (*midtransSnapResponse, error) {
 	logger.WithFields(logrus.Fields{
-		"order_id":         orderID,
-		"gross_amount":     grossAmount,
-		"shop_id":          shopID,
+		"order_id":     orderID,
+		"gross_amount": grossAmount,
+		"shop_id":      shopID,
 	}).Info("calling midtrans snap")
 
 	baseURL := cfg.MidtransBaseURL
@@ -355,7 +356,7 @@ func callMidtransSnap(orderID string, grossAmount int, shopID int) (*midtransSna
 		},
 	}
 
-	user, err := userStore.GetUserByShopID(shopID)
+	user, err := userStore.GetUserByShopID(ctx, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -372,7 +373,7 @@ func callMidtransSnap(orderID string, grossAmount int, shopID int) (*midtransSna
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, baseURL+"/snap/v1/transactions", bytes.NewReader(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, baseURL+"/snap/v1/transactions", bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, err
 	}

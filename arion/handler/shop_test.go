@@ -51,7 +51,7 @@ func TestGetShopProductsHandler(t *testing.T) {
 			shareToken: "abc123xyz",
 			mockSetup: func() {
 				mockShopService.EXPECT().
-					GetPublicProducts("abc123xyz").
+					GetPublicProducts(gomock.Any(), "abc123xyz").
 					Return([]response.ProductData{
 						{ID: 1, Name: "Product A", Price: 1000, CreatedAt: fixedTime},
 						{ID: 2, Name: "Product B", Price: 500, CreatedAt: fixedTime},
@@ -66,7 +66,7 @@ func TestGetShopProductsHandler(t *testing.T) {
 			shareToken: "empty123",
 			mockSetup: func() {
 				mockShopService.EXPECT().
-					GetPublicProducts("empty123").
+					GetPublicProducts(gomock.Any(), "empty123").
 					Return([]response.ProductData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
@@ -85,7 +85,7 @@ func TestGetShopProductsHandler(t *testing.T) {
 			shareToken: "invalid",
 			mockSetup: func() {
 				mockShopService.EXPECT().
-					GetPublicProducts("invalid").
+					GetPublicProducts(gomock.Any(), "invalid").
 					Return(nil, errors.New(apierr.ErrShopNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
@@ -97,7 +97,7 @@ func TestGetShopProductsHandler(t *testing.T) {
 			shareToken: "token",
 			mockSetup: func() {
 				mockShopService.EXPECT().
-					GetPublicProducts("token").
+					GetPublicProducts(gomock.Any(), "token").
 					Return(nil, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -161,7 +161,7 @@ func TestGetShopShareTokenHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockShopService.EXPECT().
-					GetShareTokenByID(1).
+					GetShareTokenByID(gomock.Any(), 1).
 					Return("abc123xyz789", nil)
 			},
 			wantStatus:     http.StatusOK,
@@ -173,7 +173,7 @@ func TestGetShopShareTokenHandler(t *testing.T) {
 			shopID: 999,
 			mockSetup: func() {
 				mockShopService.EXPECT().
-					GetShareTokenByID(999).
+					GetShareTokenByID(gomock.Any(), 999).
 					Return("", errors.New(apierr.ErrShopNotFound))
 			},
 			wantStatus:     http.StatusNotFound,
@@ -185,7 +185,7 @@ func TestGetShopShareTokenHandler(t *testing.T) {
 			shopID: 1,
 			mockSetup: func() {
 				mockShopService.EXPECT().
-					GetShareTokenByID(1).
+					GetShareTokenByID(gomock.Any(), 1).
 					Return("", errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,
@@ -261,7 +261,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateTempOrder("Jane Doe", "+62812345678", "share-abc123", gomock.Any()).
+					CreateTempOrder(gomock.Any(), "Jane Doe", "+62812345678", "share-abc123", gomock.Any()).
 					Return(response.TempOrderData{
 						ID:            1,
 						CustomerName:  "Jane Doe",
@@ -410,7 +410,7 @@ func TestCreateShopTempOrderHandler(t *testing.T) {
 			},
 			mockSetup: func() {
 				mockOrderService.EXPECT().
-					CreateTempOrder("Jane Doe", "+62812345678", "share-abc123", gomock.Any()).
+					CreateTempOrder(gomock.Any(), "Jane Doe", "+62812345678", "share-abc123", gomock.Any()).
 					Return(response.TempOrderData{}, errors.New("database error"))
 			},
 			wantStatus:     http.StatusInternalServerError,

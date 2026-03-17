@@ -28,7 +28,7 @@ func SubscriptionCheck(next http.Handler) http.Handler {
 			svc = service.NewSubscriptionService()
 		}
 
-		active, err := svc.IsSubscriptionActive(shopID)
+		active, err := svc.IsSubscriptionActive(ctx, shopID)
 		if err != nil {
 			handler.WriteErrorJson(w, r, http.StatusInternalServerError, err, "subscription_check")
 			return

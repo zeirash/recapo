@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/zeirash/recapo/arion/common/apierr"
@@ -12,8 +13,8 @@ import (
 
 type (
 	ShopService interface {
-		GetShareTokenByID(shopID int) (string, error)
-		GetPublicProducts(shareToken string) ([]response.ProductData, error)
+		GetShareTokenByID(ctx context.Context, shopID int) (string, error)
+		GetPublicProducts(ctx context.Context, shareToken string) ([]response.ProductData, error)
 	}
 
 	shopService struct{}
@@ -32,8 +33,8 @@ func NewShopService() ShopService {
 	return &shopService{}
 }
 
-func (s *shopService) GetShareTokenByID(shopID int) (string, error) {
-	token, err := shopStore.GetShareTokenByID(shopID)
+func (s *shopService) GetShareTokenByID(ctx context.Context, shopID int) (string, error) {
+	token, err := shopStore.GetShareTokenByID(ctx, shopID)
 	if err != nil {
 		return "", err
 	}
@@ -43,8 +44,8 @@ func (s *shopService) GetShareTokenByID(shopID int) (string, error) {
 	return token, nil
 }
 
-func (s *shopService) GetPublicProducts(shareToken string) ([]response.ProductData, error) {
-	shop, err := shopStore.GetShopByShareToken(shareToken)
+func (s *shopService) GetPublicProducts(ctx context.Context, shareToken string) ([]response.ProductData, error) {
+	shop, err := shopStore.GetShopByShareToken(ctx, shareToken)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func (s *shopService) GetPublicProducts(shareToken string) ([]response.ProductDa
 		return nil, errors.New(apierr.ErrShopNotFound)
 	}
 
-	products, err := productStore.GetProductsByShopID(shop.ID, model.FilterOptions{})
+	products, err := productStore.GetProductsByShopID(ctx, shop.ID, model.FilterOptions{})
 	if err != nil {
 		return nil, err
 	}
