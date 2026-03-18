@@ -551,6 +551,9 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 
 				mockProduct := mock_store.NewMockProductStore(ctrl)
 				mockProduct.EXPECT().
+					GetProductByID(gomock.Any(), 1).
+					Return(&model.Product{ID: 1, Name: "Test"}, nil)
+				mockProduct.EXPECT().
 					DeleteProductByID(gomock.Any(), 1).
 					Return(nil)
 
@@ -584,6 +587,9 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 
 				mockProduct := mock_store.NewMockProductStore(ctrl)
 				mockProduct.EXPECT().
+					GetProductByID(gomock.Any(), 1).
+					Return(&model.Product{ID: 1, Name: "Test"}, nil)
+				mockProduct.EXPECT().
 					DeleteProductByID(gomock.Any(), 1).
 					Return(nil)
 
@@ -600,7 +606,12 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
 					Return(nil, errors.New("database error"))
 
-				return mock_store.NewMockProductStore(ctrl), mockOrderItem, mock_store.NewMockOrderStore(ctrl), nil, nil
+				mockProduct := mock_store.NewMockProductStore(ctrl)
+				mockProduct.EXPECT().
+					GetProductByID(gomock.Any(), 1).
+					Return(&model.Product{ID: 1, Name: "Test"}, nil)
+
+				return mockProduct, mockOrderItem, mock_store.NewMockOrderStore(ctrl), nil, nil
 			},
 			wantErr: true,
 		},
@@ -616,7 +627,12 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 					GetOrderTotalsExcludingProduct(gomock.Any(), 1).
 					Return(map[int]int{10: 0}, nil)
 
-				return mock_store.NewMockProductStore(ctrl), mockOrderItem, mock_store.NewMockOrderStore(ctrl), mockDB, nil
+				mockProduct := mock_store.NewMockProductStore(ctrl)
+				mockProduct.EXPECT().
+					GetProductByID(gomock.Any(), 1).
+					Return(&model.Product{ID: 1, Name: "Test"}, nil)
+
+				return mockProduct, mockOrderItem, mock_store.NewMockOrderStore(ctrl), mockDB, nil
 			},
 			wantErr: true,
 		},
@@ -638,7 +654,12 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 					DeleteOrderItemsByProductID(gomock.Any(), mockTx, 1).
 					Return(errors.New("delete error"))
 
-				return mock_store.NewMockProductStore(ctrl), mockOrderItem, mock_store.NewMockOrderStore(ctrl), mockDB, mockTx
+				mockProduct := mock_store.NewMockProductStore(ctrl)
+				mockProduct.EXPECT().
+					GetProductByID(gomock.Any(), 1).
+					Return(&model.Product{ID: 1, Name: "Test"}, nil)
+
+				return mockProduct, mockOrderItem, mock_store.NewMockOrderStore(ctrl), mockDB, mockTx
 			},
 			wantErr: true,
 		},
@@ -665,7 +686,12 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 					UpdateOrder(gomock.Any(), mockTx, 10, gomock.Any()).
 					Return(nil, errors.New("update error"))
 
-				return mock_store.NewMockProductStore(ctrl), mockOrderItem, mockOrder, mockDB, mockTx
+				mockProduct := mock_store.NewMockProductStore(ctrl)
+				mockProduct.EXPECT().
+					GetProductByID(gomock.Any(), 1).
+					Return(&model.Product{ID: 1, Name: "Test"}, nil)
+
+				return mockProduct, mockOrderItem, mockOrder, mockDB, mockTx
 			},
 			wantErr: true,
 		},
@@ -679,6 +705,9 @@ func Test_pservice_DeleteProductByID(t *testing.T) {
 					Return(map[int]int{}, nil)
 
 				mockProduct := mock_store.NewMockProductStore(ctrl)
+				mockProduct.EXPECT().
+					GetProductByID(gomock.Any(), 1).
+					Return(&model.Product{ID: 1, Name: "Test"}, nil)
 				mockProduct.EXPECT().
 					DeleteProductByID(gomock.Any(), 1).
 					Return(errors.New("database error"))

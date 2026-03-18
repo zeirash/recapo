@@ -17,8 +17,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 
@@ -176,15 +178,17 @@ func main() {
 	// start cron jobs
 	startCron()
 
+	cfg := config.GetConfig()
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowedOrigins:   strings.Split(cfg.CORSOrigins, ","),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
-		Debug:            true,
+		Debug:            cfg.Env != "production",
 	})
 	h := c.Handler(r)
 
-	logger.Info("Server starting on port :4000")
-	logger.Fatal(http.ListenAndServe(":4000", h))
+	port := fmt.Sprintf(":%d", config.GetConfig().ServicePort)
+	logger.Info("Server starting on port ", port)
+	logger.Fatal(http.ListenAndServe(port, h))
 }

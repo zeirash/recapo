@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
+	"github.com/zeirash/recapo/arion/common/logger"
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
@@ -183,6 +184,15 @@ func (p *pservice) GetProductsByShopID(ctx context.Context, shopID int, filter m
 }
 
 func (p *pservice) UpdateProduct(ctx context.Context, input UpdateProductInput) (response.ProductData, error) {
+	// Capture old image URL before updating so we can delete it if replaced.
+	var oldImageURL string
+	if input.ImageURL != nil {
+		current, err := productStore.GetProductByID(ctx, input.ID)
+		if err == nil && current != nil {
+			oldImageURL = current.ImageURL
+		}
+	}
+
 	updateData := store.UpdateProductInput{
 		Name:          input.Name,
 		Description:   input.Description,
@@ -193,6 +203,13 @@ func (p *pservice) UpdateProduct(ctx context.Context, input UpdateProductInput) 
 	productData, err := productStore.UpdateProduct(ctx, input.ID, updateData)
 	if err != nil {
 		return response.ProductData{}, err
+	}
+
+	// Delete old image if it was replaced with a different one.
+	if oldImageURL != "" && oldImageURL != *input.ImageURL {
+		if delErr := p.DeleteProductImage(ctx, oldImageURL); delErr != nil {
+			logger.WithError(delErr).Warn("failed to delete old product image on update")
+		}
 	}
 
 	res := response.ProductData{
@@ -213,6 +230,12 @@ func (p *pservice) UpdateProduct(ctx context.Context, input UpdateProductInput) 
 }
 
 func (p *pservice) DeleteProductByID(ctx context.Context, id int) error {
+	// Fetch product image URL before deletion so we can clean up storage.
+	product, err := productStore.GetProductByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
 	orderTotals, err := orderItemStore.GetOrderTotalsExcludingProduct(ctx, id)
 	if err != nil {
 		return err
@@ -242,7 +265,18 @@ func (p *pservice) DeleteProductByID(ctx context.Context, id int) error {
 		}
 	}
 
-	return productStore.DeleteProductByID(ctx, id)
+	if err := productStore.DeleteProductByID(ctx, id); err != nil {
+		return err
+	}
+
+	// Delete associated image after successful DB deletion.
+	if product != nil && product.ImageURL != "" {
+		if delErr := p.DeleteProductImage(ctx, product.ImageURL); delErr != nil {
+			logger.WithError(delErr).Warn("failed to delete product image on delete")
+		}
+	}
+
+	return nil
 }
 
 func (p *pservice) GetPurchaseListProducts(ctx context.Context, shopID int) ([]response.PurchaseListProductData, error) {

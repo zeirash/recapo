@@ -21,8 +21,9 @@ type Config struct {
 	DbPassword string `env:"DB_PASSWORD"`
 	DbPort     int    `env:"DB_PORT"`
 
-	SecretKey string `env:"SECRET_KEY"`
-	SentryDSN string `env:"SENTRY_DSN"`
+	SecretKey   string `env:"SECRET_KEY"`
+	SentryDSN   string `env:"SENTRY_DSN"`
+	CORSOrigins string `env:"CORS_ORIGINS" envDefault:"http://localhost:3000,http://localhost:3001"`
 
 	UploadDir string `env:"UPLOAD_DIR" envDefault:"./uploads"`
 
@@ -58,13 +59,11 @@ func InitConfig() {
 	if os.Getenv("ENV") == "production" {
 		envFile = ".env.production"
 	}
-	err := godotenv.Load(envFile)
-	if err != nil {
+	if err := godotenv.Load(envFile); err != nil {
 		logger.WithError(err).Warn("unable to load env file: ", envFile)
-		return
 	}
 
-	err = env.Parse(&cfg) // Parse environment variables into `Config`
+	err := env.Parse(&cfg) // Parse environment variables into `Config`
 	if err != nil {
 		logger.WithError(err).Error("unable to parse environment variables")
 	}
