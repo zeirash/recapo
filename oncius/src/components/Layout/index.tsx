@@ -1,8 +1,10 @@
 "use client"
 
 import React, { ReactNode, useState, useEffect } from 'react'
-import { Box } from '@mui/material'
-import { usePathname } from 'next/navigation'
+import { Box, CircularProgress } from '@mui/material'
+import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth'
+import { getAuthToken } from '@/utils/api'
 import SideMenu from './SideMenu'
 
 interface LayoutProps {
@@ -11,7 +13,16 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname()
+  const router = useRouter()
   const [selectedMenu, setSelectedMenu] = useState('dashboard')
+  const { user, isLoadingUser, userError } = useAuth()
+
+  // Redirect to login if unauthenticated
+  useEffect(() => {
+    if (!getAuthToken() || (!isLoadingUser && userError)) {
+      router.replace('/login')
+    }
+  }, [isLoadingUser, userError, router])
 
   // Sync selectedMenu with current pathname
   useEffect(() => {
@@ -30,6 +41,14 @@ const Layout = ({ children }: LayoutProps) => {
       setSelectedMenu(menuId)
     }
   }, [pathname])
+
+  if (!user) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f9fafb' }}>
