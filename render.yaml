@@ -1,0 +1,79 @@
+databases:
+  - name: recapo-db
+    databaseName: recapo_master
+    user: recapo_user
+    plan: free
+
+services:
+  - type: web
+    name: recapo-backend
+    runtime: docker
+    dockerContext: ./arion
+    dockerfilePath: ./arion/Dockerfile
+    plan: free
+    port: 4000
+    healthCheckPath: /health
+    envVars:
+      - key: ENV
+        value: production
+      - key: SERVICE_NAME
+        value: arion
+      - key: SERVICE_PORT
+        value: 4000
+      - key: VERSION
+        value: "1.0"
+      - key: DB_NAME
+        fromDatabase:
+          name: recapo-db
+          property: database
+      - key: DB_HOST
+        fromDatabase:
+          name: recapo-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: recapo-db
+          property: port
+      - key: DB_USERNAME
+        fromDatabase:
+          name: recapo-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: recapo-db
+          property: password
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        fromService:
+          name: recapo-frontend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: MIDTRANS_BASE_URL
+        value: https://app.sandbox.midtrans.com
+      - key: MIDTRANS_FRONTEND_URL
+        fromService:
+          name: recapo-frontend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      # Set these manually in Render dashboard:
+      # SENTRY_DSN, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+      # GITHUB_TOKEN, GITHUB_REPO_OWNER, GITHUB_REPO_NAME
+      # MIDTRANS_SERVER_KEY
+      # R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_PUBLIC_URL
+
+  - type: web
+    name: recapo-frontend
+    runtime: docker
+    dockerContext: ./oncius
+    dockerfilePath: ./oncius/Dockerfile
+    plan: free
+    port: 3000
+    envVars:
+      - key: API_BASE_URL
+        fromService:
+          name: recapo-backend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      # Set this manually in Render dashboard:
+      # NEXT_PUBLIC_SENTRY_DSN
