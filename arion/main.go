@@ -188,7 +188,7 @@ func main() {
 	})
 	h := c.Handler(r)
 
-	port := fmt.Sprintf(":%d", config.GetConfig().ServicePort)
+	port := fmt.Sprintf(":%d", config.GetConfig().Port)
 	logger.Info("Server starting on port ", port)
 	logger.Fatal(http.ListenAndServe(port, h))
 }

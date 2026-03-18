@@ -11,15 +11,14 @@ services:
     dockerContext: ./arion
     dockerfilePath: ./arion/Dockerfile
     plan: free
-    port: 4000
     healthCheckPath: /health
     envVars:
+      - key: PORT
+        value: 4000
       - key: ENV
         value: production
       - key: SERVICE_NAME
         value: arion
-      - key: SERVICE_PORT
-        value: 4000
       - key: VERSION
         value: "1.0"
       - key: DB_NAME
@@ -68,8 +67,9 @@ services:
     dockerContext: ./oncius
     dockerfilePath: ./oncius/Dockerfile
     plan: free
-    port: 3000
     envVars:
+      - key: PORT
+        value: 3000
       - key: API_BASE_URL
         fromService:
           name: recapo-backend

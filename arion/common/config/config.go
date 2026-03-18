@@ -11,7 +11,7 @@ import (
 type Config struct {
 	Env         string `env:"ENV"`
 	ServiceName string `env:"SERVICE_NAME"`
-	ServicePort int    `env:"SERVICE_PORT"`
+	Port        int    `env:"PORT"`
 	Version     string `env:"VERSION"`
 
 	// DB related configuration
