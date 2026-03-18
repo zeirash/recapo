@@ -70,7 +70,7 @@ services:
     envVars:
       - key: PORT
         value: 3000
-      - key: API_BASE_URL
+      - key: NEXT_PUBLIC_API_BASE_URL
         fromService:
           name: recapo-backend
           type: web
