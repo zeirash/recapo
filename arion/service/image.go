@@ -17,9 +17,13 @@ import (
 // the image to R2 (or the local filesystem in dev). pathPrefix is the directory
 // segment used both as the R2 object key prefix and the local upload sub-directory
 // (e.g. "products", "feedback").
+const maxImageSize = 5 * 1024 * 1024 // 5MB
+
 func uploadImage(file io.Reader, pathPrefix string) (string, error) {
+	limited := io.LimitReader(file, maxImageSize+1)
+
 	buf := make([]byte, 512)
-	n, err := file.Read(buf)
+	n, err := limited.Read(buf)
 	if err != nil && err != io.EOF {
 		return "", err
 	}
@@ -49,8 +53,11 @@ func uploadImage(file io.Reader, pathPrefix string) (string, error) {
 	// to return empty data, producing a BadDigest error from Cloudflare R2.
 	var bodyBuf bytes.Buffer
 	bodyBuf.Write(buf[:n])
-	if _, err := io.Copy(&bodyBuf, file); err != nil {
+	if _, err := io.Copy(&bodyBuf, limited); err != nil {
 		return "", err
+	}
+	if bodyBuf.Len() > maxImageSize {
+		return "", errors.New(apierr.ErrImageTooLarge)
 	}
 	fullReader := bytes.NewReader(bodyBuf.Bytes())
 
