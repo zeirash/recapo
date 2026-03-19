@@ -113,12 +113,22 @@ func (c *customer) GetCustomersByShopID(ctx context.Context, shopID int, filter 
 	if filter.Sort != nil {
 		sort := strings.Split(*filter.Sort, ",")
 		if len(sort) == 2 {
-			col, dir := sort[0], sort[1]
-			textCols := map[string]bool{"name": true}
-			if textCols[col] {
-				q += fmt.Sprintf(" ORDER BY LOWER(%s) %s", col, dir)
-			} else {
-				q += fmt.Sprintf(" ORDER BY %s %s", col, dir)
+			col, dir := sort[0], strings.ToUpper(sort[1])
+			allowedCols := map[string]bool{"id": true, "name": true, "phone": true, "created_at": true, "updated_at": true}
+			if dir != "ASC" && dir != "DESC" {
+				dir = "ASC"
+			}
+			if allowedCols[col] {
+				nullsOrder := "NULLS LAST"
+				if dir == "ASC" {
+					nullsOrder = "NULLS FIRST"
+				}
+				textCols := map[string]bool{"name": true}
+				if textCols[col] {
+					q += fmt.Sprintf(" ORDER BY LOWER(%s) %s %s", col, dir, nullsOrder)
+				} else {
+					q += fmt.Sprintf(" ORDER BY %s %s %s", col, dir, nullsOrder)
+				}
 			}
 		}
 	}
@@ -178,34 +188,37 @@ func (c *customer) CreateCustomer(ctx context.Context, input CreateCustomerInput
 
 func (c *customer) UpdateCustomer(ctx context.Context, id int, input UpdateCustomerInput) (*model.Customer, error) {
 	set := []string{}
+	args := []interface{}{id}
+	argNum := 2
 	var customer model.Customer
 
 	// build query
 	if input.Name != nil {
-		newSet := fmt.Sprintf("name = '%s'", *input.Name)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("name = $%d", argNum))
+		args = append(args, *input.Name)
+		argNum++
 	}
 	if input.Phone != nil {
-		newSet := fmt.Sprintf("phone = '%s'", *input.Phone)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("phone = $%d", argNum))
+		args = append(args, *input.Phone)
+		argNum++
 	}
 	if input.Address != nil {
-		newSet := fmt.Sprintf("address = '%s'", *input.Address)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("address = $%d", argNum))
+		args = append(args, *input.Address)
+		argNum++
 	}
 
 	set = append(set, "updated_at = now()")
 
-	q := `
+	q := fmt.Sprintf(`
 		UPDATE customers
 		SET %s
 		WHERE id = $1
 		RETURNING id, name, phone, address, created_at, updated_at
-	`
+	`, strings.Join(set, ","))
 
-	q = fmt.Sprintf(q, strings.Join(set, ","))
-
-	err := c.db.QueryRowContext(ctx, q, id).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+	err := c.db.QueryRowContext(ctx, q, args...).Scan(&customer.ID, &customer.Name, &customer.Phone, &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, ErrDuplicatePhone

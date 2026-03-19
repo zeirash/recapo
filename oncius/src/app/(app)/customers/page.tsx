@@ -36,7 +36,7 @@ export default function CustomersPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [sortValue, setSortValue] = useState<string>('')
+  const [sortValue, setSortValue] = useState<string>('updated_at,desc')
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [deleteActiveOrderId, setDeleteActiveOrderId] = useState<number | null>(null)
   const [checkingActiveOrder, setCheckingActiveOrder] = useState(false)
@@ -173,7 +173,8 @@ export default function CustomersPage() {
               sx={{ height: 36, fontSize: '14px', borderRadius: '8px', width: 'fit-content', minWidth: 160 }}
               MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
             >
-              <MenuItem value="">{tc('sortDefault')}</MenuItem>
+              <MenuItem value="updated_at,desc">{tc('sortUpdatedAtDesc')}</MenuItem>
+              <MenuItem value="updated_at,asc">{tc('sortUpdatedAtAsc')}</MenuItem>
               <MenuItem value="name,asc">{tc('sortNameAsc')}</MenuItem>
               <MenuItem value="name,desc">{tc('sortNameDesc')}</MenuItem>
             </Select>

@@ -242,7 +242,7 @@ func Test_customer_GetCustomersByShopID(t *testing.T) {
 				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at", "deleted_at"}).
 					AddRow(1, "Alpha", "1234567890", "123 Main St", fixedTime, nil, nil).
 					AddRow(2, "Beta", "0987654321", "456 Oak Ave", fixedTime, nil, nil)
-				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at, deleted_at\s+FROM customers\s+WHERE shop_id = \$1 AND deleted_at IS NULL\s+ORDER BY LOWER\(name\) asc`).
+				mock.ExpectQuery(`SELECT id, name, phone, address, created_at, updated_at, deleted_at\s+FROM customers\s+WHERE shop_id = \$1 AND deleted_at IS NULL\s+ORDER BY LOWER\(name\) ASC NULLS FIRST`).
 					WithArgs(1).
 					WillReturnRows(rows)
 			},
@@ -448,8 +448,8 @@ func Test_customer_UpdateCustomer(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"}).
 					AddRow(1, "John Updated", "9999999999", "789 New St", fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE customers\s+SET name = 'John Updated',phone = '9999999999',address = '789 New St',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
-					WithArgs(1).
+				mock.ExpectQuery(`UPDATE customers\s+SET name = \$2,phone = \$3,address = \$4,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
+					WithArgs(1, "John Updated", "9999999999", "789 New St").
 					WillReturnRows(rows)
 			},
 			wantResult: &model.Customer{
@@ -471,8 +471,8 @@ func Test_customer_UpdateCustomer(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "phone", "address", "created_at", "updated_at"}).
 					AddRow(1, "Jane Updated", "1234567890", "123 Main St", fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE customers\s+SET name = 'Jane Updated',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
-					WithArgs(1).
+				mock.ExpectQuery(`UPDATE customers\s+SET name = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
+					WithArgs(1, "Jane Updated").
 					WillReturnRows(rows)
 			},
 			wantResult: &model.Customer{
@@ -492,8 +492,8 @@ func Test_customer_UpdateCustomer(t *testing.T) {
 				Phone: strPtr("1234567890"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`UPDATE customers\s+SET phone = '1234567890',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
-					WithArgs(1).
+				mock.ExpectQuery(`UPDATE customers\s+SET phone = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
+					WithArgs(1, "1234567890").
 					WillReturnError(&pq.Error{Code: "23505"})
 			},
 			wantResult: nil,
@@ -506,8 +506,8 @@ func Test_customer_UpdateCustomer(t *testing.T) {
 				Name: strPtr("Ghost"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`UPDATE customers\s+SET name = 'Ghost',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
-					WithArgs(9999).
+				mock.ExpectQuery(`UPDATE customers\s+SET name = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
+					WithArgs(9999, "Ghost").
 					WillReturnError(sql.ErrNoRows)
 			},
 			wantResult: nil,
@@ -520,8 +520,8 @@ func Test_customer_UpdateCustomer(t *testing.T) {
 				Name: strPtr("John"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`UPDATE customers\s+SET name = 'John',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
-					WithArgs(1).
+				mock.ExpectQuery(`UPDATE customers\s+SET name = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, phone, address, created_at, updated_at`).
+					WithArgs(1, "John").
 					WillReturnError(errors.New("database error"))
 			},
 			wantResult: nil,

@@ -116,7 +116,23 @@ func (o *order) GetOrdersByShopID(ctx context.Context, shopID int, opts model.Or
 	if opts.Sort != nil {
 		sort := strings.Split(*opts.Sort, ",")
 		if len(sort) == 2 {
-			q += fmt.Sprintf(" ORDER BY %s %s", sort[0], sort[1])
+			col, dir := sort[0], strings.ToUpper(sort[1])
+			allowedCols := map[string]bool{
+				"o.id": true, "o.created_at": true, "o.updated_at": true,
+				"o.total_price": true, "o.status": true, "o.payment_status": true,
+				"id": true, "created_at": true, "updated_at": true,
+				"total_price": true, "status": true, "payment_status": true,
+			}
+			if dir != "ASC" && dir != "DESC" {
+				dir = "ASC"
+			}
+			if allowedCols[col] {
+				nullsOrder := "NULLS LAST"
+				if dir == "ASC" {
+					nullsOrder = "NULLS FIRST"
+				}
+				q += fmt.Sprintf(" ORDER BY %s %s %s", col, dir, nullsOrder)
+			}
 		}
 	}
 
@@ -209,29 +225,35 @@ func (o *order) CreateOrder(ctx context.Context, tx database.Tx, customerID int,
 
 func (o *order) UpdateOrder(ctx context.Context, tx database.Tx, id int, input UpdateOrderInput) (*model.Order, error) {
 	set := []string{}
+	args := []interface{}{id}
+	argNum := 2
 	var order model.Order
 
 	// build query
 	if input.TotalPrice != nil {
-		newSet := fmt.Sprintf("total_price = %d", *input.TotalPrice)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("total_price = $%d", argNum))
+		args = append(args, *input.TotalPrice)
+		argNum++
 	}
 	if input.Status != nil {
-		newSet := fmt.Sprintf("status = '%s'", *input.Status)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("status = $%d", argNum))
+		args = append(args, *input.Status)
+		argNum++
 	}
 	if input.PaymentStatus != nil {
-		newSet := fmt.Sprintf("payment_status = '%s'", *input.PaymentStatus)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("payment_status = $%d", argNum))
+		args = append(args, *input.PaymentStatus)
+		argNum++
 	}
 	if input.Notes != nil {
-		newSet := fmt.Sprintf("notes = '%s'", *input.Notes)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("notes = $%d", argNum))
+		args = append(args, *input.Notes)
+		argNum++
 	}
 
 	set = append(set, "updated_at = now()")
 
-	q := `
+	q := fmt.Sprintf(`
 		WITH updated AS (
 			UPDATE orders
 			SET %s
@@ -241,15 +263,13 @@ func (o *order) UpdateOrder(ctx context.Context, tx database.Tx, id int, input U
 		SELECT u.id, u.shop_id, c.name as customer_name, (c.deleted_at IS NOT NULL) as is_customer_deleted, u.total_price, u.status, u.payment_status, u.notes, u.created_at, u.updated_at
 		FROM updated u
 		INNER JOIN customers c ON u.customer_id = c.id
-	`
-
-	q = fmt.Sprintf(q, strings.Join(set, ","))
+	`, strings.Join(set, ","))
 
 	var err error
 	if tx != nil {
-		err = tx.QueryRowContext(ctx, q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.IsCustomerDeleted, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err = tx.QueryRowContext(ctx, q, args...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.IsCustomerDeleted, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	} else {
-		err = o.db.QueryRowContext(ctx, q, id).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.IsCustomerDeleted, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
+		err = o.db.QueryRowContext(ctx, q, args...).Scan(&order.ID, &order.ShopID, &order.CustomerName, &order.IsCustomerDeleted, &order.TotalPrice, &order.Status, &order.PaymentStatus, &order.Notes, &order.CreatedAt, &order.UpdatedAt)
 	}
 	if err != nil {
 		return nil, err
@@ -361,7 +381,21 @@ func (o *order) GetTempOrdersByShopID(ctx context.Context, shopID int, opts mode
 	if opts.Sort != nil {
 		sort := strings.Split(*opts.Sort, ",")
 		if len(sort) == 2 {
-			q += fmt.Sprintf(" ORDER BY %s %s", sort[0], sort[1])
+			col, dir := sort[0], strings.ToUpper(sort[1])
+			allowedCols := map[string]bool{
+				"id": true, "created_at": true, "updated_at": true,
+				"total_price": true, "status": true,
+			}
+			if dir != "ASC" && dir != "DESC" {
+				dir = "ASC"
+			}
+			if allowedCols[col] {
+				nullsOrder := "NULLS LAST"
+				if dir == "ASC" {
+					nullsOrder = "NULLS FIRST"
+				}
+				q += fmt.Sprintf(" ORDER BY %s %s %s", col, dir, nullsOrder)
+			}
 		}
 	}
 

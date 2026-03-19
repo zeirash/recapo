@@ -388,8 +388,8 @@ func Test_user_UpdateUser(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "email", "created_at", "updated_at"}).
 					AddRow(1, "Updated Name", "john@example.com", fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE users\s+SET name = 'Updated Name',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
-					WithArgs(1).
+				mock.ExpectQuery(`UPDATE users\s+SET name = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
+					WithArgs(1, "Updated Name").
 					WillReturnRows(rows)
 			},
 			wantResult: &model.User{
@@ -410,8 +410,8 @@ func Test_user_UpdateUser(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "email", "created_at", "updated_at"}).
 					AddRow(1, "John Doe", "newemail@example.com", fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE users\s+SET email = 'newemail@example.com',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
-					WithArgs(1).
+				mock.ExpectQuery(`UPDATE users\s+SET email = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
+					WithArgs(1, "newemail@example.com").
 					WillReturnRows(rows)
 			},
 			wantResult: &model.User{
@@ -432,8 +432,8 @@ func Test_user_UpdateUser(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "name", "email", "created_at", "updated_at"}).
 					AddRow(1, "John Doe", "john@example.com", fixedTime, updatedTime)
-				mock.ExpectQuery(`UPDATE users\s+SET password = 'newhashedpassword',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
-					WithArgs(1).
+				mock.ExpectQuery(`UPDATE users\s+SET password = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
+					WithArgs(1, "newhashedpassword").
 					WillReturnRows(rows)
 			},
 			wantResult: &model.User{
@@ -452,8 +452,8 @@ func Test_user_UpdateUser(t *testing.T) {
 				Name: strPtr("New Name"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`UPDATE users\s+SET name = 'New Name',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
-					WithArgs(9999).
+				mock.ExpectQuery(`UPDATE users\s+SET name = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
+					WithArgs(9999, "New Name").
 					WillReturnError(sql.ErrNoRows)
 			},
 			wantResult: nil,
@@ -466,8 +466,8 @@ func Test_user_UpdateUser(t *testing.T) {
 				Name: strPtr("New Name"),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`UPDATE users\s+SET name = 'New Name',updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
-					WithArgs(1).
+				mock.ExpectQuery(`UPDATE users\s+SET name = \$2,updated_at = now\(\)\s+WHERE id = \$1\s+RETURNING id, name, email, created_at, updated_at`).
+					WithArgs(1, "New Name").
 					WillReturnError(errors.New("database error"))
 			},
 			wantResult: nil,

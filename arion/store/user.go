@@ -160,34 +160,37 @@ func (u *user) CreateUser(ctx context.Context, tx database.Tx, name, email, hash
 
 func (u *user) UpdateUser(ctx context.Context, id int, input UpdateUserInput) (*model.User, error) {
 	set := []string{}
+	args := []interface{}{id}
+	argNum := 2
 	var user model.User
 
 	// build query
 	if input.Name != nil {
-		newSet := fmt.Sprintf("name = '%s'", *input.Name)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("name = $%d", argNum))
+		args = append(args, *input.Name)
+		argNum++
 	}
 	if input.Email != nil {
-		newSet := fmt.Sprintf("email = '%s'", *input.Email)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("email = $%d", argNum))
+		args = append(args, *input.Email)
+		argNum++
 	}
 	if input.Password != nil {
-		newSet := fmt.Sprintf("password = '%s'", *input.Password)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("password = $%d", argNum))
+		args = append(args, *input.Password)
+		argNum++
 	}
 
 	set = append(set, "updated_at = now()")
 
-	q := `
+	q := fmt.Sprintf(`
 		UPDATE users
 		SET %s
 		WHERE id = $1
 		RETURNING id, name, email, created_at, updated_at
-	`
+	`, strings.Join(set, ","))
 
-	q = fmt.Sprintf(q, strings.Join(set, ","))
-
-	err := u.db.QueryRowContext(ctx, q, id).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	err := u.db.QueryRowContext(ctx, q, args...).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

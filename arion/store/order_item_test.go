@@ -344,8 +344,8 @@ func Test_orderitem_UpdateOrderItemByID(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "order_id", "product_name", "price", "qty", "created_at", "updated_at"}).
 					AddRow(1, 10, "Product A", 1000, 5, fixedTime, updatedTime)
-				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE order_items\s+SET qty = 5,updated_at = now\(\)\s+WHERE id = \$1 AND order_id = \$2\s+RETURNING id, order_id, product_id, qty, created_at, updated_at\s+\)\s+SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN products p ON u.product_id = p.id`).
-					WithArgs(1, 10).
+				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE order_items\s+SET qty = \$3,updated_at = now\(\)\s+WHERE id = \$1 AND order_id = \$2\s+RETURNING id, order_id, product_id, qty, created_at, updated_at\s+\)\s+SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN products p ON u.product_id = p.id`).
+					WithArgs(1, 10, 5).
 					WillReturnRows(rows)
 			},
 			wantResult: &model.OrderItem{
@@ -369,8 +369,8 @@ func Test_orderitem_UpdateOrderItemByID(t *testing.T) {
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "order_id", "product_name", "price", "qty", "created_at", "updated_at"}).
 					AddRow(1, 10, "Product B", 2000, 2, fixedTime, updatedTime)
-				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE order_items\s+SET product_id = 3,updated_at = now\(\)\s+WHERE id = \$1 AND order_id = \$2\s+RETURNING id, order_id, product_id, qty, created_at, updated_at\s+\)\s+SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN products p ON u.product_id = p.id`).
-					WithArgs(1, 10).
+				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE order_items\s+SET product_id = \$3,updated_at = now\(\)\s+WHERE id = \$1 AND order_id = \$2\s+RETURNING id, order_id, product_id, qty, created_at, updated_at\s+\)\s+SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN products p ON u.product_id = p.id`).
+					WithArgs(1, 10, 3).
 					WillReturnRows(rows)
 			},
 			wantResult: &model.OrderItem{
@@ -392,8 +392,8 @@ func Test_orderitem_UpdateOrderItemByID(t *testing.T) {
 				Qty: intPtr(5),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE order_items\s+SET qty = 5,updated_at = now\(\)\s+WHERE id = \$1 AND order_id = \$2\s+RETURNING id, order_id, product_id, qty, created_at, updated_at\s+\)\s+SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN products p ON u.product_id = p.id`).
-					WithArgs(9999, 10).
+				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE order_items\s+SET qty = \$3,updated_at = now\(\)\s+WHERE id = \$1 AND order_id = \$2\s+RETURNING id, order_id, product_id, qty, created_at, updated_at\s+\)\s+SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN products p ON u.product_id = p.id`).
+					WithArgs(9999, 10, 5).
 					WillReturnError(sql.ErrNoRows)
 			},
 			wantResult: nil,
@@ -407,8 +407,8 @@ func Test_orderitem_UpdateOrderItemByID(t *testing.T) {
 				Qty: intPtr(5),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE order_items\s+SET qty = 5,updated_at = now\(\)\s+WHERE id = \$1 AND order_id = \$2\s+RETURNING id, order_id, product_id, qty, created_at, updated_at\s+\)\s+SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN products p ON u.product_id = p.id`).
-					WithArgs(1, 10).
+				mock.ExpectQuery(`WITH updated AS \(\s+UPDATE order_items\s+SET qty = \$3,updated_at = now\(\)\s+WHERE id = \$1 AND order_id = \$2\s+RETURNING id, order_id, product_id, qty, created_at, updated_at\s+\)\s+SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at\s+FROM updated u\s+INNER JOIN products p ON u.product_id = p.id`).
+					WithArgs(1, 10, 5).
 					WillReturnError(errors.New("database error"))
 			},
 			wantResult: nil,

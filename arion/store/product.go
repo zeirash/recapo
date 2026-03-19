@@ -90,12 +90,22 @@ func (p *product) GetProductsByShopID(ctx context.Context, shopID int, filter mo
 	if filter.Sort != nil {
 		sort := strings.Split(*filter.Sort, ",")
 		if len(sort) == 2 {
-			col, dir := sort[0], sort[1]
-			textCols := map[string]bool{"name": true}
-			if textCols[col] {
-				q += fmt.Sprintf(" ORDER BY LOWER(%s) %s", col, dir)
-			} else {
-				q += fmt.Sprintf(" ORDER BY %s %s", col, dir)
+			col, dir := sort[0], strings.ToUpper(sort[1])
+			allowedCols := map[string]bool{"id": true, "name": true, "price": true, "created_at": true, "updated_at": true}
+			if dir != "ASC" && dir != "DESC" {
+				dir = "ASC"
+			}
+			if allowedCols[col] {
+				nullsOrder := "NULLS LAST"
+				if dir == "ASC" {
+					nullsOrder = "NULLS FIRST"
+				}
+				textCols := map[string]bool{"name": true}
+				if textCols[col] {
+					q += fmt.Sprintf(" ORDER BY LOWER(%s) %s %s", col, dir, nullsOrder)
+				} else {
+					q += fmt.Sprintf(" ORDER BY %s %s %s", col, dir, nullsOrder)
+				}
 			}
 		}
 	}
@@ -161,42 +171,47 @@ func (p *product) CreateProduct(ctx context.Context, name string, description *s
 
 func (p *product) UpdateProduct(ctx context.Context, productID int, input UpdateProductInput) (*model.Product, error) {
 	set := []string{}
+	args := []interface{}{productID}
+	argNum := 2
 	var product model.Product
 
 	// build query
 	if input.Name != nil {
-		newSet := fmt.Sprintf("name = '%s'", *input.Name)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("name = $%d", argNum))
+		args = append(args, *input.Name)
+		argNum++
 	}
 	if input.Description != nil {
-		newSet := fmt.Sprintf("description = '%s'", *input.Description)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("description = $%d", argNum))
+		args = append(args, *input.Description)
+		argNum++
 	}
 	if input.Price != nil {
-		newSet := fmt.Sprintf("price = %d", *input.Price)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("price = $%d", argNum))
+		args = append(args, *input.Price)
+		argNum++
 	}
 	if input.OriginalPrice != nil {
-		newSet := fmt.Sprintf("original_price = %d", *input.OriginalPrice)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("original_price = $%d", argNum))
+		args = append(args, *input.OriginalPrice)
+		argNum++
 	}
 	if input.ImageURL != nil {
-		newSet := fmt.Sprintf("image_url = '%s'", *input.ImageURL)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("image_url = $%d", argNum))
+		args = append(args, *input.ImageURL)
+		argNum++
 	}
 
 	set = append(set, "updated_at = now()")
 
-	q := `
+	q := fmt.Sprintf(`
 		UPDATE products
 		SET %s
 		WHERE id = $1
 		RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
-	`
+	`, strings.Join(set, ","))
 
-	q = fmt.Sprintf(q, strings.Join(set, ","))
-
-	err := p.db.QueryRowContext(ctx, q, productID).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRowContext(ctx, q, args...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName

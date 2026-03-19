@@ -40,7 +40,7 @@ export default function ProductsPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [sortValue, setSortValue] = useState<string>('')
+  const [sortValue, setSortValue] = useState<string>('updated_at,desc')
   const [shareCopied, setShareCopied] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreviewURL, setImagePreviewURL] = useState<string | null>(null)
@@ -282,7 +282,8 @@ export default function ProductsPage() {
               sx={{ height: 36, fontSize: '14px', borderRadius: '8px', width: 'fit-content', minWidth: 160 }}
               MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
             >
-              <MenuItem value="">{tp('sortDefault')}</MenuItem>
+              <MenuItem value="updated_at,desc">{tp('sortUpdatedAtDesc')}</MenuItem>
+              <MenuItem value="updated_at,asc">{tp('sortUpdatedAtAsc')}</MenuItem>
               <MenuItem value="name,asc">{tp('sortNameAsc')}</MenuItem>
               <MenuItem value="name,desc">{tp('sortNameDesc')}</MenuItem>
               <MenuItem value="price,asc">{tp('sortPriceAsc')}</MenuItem>

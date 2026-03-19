@@ -129,21 +129,25 @@ func (o *orderitem) CreateOrderItem(ctx context.Context, tx database.Tx, orderID
 
 func (o *orderitem) UpdateOrderItemByID(ctx context.Context, tx database.Tx, id, orderID int, input UpdateOrderItemInput) (*model.OrderItem, error) {
 	set := []string{}
+	args := []interface{}{id, orderID}
+	argNum := 3
 	var orderItem model.OrderItem
 
 	// build query
 	if input.Qty != nil {
-		newSet := fmt.Sprintf("qty = %d", *input.Qty)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("qty = $%d", argNum))
+		args = append(args, *input.Qty)
+		argNum++
 	}
 	if input.ProductID != nil {
-		newSet := fmt.Sprintf("product_id = %d", *input.ProductID)
-		set = append(set, newSet)
+		set = append(set, fmt.Sprintf("product_id = $%d", argNum))
+		args = append(args, *input.ProductID)
+		argNum++
 	}
 
 	set = append(set, "updated_at = now()")
 
-	q := `
+	q := fmt.Sprintf(`
 		WITH updated AS (
 			UPDATE order_items
 			SET %s
@@ -153,15 +157,13 @@ func (o *orderitem) UpdateOrderItemByID(ctx context.Context, tx database.Tx, id,
 		SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at
 		FROM updated u
 		INNER JOIN products p ON u.product_id = p.id
-	`
-
-	q = fmt.Sprintf(q, strings.Join(set, ","))
+	`, strings.Join(set, ","))
 
 	var err error
 	if tx != nil {
-		err = tx.QueryRowContext(ctx, q, id, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+		err = tx.QueryRowContext(ctx, q, args...).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 	} else {
-		err = o.db.QueryRowContext(ctx, q, id, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+		err = o.db.QueryRowContext(ctx, q, args...).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 	}
 	if err != nil {
 		return nil, err
