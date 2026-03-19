@@ -39,11 +39,10 @@ type Config struct {
 	SMTPUser string `env:"SMTP_USER"`
 	SMTPPass string `env:"SMTP_PASS"`
 
-	// Mailjet (preferred over SMTP when set)
-	MailjetAPIKeyPublic  string `env:"MAILJET_API_KEY_PUBLIC"`
-	MailjetAPIKeyPrivate string `env:"MAILJET_API_KEY_PRIVATE"`
-	MailjetFromEmail     string `env:"MAILJET_FROM_EMAIL"`
-	MailjetFromName      string `env:"MAILJET_FROM_NAME" envDefault:"Recapo"`
+	// Resend (preferred over SMTP when set)
+	ResendAPIKey    string `env:"RESEND_API_KEY"`
+	ResendFromEmail string `env:"RESEND_FROM_EMAIL"`
+	ResendFromName  string `env:"RESEND_FROM_NAME" envDefault:"Recapo"`
 
 	// Cloudflare R2 (leave empty to use local filesystem)
 	R2AccountID       string `env:"R2_ACCOUNT_ID"`

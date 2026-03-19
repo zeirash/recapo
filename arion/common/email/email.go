@@ -5,7 +5,7 @@ import (
 	"net/smtp"
 	"strings"
 
-	mailjet "github.com/mailjet/mailjet-apiv3-go/v4"
+	resend "github.com/resend/resend-go/v2"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/i18n"
 	"github.com/zeirash/recapo/arion/common/logger"
@@ -28,8 +28,8 @@ func SendPasswordResetOTP(to, code, lang string) error {
 func sendEmail(to, subject, body string) error {
 	cfg := config.GetConfig()
 
-	if cfg.MailjetAPIKeyPublic != "" {
-		return sendViaMailjet(cfg, to, subject, body)
+	if cfg.ResendAPIKey != "" {
+		return sendViaResend(cfg, to, subject, body)
 	}
 
 	if cfg.SMTPHost != "" {
@@ -40,24 +40,15 @@ func sendEmail(to, subject, body string) error {
 	return nil
 }
 
-func sendViaMailjet(cfg config.Config, to, subject, body string) error {
-	client := mailjet.NewMailjetClient(cfg.MailjetAPIKeyPublic, cfg.MailjetAPIKeyPrivate)
-	messages := mailjet.MessagesV31{
-		Info: []mailjet.InfoMessagesV31{
-			{
-				From: &mailjet.RecipientV31{
-					Email: cfg.MailjetFromEmail,
-					Name:  cfg.MailjetFromName,
-				},
-				To: &mailjet.RecipientsV31{
-					{Email: to},
-				},
-				Subject:  subject,
-				TextPart: body,
-			},
-		},
+func sendViaResend(cfg config.Config, to, subject, body string) error {
+	client := resend.NewClient(cfg.ResendAPIKey)
+	params := &resend.SendEmailRequest{
+		From:    fmt.Sprintf("%s <%s>", cfg.ResendFromName, cfg.ResendFromEmail),
+		To:      []string{to},
+		Subject: subject,
+		Text:    body,
 	}
-	_, err := client.SendMailV31(&messages)
+	_, err := client.Emails.Send(params)
 	return err
 }
 

@@ -18,9 +18,9 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
-	github.com/mailjet/mailjet-apiv3-go/v4 v4.0.8
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
+	github.com/resend/resend-go/v2 v2.28.0
 	github.com/rs/cors v1.10.1
 	github.com/sirupsen/logrus v1.9.4
 	github.com/swaggo/http-swagger v1.3.4
