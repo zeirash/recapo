@@ -42,7 +42,17 @@ func uploadImage(file io.Reader, pathPrefix string) (string, error) {
 		return "", err
 	}
 	filename := fmt.Sprintf("%x%s", randBytes, ext)
-	fullReader := io.MultiReader(bytes.NewReader(buf[:n]), file)
+
+	// Buffer the entire file content so the reader is seekable. The AWS SDK v2
+	// reads the body once to compute a CRC32 checksum, then seeks back to the
+	// start before sending. A non-seekable io.MultiReader causes the second read
+	// to return empty data, producing a BadDigest error from Cloudflare R2.
+	var bodyBuf bytes.Buffer
+	bodyBuf.Write(buf[:n])
+	if _, err := io.Copy(&bodyBuf, file); err != nil {
+		return "", err
+	}
+	fullReader := bytes.NewReader(bodyBuf.Bytes())
 
 	// Cloud path: upload to Cloudflare R2.
 	if cfg.R2BucketName != "" {
