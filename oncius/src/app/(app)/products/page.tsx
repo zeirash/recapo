@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
@@ -496,7 +496,7 @@ export default function ProductsPage() {
               <Button type="button" variant="outlined" onClick={closeForm}>
                 {t('cancel')}
               </Button>
-              <Button type="submit" variant="contained" disableElevation disabled={isSubmitting || createMutation.isLoading || updateMutation.isLoading}>
+              <Button type="submit" variant="contained" disableElevation disabled={isSubmitting || createMutation.isLoading || updateMutation.isLoading} startIcon={isSubmitting || createMutation.isLoading || updateMutation.isLoading ? <CircularProgress size={16} color="inherit" /> : null}>
                 {editingProduct ? t('save') : t('create')}
               </Button>
             </DialogActions>

@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { useMutation } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, OutlinedInput, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, OutlinedInput, Typography } from '@mui/material'
 import { Bug, CheckCircle, ImagePlus, Lightbulb, X } from 'lucide-react'
 import { api } from '@/utils/api'
 
@@ -252,8 +252,8 @@ const FeedbackDialog = ({ open, onClose }: FeedbackDialogProps) => {
             <Button variant="outlined" onClick={handleClose} disabled={mutation.isLoading}>
               {tCommon('cancel')}
             </Button>
-            <Button variant="contained" disableElevation type="submit" disabled={mutation.isLoading}>
-              {mutation.isLoading ? t('submitting') : t('submit')}
+            <Button variant="contained" disableElevation type="submit" disabled={mutation.isLoading} startIcon={mutation.isLoading ? <CircularProgress size={16} color="inherit" /> : null}>
+              {t('submit')}
             </Button>
           </DialogActions>
         </form>
