@@ -46,6 +46,7 @@ export default function ProductsPage() {
   const [imagePreviewURL, setImagePreviewURL] = useState<string | null>(null)
   const [imageRemoved, setImageRemoved] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [productToDelete, setProductToDelete] = useState<Product | null>(null)
   const justUploadedImageURL = useRef<string | null>(null)
   const pendingDeleteImageURL = useRef<string | null>(null)
@@ -190,26 +191,31 @@ export default function ProductsPage() {
   async function submitForm(e: React.FormEvent) {
     e.preventDefault()
     setUploadError(null)
+    setIsSubmitting(true)
 
-    let finalImageURL: string | undefined = editingProduct?.image_url ?? undefined
+    try {
+      let finalImageURL: string | undefined = editingProduct?.image_url ?? undefined
 
-    if (imageRemoved && !imageFile) {
-      finalImageURL = ''
-      pendingDeleteImageURL.current = editingProduct?.image_url ?? null
-    } else if (imageFile) {
-      const uploadRes = await api.uploadProductImage(imageFile)
-      if (!uploadRes.success || !uploadRes.data?.image_url) {
-        setUploadError(tp('imageUploadFailed'))
-        return
+      if (imageRemoved && !imageFile) {
+        finalImageURL = ''
+        pendingDeleteImageURL.current = editingProduct?.image_url ?? null
+      } else if (imageFile) {
+        const uploadRes = await api.uploadProductImage(imageFile)
+        if (!uploadRes.success || !uploadRes.data?.image_url) {
+          setUploadError(tp('imageUploadFailed'))
+          return
+        }
+        finalImageURL = uploadRes.data.image_url
+        justUploadedImageURL.current = finalImageURL
       }
-      finalImageURL = uploadRes.data.image_url
-      justUploadedImageURL.current = finalImageURL
-    }
 
-    if (editingProduct) {
-      updateMutation.mutate({ id: editingProduct.id, payload: form, imageURL: finalImageURL })
-    } else {
-      createMutation.mutate({ ...form, imageURL: finalImageURL })
+      if (editingProduct) {
+        updateMutation.mutate({ id: editingProduct.id, payload: form, imageURL: finalImageURL })
+      } else {
+        createMutation.mutate({ ...form, imageURL: finalImageURL })
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -490,7 +496,7 @@ export default function ProductsPage() {
               <Button type="button" variant="outlined" onClick={closeForm}>
                 {t('cancel')}
               </Button>
-              <Button type="submit" variant="contained" disableElevation disabled={createMutation.isLoading || updateMutation.isLoading}>
+              <Button type="submit" variant="contained" disableElevation disabled={isSubmitting || createMutation.isLoading || updateMutation.isLoading}>
                 {editingProduct ? t('save') : t('create')}
               </Button>
             </DialogActions>
