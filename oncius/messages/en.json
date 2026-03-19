@@ -132,7 +132,7 @@
     "emailRequired": "Email is required",
     "emailInvalid": "Email is invalid",
     "passwordRequired": "Password is required",
-    "passwordMinLength": "Password must be at least 6 characters",
+    "passwordMinLength": "Password must be at least 8 characters and contain at least one letter and one number",
     "confirmPasswordRequired": "Please confirm your password",
     "passwordsMismatch": "Passwords do not match",
     "otpRequired": "Verification code is required",

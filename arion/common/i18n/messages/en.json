@@ -10,6 +10,7 @@
   "err_customer_id_required": "Customer ID is required",
   "err_price_invalid": "Price must be greater than 0",
   "err_image_too_large": "File too large or invalid form (max 5MB)",
+  "err_password_too_weak": "Password must be at least 8 characters and contain at least one letter and one number",
   "err_image_field_required": "Image field is required",
   "err_image_url_required": "Image URL is required",
   "err_order_id_required": "Order ID is required",

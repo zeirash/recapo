@@ -34,7 +34,7 @@ const RegisterPage = () => {
 
     if (!formData.password) {
       newErrors.password = t('validation.passwordRequired')
-    } else if (formData.password.length < 6) {
+    } else if (formData.password.length < 8 || !/[a-zA-Z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
       newErrors.password = t('validation.passwordMinLength')
     }
 

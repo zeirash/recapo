@@ -13,6 +13,7 @@ const (
 	ErrCustomerIDRequired     = "err_customer_id_required"
 	ErrPriceInvalid           = "err_price_invalid"
 	ErrImageTooLarge          = "err_image_too_large"
+	ErrPasswordTooWeak        = "err_password_too_weak"
 	ErrImageFieldRequired     = "err_image_field_required"
 	ErrImageURLRequired       = "err_image_url_required"
 	ErrOrderIDRequired        = "err_order_id_required"

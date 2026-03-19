@@ -32,7 +32,7 @@ const ResetPasswordPage = () => {
 
     if (!password) {
       newErrors.password = t('validation.passwordRequired')
-    } else if (password.length < 6) {
+    } else if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
       newErrors.password = t('validation.passwordMinLength')
     }
 

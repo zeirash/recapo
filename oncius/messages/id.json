@@ -132,7 +132,7 @@
     "emailRequired": "Email wajib diisi",
     "emailInvalid": "Email tidak valid",
     "passwordRequired": "Kata sandi wajib diisi",
-    "passwordMinLength": "Kata sandi minimal 6 karakter",
+    "passwordMinLength": "Kata sandi minimal 8 karakter dan harus mengandung minimal satu huruf dan satu angka",
     "confirmPasswordRequired": "Silakan konfirmasi kata sandi Anda",
     "passwordsMismatch": "Kata sandi tidak cocok",
     "otpRequired": "Kode verifikasi wajib diisi",

@@ -10,6 +10,7 @@
   "err_customer_id_required": "ID pelanggan wajib diisi",
   "err_price_invalid": "Harga harus lebih dari 0",
   "err_image_too_large": "File terlalu besar atau form tidak valid (maks 5MB)",
+  "err_password_too_weak": "Kata sandi minimal 8 karakter dan harus mengandung minimal satu huruf dan satu angka",
   "err_image_field_required": "Field gambar wajib diisi",
   "err_image_url_required": "URL gambar wajib diisi",
   "err_order_id_required": "ID pesanan wajib diisi",

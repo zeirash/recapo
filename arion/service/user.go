@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"unicode"
 
 	"github.com/zeirash/recapo/arion/common/apierr"
 	"github.com/zeirash/recapo/arion/common/config"
@@ -64,6 +65,26 @@ func NewUserService() UserService {
 	}
 
 	return &uservice{}
+}
+
+func validatePasswordStrength(password string) error {
+	if len(password) < 8 {
+		return errors.New(apierr.ErrPasswordTooWeak)
+	}
+	hasLetter := false
+	hasDigit := false
+	for _, c := range password {
+		if unicode.IsLetter(c) {
+			hasLetter = true
+		}
+		if unicode.IsDigit(c) {
+			hasDigit = true
+		}
+	}
+	if !hasLetter || !hasDigit {
+		return errors.New(apierr.ErrPasswordTooWeak)
+	}
+	return nil
 }
 
 func generateSessionToken() (string, error) {
@@ -164,6 +185,10 @@ func (u *uservice) RefreshToken(ctx context.Context, refreshToken string) (respo
 }
 
 func (u *uservice) UserRegister(ctx context.Context, name, email, password string) (response.TokenResponse, error) {
+	if err := validatePasswordStrength(password); err != nil {
+		return response.TokenResponse{}, err
+	}
+
 	existUser, err := userStore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return response.TokenResponse{}, err
@@ -250,6 +275,10 @@ func (u *uservice) UpdateUser(ctx context.Context, input UpdateUserInput) (respo
 
 	var password string
 	if input.Password != nil {
+		if err := validatePasswordStrength(*input.Password); err != nil {
+			return response.UserData{}, err
+		}
+
 		encryptedPassword, err := bcrypt.GenerateFromPassword(
 			[]byte(*input.Password),
 			bcrypt.DefaultCost,
@@ -348,6 +377,10 @@ func (u *uservice) ForgotPassword(ctx context.Context, email, lang string) error
 }
 
 func (u *uservice) ResetPassword(ctx context.Context, email, otpCode, newPassword string) error {
+	if err := validatePasswordStrength(newPassword); err != nil {
+		return err
+	}
+
 	if !otpPkg.Verify(resetOTPKey(email), otpCode) {
 		return errors.New(apierr.ErrInvalidOTP)
 	}
