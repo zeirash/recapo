@@ -94,7 +94,7 @@ func InitDB() {
 		Port:     cfg.DbPort,
 		Name:     cfg.DbName,
 
-		disableSSL: true,
+		disableSSL: cfg.Env != "production",
 	})
 
 	var err error
