@@ -5,13 +5,14 @@ import (
 	"net/smtp"
 	"strings"
 
+	resend "github.com/resend/resend-go/v2"
 	"github.com/zeirash/recapo/arion/common/config"
 	"github.com/zeirash/recapo/arion/common/i18n"
 	"github.com/zeirash/recapo/arion/common/logger"
 )
 
 // SendOTP sends a 6-digit OTP to the given email address.
-// Falls back to logging when SMTP is not configured (development mode).
+// Falls back to logging when neither Resend nor SMTP is configured (development mode).
 func SendOTP(to, code, lang string) error {
 	subject := i18n.T(lang, "email_otp_subject")
 	body := fmt.Sprintf(i18n.T(lang, "email_otp_body"), code)
@@ -19,7 +20,7 @@ func SendOTP(to, code, lang string) error {
 }
 
 // SendPasswordResetOTP sends a password reset OTP to the given email address.
-// Falls back to logging when SMTP is not configured (development mode).
+// Falls back to logging when neither Resend nor SMTP is configured (development mode).
 func SendPasswordResetOTP(to, code, lang string) error {
 	subject := i18n.T(lang, "email_reset_otp_subject")
 	body := fmt.Sprintf(i18n.T(lang, "email_reset_otp_body"), code)
@@ -29,11 +30,31 @@ func SendPasswordResetOTP(to, code, lang string) error {
 func sendEmail(to, subject, body string) error {
 	cfg := config.GetConfig()
 
-	if cfg.SMTPHost == "" {
-		logger.Infof("[DEV] Email to %s | Subject: %s | Body: %s", to, subject, body)
-		return nil
+	if cfg.ResendAPIKey != "" {
+		return sendViaResend(cfg, to, subject, body)
 	}
 
+	if cfg.SMTPHost != "" {
+		return sendViaSMTP(cfg, to, subject, body)
+	}
+
+	logger.Infof("[DEV] Email to %s | Subject: %s | Body: %s", to, subject, body)
+	return nil
+}
+
+func sendViaResend(cfg config.Config, to, subject, body string) error {
+	client := resend.NewClient(cfg.ResendAPIKey)
+	params := &resend.SendEmailRequest{
+		From:    cfg.ResendFromAddr,
+		To:      []string{to},
+		Subject: subject,
+		Text:    body,
+	}
+	_, err := client.Emails.Send(params)
+	return err
+}
+
+func sendViaSMTP(cfg config.Config, to, subject, body string) error {
 	from := cfg.SMTPUser
 	addr := fmt.Sprintf("%s:%d", cfg.SMTPHost, cfg.SMTPPort)
 

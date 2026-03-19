@@ -39,6 +39,10 @@ type Config struct {
 	SMTPUser string `env:"SMTP_USER"`
 	SMTPPass string `env:"SMTP_PASS"`
 
+	// Resend (preferred over SMTP when set)
+	ResendAPIKey   string `env:"RESEND_API_KEY"`
+	ResendFromAddr string `env:"RESEND_FROM_ADDR" envDefault:"noreply@yourdomain.com"`
+
 	// Cloudflare R2 (leave empty to use local filesystem)
 	R2AccountID       string `env:"R2_ACCOUNT_ID"`
 	R2AccessKeyID     string `env:"R2_ACCESS_KEY_ID"`
