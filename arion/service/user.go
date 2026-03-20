@@ -342,6 +342,10 @@ func (u *uservice) GetUserByID(ctx context.Context, userID int) (*response.UserD
 }
 
 func (u *uservice) SendOTP(ctx context.Context, email, lang string) error {
+	if !otpPkg.CanResend(email) {
+		return errors.New(apierr.ErrOTPCooldown)
+	}
+
 	existUser, err := userStore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err
@@ -362,6 +366,10 @@ func resetOTPKey(email string) string {
 }
 
 func (u *uservice) ForgotPassword(ctx context.Context, email, lang string) error {
+	if !otpPkg.CanResend(resetOTPKey(email)) {
+		return errors.New(apierr.ErrOTPCooldown)
+	}
+
 	user, err := userStore.GetUserByEmail(ctx, email)
 	if err != nil {
 		return err

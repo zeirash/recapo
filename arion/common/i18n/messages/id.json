@@ -56,6 +56,7 @@
   "err_invalid_signature": "Tanda tangan tidak valid",
   "err_otp_required": "Kode verifikasi wajib diisi",
   "err_invalid_otp": "Kode verifikasi tidak valid atau sudah kedaluwarsa",
+  "err_otp_cooldown": "Tunggu 60 detik sebelum meminta kode baru",
 
   "email_otp_subject": "Kode verifikasi Recapo Anda",
   "email_otp_body": "Kode verifikasi Recapo Anda adalah: %s\n\nKode ini akan kedaluwarsa dalam 10 menit.\n\nJika Anda tidak meminta kode ini, abaikan email ini.",

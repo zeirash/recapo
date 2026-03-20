@@ -56,6 +56,7 @@
   "err_invalid_signature": "Invalid signature",
   "err_otp_required": "Verification code is required",
   "err_invalid_otp": "Invalid or expired verification code",
+  "err_otp_cooldown": "Please wait 60 seconds before requesting another code",
 
   "email_otp_subject": "Your Recapo verification code",
   "email_otp_body": "Your Recapo verification code is: %s\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.",

@@ -12,7 +12,7 @@ const nextConfig = {
     includePaths: ['./src/styles'],
   },
   env: {
-    API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:3000',
+    API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:4000',
   },
   async headers() {
     return [
@@ -28,7 +28,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.API_BASE_URL || 'http://localhost:3000'}/:path*`,
+        destination: `${process.env.API_BASE_URL || 'http://localhost:4000'}/:path*`,
       },
     ];
   },

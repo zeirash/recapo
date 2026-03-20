@@ -65,8 +65,9 @@ const (
 	ErrInvalidSignature      = "err_invalid_signature"
 
 	// OTP
-	ErrOTPRequired = "err_otp_required"
-	ErrInvalidOTP  = "err_invalid_otp"
+	ErrOTPRequired  = "err_otp_required"
+	ErrInvalidOTP   = "err_invalid_otp"
+	ErrOTPCooldown  = "err_otp_cooldown"
 
 	// Feedback
 	ErrFeedbackTitleRequired = "err_feedback_title_required"
