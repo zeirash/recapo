@@ -1301,6 +1301,8 @@ func Test_uservice_SendOTP(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			otpPkg.Delete(tt.email)
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
@@ -1365,6 +1367,8 @@ func Test_uservice_ForgotPassword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			otpPkg.Delete("reset:" + tt.email)
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
