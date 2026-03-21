@@ -364,11 +364,11 @@ func TestGetOrdersHandler(t *testing.T) {
 			wantSuccess: true,
 		},
 		{
-			name: "get orders with date_to passes filter to service",
+			name:   "get orders with date_to passes filter to service",
 			shopID: 1,
-			opts: queryOpts{dateTo: "2024-01-31"},
+			opts:   queryOpts{dateTo: "2024-01-31T23:59:59Z"},
 			mockSetup: func() {
-				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC) // handler adds 24h for inclusive end of day
+				dt := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateTo: &dt}).
 					Return([]response.OrderData{
@@ -381,10 +381,10 @@ func TestGetOrdersHandler(t *testing.T) {
 		{
 			name:   "get orders with date_from and date_to passes filters to service",
 			shopID: 1,
-			opts:   queryOpts{dateFrom: "2024-01-01", dateTo: "2024-01-31"},
+			opts:   queryOpts{dateFrom: "2024-01-01", dateTo: "2024-01-31T23:59:59Z"},
 			mockSetup: func() {
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
+				dt := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df, DateTo: &dt}).
 					Return([]response.OrderData{
@@ -1893,9 +1893,9 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		{
 			name:   "get temp orders with date_to passes filter to service",
 			shopID: 1,
-			opts:   queryOpts{dateTo: "2024-01-31"},
+			opts:   queryOpts{dateTo: "2024-01-31T23:59:59Z"},
 			mockSetup: func() {
-				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC) // handler adds 24h for inclusive end of day
+				dt := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateTo: &dt}).
 					Return([]response.TempOrderData{
@@ -1916,11 +1916,11 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		{
 			name:   "get temp orders with rejected status filter passes to service",
 			shopID: 1,
-			opts:   queryOpts{status: "rejected", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31"},
+			opts:   queryOpts{status: "rejected", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31T23:59:59Z"},
 			mockSetup: func() {
 				q := "john"
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-				dt := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
+				dt := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{SearchQuery: &q, DateFrom: &df, DateTo: &dt, Status: []string{"rejected"}}).
 					Return([]response.TempOrderData{

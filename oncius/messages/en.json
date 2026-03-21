@@ -258,7 +258,9 @@
     "updatePaymentFailed": "Failed to update payment",
     "deletePaymentFailed": "Failed to delete payment",
     "amount": "Amount",
-    "customerDeleted": "Deleted"
+    "customerDeleted": "Deleted",
+    "dateFrom": "From",
+    "dateTo": "To"
   },
   "paymentStatus": {
     "outstanding": "Outstanding",

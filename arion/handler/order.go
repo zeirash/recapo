@@ -235,8 +235,7 @@ func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if dt := r.URL.Query().Get("date_to"); dt != "" {
 		if t, err := parseDate(dt); err == nil {
-			endOfDay := t.Add(24 * time.Hour)
-			opts.DateTo = &endOfDay
+			opts.DateTo = &t
 		}
 	}
 	if sort := r.URL.Query().Get("sort"); sort != "" {
@@ -631,8 +630,7 @@ func GetTempOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if dt := r.URL.Query().Get("date_to"); dt != "" {
 		if t, err := parseDate(dt); err == nil {
-			endOfDay := t.Add(24 * time.Hour)
-			opts.DateTo = &endOfDay
+			opts.DateTo = &t
 		}
 	}
 	if sort := r.URL.Query().Get("sort"); sort != "" {
@@ -952,7 +950,10 @@ func validateMergeTempOrder(inp MergeOrderRequest) (bool, error) {
 	return true, nil
 }
 
-// parseDate parses a date string in YYYY-MM-DD format.
+// parseDate parses a date string. Accepts RFC3339 (with timezone) or YYYY-MM-DD (UTC fallback).
 func parseDate(s string) (time.Time, error) {
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		return t, nil
+	}
 	return time.ParseInLocation("2006-01-02", s, time.UTC)
 }

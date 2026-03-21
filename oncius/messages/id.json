@@ -258,7 +258,9 @@
     "updatePaymentFailed": "Gagal memperbarui pembayaran",
     "deletePaymentFailed": "Gagal menghapus pembayaran",
     "amount": "Jumlah",
-    "customerDeleted": "Dihapus"
+    "customerDeleted": "Dihapus",
+    "dateFrom": "Dari",
+    "dateTo": "Sampai"
   },
   "paymentStatus": {
     "outstanding": "Terutang",

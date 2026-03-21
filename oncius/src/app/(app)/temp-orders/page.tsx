@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Container, Paper, Typography } from '@mui/material'
 import { ClipboardList } from 'lucide-react'
+import DateRangeFilter from '@/components/ui/DateRangeFilter'
 import SearchInput from '@/components/ui/SearchInput'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
@@ -45,6 +46,8 @@ export default function TempOrdersPage() {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string[]>(['pending'])
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
   const [acceptLoading, setAcceptLoading] = useState(false)
   const [acceptError, setAcceptError] = useState<string | null>(null)
   const [acceptSuccess, setAcceptSuccess] = useState(false)
@@ -60,11 +63,13 @@ export default function TempOrdersPage() {
   }, [searchInput])
 
   const { data: tempOrdersRes, isLoading, isError, error } = useQuery(
-    ['temp_orders', debouncedSearch, statusFilter],
+    ['temp_orders', debouncedSearch, statusFilter, dateFrom, dateTo],
     async () => {
-      const opts: { search?: string; status?: string } = {}
+      const opts: { search?: string; status?: string; date_from?: string; date_to?: string } = {}
       if (debouncedSearch) opts.search = debouncedSearch
       if (statusFilter.length > 0) opts.status = statusFilter.join(',')
+      if (dateFrom) opts.date_from = new Date(dateFrom + 'T00:00:00').toISOString()
+      if (dateTo) opts.date_to = new Date(dateTo + 'T23:59:59').toISOString()
       const res = await api.getTempOrders(opts)
       if (!res.success) throw new Error(res.message || tTemp('fetchFailed'))
       return res.data as TempOrder[]
@@ -83,11 +88,15 @@ export default function TempOrdersPage() {
     { enabled: !!selectedTempOrderId }
   )
 
+  // When results change: if selected order is no longer in the list, reset to first
   useEffect(() => {
-    if (!selectedTempOrderId && tempOrdersRes && tempOrdersRes.length > 0) {
+    if (!tempOrdersRes) return
+    if (selectedTempOrderId && !tempOrdersRes.some(o => o.id === selectedTempOrderId)) {
+      setSelectedTempOrderId(tempOrdersRes.length > 0 ? tempOrdersRes[0].id : null)
+    } else if (!selectedTempOrderId && tempOrdersRes.length > 0) {
       setSelectedTempOrderId(tempOrdersRes[0].id)
     }
-  }, [tempOrdersRes, selectedTempOrderId])
+  }, [tempOrdersRes])
 
   useEffect(() => {
     setAcceptError(null)
@@ -155,7 +164,7 @@ export default function TempOrdersPage() {
       if (mergeRes.success) {
         setAcceptSuccess(true)
         await Promise.all([
-          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter]),
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter, dateFrom, dateTo]),
           queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
         ])
       } else {
@@ -183,7 +192,7 @@ export default function TempOrdersPage() {
         setShowActiveOrderConflictDialog(false)
         setConflictData(null)
         await Promise.all([
-          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter]),
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter, dateFrom, dateTo]),
           queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
         ])
       } else {
@@ -208,7 +217,7 @@ export default function TempOrdersPage() {
       if (res.success) {
         setRejectSuccess(true)
         await Promise.all([
-          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter]),
+          queryClient.invalidateQueries(['temp_orders', debouncedSearch, statusFilter, dateFrom, dateTo]),
           queryClient.invalidateQueries(['temp_order', selectedTempOrder.id]),
         ])
       } else {
@@ -275,6 +284,12 @@ export default function TempOrdersPage() {
                       </optgroup>
                     </select>
                   </Box>
+                  <DateRangeFilter
+                    dateFrom={dateFrom}
+                    dateTo={dateTo}
+                    onDateFromChange={setDateFrom}
+                    onDateToChange={setDateTo}
+                  />
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                   {(tempOrdersRes || []).map((o) => {

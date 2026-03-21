@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, NativeSelect, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
+import DateRangeFilter from '@/components/ui/DateRangeFilter'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import CustomerSearchSelect from '@/components/ui/CustomerSearchSelect'
@@ -109,6 +110,8 @@ export default function OrdersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string[]>([...DEFAULT_STATUSES])
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('')
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
   const [createFormConflict, setCreateFormConflict] = useState(false)
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [exportMessage, setExportMessage] = useState('')
@@ -121,12 +124,14 @@ export default function OrdersPage() {
 
   // Fetch orders
   const { data: ordersRes, isLoading, isError, error } = useQuery(
-    ['orders', debouncedSearch, statusFilter, paymentStatusFilter],
+    ['orders', debouncedSearch, statusFilter, paymentStatusFilter, dateFrom, dateTo],
     async () => {
-      const opts: { search?: string; status?: string; payment_status?: string } = {}
+      const opts: { search?: string; status?: string; payment_status?: string; date_from?: string; date_to?: string } = {}
       if (debouncedSearch) opts.search = debouncedSearch
       if (statusFilter.length > 0) opts.status = statusFilter.join(',')
       if (paymentStatusFilter) opts.payment_status = paymentStatusFilter
+      if (dateFrom) opts.date_from = new Date(dateFrom + 'T00:00:00').toISOString()
+      if (dateTo) opts.date_to = new Date(dateTo + 'T23:59:59').toISOString()
       const res = await api.getOrders(opts)
       if (!res.success) throw new Error(res.message || to('fetchFailed'))
       return res.data as Order[]
@@ -378,12 +383,15 @@ export default function OrdersPage() {
     }
   )
 
-  // Set default selection when data loads
+  // When results change: if selected order is no longer in the list, reset to first
   useEffect(() => {
-    if (!selectedOrderId && ordersRes && ordersRes.length > 0) {
+    if (!ordersRes) return
+    if (selectedOrderId && !ordersRes.some(o => o.id === selectedOrderId)) {
+      setSelectedOrderId(ordersRes.length > 0 ? ordersRes[0].id : null)
+    } else if (!selectedOrderId && ordersRes.length > 0) {
       setSelectedOrderId(ordersRes[0].id)
     }
-  }, [ordersRes, selectedOrderId])
+  }, [ordersRes])
 
   const selectedOrder: Order | null = useMemo(() => {
     if (!selectedOrderDetails) {
@@ -527,6 +535,12 @@ export default function OrdersPage() {
                       </optgroup>
                     </select>
                   </Box>
+                  <DateRangeFilter
+                    dateFrom={dateFrom}
+                    dateTo={dateTo}
+                    onDateFromChange={setDateFrom}
+                    onDateToChange={setDateTo}
+                  />
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                   {(ordersRes || []).map((o) => {
