@@ -115,6 +115,7 @@ export default function OrdersPage() {
   const [createFormConflict, setCreateFormConflict] = useState(false)
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [exportMessage, setExportMessage] = useState('')
+  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'total_asc' | 'total_desc'>('date_desc')
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {
@@ -393,6 +394,19 @@ export default function OrdersPage() {
     }
   }, [ordersRes])
 
+  const sortedOrders = useMemo(() => {
+    const list = ordersRes || []
+    return [...list].sort((a, b) => {
+      switch (sortBy) {
+        case 'date_asc': return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        case 'total_asc': return a.total_price - b.total_price
+        case 'total_desc': return b.total_price - a.total_price
+        case 'date_desc':
+        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      }
+    })
+  }, [ordersRes, sortBy])
+
   const selectedOrder: Order | null = useMemo(() => {
     if (!selectedOrderDetails) {
       // Fallback to basic order data from list
@@ -487,7 +501,7 @@ export default function OrdersPage() {
                     />
                     <AddButton onClick={openCreateForm} title={to('addOrder')} />
                   </Box>
-                  <Box sx={{ mt: '16px', display: 'flex', gap: '8px' }}>
+                  <Box sx={{ mt: '16px', display: 'flex', gap: '8px', overflowX: 'auto', flexShrink: 0, pb: '4px', '&::-webkit-scrollbar': { height: '3px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: '#d0d0d0', borderRadius: '2px' } }}>
                     <select
                       value={statusFilter.length === 1 ? statusFilter[0] : statusFilter.join(',')}
                       onChange={(e) => {
@@ -495,6 +509,7 @@ export default function OrdersPage() {
                         setStatusFilter(val === '' ? [...DEFAULT_STATUSES] : val.split(','))
                       }}
                       style={{
+                        flexShrink: 0,
                         width: '100px',
                         padding: '6px',
                         fontSize: 12,
@@ -503,6 +518,7 @@ export default function OrdersPage() {
                         backgroundColor: 'white',
                         color: 'var(--theme-ui-colors-text, #333)',
                         cursor: 'pointer',
+                        outline: 'none',
                       }}
                     >
                       <optgroup label={toStatus('placeholder')}>
@@ -518,6 +534,7 @@ export default function OrdersPage() {
                       value={paymentStatusFilter}
                       onChange={(e) => setPaymentStatusFilter(e.target.value)}
                       style={{
+                        flexShrink: 0,
                         width: '100px',
                         padding: '6px',
                         fontSize: 12,
@@ -526,12 +543,36 @@ export default function OrdersPage() {
                         backgroundColor: 'white',
                         color: 'var(--theme-ui-colors-text, #333)',
                         cursor: 'pointer',
+                        outline: 'none',
                       }}
                     >
                       <optgroup label={to('paymentStatus')}>
                         <option value="">{toStatus('all')}</option>
                         <option value="outstanding">{toPaymentStatus('outstanding')}</option>
                         <option value="paid">{toPaymentStatus('paid')}</option>
+                      </optgroup>
+                    </select>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                      style={{
+                        flexShrink: 0,
+                        width: '100px',
+                        padding: '6px',
+                        fontSize: 12,
+                        borderRadius: 6,
+                        border: '1px solid var(--theme-ui-colors-border, #e0e0e0)',
+                        backgroundColor: 'white',
+                        color: 'var(--theme-ui-colors-text, #333)',
+                        cursor: 'pointer',
+                        outline: 'none',
+                      }}
+                    >
+                      <optgroup label={to('sortLabel')}>
+                        <option value="date_desc">{to('sortDateDesc')}</option>
+                        <option value="date_asc">{to('sortDateAsc')}</option>
+                        <option value="total_asc">{to('sortTotalAsc')}</option>
+                        <option value="total_desc">{to('sortTotalDesc')}</option>
                       </optgroup>
                     </select>
                   </Box>
@@ -543,7 +584,7 @@ export default function OrdersPage() {
                   />
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                  {(ordersRes || []).map((o) => {
+                  {sortedOrders.map((o) => {
                     const isActive = o.id === selectedOrderId
                     const statusStyle = getStatusStyle(o.status)
                     return (
@@ -591,7 +632,7 @@ export default function OrdersPage() {
                       </Box>
                     )
                   })}
-                  {(ordersRes || []).length === 0 && (
+                  {sortedOrders.length === 0 && (
                     <Box sx={{ p: '16px', color: 'grey.500', textAlign: 'center' }}>{to('noOrders')}</Box>
                   )}
                 </Box>

@@ -260,7 +260,12 @@
     "amount": "Amount",
     "customerDeleted": "Deleted",
     "dateFrom": "From",
-    "dateTo": "To"
+    "dateTo": "To",
+    "sortLabel": "Sort By",
+    "sortDateDesc": "Newest First",
+    "sortDateAsc": "Oldest First",
+    "sortTotalAsc": "Total: Low → High",
+    "sortTotalDesc": "Total: High → Low"
   },
   "paymentStatus": {
     "outstanding": "Outstanding",

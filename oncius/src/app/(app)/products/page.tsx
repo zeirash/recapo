@@ -288,8 +288,6 @@ export default function ProductsPage() {
               <MenuItem value="name,desc">{tp('sortNameDesc')}</MenuItem>
               <MenuItem value="price,asc">{tp('sortPriceAsc')}</MenuItem>
               <MenuItem value="price,desc">{tp('sortPriceDesc')}</MenuItem>
-              <MenuItem value="created_at,desc">{tp('sortCreatedAtDesc')}</MenuItem>
-              <MenuItem value="created_at,asc">{tp('sortCreatedAtAsc')}</MenuItem>
             </Select>
           </Box>
         </Box>

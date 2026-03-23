@@ -260,7 +260,12 @@
     "amount": "Jumlah",
     "customerDeleted": "Dihapus",
     "dateFrom": "Dari",
-    "dateTo": "Sampai"
+    "dateTo": "Sampai",
+    "sortLabel": "Urutkan",
+    "sortDateDesc": "Terbaru",
+    "sortDateAsc": "Terlama",
+    "sortTotalAsc": "Total: Rendah → Tinggi",
+    "sortTotalDesc": "Total: Tinggi → Rendah"
   },
   "paymentStatus": {
     "outstanding": "Terutang",
