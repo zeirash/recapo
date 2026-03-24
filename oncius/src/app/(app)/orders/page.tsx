@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
 import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, NativeSelect, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
@@ -116,6 +116,18 @@ export default function OrdersPage() {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [exportMessage, setExportMessage] = useState('')
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'total_asc' | 'total_desc'>('date_desc')
+  const filterRowRef = useRef<HTMLDivElement>(null)
+  const filterScrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function handleFilterScroll() {
+    const el = filterRowRef.current
+    if (!el) return
+    el.dataset.scrolling = 'true'
+    if (filterScrollTimer.current) clearTimeout(filterScrollTimer.current)
+    filterScrollTimer.current = setTimeout(() => {
+      if (filterRowRef.current) delete filterRowRef.current.dataset.scrolling
+    }, 600)
+  }
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {
@@ -501,7 +513,7 @@ export default function OrdersPage() {
                     />
                     <AddButton onClick={openCreateForm} title={to('addOrder')} />
                   </Box>
-                  <Box sx={{ mt: '16px', display: 'flex', gap: '8px', overflowX: 'auto', flexShrink: 0, pb: '4px', '&::-webkit-scrollbar': { height: '3px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: '#d0d0d0', borderRadius: '2px' } }}>
+                  <Box ref={filterRowRef} onScroll={handleFilterScroll} sx={{ mt: '16px', display: 'flex', gap: '8px', overflowX: 'auto', flexShrink: 0, pb: '4px', '&::-webkit-scrollbar': { height: '3px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: 'transparent', borderRadius: '2px', transition: 'background 0.2s' }, '&[data-scrolling="true"]::-webkit-scrollbar-thumb': { background: '#d0d0d0' } }}>
                     <select
                       value={statusFilter.length === 1 ? statusFilter[0] : statusFilter.join(',')}
                       onChange={(e) => {
