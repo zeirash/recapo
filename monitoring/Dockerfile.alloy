@@ -2,4 +2,4 @@ FROM grafana/alloy:v1.7.1
 
 COPY config.alloy /etc/alloy/config.alloy
 
-CMD ["run", "/etc/alloy/config.alloy"]
+CMD ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]

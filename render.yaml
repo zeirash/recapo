@@ -70,6 +70,7 @@ services:
     dockerContext: ./monitoring
     dockerfilePath: ./monitoring/Dockerfile.alloy
     plan: free
+    healthCheckPath: /-/ready
     envVars:
       - key: GRAFANA_REMOTE_WRITE_URL
         sync: false
