@@ -8,6 +8,7 @@ A modern order management system for Jastipers (Indonesian cross-border social m
 recapo/
 ├── arion/           # Backend API Service (Go)
 ├── oncius/          # Frontend Application (Next.js)
+├── monitoring/      # Monitoring configuration (Prometheus, Grafana, Alloy)
 └── README.md        # This file
 ```
 
@@ -78,6 +79,34 @@ docker compose up -d postgres
 ### Docker Compose (Full Stack)
 ```bash
 docker compose up -d
+```
+
+### Monitoring (Local)
+
+Prometheus scrapes arion metrics every 15s. Grafana visualizes them.
+
+```bash
+docker compose up -d prometheus grafana
+```
+
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3001 (admin / recapo_grafana)
+
+### Monitoring (Production)
+
+Grafana Alloy scrapes arion and pushes metrics to Grafana Cloud.
+
+Required env vars (set in `.env.production` or Render/Railway dashboard):
+```
+GRAFANA_REMOTE_WRITE_URL=
+GRAFANA_USER_ID=
+GRAFANA_API_KEY=
+ARION_URL=
+```
+
+Test locally against production Grafana Cloud:
+```bash
+docker compose --env-file .env.production --profile prod up alloy-prod
 ```
 
 ## 📋 Logs

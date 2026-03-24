@@ -80,24 +80,18 @@ services:
     depends_on:
       - prometheus
 
-  # Production-only: pushes metrics to Grafana Cloud (no self-hosted Grafana needed)
-  prometheus-prod:
-    image: prom/prometheus:v2.51.0
+  # Production-only: scrapes arion and pushes metrics to Grafana Cloud
+  alloy-prod:
+    image: grafana/alloy:v1.7.1
     profiles: ["prod"]
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        cp /etc/prometheus/prometheus.template.yml /etc/prometheus/prometheus.yml &&
-        sed -i "s#GRAFANA_REMOTE_WRITE_URL_PLACEHOLDER#$GRAFANA_REMOTE_WRITE_URL#g" /etc/prometheus/prometheus.yml &&
-        sed -i "s#GRAFANA_USER_ID_PLACEHOLDER#$GRAFANA_USER_ID#g" /etc/prometheus/prometheus.yml &&
-        sed -i "s#GRAFANA_API_KEY_PLACEHOLDER#$GRAFANA_API_KEY#g" /etc/prometheus/prometheus.yml &&
-        prometheus --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./monitoring/config.alloy:/etc/alloy/config.alloy:ro
+    command: ["run", "/etc/alloy/config.alloy"]
     environment:
       - GRAFANA_REMOTE_WRITE_URL=${GRAFANA_REMOTE_WRITE_URL}
       - GRAFANA_USER_ID=${GRAFANA_USER_ID}
       - GRAFANA_API_KEY=${GRAFANA_API_KEY}
-    volumes:
-      - ./monitoring/prometheus.prod.yml:/etc/prometheus/prometheus.template.yml:ro
+      - ARION_URL=host.docker.internal:4000
     networks:
       - recapo-network
 

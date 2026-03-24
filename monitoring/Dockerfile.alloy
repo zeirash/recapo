@@ -1,0 +1,5 @@
+FROM grafana/alloy:v1.7.1
+
+COPY config.alloy /etc/alloy/config.alloy
+
+CMD ["run", "/etc/alloy/config.alloy"]
