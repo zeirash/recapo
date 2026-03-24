@@ -80,6 +80,26 @@ services:
     depends_on:
       - prometheus
 
+  # Production-only: pushes metrics to Grafana Cloud (no self-hosted Grafana needed)
+  prometheus-prod:
+    image: prom/prometheus:v2.51.0
+    profiles: ["prod"]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        envsubst < /etc/prometheus/prometheus.template.yml > /etc/prometheus/prometheus.yml &&
+        prometheus --config.file=/etc/prometheus/prometheus.yml
+    environment:
+      - GRAFANA_REMOTE_WRITE_URL=${GRAFANA_REMOTE_WRITE_URL}
+      - GRAFANA_USER_ID=${GRAFANA_USER_ID}
+      - GRAFANA_API_KEY=${GRAFANA_API_KEY}
+    volumes:
+      - ./monitoring/prometheus.prod.yml:/etc/prometheus/prometheus.template.yml:ro
+    networks:
+      - recapo-network
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
   prometheus_data:
