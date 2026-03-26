@@ -5,6 +5,8 @@ import { useQuery } from 'react-query'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Box, Button, Card, IconButton, Typography, OutlinedInput } from '@mui/material'
+import { ThemeProvider } from '@mui/material/styles'
+import { createAppTheme } from '@/theme'
 import { Plus, Minus, ImageIcon, ChevronUp, ChevronDown, ShoppingCart } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 import { api, resolveImageURL } from '@/utils/api'
@@ -267,6 +269,7 @@ export default function SharePage() {
   }
 
   return (
+    <ThemeProvider theme={createAppTheme('light')}>
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #ffffff 100%)' }}>
       <SharePageHeader />
 
@@ -275,7 +278,7 @@ export default function SharePage() {
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', mx: 'auto', px: { xs: 2, sm: 4 }, width: '100%' }}>
           <Box sx={{ mt: { xs: 3, sm: 4 }, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start', gap: 4 }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.25rem', sm: '1.5rem' }, color: 'text.primary' }}>
                 {tShare('title')}
               </Typography>
               <Typography sx={{ color: 'text.secondary', mb: 3, display: 'block', fontSize: { xs: '0.875rem', sm: '1rem' } }}>{tShare('description')}</Typography>
@@ -543,5 +546,6 @@ export default function SharePage() {
         </Box>
       )}
     </Box>
+    </ThemeProvider>
   )
 }

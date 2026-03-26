@@ -7,7 +7,9 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useQuery } from 'react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
-import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, MessageSquare, LogOut, User, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, MessageSquare, LogOut, User, Moon, Sun, type LucideIcon } from 'lucide-react'
+import { alpha, useTheme } from '@mui/material/styles'
+import { useThemeMode } from '@/providers/ThemeProvider'
 import RecapoLogo from '@/components/ui/RecapoLogo'
 import FeedbackDialog from '@/components/ui/FeedbackDialog'
 import { api } from '@/utils/api'
@@ -22,6 +24,8 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const t = useTranslations('nav')
   const tCommon = useTranslations('common')
   const { user, logout } = useAuth()
+  const theme = useTheme()
+  const { mode, toggleTheme } = useThemeMode()
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
@@ -59,7 +63,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     <Box
       sx={{
         width: '96px',
-        bgcolor: 'white',
+        bgcolor: 'background.paper',
         borderRight: '1px solid',
         borderColor: 'grey.200',
         display: 'flex',
@@ -88,9 +92,9 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
                 borderRadius: '8px',
                 cursor: locked ? 'not-allowed' : 'pointer',
                 textAlign: 'center',
-                bgcolor: selectedMenu === item.id ? '#eff6ff' : 'transparent',
+                bgcolor: selectedMenu === item.id ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
                 '&:hover': {
-                  bgcolor: locked ? 'transparent' : (selectedMenu === item.id ? '#eff6ff' : 'grey.100'),
+                  bgcolor: locked ? 'transparent' : alpha(theme.palette.primary.main, selectedMenu === item.id ? 0.1 : 0.05),
                 },
               }}
               onClick={locked ? undefined : () => handleMenuClick(item)}
@@ -185,7 +189,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               left: '70px',
               bottom: '16px',
               zIndex: 1000,
-              bgcolor: 'white',
+              bgcolor: 'background.paper',
               borderRadius: '8px',
               boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
               minWidth: '180px',
@@ -202,7 +206,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               }}
             >
               <Box sx={{ fontSize: '12px', color: 'grey.400', mb: '2px' }}>{t('signedInAs')}</Box>
-              <Box sx={{ fontSize: '13px', fontWeight: 500, color: 'grey.800', wordBreak: 'break-all' }}>
+              <Box sx={{ fontSize: '13px', fontWeight: 500, color: 'text.primary', wordBreak: 'break-all' }}>
                 {user?.email}
               </Box>
             </Box>
@@ -215,11 +219,26 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
                 py: '10px',
                 px: '16px',
                 cursor: 'pointer',
-                '&:hover': { bgcolor: 'grey.50' },
+                '&:hover': { bgcolor: 'action.hover' },
               }}
             >
               <MessageSquare size={16} />
               <Box sx={{ fontSize: '14px' }}>{t('feedback')}</Box>
+            </Box>
+            <Box
+              onClick={() => { toggleTheme(); setShowDropdown(false) }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                py: '10px',
+                px: '16px',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              {mode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              <Box sx={{ fontSize: '14px' }}>{mode === 'dark' ? t('lightMode') : t('darkMode')}</Box>
             </Box>
             <Box
               onClick={() => {
@@ -234,7 +253,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
                 px: '16px',
                 cursor: 'pointer',
                 color: 'error.main',
-                '&:hover': { bgcolor: 'grey.50' },
+                '&:hover': { bgcolor: 'action.hover' },
               }}
             >
               <LogOut size={16} />
@@ -263,7 +282,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
         >
           <Box
             sx={{
-              bgcolor: 'white',
+              bgcolor: 'background.paper',
               borderRadius: '12px',
               p: '24px',
               maxWidth: 360,
@@ -274,7 +293,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
             <Box sx={{ fontSize: '18px', fontWeight: 600, mb: '8px', display: 'block' }}>
               {t('logoutConfirmTitle')}
             </Box>
-            <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
+            <Box sx={{ fontSize: '14px', color: 'text.secondary', mb: '24px' }}>
               {t('logoutConfirmMessage')}
             </Box>
             <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>

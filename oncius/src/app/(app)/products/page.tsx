@@ -244,7 +244,7 @@ export default function ProductsPage() {
   const products = productsRes || []
 
   return (
-    <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+    <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Top bar */}
         <Box sx={{ p: '24px', flexShrink: 0 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
@@ -293,7 +293,7 @@ export default function ProductsPage() {
         </Box>
 
         {/* Scrollable body */}
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: '24px', bgcolor: 'grey.50' }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: '24px' }}>
           {isLoading && <PageLoadingSkeleton />}
           {isError && (
             <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Box>
@@ -301,7 +301,7 @@ export default function ProductsPage() {
 
           {/* Empty state */}
           {!isLoading && !isError && products.length === 0 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: 'grey.500', minHeight: 320 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: 'text.secondary', minHeight: 320 }}>
               <Package size={48} opacity={0.4} />
               <Typography>{tp('noProducts')}</Typography>
             </Box>
@@ -318,12 +318,12 @@ export default function ProductsPage() {
                     border: '1px solid',
                     borderColor: 'grey.200',
                     borderRadius: '10px',
-                    bgcolor: 'white',
+                    bgcolor: 'background.paper',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '16px',
                     p: '12px 16px',
-                    '&:hover': { borderColor: 'grey.300', bgcolor: 'grey.50' },
+                    '&:hover': { borderColor: 'grey.300', bgcolor: 'action.hover' },
                   }}
                 >
                   {/* Thumbnail */}
@@ -363,7 +363,7 @@ export default function ProductsPage() {
                       )}
                     </Box>
                     {p.description && (
-                      <Typography sx={{ fontSize: '12px', color: 'grey.500', mt: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <Typography sx={{ fontSize: '12px', color: 'text.secondary', mt: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {p.description}
                       </Typography>
                     )}

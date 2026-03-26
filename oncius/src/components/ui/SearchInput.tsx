@@ -19,7 +19,7 @@ export default function SearchInput({ value, onChange, placeholder, sx = {} }: S
           left: '16px',
           top: '50%',
           transform: 'translateY(-50%)',
-          color: 'grey.500',
+          color: 'text.secondary',
           pointerEvents: 'none',
           display: 'flex',
           alignItems: 'center',
@@ -38,9 +38,9 @@ export default function SearchInput({ value, onChange, placeholder, sx = {} }: S
         sx={{
           width: '100%',
           borderRadius: '8px',
-          bgcolor: 'grey.50',
+          bgcolor: 'background.paper',
           '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'grey.200',
+            borderColor: 'grey.400',
           },
           '& .MuiOutlinedInput-input': {
             paddingLeft: '40px',

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Paper, Typography } from '@mui/material'
+import { Box, Button, Container, ListSubheader, MenuItem, Paper, Select, Typography } from '@mui/material'
 import { ClipboardList } from 'lucide-react'
 import DateRangeFilter from '@/components/ui/DateRangeFilter'
 import SearchInput from '@/components/ui/SearchInput'
@@ -262,34 +262,31 @@ export default function TempOrdersPage() {
                     placeholder={tTemp('searchPlaceholder')}
                   />
                   <Box sx={{ mt: '16px' }}>
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(Array.from(e.target.selectedOptions).map(o => o.value))}
-                      style={{
-                        width: '100px',
-                        padding: '6px',
-                        fontSize: 12,
-                        borderRadius: 6,
-                        border: '1px solid #e5e7eb',
-                        backgroundColor: 'white',
-                        color: '#1f2937',
-                        cursor: 'pointer',
+                    <Select
+                      size="small"
+                      value={statusFilter.length === 1 ? statusFilter[0] : statusFilter.join(',')}
+                      onChange={(e) => {
+                        const val = e.target.value as string
+                        setStatusFilter(val === 'all' ? ['all'] : val.split(','))
                       }}
+                      sx={{ height: 36, fontSize: '13px', borderRadius: '6px', minWidth: 110 }}
+                      MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
                     >
-                      <optgroup label={toStatus('placeholder')}>
-                        <option value="all">{toStatus('all')}</option>
-                        <option value="pending">{toStatus('pending')}</option>
-                        <option value="accepted">{toStatus('accepted')}</option>
-                        <option value="rejected">{toStatus('rejected')}</option>
-                      </optgroup>
-                    </select>
+                      <ListSubheader sx={{ fontSize: '12px', lineHeight: '28px' }}>{toStatus('placeholder')}</ListSubheader>
+                      <MenuItem value="all" sx={{ fontSize: '13px' }}>{toStatus('all')}</MenuItem>
+                      <MenuItem value="pending" sx={{ fontSize: '13px' }}>{toStatus('pending')}</MenuItem>
+                      <MenuItem value="accepted" sx={{ fontSize: '13px' }}>{toStatus('accepted')}</MenuItem>
+                      <MenuItem value="rejected" sx={{ fontSize: '13px' }}>{toStatus('rejected')}</MenuItem>
+                    </Select>
                   </Box>
-                  <DateRangeFilter
-                    dateFrom={dateFrom}
-                    dateTo={dateTo}
-                    onDateFromChange={setDateFrom}
-                    onDateToChange={setDateTo}
-                  />
+                  <Box sx={{ mt: '8px', display: 'flex', gap: '8px' }}>
+                    <DateRangeFilter
+                      dateFrom={dateFrom}
+                      dateTo={dateTo}
+                      onDateFromChange={setDateFrom}
+                      onDateToChange={setDateTo}
+                    />
+                  </Box>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                   {(tempOrdersRes || []).map((o) => {
@@ -303,10 +300,10 @@ export default function TempOrdersPage() {
                           px: '24px',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          bgcolor: isActive ? 'grey.100' : 'transparent',
+                          bgcolor: isActive ? 'action.selected' : 'transparent',
                           borderRadius: '8px',
                           '&:hover': {
-                            bgcolor: isActive ? 'grey.100' : 'grey.50',
+                            bgcolor: 'action.selected',
                           },
                         }}
                         onClick={() => setSelectedTempOrderId(o.id)}
@@ -331,7 +328,7 @@ export default function TempOrdersPage() {
                               {toStatus(o.status) || o.status}
                             </Box>
                           </Box>
-                          <Box sx={{ fontSize: '12px', color: 'grey.500' }}>
+                          <Box sx={{ fontSize: '12px', color: 'text.secondary' }}>
                             {o.customer_name}
                           </Box>
                           <Box sx={{ fontSize: '12px', fontWeight: 500 }}>
@@ -342,7 +339,7 @@ export default function TempOrdersPage() {
                     )
                   })}
                   {(tempOrdersRes || []).length === 0 && (
-                    <Box sx={{ p: '16px', color: 'grey.500', textAlign: 'center' }}>
+                    <Box sx={{ p: '16px', color: 'text.secondary', textAlign: 'center' }}>
                       {tTemp('noOrders')}
                     </Box>
                   )}
@@ -350,7 +347,7 @@ export default function TempOrdersPage() {
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'grey.50' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'background.default' }}>
                 {selectedTempOrder ? (
                   <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
                     <Box sx={{ alignItems: 'center', gap: '16px', mb: '16px', flexWrap: 'wrap', display: 'flex' }}>
@@ -379,9 +376,11 @@ export default function TempOrdersPage() {
                           disabled={acceptLoading || rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
                             ...(selectedTempOrder.status === 'rejected'
-                              ? { bgcolor: 'grey.50', color: 'grey.800', border: '1px solid', borderColor: 'grey.200' }
+                              ? { bgcolor: 'action.hover', color: 'text.primary', border: '1px solid', borderColor: 'grey.200' }
                               : { bgcolor: 'primary.main', color: 'white' }),
-                            '&:disabled': { opacity: 0.7 },
+                            '&.Mui-disabled': selectedTempOrder.status === 'accepted'
+                              ? { bgcolor: 'success.main', color: 'white', borderColor: 'transparent' }
+                              : { bgcolor: 'action.disabledBackground', color: 'action.disabled', borderColor: 'transparent' },
                           }}
                         >
                           {acceptLoading ? tTemp('accepting') : tTemp('accept')}
@@ -394,8 +393,10 @@ export default function TempOrdersPage() {
                           sx={{
                             ...(selectedTempOrder.status === 'rejected'
                               ? { bgcolor: 'primary.main', color: 'white', border: 'none' }
-                              : { bgcolor: 'grey.50', color: 'grey.800', border: '1px solid', borderColor: 'grey.200' }),
-                            '&:disabled': { opacity: 0.7 },
+                              : { bgcolor: 'action.hover', color: 'text.primary', border: '1px solid', borderColor: 'grey.200' }),
+                            '&.Mui-disabled': selectedTempOrder.status === 'rejected'
+                              ? { bgcolor: 'error.main', color: 'white', borderColor: 'transparent' }
+                              : { bgcolor: 'action.disabledBackground', color: 'action.disabled', borderColor: 'transparent' },
                           }}
                         >
                           {rejectLoading ? tTemp('rejecting') : tTemp('reject')}
@@ -426,14 +427,14 @@ export default function TempOrdersPage() {
                         boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
                         borderColor: 'grey.200',
-                        bgcolor: 'white',
+                        bgcolor: 'background.paper',
                       }}
                     >
                       <Box sx={{ flexWrap: 'wrap', gap: { xs: '24px', sm: '32px' }, display: 'flex' }}>
                         <Box sx={{ minWidth: 140 }}>
                           <Box
                             sx={{
-                              color: 'grey.500',
+                              color: 'text.secondary',
                               fontSize: '14px',
                               fontWeight: 700,
                               mb: '4px',
@@ -449,7 +450,7 @@ export default function TempOrdersPage() {
                         <Box sx={{ minWidth: 140 }}>
                           <Box
                             sx={{
-                              color: 'grey.500',
+                              color: 'text.secondary',
                               fontSize: '14px',
                               fontWeight: 700,
                               mb: '4px',
@@ -463,7 +464,7 @@ export default function TempOrdersPage() {
                         <Box sx={{ minWidth: 140 }}>
                           <Box
                             sx={{
-                              color: 'grey.500',
+                              color: 'text.secondary',
                               fontSize: '14px',
                               fontWeight: 700,
                               mb: '4px',
@@ -486,11 +487,11 @@ export default function TempOrdersPage() {
                         boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                         border: '1px solid',
                         borderColor: 'grey.200',
-                        bgcolor: 'white',
+                        bgcolor: 'background.paper',
                         overflow: 'hidden',
                       }}
                     >
-                      <Box sx={{ p: '8px', borderBottom: '1px solid', borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                      <Box sx={{ p: '8px', borderBottom: '1px solid', borderColor: 'grey.200', bgcolor: 'action.hover' }}>
                         <Typography component="h3" sx={{ fontSize: '16px', fontWeight: 600 }}>
                           {t('items')}
                         </Typography>
@@ -498,7 +499,7 @@ export default function TempOrdersPage() {
                       {selectedTempOrder.order_items && selectedTempOrder.order_items.length > 0 ? (
                         <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
                           <Box component="thead">
-                            <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
+                            <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                               <Box
                                 component="th"
                                 sx={{
@@ -506,7 +507,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'left',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  color: 'grey.500',
+                                  color: 'text.secondary',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -520,7 +521,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'right',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  color: 'grey.500',
+                                  color: 'text.secondary',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -534,7 +535,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'right',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  color: 'grey.500',
+                                  color: 'text.secondary',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -548,7 +549,7 @@ export default function TempOrdersPage() {
                                   textAlign: 'right',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  color: 'grey.500',
+                                  color: 'text.secondary',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                 }}
@@ -565,7 +566,7 @@ export default function TempOrdersPage() {
                                 sx={{
                                   borderTop: '1px solid',
                                   borderColor: 'grey.200',
-                                  '&:hover': { bgcolor: 'grey.50' },
+                                  '&:hover': { bgcolor: 'action.hover' },
                                 }}
                               >
                                 <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
@@ -598,7 +599,7 @@ export default function TempOrdersPage() {
                               sx={{
                                 borderTop: '2px solid',
                                 borderColor: 'grey.200',
-                                bgcolor: 'grey.50',
+                                bgcolor: 'action.hover',
                               }}
                             >
                               <Box
@@ -631,7 +632,7 @@ export default function TempOrdersPage() {
                           </Box>
                         </Box>
                       ) : (
-                        <Box sx={{ p: '32px', textAlign: 'center', color: 'grey.500' }}>
+                        <Box sx={{ p: '32px', textAlign: 'center', color: 'text.secondary' }}>
                           <Box sx={{ fontSize: '16px' }}>{to('noItems')}</Box>
                         </Box>
                       )}
@@ -646,7 +647,7 @@ export default function TempOrdersPage() {
                       justifyContent: 'center',
                       flexDirection: 'column',
                       gap: '8px',
-                      color: 'grey.500',
+                      color: 'text.secondary',
                       display: 'flex',
                     }}
                   >
@@ -682,7 +683,7 @@ export default function TempOrdersPage() {
             <Typography component="h3" sx={{ mb: '8px' }}>
               {to('duplicateOrderTitle')}
             </Typography>
-            <Box sx={{ mb: '24px', color: 'grey.500', display: 'block' }}>
+            <Box sx={{ mb: '24px', color: 'text.secondary', display: 'block' }}>
               {to('duplicateOrderMessageInline')}
             </Box>
             <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>

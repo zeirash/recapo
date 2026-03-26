@@ -153,7 +153,7 @@ export default function CustomersPage() {
   const customers = customersRes || []
 
   return (
-    <Container disableGutters sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+    <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Top bar */}
         <Box sx={{ p: '24px', flexShrink: 0 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
@@ -190,7 +190,7 @@ export default function CustomersPage() {
 
           {/* Empty state */}
           {!isLoading && !isError && customers.length === 0 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: 'grey.500', minHeight: 320 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: 'text.secondary', minHeight: 320 }}>
               <User size={48} opacity={0.4} />
               <Typography>{tc('noCustomers')}</Typography>
             </Box>
@@ -207,12 +207,12 @@ export default function CustomersPage() {
                     border: '1px solid',
                     borderColor: 'grey.200',
                     borderRadius: '10px',
-                    bgcolor: 'white',
+                    bgcolor: 'background.paper',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '16px',
                     p: '12px 16px',
-                    '&:hover': { borderColor: 'grey.300', bgcolor: 'grey.50' },
+                    '&:hover': { borderColor: 'grey.300', bgcolor: 'action.hover' },
                   }}
                 >
                   {/* Avatar */}
@@ -238,7 +238,7 @@ export default function CustomersPage() {
                     {c.phone && (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mt: '2px' }}>
                         <Phone size={11} style={{ color: '#9ca3af', flexShrink: 0 }} />
-                        <Box sx={{ fontSize: '12px', color: 'grey.500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <Box sx={{ fontSize: '12px', color: 'text.secondary', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {c.phone}
                         </Box>
                       </Box>
@@ -246,7 +246,7 @@ export default function CustomersPage() {
                     {c.address && (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mt: '2px' }}>
                         <MapPin size={11} style={{ color: '#9ca3af', flexShrink: 0 }} />
-                        <Box sx={{ fontSize: '12px', color: 'grey.500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <Box sx={{ fontSize: '12px', color: 'text.secondary', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {c.address}
                         </Box>
                       </Box>

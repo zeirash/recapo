@@ -51,7 +51,7 @@ const LoginPage = () => {
     <AuthLayout>
       <Container maxWidth="xs">
         <Box sx={{ bgcolor: 'white', p: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-          <Typography component="h1" sx={{ textAlign: 'center', mb: '24px' }}>
+          <Typography component="h1" sx={{ textAlign: 'center', mb: '24px', color: 'text.primary' }}>
             {t('auth.login')}
           </Typography>
 
@@ -69,7 +69,7 @@ const LoginPage = () => {
 
           <Box component="form" onSubmit={handleSubmit}>
             <Box sx={{ mb: '16px' }}>
-              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary' }}>
                 {t('common.email')}
               </Box>
               <OutlinedInput
@@ -90,7 +90,7 @@ const LoginPage = () => {
 
             <Box sx={{ mb: '24px' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '4px' }}>
-                <Box component="label" sx={{ fontWeight: 600 }}>
+                <Box component="label" sx={{ fontWeight: 600, color: 'text.primary' }}>
                   {t('common.password')}
                 </Box>
                 <Link href="/forgot-password">
@@ -126,7 +126,7 @@ const LoginPage = () => {
             </Button>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
-              <Box sx={{ color: 'grey.500' }}>{t('auth.noAccount')}</Box>
+              <Box sx={{ color: 'text.secondary' }}>{t('auth.noAccount')}</Box>
               <Link href="/register">
                 <Box
                   sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}

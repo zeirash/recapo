@@ -55,11 +55,11 @@ const ConfirmEmailPage = () => {
             </Box>
           </Box>
 
-          <Typography component="h1" sx={{ textAlign: 'center', mb: '8px' }}>
+          <Typography component="h1" sx={{ textAlign: 'center', mb: '8px', color: 'text.primary' }}>
             {t('auth.confirmEmailTitle')}
           </Typography>
 
-          <Box sx={{ textAlign: 'center', color: 'grey.500', mb: '4px', display: 'block' }}>
+          <Box sx={{ textAlign: 'center', color: 'text.secondary', mb: '4px', display: 'block' }}>
             {t('auth.confirmEmailDescription')}
           </Box>
 
@@ -77,7 +77,7 @@ const ConfirmEmailPage = () => {
 
           <Box component="form" onSubmit={handleSubmit}>
             <Box sx={{ mb: '24px' }}>
-              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary' }}>
                 {t('auth.otpLabel')}
               </Box>
               <OutlinedInput
@@ -113,7 +113,7 @@ const ConfirmEmailPage = () => {
           </Box>
 
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
-            <Box sx={{ color: 'grey.500', fontSize: '14px' }}>{t('auth.confirmEmailNoEmail')}</Box>
+            <Box sx={{ color: 'text.secondary', fontSize: '14px' }}>{t('auth.confirmEmailNoEmail')}</Box>
             <Link href="/register" style={{ textDecoration: 'none' }}>
               <Box sx={{ color: 'primary.main', fontSize: '14px', '&:hover': { textDecoration: 'underline' } }}>
                 {t('auth.confirmEmailResend')}
@@ -123,7 +123,7 @@ const ConfirmEmailPage = () => {
 
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: '16px' }}>
             <Link href="/login">
-              <Box sx={{ color: 'grey.500', fontSize: '14px', cursor: 'pointer', '&:hover': { color: 'primary.main' } }}>
+              <Box sx={{ color: 'text.secondary', fontSize: '14px', cursor: 'pointer', '&:hover': { color: 'primary.main' } }}>
                 {t('auth.backToLogin')}
               </Box>
             </Link>

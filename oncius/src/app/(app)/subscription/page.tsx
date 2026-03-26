@@ -56,10 +56,10 @@ export default function SubscriptionPage() {
   return (
     <>
       <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: '16px', sm: '24px' }, py: '32px' }}>
-        <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
+        <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px' }}>
           {t('subscription.title')}
         </Typography>
-        <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
+        <Box sx={{ fontSize: '14px', color: 'text.secondary', mb: '24px' }}>
           {t('subscription.subtitle')}
         </Box>
 
@@ -81,12 +81,12 @@ export default function SubscriptionPage() {
           <Paper sx={{ p: '24px', borderRadius: '12px', border: '1px solid', borderColor: 'grey.200', mb: '32px' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '12px' }}>
               <Crown size={18} />
-              <Typography sx={{ fontWeight: 600, fontSize: '16px', color: 'grey.800' }}>
+              <Typography sx={{ fontWeight: 600, fontSize: '16px' }}>
                 {t('subscription.currentPlan')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <Typography sx={{ fontSize: '18px', fontWeight: 700, color: 'grey.800' }}>
+              <Typography sx={{ fontSize: '18px', fontWeight: 700 }}>
                 {subscription.plan.display_name}
               </Typography>
               <Chip
@@ -101,13 +101,13 @@ export default function SubscriptionPage() {
               />
             </Box>
             {subscription.status === 'trialing' && subscription.trial_ends_at && (
-              <Box sx={{ fontSize: '13px', color: 'grey.500', mt: '8px' }}>
+              <Box sx={{ fontSize: '13px', color: 'text.secondary', mt: '8px' }}>
                 {t('subscription.trialEnds', { date: formatDate(subscription.trial_ends_at) })}
               </Box>
             )}
             {subscription.status === 'active' && (
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                <Box sx={{ fontSize: '13px', color: 'grey.500' }}>
+                <Box sx={{ fontSize: '13px', color: 'text.secondary' }}>
                   {t('subscription.renewsOn', { date: formatDate(subscription.current_period_end) })}
                 </Box>
                 <Button
@@ -124,7 +124,7 @@ export default function SubscriptionPage() {
         )}
 
         {/* Plans */}
-        <Typography sx={{ fontWeight: 600, fontSize: '16px', color: 'grey.800', mb: '16px' }}>
+        <Typography sx={{ fontWeight: 600, fontSize: '16px', mb: '16px' }}>
           {t('subscription.availablePlans')}
         </Typography>
 
@@ -149,7 +149,7 @@ export default function SubscriptionPage() {
                     borderRadius: '12px',
                     border: '2px solid',
                     borderColor: isCurrent ? 'primary.main' : 'grey.200',
-                    bgcolor: 'white',
+                    bgcolor: 'background.paper',
                     width: { xs: '100%', sm: 300 },
                     display: 'flex',
                     flexDirection: 'column',
@@ -158,21 +158,21 @@ export default function SubscriptionPage() {
                   {isOnThisPlan && (
                     <Chip label={t('subscription.currentBadge')} size="small" color="primary" sx={{ alignSelf: 'flex-start', mb: '12px' }} />
                   )}
-                  <Typography sx={{ fontSize: '18px', fontWeight: 700, mb: '4px', color: 'grey.800' }}>
+                  <Typography sx={{ fontSize: '18px', fontWeight: 700, mb: '4px' }}>
                     {plan.display_name}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'baseline', mb: '8px' }}>
-                    <Box sx={{ fontSize: '24px', fontWeight: 700, color: 'grey.800' }}>
+                    <Box sx={{ fontSize: '24px', fontWeight: 700 }}>
                       {formatPriceIDR(plan.price_idr)}
                     </Box>
-                    <Box sx={{ fontSize: '13px', color: 'grey.500', ml: '4px' }}>
+                    <Box sx={{ fontSize: '13px', color: 'text.secondary', ml: '4px' }}>
                       {t('landing.pricingPeriod')}
                     </Box>
                   </Box>
-                  <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '20px' }}>
+                  <Box sx={{ fontSize: '14px', color: 'text.secondary', mb: '20px' }}>
                     {locale === 'id' ? plan.description_id : plan.description_en}
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '20px', fontSize: '14px', color: 'grey.700' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '20px', fontSize: '14px', color: 'text.secondary' }}>
                     <Users size={15} />
                     {t('landing.pricingMaxUsers', { count: plan.max_users })}
                   </Box>
@@ -210,7 +210,7 @@ export default function SubscriptionPage() {
       <Dialog open={showCancelDialog} onClose={() => setShowCancelDialog(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{t('subscription.cancelConfirmTitle')}</DialogTitle>
         <DialogContent>
-          <Box sx={{ fontSize: '14px', color: 'grey.600' }}>
+          <Box sx={{ fontSize: '14px', color: 'text.secondary' }}>
             {t('subscription.cancelConfirmBody')}
           </Box>
           {cancelMutation.isError && (

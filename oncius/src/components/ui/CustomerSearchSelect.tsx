@@ -110,7 +110,7 @@ export default function CustomerSearchSelect({
             top: '50%',
             transform: 'translateY(-50%)',
             pointerEvents: 'none',
-            color: 'grey.500',
+            color: 'text.secondary',
             display: 'flex',
             alignItems: 'center',
           }}
@@ -162,9 +162,9 @@ export default function CustomerSearchSelect({
             right: 0,
             zIndex: 100,
             mt: '4px',
-            bgcolor: 'white',
+            bgcolor: 'background.paper',
             border: '1px solid',
-            borderColor: 'grey.200',
+            borderColor: 'divider',
             borderRadius: '8px',
             boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
             maxHeight: '200px',
@@ -172,11 +172,11 @@ export default function CustomerSearchSelect({
           }}
         >
           {isLoading ? (
-            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'grey.500' }}>
+            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
               Loading...
             </Box>
           ) : !customers || customers.length === 0 ? (
-            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'grey.500' }}>
+            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
               {noResultsText}
             </Box>
           ) : (
@@ -188,14 +188,14 @@ export default function CustomerSearchSelect({
                   px: '16px',
                   py: '8px',
                   cursor: 'pointer',
-                  '&:hover': { bgcolor: 'grey.50' },
+                  '&:hover': { bgcolor: 'action.hover' },
                   borderBottom: '1px solid',
-                  borderColor: 'grey.200',
+                  borderColor: 'divider',
                   '&:last-child': { borderBottom: 'none' },
                 }}
               >
                 <Box sx={{ display: 'block', fontWeight: 500, fontSize: '14px' }}>{c.name}</Box>
-                <Box sx={{ display: 'block', fontSize: '12px', color: 'grey.500' }}>{c.phone}</Box>
+                <Box sx={{ display: 'block', fontSize: '12px', color: 'text.secondary' }}>{c.phone}</Box>
               </Box>
             ))
           )}

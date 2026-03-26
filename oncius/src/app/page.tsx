@@ -122,7 +122,7 @@ const ScreenshotsSection = () => {
         >
           {t('landing.screenshotsTitle')}
         </Typography>
-        <Box sx={{ fontSize: { xs: '14px', sm: '16px' }, color: 'grey.500', textAlign: 'center', mb: '40px' }}>
+        <Box sx={{ fontSize: { xs: '14px', sm: '16px' }, color: 'text.secondary', textAlign: 'center', mb: '40px' }}>
           {t('landing.screenshotsSubtitle')}
         </Box>
 
@@ -338,7 +338,7 @@ export default function HomePage() {
           sx={{
             display: 'block',
             fontSize: { xs: '16px', sm: '18px' },
-            color: 'grey.500',
+            color: 'text.secondary',
             maxWidth: 840,
             mx: 'auto',
             mb: '16px',
@@ -395,7 +395,7 @@ export default function HomePage() {
             sx={{
               display: 'block',
               fontSize: { xs: '14px', sm: '16px' },
-              color: 'grey.500',
+              color: 'text.secondary',
               textAlign: 'center',
               maxWidth: 600,
               mx: 'auto',
@@ -428,7 +428,7 @@ export default function HomePage() {
                 <Typography component="h4" sx={{ fontSize: '16px', mb: '8px', color: 'grey.800' }}>
                   {t(f.titleKey)}
                 </Typography>
-                <Box sx={{ fontSize: '14px', color: 'grey.500', lineHeight: 1.6 }}>
+                <Box sx={{ fontSize: '14px', color: 'text.secondary', lineHeight: 1.6 }}>
                   {t(f.descKey)}
                 </Box>
               </Paper>
@@ -486,11 +486,11 @@ export default function HomePage() {
                       <Box sx={{ fontSize: '24px', fontWeight: 700, color: 'grey.800' }}>
                         {formatPriceIDR(plan.price_idr)}
                       </Box>
-                      <Box sx={{ fontSize: '14px', color: 'grey.500', ml: '4px' }}>
+                      <Box sx={{ fontSize: '14px', color: 'text.secondary', ml: '4px' }}>
                         {t('landing.pricingPeriod')}
                       </Box>
                     </Box>
-                    <Box sx={{ fontSize: '14px', color: 'grey.500', mb: '24px' }}>
+                    <Box sx={{ fontSize: '14px', color: 'text.secondary', mb: '24px' }}>
                       {locale === 'id' ? plan.description_id : plan.description_en}
                     </Box>
                     <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, mb: '24px', flex: 1 }}>
@@ -641,7 +641,7 @@ export default function HomePage() {
             gap: '16px',
           }}
         >
-          <Box sx={{ fontSize: '14px', color: 'grey.500' }}>{t('landing.footer')}</Box>
+          <Box sx={{ fontSize: '14px', color: 'text.secondary' }}>{t('landing.footer')}</Box>
         </Box>
       </Box>
     </Box>

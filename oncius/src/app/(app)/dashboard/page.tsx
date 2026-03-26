@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { useQuery } from 'react-query'
 import Link from 'next/link'
 import { Box, Button, Paper, Typography } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
@@ -18,12 +19,20 @@ type Order = {
   created_at: string
 }
 
-const statusColors: Record<string, { bg: string; color: string }> = {
+const lightStatusColors: Record<string, { bg: string; color: string }> = {
   created: { bg: '#E3F2FD', color: '#1565C0' },
   in_progress: { bg: '#FFF3E0', color: '#E65100' },
   in_delivery: { bg: '#F3E5F5', color: '#7B1FA2' },
   done: { bg: '#E8F5E9', color: '#2E7D32' },
   cancelled: { bg: '#FFEBEE', color: '#C62828' },
+}
+
+const darkStatusColors: Record<string, { bg: string; color: string }> = {
+  created: { bg: '#1e3a5f', color: '#90caf9' },
+  in_progress: { bg: '#3e2000', color: '#ffb74d' },
+  in_delivery: { bg: '#2d1b4e', color: '#ce93d8' },
+  done: { bg: '#1b3a2d', color: '#81c784' },
+  cancelled: { bg: '#3e1a1a', color: '#ef9a9a' },
 }
 
 const StatCard = ({
@@ -42,14 +51,14 @@ const StatCard = ({
       boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
       border: '1px solid',
       borderColor: 'grey.200',
-      bgcolor: 'white',
+      bgcolor: 'background.paper',
       flex: 1,
       minWidth: { xs: '100%', sm: 140 },
     }}
   >
     <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
       <Box>
-        <Box sx={{ color: 'grey.500', fontSize: '14px', fontWeight: 600, mb: '4px', display: 'block' }}>
+        <Box sx={{ color: 'text.secondary', fontSize: '14px', fontWeight: 600, mb: '4px', display: 'block' }}>
           {label}
         </Box>
         <Box sx={{ fontSize: '20px', fontWeight: 700 }}>{value}</Box>
@@ -72,6 +81,8 @@ const getThisMonthRange = () => {
 const DashboardPage = () => {
   const t = useTranslations()
   const { isAuthenticated } = useAuth()
+  const theme = useTheme()
+  const statusColors = theme.palette.mode === 'dark' ? darkStatusColors : lightStatusColors
   const { dateFrom, dateTo } = getThisMonthRange()
 
   const { data: ordersRes, isLoading: ordersLoading } = useQuery(
@@ -133,7 +144,7 @@ const DashboardPage = () => {
   }
 
   function getStatusStyle(status: string) {
-    return statusColors[status] || { bg: '#F5F5F5', color: '#616161' }
+    return statusColors[status] || (theme.palette.mode === 'dark' ? { bg: '#2a2a2a', color: '#bdbdbd' } : { bg: '#F5F5F5', color: '#616161' })
   }
 
   if (!isAuthenticated) {
@@ -146,7 +157,7 @@ const DashboardPage = () => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
-        <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
+        <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px' }}>
           {t('nav.dashboard')}
         </Typography>
 
@@ -195,7 +206,7 @@ const DashboardPage = () => {
                 boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
                 border: '1px solid',
                 borderColor: 'grey.200',
-                bgcolor: 'white',
+                bgcolor: 'background.paper',
                 overflow: 'hidden',
               }}
             >
@@ -207,7 +218,7 @@ const DashboardPage = () => {
                   p: '24px',
                   borderBottom: '1px solid',
                   borderColor: 'grey.200',
-                  bgcolor: 'grey.50',
+                  bgcolor: 'action.hover',
                 }}
               >
                 <Typography component="h2" sx={{ fontSize: '16px', fontWeight: 600 }}>
@@ -222,7 +233,7 @@ const DashboardPage = () => {
               {recentOrders.length > 0 ? (
                 <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
                   <Box component="thead">
-                    <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
+                    <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                       <Box
                         component="th"
                         sx={{
@@ -230,7 +241,7 @@ const DashboardPage = () => {
                           textAlign: 'left',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: 'grey.500',
+                          color: 'text.secondary',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -244,7 +255,7 @@ const DashboardPage = () => {
                           textAlign: 'left',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: 'grey.500',
+                          color: 'text.secondary',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -258,7 +269,7 @@ const DashboardPage = () => {
                           textAlign: 'right',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: 'grey.500',
+                          color: 'text.secondary',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -272,7 +283,7 @@ const DashboardPage = () => {
                           textAlign: 'left',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: 'grey.500',
+                          color: 'text.secondary',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -286,7 +297,7 @@ const DashboardPage = () => {
                           textAlign: 'left',
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: 'grey.500',
+                          color: 'text.secondary',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -305,7 +316,7 @@ const DashboardPage = () => {
                           sx={{
                             borderTop: '1px solid',
                             borderColor: 'grey.200',
-                            '&:hover': { bgcolor: 'grey.50' },
+                            '&:hover': { bgcolor: 'action.hover' },
                           }}
                         >
                           <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
@@ -339,7 +350,7 @@ const DashboardPage = () => {
                               {t(`orderStatus.${order.status}`)}
                             </Box>
                           </Box>
-                          <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px', color: 'grey.500' }}>
+                          <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px', color: 'text.secondary' }}>
                             {formatDate(order.created_at)}
                           </Box>
                         </Box>
@@ -348,7 +359,7 @@ const DashboardPage = () => {
                   </Box>
                 </Box>
               ) : (
-                <Box sx={{ p: '32px', textAlign: 'center', color: 'grey.500' }}>
+                <Box sx={{ p: '32px', textAlign: 'center', color: 'text.secondary' }}>
                   <Box sx={{ fontSize: '16px', display: 'block', mb: '8px' }}>{t('dashboard.noOrdersYet')}</Box>
                   <Link href="/orders" passHref legacyBehavior>
                     <Button component="a" variant="contained" disableElevation>{t('dashboard.createFirstOrder')}</Button>

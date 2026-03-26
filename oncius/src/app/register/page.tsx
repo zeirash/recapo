@@ -76,7 +76,7 @@ const RegisterPage = () => {
     <AuthLayout>
       <Container maxWidth="xs">
         <Box sx={{ bgcolor: 'white', p: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-          <Typography component="h1" sx={{ textAlign: 'center', mb: '24px' }}>
+          <Typography component="h1" sx={{ textAlign: 'center', mb: '24px', color: 'text.primary' }}>
             {t('auth.register')}
           </Typography>
 
@@ -88,7 +88,7 @@ const RegisterPage = () => {
 
           <Box component="form" onSubmit={handleSubmit}>
             <Box sx={{ mb: '16px' }}>
-              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary' }}>
                 {t('auth.fullName')}
               </Box>
               <OutlinedInput
@@ -109,7 +109,7 @@ const RegisterPage = () => {
             </Box>
 
             <Box sx={{ mb: '16px' }}>
-              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary' }}>
                 {t('common.email')}
               </Box>
               <OutlinedInput
@@ -130,7 +130,7 @@ const RegisterPage = () => {
             </Box>
 
             <Box sx={{ mb: '16px' }}>
-              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary' }}>
                 {t('common.password')}
               </Box>
               <OutlinedInput
@@ -151,7 +151,7 @@ const RegisterPage = () => {
             </Box>
 
             <Box sx={{ mb: '24px' }}>
-              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary' }}>
                 {t('auth.confirmPassword')}
               </Box>
               <OutlinedInput
@@ -183,7 +183,7 @@ const RegisterPage = () => {
             </Button>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
-              <Box sx={{ color: 'grey.500' }}>{t('auth.hasAccount')}</Box>
+              <Box sx={{ color: 'text.secondary' }}>{t('auth.hasAccount')}</Box>
               <Link href="/login">
                 <Box
                   sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}

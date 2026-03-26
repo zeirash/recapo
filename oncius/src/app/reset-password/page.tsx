@@ -81,7 +81,7 @@ const ResetPasswordPage = () => {
             {t('auth.resetPasswordTitle')}
           </Typography>
 
-          <Box sx={{ textAlign: 'center', color: 'grey.500', mb: '4px', display: 'block' }}>
+          <Box sx={{ textAlign: 'center', color: 'text.secondary', mb: '4px', display: 'block' }}>
             {t('auth.resetPasswordDescription')}
           </Box>
 
@@ -179,7 +179,7 @@ const ResetPasswordPage = () => {
 
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: '8px' }}>
             <Link href="/login">
-              <Box sx={{ color: 'grey.500', fontSize: '14px', cursor: 'pointer', '&:hover': { color: 'primary.main' } }}>
+              <Box sx={{ color: 'text.secondary', fontSize: '14px', cursor: 'pointer', '&:hover': { color: 'primary.main' } }}>
                 {t('auth.backToLogin')}
               </Box>
             </Link>

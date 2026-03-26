@@ -41,11 +41,11 @@ const ForgotPasswordPage = () => {
     <AuthLayout>
       <Container maxWidth="xs">
         <Box sx={{ bgcolor: 'white', p: '24px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-          <Typography component="h1" sx={{ textAlign: 'center', mb: '8px' }}>
+          <Typography component="h1" sx={{ textAlign: 'center', mb: '8px', color: 'text.primary' }}>
             {t('auth.forgotPasswordTitle')}
           </Typography>
 
-          <Box sx={{ textAlign: 'center', color: 'grey.500', mb: '24px', display: 'block' }}>
+          <Box sx={{ textAlign: 'center', color: 'text.secondary', mb: '24px', display: 'block' }}>
             {t('auth.forgotPasswordDescription')}
           </Box>
 
@@ -57,7 +57,7 @@ const ForgotPasswordPage = () => {
 
           <Box component="form" onSubmit={handleSubmit}>
             <Box sx={{ mb: '24px' }}>
-              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600 }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary' }}>
                 {t('common.email')}
               </Box>
               <OutlinedInput

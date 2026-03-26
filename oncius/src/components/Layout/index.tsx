@@ -51,13 +51,13 @@ const Layout = ({ children }: LayoutProps) => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f9fafb' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <Box sx={{ display: 'flex', height: '100vh' }}>
         <SideMenu
           selectedMenu={selectedMenu}
           onMenuSelect={setSelectedMenu}
         />
-        <Box component="main" sx={{ flex: 1, bgcolor: 'grey.50', overflowY: 'auto' }}>
+        <Box component="main" sx={{ flex: 1, bgcolor: 'background.default', overflowY: 'auto' }}>
           {children}
         </Box>
       </Box>

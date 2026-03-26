@@ -34,6 +34,8 @@
     "logoutConfirmTitle": "Keluar?",
     "logoutConfirmMessage": "Apakah Anda yakin ingin keluar?",
     "feedback": "Masukan",
+    "darkMode": "Mode gelap",
+    "lightMode": "Mode terang",
     "profile": "Profil",
     "welcome": "Selamat datang, {name}",
     "subscription": "Tagihan",

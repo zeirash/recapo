@@ -1,13 +1,11 @@
 "use client"
 
 import { Inter } from 'next/font/google'
-import { ThemeProvider } from '@mui/material/styles'
-import CssBaseline from '@mui/material/CssBaseline'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { NextIntlClientProvider } from 'next-intl'
 import '@/styles/globals.css'
 import { useEffect, useState } from 'react'
-import theme from '@/theme'
+import { AppThemeProvider } from '@/providers/ThemeProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -62,10 +60,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <QueryClientProvider client={queryClient}>
-            <ThemeProvider theme={theme}>
-              <CssBaseline />
+            <AppThemeProvider>
               {children}
-            </ThemeProvider>
+            </AppThemeProvider>
           </QueryClientProvider>
         </NextIntlClientProvider>
       </body>

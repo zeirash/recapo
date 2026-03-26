@@ -1,4 +1,5 @@
-import { Box } from '@mui/material'
+import { OutlinedInput } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { useTranslations } from 'next-intl'
 
 type Props = {
@@ -10,39 +11,40 @@ type Props = {
 
 export default function DateRangeFilter({ dateFrom, dateTo, onDateFromChange, onDateToChange }: Props) {
   const to = useTranslations('orders')
+  const theme = useTheme()
+
+  const inputSx = {
+    height: 36,
+    fontSize: '13px',
+    borderRadius: '6px',
+    width: 130,
+    flexShrink: 0,
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'grey.400' },
+    '& .MuiOutlinedInput-input': { padding: '6px 8px', colorScheme: 'inherit' },
+    '& input::-webkit-calendar-picker-indicator': {
+      filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none',
+      cursor: 'pointer',
+    },
+  }
 
   return (
-    <Box sx={{ mt: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-      <input
+    <>
+      <OutlinedInput
         type="date"
+        size="small"
         value={dateFrom}
         onChange={(e) => onDateFromChange(e.target.value)}
         title={to('dateFrom')}
-        style={{
-          flex: 1,
-          padding: '6px',
-          fontSize: 12,
-          borderRadius: 6,
-          border: '1px solid var(--theme-ui-colors-border, #e0e0e0)',
-          backgroundColor: 'white',
-          color: dateFrom ? 'var(--theme-ui-colors-text, #333)' : '#aaa',
-        }}
+        sx={inputSx}
       />
-      <input
+      <OutlinedInput
         type="date"
+        size="small"
         value={dateTo}
         onChange={(e) => onDateToChange(e.target.value)}
         title={to('dateTo')}
-        style={{
-          flex: 1,
-          padding: '6px',
-          fontSize: 12,
-          borderRadius: 6,
-          border: '1px solid var(--theme-ui-colors-border, #e0e0e0)',
-          backgroundColor: 'white',
-          color: dateTo ? 'var(--theme-ui-colors-text, #333)' : '#aaa',
-        }}
+        sx={inputSx}
       />
-    </Box>
+    </>
   )
 }

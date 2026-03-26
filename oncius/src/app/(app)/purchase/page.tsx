@@ -28,10 +28,10 @@ export default function PurchasePage() {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
-        <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'grey.800' }}>
+        <Typography component="h1" sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 700, mb: '8px', color: 'text.primary' }}>
           {tPurchase('title')}
         </Typography>
-        <Box sx={{ color: 'grey.500', fontSize: '14px', mb: '24px', display: 'block' }}>
+        <Box sx={{ color: 'text.secondary', fontSize: '14px', mb: '24px', display: 'block' }}>
           {tPurchase('note')}
         </Box>
 
@@ -48,14 +48,14 @@ export default function PurchasePage() {
               boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
               border: '1px solid',
               borderColor: 'grey.200',
-              bgcolor: 'white',
+              bgcolor: 'background.paper',
               overflow: 'hidden',
             }}
           >
             {products && products.length > 0 ? (
               <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
                 <Box component="thead">
-                  <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
+                  <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                     <Box
                       component="th"
                       sx={{
@@ -63,7 +63,7 @@ export default function PurchasePage() {
                         textAlign: 'left',
                         fontSize: '12px',
                         fontWeight: 600,
-                        color: 'grey.500',
+                        color: 'text.secondary',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
@@ -77,7 +77,7 @@ export default function PurchasePage() {
                         textAlign: 'right',
                         fontSize: '12px',
                         fontWeight: 600,
-                        color: 'grey.500',
+                        color: 'text.secondary',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
@@ -94,7 +94,7 @@ export default function PurchasePage() {
                       sx={{
                         borderTop: '1px solid',
                         borderColor: 'grey.200',
-                        '&:hover': { bgcolor: 'grey.50' },
+                        '&:hover': { bgcolor: 'action.hover' },
                       }}
                     >
                       <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
@@ -108,7 +108,7 @@ export default function PurchasePage() {
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ p: '32px', textAlign: 'center', color: 'grey.500' }}>
+              <Box sx={{ p: '32px', textAlign: 'center', color: 'text.secondary' }}>
                 <Box sx={{ fontSize: '16px' }}>{tPurchase('empty')}</Box>
               </Box>
             )}
