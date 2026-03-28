@@ -130,6 +130,8 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               color: locale === 'en' ? 'primary.main' : 'grey.500',
               textDecoration: 'none',
               p: 0,
+              minWidth: 0,
+              minHeight: 0,
               '&:hover': { color: 'primary.main' },
             }}
           >
@@ -148,6 +150,8 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
               color: locale === 'id' ? 'primary.main' : 'grey.500',
               textDecoration: 'none',
               p: 0,
+              minWidth: 0,
+              minHeight: 0,
               '&:hover': { color: 'primary.main' },
             }}
           >

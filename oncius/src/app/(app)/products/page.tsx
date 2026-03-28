@@ -8,7 +8,7 @@ import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
-import { Share2, Check, Package, X, Pencil, Trash2, ImageIcon } from 'lucide-react'
+import { Share2, Check, Package, Pencil, Trash2, ImageIcon } from 'lucide-react'
 
 type Product = {
   id: number
@@ -263,6 +263,7 @@ export default function ProductsPage() {
                   minWidth: 36,
                   width: 36,
                   height: 36,
+                  minHeight: 36,
                   p: 0,
                   display: 'inline-flex',
                   alignItems: 'center',

@@ -19,6 +19,7 @@ export default function AddButton({ onClick, title }: AddButtonProps) {
         width: 36,
         minWidth: 36,
         height: 36,
+        minHeight: 36,
         p: 0,
         display: 'inline-flex',
         alignItems: 'center',
