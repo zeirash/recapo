@@ -148,38 +148,6 @@
           "color": {
             "mode": "palette-classic"
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -194,7 +162,28 @@
               }
             ]
           },
-          "unit": "ms"
+          "unit": "ms",
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "ms",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          }
         },
         "overrides": []
       },
@@ -219,8 +208,8 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le)) * 1000",
-          "legendFormat": "p95",
+          "expr": "histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket[1m]))) * 1000",
+          "legendFormat": "{{route}}",
           "refId": "A"
         }
       ],
@@ -377,8 +366,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status_code=~\"2..\"}[1m])) / sum(rate(http_requests_total[1m])) * 100",
-          "legendFormat": "success %",
+          "expr": "sum by (route) (rate(http_requests_total{status_code=~\"2..\"}[1m])) / sum by (route) (rate(http_requests_total[1m])) * 100",
+          "legendFormat": "{{route}}",
           "refId": "A"
         }
       ],
@@ -466,8 +455,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[1m]))",
-          "legendFormat": "rps",
+          "expr": "sum by (route) (rate(http_requests_total[1m]))",
+          "legendFormat": "{{route}}",
           "refId": "A"
         }
       ],
@@ -555,7 +544,7 @@
       },
       "targets": [
         {
-          "expr": "recapo_sql_open_connections",
+          "expr": "recapo_sql_open_connections or vector(0)",
           "legendFormat": "open connections",
           "refId": "A"
         }
@@ -646,8 +635,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m])) * 100",
-          "legendFormat": "error %",
+          "expr": "(sum by (route) (rate(http_requests_total{status_code=~\"5..\"}[1m])) / sum by (route) (rate(http_requests_total[1m])) * 100) or (sum by (route) (rate(http_requests_total[1m])) * 0)",
+          "legendFormat": "{{route}}",
           "refId": "A"
         }
       ],
