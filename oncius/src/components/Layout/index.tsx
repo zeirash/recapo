@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { getAuthToken } from '@/utils/api'
 import SideMenu from './SideMenu'
+import BottomNav from './BottomNav'
 
 interface LayoutProps {
   children: ReactNode
@@ -53,14 +54,27 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <Box sx={{ display: 'flex', height: '100vh' }}>
-        <SideMenu
-          selectedMenu={selectedMenu}
-          onMenuSelect={setSelectedMenu}
-        />
-        <Box component="main" sx={{ flex: 1, bgcolor: 'background.default', overflowY: 'auto' }}>
+        {/* Sidebar — desktop only */}
+        <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>
+          <SideMenu selectedMenu={selectedMenu} onMenuSelect={setSelectedMenu} />
+        </Box>
+
+        {/* Main content — extra bottom padding on mobile for bottom nav */}
+        <Box
+          component="main"
+          sx={{
+            flex: 1,
+            bgcolor: 'background.default',
+            overflowY: 'auto',
+            pb: { xs: '64px', sm: 0 },
+          }}
+        >
           {children}
         </Box>
       </Box>
+
+      {/* Bottom nav — mobile only */}
+      <BottomNav selectedMenu={selectedMenu} onMenuSelect={setSelectedMenu} />
     </Box>
   )
 }
