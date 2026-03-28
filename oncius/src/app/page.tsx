@@ -424,7 +424,7 @@ export default function HomePage() {
                   zIndex: 0,
                 }}
               >
-                <Box sx={{ mb: '8px' }}><f.icon size={36} /></Box>
+                <Box sx={{ mb: '8px', color: 'grey.800' }}><f.icon size={36} /></Box>
                 <Typography component="h4" sx={{ fontSize: '16px', mb: '8px', color: 'grey.800' }}>
                   {t(f.titleKey)}
                 </Typography>
