@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, ListSubheader, MenuItem, Paper, Select, Typography } from '@mui/material'
-import { ClipboardList } from 'lucide-react'
+import { Box, Button, Container, IconButton, ListSubheader, MenuItem, Paper, Select, Typography } from '@mui/material'
+import { ArrowLeft, ClipboardList } from 'lucide-react'
 import DateRangeFilter from '@/components/ui/DateRangeFilter'
 import SearchInput from '@/components/ui/SearchInput'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
@@ -56,6 +56,7 @@ export default function TempOrdersPage() {
   const [rejectError, setRejectError] = useState<string | null>(null)
   const [showActiveOrderConflictDialog, setShowActiveOrderConflictDialog] = useState(false)
   const [conflictData, setConflictData] = useState<{ customerId: number; activeOrderId: number } | null>(null)
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
@@ -248,7 +249,8 @@ export default function TempOrdersPage() {
                 sx={{
                   width: { xs: '100%', sm: '300px' },
                   minHeight: 0,
-                  display: 'flex',
+                  flexShrink: 0,
+                  display: { xs: mobileView === 'list' ? 'flex' : 'none', sm: 'flex' },
                   flexDirection: 'column',
                   overflow: 'hidden',
                   borderRight: { xs: 'none', sm: '1px solid' },
@@ -306,7 +308,7 @@ export default function TempOrdersPage() {
                             bgcolor: 'action.selected',
                           },
                         }}
-                        onClick={() => setSelectedTempOrderId(o.id)}
+                        onClick={() => { setSelectedTempOrderId(o.id); setMobileView('detail') }}
                       >
                         <Box sx={{ flexDirection: 'column', gap: '4px', display: 'flex' }}>
                           <Box sx={{ justifyContent: 'space-between', alignItems: 'center', display: 'flex' }}>
@@ -347,10 +349,26 @@ export default function TempOrdersPage() {
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'background.default' }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: 'auto',
+                  bgcolor: 'background.default',
+                  display: { xs: mobileView === 'detail' ? 'block' : 'none', sm: 'block' },
+                }}
+              >
                 {selectedTempOrder ? (
-                  <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
-                    <Box sx={{ alignItems: 'center', gap: '16px', mb: '16px', flexWrap: 'wrap', display: 'flex' }}>
+                  <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '16px', sm: '32px' } }}>
+                    {/* Mobile back button */}
+                    <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: '8px', mb: '16px' }}>
+                      <IconButton size="small" onClick={() => setMobileView('list')} sx={{ ml: '-4px' }}>
+                        <ArrowLeft size={20} />
+                      </IconButton>
+                      <Typography sx={{ fontSize: '14px', color: 'text.secondary' }}>{tTemp('title')}</Typography>
+                    </Box>
+
+                    <Box sx={{ alignItems: 'center', gap: '8px', mb: '16px', flexWrap: 'wrap', display: 'flex' }}>
                       <Typography component="h2" sx={{ fontSize: '18px' }}>
                         {tTemp('orderNumber', { id: selectedTempOrder.id })}
                       </Typography>
@@ -368,10 +386,11 @@ export default function TempOrdersPage() {
                       >
                         {toStatus(selectedTempOrder.status) || selectedTempOrder.status}
                       </Box>
-                      <Box sx={{ ml: 'auto', gap: '8px', display: 'flex' }}>
+                      <Box sx={{ width: { xs: '100%', sm: 'auto' }, ml: { xs: 0, sm: 'auto' }, gap: '8px', display: 'flex' }}>
                         <Button
                           variant={selectedTempOrder.status === 'rejected' ? 'outlined' : 'contained'}
                           disableElevation
+                          fullWidth
                           onClick={handleAccept}
                           disabled={acceptLoading || rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
@@ -388,6 +407,7 @@ export default function TempOrdersPage() {
                         <Button
                           variant={selectedTempOrder.status === 'rejected' ? 'contained' : 'outlined'}
                           disableElevation
+                          fullWidth
                           onClick={handleReject}
                           disabled={rejectLoading || selectedTempOrder.status !== 'pending'}
                           sx={{
@@ -497,7 +517,8 @@ export default function TempOrdersPage() {
                         </Typography>
                       </Box>
                       {selectedTempOrder.order_items && selectedTempOrder.order_items.length > 0 ? (
-                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <Box sx={{ overflowX: 'auto' }}>
+                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
                           <Box component="thead">
                             <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                               <Box
@@ -630,6 +651,7 @@ export default function TempOrdersPage() {
                               </Box>
                             </Box>
                           </Box>
+                        </Box>
                         </Box>
                       ) : (
                         <Box sx={{ p: '32px', textAlign: 'center', color: 'text.secondary' }}>

@@ -181,21 +181,15 @@ const DashboardPage = () => {
             </Box>
 
             {/* Quick links */}
-            <Box sx={{ display: 'flex', gap: '8px', mb: '32px', flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: '8px', mb: '32px', justifyContent: 'center' }}>
               <Link href="/orders" passHref legacyBehavior>
-                <Button component="a" variant="outlined">
-                  {t('dashboard.newOrder')}
-                </Button>
+                <Button component="a" variant="outlined" sx={{ flex: 1, fontSize: { xs: '11px', sm: '14px' }, whiteSpace: 'nowrap' }}>{t('dashboard.newOrder')}</Button>
               </Link>
               <Link href="/customers" passHref legacyBehavior>
-                <Button component="a" variant="outlined">
-                  {t('dashboard.addCustomer')}
-                </Button>
+                <Button component="a" variant="outlined" sx={{ flex: 1, fontSize: { xs: '11px', sm: '14px' }, whiteSpace: 'nowrap' }}>{t('dashboard.addCustomer')}</Button>
               </Link>
               <Link href="/products" passHref legacyBehavior>
-                <Button component="a" variant="outlined">
-                  {t('dashboard.addProduct')}
-                </Button>
+                <Button component="a" variant="outlined" sx={{ flex: 1, fontSize: { xs: '11px', sm: '14px' }, whiteSpace: 'nowrap' }}>{t('dashboard.addProduct')}</Button>
               </Link>
             </Box>
 
@@ -231,7 +225,8 @@ const DashboardPage = () => {
                 </Link>
               </Box>
               {recentOrders.length > 0 ? (
-                <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                <Box sx={{ overflowX: 'auto' }}>
+                <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
                   <Box component="thead">
                     <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                       <Box
@@ -357,6 +352,7 @@ const DashboardPage = () => {
                       )
                     })}
                   </Box>
+                </Box>
                 </Box>
               ) : (
                 <Box sx={{ p: '32px', textAlign: 'center', color: 'text.secondary' }}>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, ListSubheader, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, ListSubheader, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
 import DateRangeFilter from '@/components/ui/DateRangeFilter'
 import SearchInput from '@/components/ui/SearchInput'
 import AddButton from '@/components/ui/AddButton'
@@ -11,7 +11,7 @@ import CustomerSearchSelect from '@/components/ui/CustomerSearchSelect'
 import ProductSearchSelect from '@/components/ui/ProductSearchSelect'
 import { api, ApiError } from '@/utils/api'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
-import { ClipboardList, Download, Info, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, ClipboardList, Download, Info, Pencil, Trash2 } from 'lucide-react'
 
 type OrderItem = {
   id: number
@@ -116,6 +116,7 @@ export default function OrdersPage() {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [exportMessage, setExportMessage] = useState('')
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'total_asc' | 'total_desc'>('date_desc')
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
   const filterRowRef = useRef<HTMLDivElement>(null)
   const filterScrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -503,7 +504,7 @@ export default function OrdersPage() {
           {!isLoading && !isError && (
             <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
               {/* Left list */}
-              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: 'grey.200' }}>
+              <Box sx={{ width: { xs: '100%', sm: '300px' }, minHeight: 0, flexShrink: 0, display: { xs: mobileView === 'list' ? 'flex' : 'none', sm: 'flex' }, flexDirection: 'column', overflow: 'hidden', borderRight: { xs: 'none', sm: '1px solid' }, borderColor: 'grey.200' }}>
                 <Box sx={{ p: '24px', flexShrink: 0 }}>
                   <Box sx={{ gap: '8px', alignItems: 'center', display: 'flex' }}>
                     <SearchInput
@@ -584,7 +585,7 @@ export default function OrdersPage() {
                           borderRadius: '8px',
                           '&:hover': { bgcolor: 'action.selected' },
                         }}
-                        onClick={() => setSelectedOrderId(o.id)}
+                        onClick={() => { setSelectedOrderId(o.id); setMobileView('detail') }}
                       >
                         <Box sx={{ flexDirection: 'column', gap: '4px', display: 'flex' }}>
                           <Box sx={{ justifyContent: 'space-between', alignItems: 'center', display: 'flex' }}>
@@ -624,17 +625,25 @@ export default function OrdersPage() {
               </Box>
 
               {/* Right detail */}
-              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'background.default' }}>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'background.default', display: { xs: mobileView === 'detail' ? 'block' : 'none', sm: 'block' } }}>
                 {selectedOrder ? (
-                  <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '24px', sm: '32px' } }}>
-                    <Box sx={{ alignItems: 'center', justifyContent: 'space-between', mb: '16px', display: 'flex' }}>
-                      <Box sx={{ alignItems: 'center', gap: '16px', display: 'flex' }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <Typography component="h2" sx={{ fontSize: '18px' }}>{to('orderNumber', { id: selectedOrder.id })}</Typography>
-                          <Box sx={{ fontSize: '12px', color: 'text.secondary' }}>{formatDate(selectedOrder.created_at)}</Box>
-                        </Box>
+                  <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '16px', sm: '32px' } }}>
+                    {/* Mobile back button */}
+                    <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: '8px', mb: '16px' }}>
+                      <IconButton size="small" onClick={() => setMobileView('list')} sx={{ ml: '-4px' }}>
+                        <ArrowLeft size={20} />
+                      </IconButton>
+                      <Typography sx={{ fontSize: '14px', color: 'text.secondary' }}>{to('title')}</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: '16px', gap: '8px' }}>
+                      <Box>
+                        <Typography component="h2" sx={{ fontSize: '18px', fontWeight: 600 }}>{to('orderNumber', { id: selectedOrder.id })}</Typography>
+                        <Box sx={{ fontSize: '12px', color: 'text.secondary', mt: '2px' }}>{formatDate(selectedOrder.created_at)}</Box>
                         <Box
                           sx={{
+                            display: 'inline-block',
+                            mt: '8px',
                             px: '8px',
                             py: '4px',
                             borderRadius: '4px',
@@ -648,22 +657,37 @@ export default function OrdersPage() {
                           {toStatus(selectedOrder.status)}
                         </Box>
                       </Box>
-                      <Box sx={{ display: 'flex', gap: '8px' }}>
+                      <Box sx={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        <Tooltip title={to('exportInvoice')}>
+                          <IconButton
+                            size="small"
+                            onClick={() => { setExportMessage(''); setIsExportDialogOpen(true) }}
+                            sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', p: '6px', display: { xs: 'flex', sm: 'none' } }}
+                          >
+                            <Download size={18} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t('delete')}>
+                          <IconButton
+                            size="small"
+                            onClick={() => { if (confirm(to('deleteConfirm'))) deleteMutation.mutate(selectedOrder.id) }}
+                            sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', p: '6px', display: { xs: 'flex', sm: 'none' } }}
+                          >
+                            <Trash2 size={18} />
+                          </IconButton>
+                        </Tooltip>
                         <Button
                           variant="outlined"
                           startIcon={<Download size={16} />}
-                          onClick={() => {
-                            setExportMessage('')
-                            setIsExportDialogOpen(true)
-                          }}
+                          onClick={() => { setExportMessage(''); setIsExportDialogOpen(true) }}
+                          sx={{ display: { xs: 'none', sm: 'flex' } }}
                         >
                           {to('exportInvoice')}
                         </Button>
                         <Button
                           variant="outlined"
-                          onClick={() => {
-                            if (confirm(to('deleteConfirm'))) deleteMutation.mutate(selectedOrder.id)
-                          }}
+                          onClick={() => { if (confirm(to('deleteConfirm'))) deleteMutation.mutate(selectedOrder.id) }}
+                          sx={{ display: { xs: 'none', sm: 'flex' } }}
                         >
                           {t('delete')}
                         </Button>
@@ -734,7 +758,7 @@ export default function OrdersPage() {
                             </Button>
                           </Box>
                         </Box>
-                        <Box sx={{ minWidth: 140, ml: 'auto' }}>
+                        <Box sx={{ minWidth: 140, ml: { xs: 0, sm: 'auto' } }}>
                           <Box sx={{ color: 'text.secondary', fontSize: '14px', fontWeight: 700, mb: '4px', display: 'block' }}>{t('status')}</Box>
                           <Select
                             size="small"
@@ -800,7 +824,8 @@ export default function OrdersPage() {
                         </Button>
                       </Box>
                       {selectedOrder.order_items && selectedOrder.order_items.length > 0 ? (
-                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <Box sx={{ overflowX: 'auto' }}>
+                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
                           <Box component="thead">
                             <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                               <Box component="th" sx={{ p: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('product')}</Box>
@@ -886,6 +911,7 @@ export default function OrdersPage() {
                             })()}
                           </Box>
                         </Box>
+                        </Box>
                       ) : (
                         <Box sx={{ p: '32px', textAlign: 'center', color: 'text.secondary' }}>
                           <Box sx={{ fontSize: '16px', display: 'block', mb: '8px' }}>{to('noItems')}</Box>
@@ -917,7 +943,8 @@ export default function OrdersPage() {
                         </Button>
                       </Box>
                       {selectedOrder.order_payments && selectedOrder.order_payments.length > 0 ? (
-                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <Box sx={{ overflowX: 'auto' }}>
+                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 360 }}>
                           <Box component="thead">
                             <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                               <Box component="th" sx={{ p: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{to('amount')}</Box>
@@ -955,6 +982,7 @@ export default function OrdersPage() {
                               </Box>
                             ))}
                           </Box>
+                        </Box>
                         </Box>
                       ) : (
                         <Box sx={{ p: '32px', textAlign: 'center', color: 'text.secondary' }}>
