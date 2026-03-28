@@ -58,18 +58,33 @@ html {
   outline-offset: 2px;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — hidden until scrolling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+*:hover {
+  scrollbar-color: #c1c1c1 transparent;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: transparent;
   border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -77,11 +92,11 @@ html {
 }
 
 @media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-track {
-    background: #1e293b;
+  *:hover {
+    scrollbar-color: #475569 transparent;
   }
 
-  ::-webkit-scrollbar-thumb {
+  *:hover::-webkit-scrollbar-thumb {
     background: #475569;
   }
 

@@ -127,7 +127,7 @@ const ScreenshotsSection = () => {
         </Box>
 
         {/* Tab buttons */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: '8px', mb: '32px', flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', sm: 'center' }, gap: '8px', mb: '32px', overflowX: { xs: 'auto', sm: 'visible' }, pb: { xs: '4px', sm: 0 }, mx: { xs: '-16px', sm: 0 }, px: { xs: '16px', sm: 0 } }}>
           {SCREENSHOTS.map((s, i) => {
             const Icon = s.icon
             const isActive = i === active
@@ -139,9 +139,9 @@ const ScreenshotsSection = () => {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  px: '20px',
-                  py: '10px',
+                  gap: '6px',
+                  px: { xs: '14px', sm: '20px' },
+                  py: { xs: '8px', sm: '10px' },
                   zIndex: 1,
                   borderRadius: '8px',
                   border: '2px solid',
@@ -150,12 +150,14 @@ const ScreenshotsSection = () => {
                   color: isActive ? 'white' : 'grey.600',
                   cursor: 'pointer',
                   fontWeight: 600,
-                  fontSize: '14px',
+                  fontSize: { xs: '12px', sm: '14px' },
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                   transition: 'all 0.15s',
                   '&:hover': { borderColor: 'primary.main', color: isActive ? 'white' : 'primary.main' },
                 }}
               >
-                <Icon size={16} />
+                <Icon size={15} />
                 {t(s.tabKey)}
               </Box>
             )
@@ -347,22 +349,22 @@ export default function HomePage() {
         >
           {t('landing.heroDescription')}
         </Box>
-        <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: '16px', justifyContent: 'center', flexDirection: { xs: 'column', sm: 'row' }, px: { xs: '8px', sm: 0 } }}>
           {isAuthenticated ? (
-            <Link href="/dashboard">
-              <Button variant="contained" disableElevation sx={{ px: '32px', py: '16px', fontSize: '16px' }}>
+            <Link href="/dashboard" style={{ display: 'flex' }}>
+              <Button variant="contained" disableElevation sx={{ px: '32px', py: '14px', fontSize: '16px', width: { xs: '100%', sm: 'auto' } }}>
                 {t('landing.goToDashboard')}
               </Button>
             </Link>
           ) : (
             <>
-              <Link href="/register">
-                <Button variant="contained" disableElevation sx={{ px: '32px', py: '16px', fontSize: '16px' }}>
+              <Link href="/register" style={{ display: 'flex' }}>
+                <Button variant="contained" disableElevation sx={{ px: '32px', py: '14px', fontSize: '16px', width: { xs: '100%', sm: 'auto' } }}>
                   {t('landing.startForFree')}
                 </Button>
               </Link>
-              <Link href="#pricing">
-                <Button variant="outlined" sx={{ px: '32px', py: '16px', fontSize: '16px', bgcolor: '#f8fafc', '&:hover': { bgcolor: '#f1f5f9' } }}>
+              <Link href="#pricing" style={{ display: 'flex' }}>
+                <Button variant="outlined" sx={{ px: '32px', py: '14px', fontSize: '16px', bgcolor: '#f8fafc', width: { xs: '100%', sm: 'auto' }, '&:hover': { bgcolor: '#f1f5f9' } }}>
                   {t('landing.viewPricing')}
                 </Button>
               </Link>
@@ -463,18 +465,18 @@ export default function HomePage() {
           <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px' }}>
             {plansLoading
               ? Array.from({ length: 2 }).map((_, i) => (
-                  <Skeleton key={i} variant="rectangular" width={320} height={380} sx={{ borderRadius: '12px' }} />
+                  <Skeleton key={i} variant="rectangular" sx={{ width: { xs: '100%', sm: 320 }, height: 380, borderRadius: '12px' }} />
                 ))
               : plans.map((plan) => (
                   <Paper
                     key={plan.id}
                     sx={{
-                      p: '32px',
+                      p: { xs: '24px', sm: '32px' },
                       borderRadius: '12px',
                       border: '2px solid',
                       borderColor: 'grey.200',
                       bgcolor: 'white',
-                      width: 320,
+                      width: { xs: '100%', sm: 320 },
                       display: 'flex',
                       flexDirection: 'column',
                     }}
@@ -545,7 +547,7 @@ export default function HomePage() {
           sx={{
             position: 'relative',
             overflow: 'hidden',
-            p: '48px',
+            p: { xs: '28px 20px', sm: '48px' },
             borderRadius: '12px',
             bgcolor: 'primary.main',
             border: 'none',
