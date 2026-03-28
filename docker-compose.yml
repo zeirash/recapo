@@ -62,8 +62,6 @@ services:
       - prometheus_data:/prometheus
     networks:
       - recapo-network
-    depends_on:
-      - backend
 
   grafana:
     image: grafana/grafana:10.4.0
