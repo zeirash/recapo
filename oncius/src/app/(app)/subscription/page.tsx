@@ -22,21 +22,19 @@ export default function SubscriptionPage() {
   const locale = useLocale()
   const router = useRouter()
   const { user } = useAuth()
-
-  if (user?.role === 'system') {
-    router.replace('/dashboard')
-    return null
-  }
   const queryClient = useQueryClient()
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   const { data: plansRes, isLoading: plansLoading } = useQuery('plans', () => api.getPlans(), {
     staleTime: 5 * 60 * 1000,
+    enabled: user?.role !== 'system',
   })
   const plans: Plan[] = plansRes?.data ?? []
 
-  const { data: subRes, isLoading: subLoading } = useQuery('subscription', () => api.getSubscription())
+  const { data: subRes, isLoading: subLoading } = useQuery('subscription', () => api.getSubscription(), {
+    enabled: user?.role !== 'system',
+  })
   const subscription: Subscription | null = subRes?.data ?? null
 
   const cancelMutation = useMutation(() => api.cancelSubscription(), {
@@ -59,6 +57,11 @@ export default function SubscriptionPage() {
       },
     }
   )
+
+  if (user?.role === 'system') {
+    router.replace('/dashboard')
+    return null
+  }
 
   const isLoading = plansLoading || subLoading
 
