@@ -160,7 +160,7 @@ func (p *pservice) GetProductsByShopID(ctx context.Context, shopID int, filter m
 		return []response.ProductData{}, err
 	}
 
-	productsData := []response.ProductData{}
+	productsData := make([]response.ProductData, 0, len(products))
 	for _, product := range products {
 		res := response.ProductData{
 			ID:            product.ID,
@@ -285,7 +285,7 @@ func (p *pservice) GetPurchaseListProducts(ctx context.Context, shopID int) ([]r
 		return []response.PurchaseListProductData{}, err
 	}
 
-	productsData := []response.PurchaseListProductData{}
+	productsData := make([]response.PurchaseListProductData, 0, len(products))
 	for _, product := range products {
 		productsData = append(productsData, response.PurchaseListProductData{
 			ProductName: product.ProductName,

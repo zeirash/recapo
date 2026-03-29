@@ -16,6 +16,7 @@ type (
 		ID        int        `json:"id"`
 		Name      string     `json:"name"`
 		Email     string     `json:"email"`
+		Role      string     `json:"role"`
 		CreatedAt time.Time  `json:"created_at"`
 		UpdatedAt *time.Time `json:"updated_at"`
 	}
@@ -132,5 +133,36 @@ type (
 		OrderID     string `json:"order_id"`
 		RedirectURL string `json:"redirect_url"`
 		SnapToken   string `json:"snap_token"`
+	}
+
+	SystemStatsData struct {
+		TotalShops    int `json:"total_shops"`
+		SubsTrialing  int `json:"subs_trialing"`
+		SubsActive    int `json:"subs_active"`
+		SubsExpired   int `json:"subs_expired"`
+		SubsCancelled int `json:"subs_cancelled"`
+		MRRIDR        int `json:"mrr_idr"`
+	}
+
+	SystemShopData struct {
+		ShopID      int        `json:"shop_id"`
+		ShopName    string     `json:"shop_name"`
+		OwnerName   string     `json:"owner_name"`
+		OwnerEmail  string     `json:"owner_email"`
+		PlanName    string     `json:"plan_name"`
+		SubStatus   string     `json:"sub_status"`
+		TrialEndsAt *time.Time `json:"trial_ends_at,omitempty"`
+		PeriodEnd   time.Time  `json:"period_end"`
+		JoinedAt    time.Time  `json:"joined_at"`
+	}
+
+	SystemPaymentData struct {
+		ShopName        string     `json:"shop_name"`
+		PlanName        string     `json:"plan_name"`
+		AmountIDR       int        `json:"amount_idr"`
+		Status          string     `json:"status"`
+		MidtransOrderID string     `json:"midtrans_order_id"`
+		PaidAt          *time.Time `json:"paid_at,omitempty"`
+		CreatedAt       time.Time  `json:"created_at"`
 	}
 )

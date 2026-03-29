@@ -574,6 +574,19 @@ export const api = {
     return response.json() as Promise<ApiResponse>
   },
 
+  // System (admin only)
+  getSystemStats: () => {
+    return apiRequest<ApiResponse<any>>('/system/stats')
+  },
+
+  getSystemShops: () => {
+    return apiRequest<ApiResponse<any[]>>('/system/shops')
+  },
+
+  getSystemPayments: () => {
+    return apiRequest<ApiResponse<any[]>>('/system/payments')
+  },
+
   // Health check
   health: () => {
     return apiRequest<ApiResponse>('/health')

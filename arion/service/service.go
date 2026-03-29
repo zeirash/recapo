@@ -18,6 +18,7 @@ var (
 	orderItemStore    store.OrderItemStore
 	orderPaymentStore store.OrderPaymentStore
 	subscriptionStore store.SubscriptionStore
+	systemStore       store.SystemStore
 
 	subscriptionService SubscriptionService
 

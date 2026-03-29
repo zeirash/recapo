@@ -2,40 +2,28 @@
 
 import { useState } from 'react'
 import { Box, Button } from '@mui/material'
-import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { useTheme } from '@mui/material/styles'
-import { alpha } from '@mui/material/styles'
-import { LayoutDashboard, Package, ClipboardList, ShoppingCart, ShoppingBag, Users, CreditCard, User, Moon, Sun, MessageSquare, LogOut, Settings, type LucideIcon } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useThemeMode } from '@/providers/ThemeProvider'
-import FeedbackDialog from '@/components/ui/FeedbackDialog'
+import { LayoutDashboard, Store, CreditCard, User, Moon, Sun, ArrowLeftRight, LogOut, type LucideIcon } from 'lucide-react'
+import { alpha, useTheme } from '@mui/material/styles'
 
-interface BottomNavProps {
-  selectedMenu: string
-  onMenuSelect: (menu: string) => void
-}
-
-const menuItems: { id: string; labelKey: string; icon: LucideIcon; path: string }[] = [
-  { id: 'dashboard',    labelKey: 'dashboard',   icon: LayoutDashboard, path: '/dashboard' },
-  { id: 'products',     labelKey: 'products',    icon: Package,         path: '/products' },
-  { id: 'orders',       labelKey: 'orders',      icon: ClipboardList,   path: '/orders' },
-  { id: 'temp_orders',  labelKey: 'tempOrders',  icon: ShoppingCart,    path: '/temp-orders' },
-  { id: 'purchase',     labelKey: 'purchase',    icon: ShoppingBag,     path: '/purchase' },
-  { id: 'customers',    labelKey: 'customers',   icon: Users,           path: '/customers' },
-  { id: 'subscription', labelKey: 'subscription',icon: CreditCard,      path: '/subscription' },
+const menuItems: { id: string; label: string; icon: LucideIcon; path: string }[] = [
+  { id: 'system',   label: 'Overview', icon: LayoutDashboard, path: '/system' },
+  { id: 'shops',    label: 'Shops',    icon: Store,           path: '/system/shops' },
+  { id: 'payments', label: 'Payments', icon: CreditCard,      path: '/system/payments' },
 ]
 
-export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps) {
-  const t = useTranslations('nav')
+export default function SystemBottomNav() {
   const router = useRouter()
+  const pathname = usePathname()
   const theme = useTheme()
   const { user, logout } = useAuth()
   const { mode, toggleTheme } = useThemeMode()
   const [profileOpen, setProfileOpen] = useState(false)
-  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
-  const tCommon = useTranslations('common')
+
+  const selectedMenu = menuItems.find(item => pathname === item.path)?.id ?? 'system'
 
   return (
     <>
@@ -50,9 +38,7 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
           bgcolor: 'background.paper',
           borderTop: '1px solid',
           borderColor: 'divider',
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
+          justifyContent: 'center',
         }}
       >
         {menuItems.map((item) => {
@@ -60,7 +46,7 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
           return (
             <Box
               key={item.id}
-              onClick={() => { onMenuSelect(item.id); router.push(item.path) }}
+              onClick={() => router.push(item.path)}
               sx={{
                 flex: '0 0 auto',
                 display: 'flex',
@@ -71,17 +57,17 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
                 px: '14px',
                 py: '10px',
                 cursor: 'pointer',
-                color: isActive ? 'primary.main' : 'grey.500',
-                bgcolor: isActive ? alpha(theme.palette.primary.main, 0.07) : 'transparent',
+                color: isActive ? 'warning.main' : 'grey.500',
+                bgcolor: isActive ? alpha(theme.palette.warning.main, 0.07) : 'transparent',
                 borderTop: '2px solid',
-                borderColor: isActive ? 'primary.main' : 'transparent',
+                borderColor: isActive ? 'warning.main' : 'transparent',
                 transition: 'color 0.15s, background-color 0.15s',
                 minWidth: '64px',
               }}
             >
               <item.icon size={20} />
               <Box sx={{ fontSize: '10px', fontWeight: isActive ? 600 : 400, whiteSpace: 'nowrap', lineHeight: 1 }}>
-                {t(item.labelKey)}
+                {item.label}
               </Box>
             </Box>
           )
@@ -106,7 +92,7 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
           }}
         >
           <User size={20} />
-          <Box sx={{ fontSize: '10px', whiteSpace: 'nowrap', lineHeight: 1 }}>{t('profile')}</Box>
+          <Box sx={{ fontSize: '10px', whiteSpace: 'nowrap', lineHeight: 1 }}>Profile</Box>
         </Box>
       </Box>
 
@@ -134,34 +120,28 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
             <Box sx={{ display: 'flex', justifyContent: 'center', pt: '12px', pb: '8px' }}>
               <Box sx={{ width: '36px', height: '4px', borderRadius: '2px', bgcolor: 'grey.300' }} />
             </Box>
-            {/* Email */}
+            {/* Header */}
             <Box sx={{ px: '20px', py: '12px', borderBottom: '1px solid', borderColor: 'divider' }}>
-              <Box sx={{ fontSize: '11px', color: 'text.secondary', mb: '2px' }}>{t('signedInAs')}</Box>
+              <Box sx={{ fontSize: '11px', color: 'warning.main', fontWeight: 600, mb: '2px' }}>SYSTEM MODE</Box>
               <Box sx={{ fontSize: '14px', fontWeight: 500, wordBreak: 'break-all' }}>{user?.email}</Box>
             </Box>
             {/* Actions */}
             {[
-              ...(user?.role === 'system' ? [{
-                icon: <Settings size={18} />,
-                label: 'System Dashboard',
-                onClick: () => { setProfileOpen(false); router.push('/system') },
-                color: 'text.primary',
-              }] : []),
               {
-                icon: <MessageSquare size={18} />,
-                label: t('feedback'),
-                onClick: () => { setProfileOpen(false); setShowFeedbackDialog(true) },
+                icon: <ArrowLeftRight size={18} />,
+                label: 'Go to Merchant',
+                onClick: () => { setProfileOpen(false); router.push('/dashboard') },
                 color: 'text.primary',
               },
               {
                 icon: mode === 'dark' ? <Sun size={18} /> : <Moon size={18} />,
-                label: mode === 'dark' ? t('lightMode') : t('darkMode'),
+                label: mode === 'dark' ? 'Light Mode' : 'Dark Mode',
                 onClick: () => { toggleTheme(); setProfileOpen(false) },
                 color: 'text.primary',
               },
               {
                 icon: <LogOut size={18} />,
-                label: t('logout'),
+                label: 'Logout',
                 onClick: () => { setProfileOpen(false); setShowLogoutDialog(true) },
                 color: 'error.main',
               },
@@ -191,8 +171,6 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
         </>
       )}
 
-      <FeedbackDialog open={showFeedbackDialog} onClose={() => setShowFeedbackDialog(false)} />
-
       {/* Logout confirmation */}
       {showLogoutDialog && (
         <Box
@@ -203,11 +181,11 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
             sx={{ bgcolor: 'background.paper', borderRadius: '12px', p: '24px', width: '100%', maxWidth: 360 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Box sx={{ fontSize: '18px', fontWeight: 600, mb: '8px' }}>{t('logoutConfirmTitle')}</Box>
-            <Box sx={{ fontSize: '14px', color: 'text.secondary', mb: '24px' }}>{t('logoutConfirmMessage')}</Box>
+            <Box sx={{ fontSize: '18px', fontWeight: 600, mb: '8px' }}>Logout?</Box>
+            <Box sx={{ fontSize: '14px', color: 'text.secondary', mb: '24px' }}>You will be signed out.</Box>
             <Box sx={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <Button variant="outlined" onClick={() => setShowLogoutDialog(false)}>{tCommon('cancel')}</Button>
-              <Button variant="contained" disableElevation onClick={async () => { setShowLogoutDialog(false); await logout() }}>{t('logout')}</Button>
+              <Button variant="outlined" onClick={() => setShowLogoutDialog(false)}>Cancel</Button>
+              <Button variant="contained" color="error" disableElevation onClick={async () => { setShowLogoutDialog(false); await logout() }}>Logout</Button>
             </Box>
           </Box>
         </Box>

@@ -1,12 +1,14 @@
 "use client"
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { Box, Typography, Button, Paper, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
 import { useTranslations, useLocale } from 'next-intl'
 import { Check, Users, Crown, Info } from 'lucide-react'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
+import { useAuth } from '@/hooks/useAuth'
 import type { Plan, Subscription } from '@/types'
 
 const formatPriceIDR = (price: number) =>
@@ -18,6 +20,13 @@ const formatDate = (dateStr: string) =>
 export default function SubscriptionPage() {
   const t = useTranslations()
   const locale = useLocale()
+  const router = useRouter()
+  const { user } = useAuth()
+
+  if (user?.role === 'system') {
+    router.replace('/dashboard')
+    return null
+  }
   const queryClient = useQueryClient()
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const [showCancelDialog, setShowCancelDialog] = useState(false)

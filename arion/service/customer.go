@@ -94,7 +94,7 @@ func (c *cservice) GetCustomersByShopID(ctx context.Context, shopID int, filter 
 		return []response.CustomerData{}, err
 	}
 
-	customersData := []response.CustomerData{}
+	customersData := make([]response.CustomerData, 0, len(customers))
 	for _, customer := range customers {
 		res := response.CustomerData{
 			ID:        customer.ID,

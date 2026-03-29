@@ -126,7 +126,7 @@ func (o *oservice) GetOrderByID(ctx context.Context, id int, shopID ...int) (*re
 		return nil, err
 	}
 
-	orderItemsData := []response.OrderItemData{}
+	orderItemsData := make([]response.OrderItemData, 0, len(orderItems))
 	for _, orderItem := range orderItems {
 		orderItemsData = append(orderItemsData, response.OrderItemData{
 			ID:          orderItem.ID,
@@ -146,7 +146,7 @@ func (o *oservice) GetOrderByID(ctx context.Context, id int, shopID ...int) (*re
 		return nil, err
 	}
 
-	orderPaymentsData := []response.OrderPaymentData{}
+	orderPaymentsData := make([]response.OrderPaymentData, 0, len(orderPayments))
 	for _, orderPayment := range orderPayments {
 		orderPaymentsData = append(orderPaymentsData, response.OrderPaymentData{
 			ID:        orderPayment.ID,
@@ -187,7 +187,7 @@ func (o *oservice) GetOrdersByShopID(ctx context.Context, shopID int, opts model
 		return []response.OrderData{}, err
 	}
 
-	ordersData := []response.OrderData{}
+	ordersData := make([]response.OrderData, 0, len(orders))
 	for _, order := range orders {
 		res := response.OrderData{
 			ID:                order.ID,
@@ -427,7 +427,7 @@ func (o *oservice) GetOrderPaymentsByOrderID(ctx context.Context, orderID int) (
 		return []response.OrderPaymentData{}, err
 	}
 
-	orderPaymentsData := []response.OrderPaymentData{}
+	orderPaymentsData := make([]response.OrderPaymentData, 0, len(orderPayments))
 	for _, orderPayment := range orderPayments {
 		res := response.OrderPaymentData{
 			ID:        orderPayment.ID,
@@ -462,7 +462,7 @@ func (o *oservice) GetOrderItemsByOrderID(ctx context.Context, orderID int) ([]r
 		return []response.OrderItemData{}, err
 	}
 
-	orderItemsData := []response.OrderItemData{}
+	orderItemsData := make([]response.OrderItemData, 0, len(orderItems))
 	for _, orderItem := range orderItems {
 		res := response.OrderItemData{
 			ID:          orderItem.ID,
@@ -506,7 +506,7 @@ func (o *oservice) CreateTempOrder(ctx context.Context, customerName, customerPh
 		return response.TempOrderData{}, err
 	}
 
-	tempOrderItemsData := []response.TempOrderItemData{}
+	tempOrderItemsData := make([]response.TempOrderItemData, 0, len(items))
 	totalPrice := 0
 	for _, item := range items {
 		orderItemTemp, err := orderItemStore.CreateTempOrderItem(ctx, tx, tempOrder.ID, item.ProductID, item.Qty)
@@ -564,7 +564,7 @@ func (o *oservice) GetTempOrderByID(ctx context.Context, id int, shopID ...int) 
 		return nil, err
 	}
 
-	tempOrderItemsData := []response.TempOrderItemData{}
+	tempOrderItemsData := make([]response.TempOrderItemData, 0, len(tempOrderItems))
 	for _, tempOrderItem := range tempOrderItems {
 		tempOrderItemsData = append(tempOrderItemsData, response.TempOrderItemData{
 			ID:          tempOrderItem.ID,
@@ -601,7 +601,7 @@ func (o *oservice) GetTempOrdersByShopID(ctx context.Context, shopID int, opts m
 		return []response.TempOrderData{}, err
 	}
 
-	tempOrdersData := []response.TempOrderData{}
+	tempOrdersData := make([]response.TempOrderData, 0, len(tempOrders))
 	for _, tempOrder := range tempOrders {
 		res := response.TempOrderData{
 			ID:            tempOrder.ID,
@@ -744,7 +744,7 @@ func (o *oservice) createOrderFromTempOrder(ctx context.Context, tempOrderID, cu
 		return nil, err
 	}
 
-	orderItems := []response.OrderItemData{}
+	orderItems := make([]response.OrderItemData, 0, len(tempOrder.TempOrderItems))
 	for _, tempOrderItem := range tempOrder.TempOrderItems {
 		orderItem, err := orderItemStore.CreateOrderItem(ctx, tx, order.ID, tempOrderItem.ProductID, tempOrderItem.Qty)
 		if err != nil {

@@ -331,6 +331,7 @@ func (u *uservice) GetUserByID(ctx context.Context, userID int) (*response.UserD
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
+		Role:      user.Role,
 		CreatedAt: user.CreatedAt,
 	}
 

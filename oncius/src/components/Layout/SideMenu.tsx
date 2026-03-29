@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useQuery } from 'react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
-import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, MessageSquare, LogOut, User, Moon, Sun, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, MessageSquare, LogOut, User, Moon, Sun, Settings, type LucideIcon } from 'lucide-react'
 import { alpha, useTheme } from '@mui/material/styles'
 import { useThemeMode } from '@/providers/ThemeProvider'
 import RecapoLogo from '@/components/ui/RecapoLogo'
@@ -33,14 +33,16 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const locale = useLocale()
   const changeLocale = useChangeLocale()
 
+  const isSystem = user?.role === 'system'
   const { data: subRes } = useQuery('subscription', () => api.getSubscription(), {
     staleTime: 5 * 60 * 1000,
+    enabled: !isSystem,
   })
   const subscription: Subscription | null = subRes?.data ?? null
   const trialExpired = subscription?.status === 'trialing' && !!subscription.trial_ends_at && new Date(subscription.trial_ends_at) < new Date()
   const periodExpired = subscription?.status === 'active' && new Date(subscription.current_period_end) < new Date()
   const isLocked = !!subscription && (['expired', 'past_due', 'cancelled'].includes(subscription.status) || trialExpired || periodExpired)
-  const menuItems: { id: string; label: string; icon: LucideIcon; path: string }[] = [
+  const allMenuItems: { id: string; label: string; icon: LucideIcon; path: string }[] = [
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, path: '/dashboard' },
     { id: 'products', label: t('products'), icon: Package, path: '/products' },
     { id: 'orders', label: t('orders'), icon: ClipboardList, path: '/orders' },
@@ -49,6 +51,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     { id: 'customers', label: t('customers'), icon: Users, path: '/customers' },
     { id: 'subscription', label: t('subscription'), icon: CreditCard, path: '/subscription' },
   ]
+  const menuItems = isSystem ? allMenuItems.filter(item => item.id !== 'subscription') : allMenuItems
 
   useEffect(() => {
     menuItems.forEach(item => router.prefetch(item.path))
@@ -214,6 +217,23 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
                 {user?.email}
               </Box>
             </Box>
+            {user?.role === 'system' && (
+              <Box
+                onClick={() => { setShowDropdown(false); router.push('/system') }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  py: '10px',
+                  px: '16px',
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                <Settings size={16} />
+                <Box sx={{ fontSize: '14px' }}>System Dashboard</Box>
+              </Box>
+            )}
             <Box
               onClick={() => { setShowDropdown(false); setShowFeedbackDialog(true) }}
               sx={{

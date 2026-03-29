@@ -16,6 +16,12 @@ import (
 func SubscriptionCheck(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+
+		if isSystem, _ := ctx.Value(common.SystemModeKey).(bool); isSystem {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		shopID, ok := ctx.Value(common.ShopIDKey).(int)
 		if !ok || shopID == 0 {
 			handler.WriteErrorJson(w, r, http.StatusUnauthorized, errors.New(apierr.ErrMissingShopContext), "unauthorized")

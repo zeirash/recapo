@@ -94,7 +94,6 @@ func NewRouter() *mux.Router {
 	// User
 	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateUserHandler))).Methods("PATCH")
 	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
-	r.Handle("/users", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetUsersHandler))).Methods("GET")
 
 	// Customer
 	r.Handle("/customer", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateCustomerHandler))).Methods("POST")
@@ -141,10 +140,15 @@ func NewRouter() *mux.Router {
 	r.Handle("/temp_orders/{temp_order_id}/reject", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.RejectTempOrderHandler))).Methods("PATCH")
 
 	// Feedback
-	r.Handle("/feedback", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.CreateFeedbackHandler))).Methods("POST")
+	r.Handle("/feedback", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateFeedbackHandler))).Methods("POST")
 
 	// System
-	r.Handle("/system/user/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
+	// r.Handle("/system/users/{user_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
+	// r.Handle("/system/users", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetUsersHandler))).Methods("GET")
+	r.Handle("/system/stats", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetSystemStatsHandler))).Methods("GET")
+	r.Handle("/system/shops", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetSystemShopsHandler))).Methods("GET")
+	r.Handle("/system/payments", middleware.ChainMiddleware(middleware.Authentication, middleware.CheckSystemMode)(http.HandlerFunc(handler.GetSystemPaymentsHandler))).Methods("GET")
+
 
 	// Static file serving for uploaded product images
 	uploadDir := config.GetConfig().UploadDir

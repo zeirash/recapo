@@ -36,6 +36,7 @@ var (
 	shopService         service.ShopService
 	subscriptionService service.SubscriptionService
 	feedbackService     service.FeedbackService
+	systemService       service.SystemService
 )
 
 func Init() {
@@ -65,6 +66,10 @@ func Init() {
 
 	if feedbackService == nil {
 		feedbackService = service.NewFeedbackService()
+	}
+
+	if systemService == nil {
+		systemService = service.NewSystemService()
 	}
 }
 
@@ -111,6 +116,16 @@ func SetOrderService(s service.OrderService) {
 // SetShopService sets the shop service (for testing)
 func SetShopService(s service.ShopService) {
 	shopService = s
+}
+
+// SetSystemService sets the system service (for testing).
+func SetSystemService(s service.SystemService) {
+	systemService = s
+}
+
+// GetSystemService returns the current system service (for testing).
+func GetSystemService() service.SystemService {
+	return systemService
 }
 
 // GetUserService returns the current user service (for testing).
