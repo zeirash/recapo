@@ -60,6 +60,7 @@ type Product = {
 
 type CreateOrderForm = {
   customer_id: number | null
+  customer_name?: string
   notes: string
 }
 
@@ -117,6 +118,7 @@ export default function OrdersPage() {
   const [exportMessage, setExportMessage] = useState('')
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'total_asc' | 'total_desc'>('date_desc')
   const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
+  const [createCustomerDialog, setCreateCustomerDialog] = useState<{ open: boolean; name: string; phone: string }>({ open: false, name: '', phone: '' })
   const filterRowRef = useRef<HTMLDivElement>(null)
   const filterScrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -393,6 +395,18 @@ export default function OrdersPage() {
       onSuccess: () => {
         setIsExportDialogOpen(false)
         setExportMessage('')
+      },
+    }
+  )
+
+  const createCustomerMutation = useMutation(
+    (data: { name: string; phone: string }) => api.createCustomer({ name: data.name, phone: data.phone, address: '' }),
+    {
+      onSuccess: (res) => {
+        const customer = res.data as Customer
+        setCreateForm((f) => ({ ...f, customer_id: customer.id, customer_name: customer.name }))
+        setCreateCustomerDialog({ open: false, name: '', phone: '' })
+        queryClient.invalidateQueries(['customers'])
       },
     }
   )
@@ -1044,9 +1058,14 @@ export default function OrdersPage() {
                   <Box component="label" htmlFor="customer" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('customer')}</Box>
                   <CustomerSearchSelect
                     value={createForm.customer_id}
-                    onChange={(id) => setCreateForm({ ...createForm, customer_id: id })}
+                    onChange={(id) => setCreateForm({ ...createForm, customer_id: id, customer_name: undefined })}
                     placeholder={to('selectCustomer')}
                     searchPlaceholder={to('searchCustomer')}
+                    selectedLabel={createForm.customer_name}
+                    onCreateCustomer={(term) => {
+                      const isPhone = /^\d+$/.test(term)
+                      setCreateCustomerDialog({ open: true, name: isPhone ? '' : term, phone: isPhone ? term : '' })
+                    }}
                   />
                 </Box>
                 <Box sx={{ mb: '8px' }}>
@@ -1250,6 +1269,49 @@ export default function OrdersPage() {
               </Button>
               <Button type="submit" variant="contained" disableElevation disabled={addPaymentMutation.isLoading || addPaymentAmount <= 0}>
                 {to('addPaymentButton')}
+              </Button>
+            </DialogActions>
+          </Box>
+        </Dialog>
+
+        {/* Create Customer Dialog */}
+        <Dialog open={createCustomerDialog.open} onClose={() => setCreateCustomerDialog({ open: false, name: '', phone: '' })} fullWidth maxWidth="xs">
+          <Box
+            component="form"
+            onSubmit={(e: React.FormEvent) => {
+              e.preventDefault()
+              createCustomerMutation.mutate({ name: createCustomerDialog.name, phone: createCustomerDialog.phone })
+            }}
+          >
+            <DialogTitle sx={{ pb: '8px' }}>{t('create')} {t('customer')}</DialogTitle>
+            <DialogContent sx={{ pt: '8px !important', pb: 0 }}>
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('name')}</Box>
+                <OutlinedInput
+                  value={createCustomerDialog.name}
+                  onChange={(e) => setCreateCustomerDialog((d) => ({ ...d, name: e.target.value }))}
+                  size="small"
+                  fullWidth
+                  required
+                />
+              </Box>
+              <Box sx={{ mb: '8px' }}>
+                <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('phone')}</Box>
+                <OutlinedInput
+                  value={createCustomerDialog.phone}
+                  onChange={(e) => setCreateCustomerDialog((d) => ({ ...d, phone: e.target.value }))}
+                  size="small"
+                  fullWidth
+                  required
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+              <Button type="button" variant="outlined" onClick={() => setCreateCustomerDialog({ open: false, name: '', phone: '' })}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" variant="contained" disableElevation disabled={createCustomerMutation.isLoading}>
+                {t('create')}
               </Button>
             </DialogActions>
           </Box>

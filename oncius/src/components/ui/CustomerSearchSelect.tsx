@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from 'react-query'
 import { Box, OutlinedInput } from '@mui/material'
-import { Search, X } from 'lucide-react'
+import { Search, UserPlus, X } from 'lucide-react'
 import { api } from '@/utils/api'
 
 type Customer = {
@@ -19,6 +19,8 @@ type Props = {
   placeholder: string
   searchPlaceholder: string
   noResultsText?: string
+  onCreateCustomer?: (searchTerm: string) => void
+  selectedLabel?: string
 }
 
 function useDebounce(value: string, delay: number) {
@@ -36,6 +38,8 @@ export default function CustomerSearchSelect({
   placeholder,
   searchPlaceholder,
   noResultsText = 'No customers found',
+  onCreateCustomer,
+  selectedLabel,
 }: Props) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedName, setSelectedName] = useState('')
@@ -97,8 +101,8 @@ export default function CustomerSearchSelect({
     setIsOpen(false)
   }
 
-  const inputValue = value ? selectedName : searchTerm
-  const inputPlaceholder = value ? selectedName : (isOpen ? searchPlaceholder : placeholder)
+  const inputValue = value ? (selectedName || selectedLabel || '') : searchTerm
+  const inputPlaceholder = value ? (selectedName || selectedLabel || '') : (isOpen ? searchPlaceholder : placeholder)
 
   return (
     <Box ref={containerRef} sx={{ position: 'relative' }}>
@@ -176,8 +180,35 @@ export default function CustomerSearchSelect({
               Loading...
             </Box>
           ) : !customers || customers.length === 0 ? (
-            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
-              {noResultsText}
+            <Box>
+              <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
+                {noResultsText}
+              </Box>
+              {onCreateCustomer && debouncedSearch && (
+                <Box
+                  onClick={() => {
+                    onCreateCustomer(debouncedSearch)
+                    setIsOpen(false)
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    px: '16px',
+                    py: '8px',
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                >
+                  <UserPlus size={14} />
+                  Create &quot;{debouncedSearch}&quot;
+                </Box>
+              )}
             </Box>
           ) : (
             customers.map((c) => (
