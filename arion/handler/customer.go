@@ -276,10 +276,6 @@ func validateCreateCustomer(inp CreateCustomerRequest) (bool, error) {
 		return false, errors.New(apierr.ErrPhoneRequired)
 	}
 
-	if inp.Address == "" {
-		return false, errors.New(apierr.ErrAddressRequired)
-	}
-
 	return true, nil
 }
 

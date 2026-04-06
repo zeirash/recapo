@@ -111,16 +111,24 @@ func TestCreateCustomerHandler(t *testing.T) {
 			wantSuccess: false,
 		},
 		{
-			name: "create customer returns 400 on validation failure - missing address",
+			name: "create customer succeeds without address",
 			body: map[string]interface{}{
-				"name":    "John",
-				"phone":   "08123456789",
-				"address": "",
+				"name":  "John",
+				"phone": "08123456789",
 			},
-			shopID:      1,
-			mockSetup:   func() {},
-			wantStatus:  http.StatusBadRequest,
-			wantSuccess: false,
+			shopID: 1,
+			mockSetup: func() {
+				mockCustomerService.EXPECT().
+					CreateCustomer(gomock.Any(), "John", "08123456789", "", 1).
+					Return(response.CustomerData{
+						ID:        2,
+						Name:      "John",
+						Phone:     "08123456789",
+						CreatedAt: time.Now(),
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
 		},
 	}
 

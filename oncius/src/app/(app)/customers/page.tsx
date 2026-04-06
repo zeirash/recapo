@@ -316,7 +316,7 @@ export default function CustomersPage() {
               </Box>
               <Box sx={{ mb: '8px' }}>
                 <Box component="label" htmlFor="address" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>Address</Box>
-                <OutlinedInput size="small" fullWidth multiline rows={3} id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required />
+                <OutlinedInput size="small" fullWidth multiline rows={3} id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
               </Box>
             </DialogContent>
             <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
