@@ -1,4 +1,4 @@
-import { OutlinedInput } from '@mui/material'
+import { Box, OutlinedInput } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useTranslations } from 'next-intl'
 
@@ -20,45 +20,48 @@ export default function DateRangeFilter({ dateFrom, dateTo, onDateFromChange, on
     width: 130,
     flexShrink: 0,
     '& .MuiOutlinedInput-notchedOutline': { borderColor: 'grey.400' },
-    '& .MuiOutlinedInput-input': {
-      padding: '6px 8px',
-      colorScheme: theme.palette.mode,
-      color: theme.palette.text.primary,
-      '&::-webkit-date-and-time-value': { color: theme.palette.text.primary },
-    },
+    '& .MuiOutlinedInput-input': { padding: '6px 8px' },
     '& input::-webkit-calendar-picker-indicator': {
       filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none',
       cursor: 'pointer',
     },
   }
 
+  const isDark = theme.palette.mode === 'dark'
   const dateInputProps = {
     style: {
-      color: theme.palette.text.primary,
-      WebkitTextFillColor: theme.palette.text.primary,
+      colorScheme: theme.palette.mode as 'light' | 'dark',
+      color: isDark ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.87)',
+      WebkitTextFillColor: isDark ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.87)',
     },
   }
 
   return (
     <>
-      <OutlinedInput
-        type="date"
-        size="small"
-        value={dateFrom}
-        onChange={(e) => onDateFromChange(e.target.value)}
-        title={to('dateFrom')}
-        sx={inputSx}
-        inputProps={dateInputProps}
-      />
-      <OutlinedInput
-        type="date"
-        size="small"
-        value={dateTo}
-        onChange={(e) => onDateToChange(e.target.value)}
-        title={to('dateTo')}
-        sx={inputSx}
-        inputProps={dateInputProps}
-      />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <Box sx={{ fontSize: '11px', color: 'text.secondary', px: '2px' }}>{to('dateFrom')}</Box>
+        <OutlinedInput
+          type="date"
+          size="small"
+          value={dateFrom}
+          onChange={(e) => onDateFromChange(e.target.value)}
+          title={to('dateFrom')}
+          sx={inputSx}
+          inputProps={dateInputProps}
+        />
+      </Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <Box sx={{ fontSize: '11px', color: 'text.secondary', px: '2px' }}>{to('dateTo')}</Box>
+        <OutlinedInput
+          type="date"
+          size="small"
+          value={dateTo}
+          onChange={(e) => onDateToChange(e.target.value)}
+          title={to('dateTo')}
+          sx={inputSx}
+          inputProps={dateInputProps}
+        />
+      </Box>
     </>
   )
 }
