@@ -32,6 +32,13 @@ export default function DateRangeFilter({ dateFrom, dateTo, onDateFromChange, on
     },
   }
 
+  const dateInputProps = {
+    style: {
+      color: theme.palette.text.primary,
+      WebkitTextFillColor: theme.palette.text.primary,
+    },
+  }
+
   return (
     <>
       <OutlinedInput
@@ -41,6 +48,7 @@ export default function DateRangeFilter({ dateFrom, dateTo, onDateFromChange, on
         onChange={(e) => onDateFromChange(e.target.value)}
         title={to('dateFrom')}
         sx={inputSx}
+        inputProps={dateInputProps}
       />
       <OutlinedInput
         type="date"
@@ -49,6 +57,7 @@ export default function DateRangeFilter({ dateFrom, dateTo, onDateFromChange, on
         onChange={(e) => onDateToChange(e.target.value)}
         title={to('dateTo')}
         sx={inputSx}
+        inputProps={dateInputProps}
       />
     </>
   )
