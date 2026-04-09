@@ -309,6 +309,12 @@
     "loginRequired": "Please log in to access the dashboard.",
     "totalOrdersThisMonth": "Total Orders (this month)",
     "revenueThisMonth": "Revenue (this month)",
+    "totalOrders": "Total Orders",
+    "revenue": "Revenue",
+    "outstanding": "Outstanding",
+    "topCustomers": "Top Customers",
+    "topCustomerOrders": "{count} orders",
+    "outstandingOrders": "{count} unpaid orders",
     "customers": "Customers",
     "products": "Products",
     "newOrder": "New Order",
@@ -319,7 +325,14 @@
     "order": "Order",
     "date": "Date",
     "noOrdersYet": "No orders yet",
-    "createFirstOrder": "Create your first order"
+    "createFirstOrder": "Create your first order",
+    "ordersByStatus": "Orders by Status",
+    "thisMonth": "this month",
+    "preset_this_month": "This month",
+    "preset_last_7": "Last 7 days",
+    "preset_last_30": "Last 30 days",
+    "preset_all_time": "All time",
+    "staleOrdersAlert": "You have {count} order(s) pending for 3+ days."
   },
   "errors": {
     "loadingError": "Error loading {resource}"

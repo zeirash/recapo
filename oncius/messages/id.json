@@ -309,6 +309,12 @@
     "loginRequired": "Silakan masuk untuk mengakses dasbor.",
     "totalOrdersThisMonth": "Total Pesanan (bulan ini)",
     "revenueThisMonth": "Pendapatan (bulan ini)",
+    "totalOrders": "Total Pesanan",
+    "revenue": "Pendapatan",
+    "outstanding": "Belum Lunas",
+    "topCustomers": "Pelanggan Teratas",
+    "topCustomerOrders": "{count} pesanan",
+    "outstandingOrders": "{count} pesanan belum bayar",
     "customers": "Pelanggan",
     "products": "Produk",
     "newOrder": "Pesanan Baru",
@@ -319,7 +325,14 @@
     "order": "Pesanan",
     "date": "Tanggal",
     "noOrdersYet": "Belum ada pesanan",
-    "createFirstOrder": "Buat pesanan pertama Anda"
+    "createFirstOrder": "Buat pesanan pertama Anda",
+    "ordersByStatus": "Pesanan per Status",
+    "thisMonth": "bulan ini",
+    "preset_this_month": "Bulan ini",
+    "preset_last_7": "7 hari terakhir",
+    "preset_last_30": "30 hari terakhir",
+    "preset_all_time": "Semua waktu",
+    "staleOrdersAlert": "Ada {count} pesanan yang belum diproses selama 3+ hari."
   },
   "errors": {
     "loadingError": "Gagal memuat {resource}"
