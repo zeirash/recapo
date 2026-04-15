@@ -108,6 +108,8 @@ func AcceptInviteHandler(w http.ResponseWriter, r *http.Request) {
 		switch err.Error() {
 		case apierr.ErrInvitationNotFound:
 			WriteErrorJson(w, r, http.StatusBadRequest, err, err.Error())
+		case apierr.ErrMaxUsersReached:
+			WriteErrorJson(w, r, http.StatusForbidden, err, err.Error())
 		case apierr.ErrInvitationAlreadyAccepted:
 			WriteErrorJson(w, r, http.StatusConflict, err, err.Error())
 		case apierr.ErrPasswordTooWeak:
