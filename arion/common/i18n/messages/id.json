@@ -61,5 +61,14 @@
   "email_otp_subject": "Kode verifikasi Recapo Anda",
   "email_otp_body": "Kode verifikasi Recapo Anda adalah: %s\n\nKode ini akan kedaluwarsa dalam 10 menit.\n\nJika Anda tidak meminta kode ini, abaikan email ini.",
   "email_reset_otp_subject": "Reset kata sandi Recapo Anda",
-  "email_reset_otp_body": "Kode reset kata sandi Recapo Anda adalah: %s\n\nKode ini akan kedaluwarsa dalam 10 menit.\n\nJika Anda tidak meminta reset kata sandi, abaikan email ini."
+  "email_reset_otp_body": "Kode reset kata sandi Recapo Anda adalah: %s\n\nKode ini akan kedaluwarsa dalam 10 menit.\n\nJika Anda tidak meminta reset kata sandi, abaikan email ini.",
+
+  "err_invitation_already_sent": "Undangan sudah pernah dikirim ke email ini",
+  "err_invitation_not_found": "Undangan tidak ditemukan atau sudah diterima",
+  "err_invitation_already_accepted": "Undangan ini sudah diterima",
+  "err_not_owner": "Hanya pemilik toko yang dapat melakukan tindakan ini",
+  "err_max_users_reached": "Paket Anda tidak mengizinkan lebih banyak pengguna. Upgrade paket untuk menambahkan lebih banyak admin.",
+
+  "email_invitation_subject": "Anda diundang untuk bergabung dengan %s di Recapo",
+  "email_invitation_body": "Halo,\n\n%s mengundang Anda untuk bergabung dengan %s di Recapo sebagai admin.\n\nKlik tautan berikut untuk menerima undangan dan mengatur akun Anda:\n%s\n\nJika Anda tidak mengharapkan undangan ini, abaikan email ini."
 }

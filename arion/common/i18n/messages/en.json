@@ -61,5 +61,14 @@
   "email_otp_subject": "Your Recapo verification code",
   "email_otp_body": "Your Recapo verification code is: %s\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.",
   "email_reset_otp_subject": "Reset your Recapo password",
-  "email_reset_otp_body": "Your Recapo password reset code is: %s\n\nThis code will expire in 10 minutes.\n\nIf you did not request a password reset, please ignore this email."
+  "email_reset_otp_body": "Your Recapo password reset code is: %s\n\nThis code will expire in 10 minutes.\n\nIf you did not request a password reset, please ignore this email.",
+
+  "err_invitation_already_sent": "An invitation has already been sent to this email",
+  "err_invitation_not_found": "Invitation not found or already accepted",
+  "err_invitation_already_accepted": "This invitation has already been accepted",
+  "err_not_owner": "Only shop owners can perform this action",
+  "err_max_users_reached": "Your plan does not allow more users. Please upgrade to add more admins.",
+
+  "email_invitation_subject": "You've been invited to join %s on Recapo",
+  "email_invitation_body": "Hi,\n\n%s has invited you to join %s on Recapo as an admin.\n\nClick the link below to accept the invitation and set up your account:\n%s\n\nIf you did not expect this invitation, please ignore this email."
 }

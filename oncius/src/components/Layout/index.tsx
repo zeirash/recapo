@@ -17,16 +17,15 @@ const Layout = ({ children }: LayoutProps) => {
   const router = useRouter()
   const [selectedMenu, setSelectedMenu] = useState('dashboard')
   const { user, isLoadingUser, userError, isSubscriptionRequired } = useAuth()
-  const isSubscriptionError = isSubscriptionRequired || (userError as any)?.status === 402
 
   // Redirect to login if unauthenticated, or to billing if subscription is required
   useEffect(() => {
-    if (!getAuthToken() || (!isLoadingUser && userError && !isSubscriptionError)) {
+    if (!getAuthToken() || (!isLoadingUser && userError)) {
       router.replace('/login')
-    } else if (isSubscriptionError && !pathname.startsWith('/subscription')) {
+    } else if (isSubscriptionRequired && !pathname.startsWith('/subscription')) {
       router.replace('/subscription')
     }
-  }, [isLoadingUser, userError, isSubscriptionError, pathname, router])
+  }, [isLoadingUser, userError, isSubscriptionRequired, pathname, router])
 
   // Sync selectedMenu with current pathname
   useEffect(() => {
@@ -46,7 +45,7 @@ const Layout = ({ children }: LayoutProps) => {
     }
   }, [pathname])
 
-  if (!user && !isSubscriptionError) {
+  if (!user && !isSubscriptionRequired) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />

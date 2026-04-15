@@ -18,6 +18,7 @@ type (
 		CreateShop(ctx context.Context, tx database.Tx, name string) (*model.Shop, error)
 		GetShareTokenByID(ctx context.Context, shopID int) (string, error)
 		GetShopByShareToken(ctx context.Context, shareToken string) (*model.Shop, error)
+		GetShopByID(ctx context.Context, shopID int) (*model.Shop, error)
 	}
 
 	shop struct {
@@ -87,6 +88,25 @@ func (s *shop) GetShareTokenByID(ctx context.Context, shopID int) (string, error
 	}
 
 	return token, nil
+}
+
+func (s *shop) GetShopByID(ctx context.Context, shopID int) (*model.Shop, error) {
+	q := `
+		SELECT id, name, share_token, created_at, updated_at
+		FROM shops
+		WHERE id = $1
+	`
+
+	var sh model.Shop
+	err := s.db.QueryRowContext(ctx, q, shopID).Scan(&sh.ID, &sh.Name, &sh.ShareToken, &sh.CreatedAt, &sh.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &sh, nil
 }
 
 func (s *shop) GetShopByShareToken(ctx context.Context, shareToken string) (*model.Shop, error) {

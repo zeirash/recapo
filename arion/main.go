@@ -85,6 +85,11 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/reset_password", handler.ResetPasswordHandler).Methods("POST")
 	r.Handle("/logout", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.LogoutHandler))).Methods("POST")
 
+	// Invitation
+	r.Handle("/invite", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.InviteAdminHandler))).Methods("POST")
+	r.HandleFunc("/invite/validate", handler.ValidateInviteHandler).Methods("GET")
+	r.HandleFunc("/invite/accept", handler.AcceptInviteHandler).Methods("POST")
+
 	// Subscription
 	r.HandleFunc("/webhook/midtrans", handler.MidtransWebhookHandler).Methods("POST")
 	r.Handle("/subscription", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetSubscriptionHandler))).Methods("GET")
@@ -93,7 +98,7 @@ func NewRouter() *mux.Router {
 
 	// User
 	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateUserHandler))).Methods("PATCH")
-	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
+	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
 
 	// Customer
 	r.Handle("/customer", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateCustomerHandler))).Methods("POST")

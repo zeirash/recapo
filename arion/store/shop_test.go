@@ -231,3 +231,79 @@ func Test_shop_GetShareTokenByID(t *testing.T) {
 		})
 	}
 }
+
+func Test_shop_GetShopByID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name      string
+		shopID    int
+		mockSetup func(mock sqlmock.Sqlmock)
+		want      *model.Shop
+		wantErr   bool
+	}{
+		{
+			name:   "successfully get shop by id",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "name", "share_token", "created_at", "updated_at"}).
+					AddRow(1, "My Shop", "abc123xyz789", fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, name, share_token, created_at, updated_at\s+FROM shops\s+WHERE id = \$1`).
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			want: &model.Shop{
+				ID:         1,
+				Name:       "My Shop",
+				ShareToken: "abc123xyz789",
+				CreatedAt:  fixedTime,
+			},
+		},
+		{
+			name:   "returns nil when shop not found",
+			shopID: 999,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT id, name, share_token, created_at, updated_at\s+FROM shops\s+WHERE id = \$1`).
+					WithArgs(999).
+					WillReturnError(sql.ErrNoRows)
+			},
+			want: nil,
+		},
+		{
+			name:   "returns error on database failure",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT id, name, share_token, created_at, updated_at\s+FROM shops\s+WHERE id = \$1`).
+					WithArgs(1).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+
+			s := &shop{db: db}
+			got, gotErr := s.GetShopByID(context.Background(), tt.shopID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetShopByID() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetShopByID() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetShopByID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

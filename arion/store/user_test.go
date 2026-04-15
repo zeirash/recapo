@@ -740,3 +740,72 @@ func Test_user_GetUserByShopID(t *testing.T) {
 		})
 	}
 }
+
+func Test_user_CountUsersByShopID(t *testing.T) {
+	tests := []struct {
+		name      string
+		shopID    int
+		mockSetup func(mock sqlmock.Sqlmock)
+		want      int
+		wantErr   bool
+	}{
+		{
+			name:   "returns count of users for shop",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"count"}).AddRow(3)
+				mock.ExpectQuery(`SELECT COUNT\(\*\) FROM users WHERE shop_id = \$1`).
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			want: 3,
+		},
+		{
+			name:   "returns zero when no users in shop",
+			shopID: 99,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"count"}).AddRow(0)
+				mock.ExpectQuery(`SELECT COUNT\(\*\) FROM users WHERE shop_id = \$1`).
+					WithArgs(99).
+					WillReturnRows(rows)
+			},
+			want: 0,
+		},
+		{
+			name:   "returns error on database failure",
+			shopID: 1,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT COUNT\(\*\) FROM users WHERE shop_id = \$1`).
+					WithArgs(1).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+
+			u := &user{db: db}
+			got, gotErr := u.CountUsersByShopID(context.Background(), tt.shopID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("CountUsersByShopID() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("CountUsersByShopID() succeeded unexpectedly")
+			}
+			if got != tt.want {
+				t.Errorf("CountUsersByShopID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

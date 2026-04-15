@@ -58,6 +58,7 @@ export interface User {
   name: string
   email: string
   role: UserRole
+  subscription_active: boolean
   createdAt: string
   updatedAt: string
 }

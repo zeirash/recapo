@@ -42,4 +42,8 @@ const (
 
 	OrderPaymentStatusOutstanding = "outstanding"
 	OrderPaymentStatusPaid        = "paid"
+
+	// Invitation status constants
+	InvitationStatusPending  = "pending"
+	InvitationStatusAccepted = "accepted"
 )

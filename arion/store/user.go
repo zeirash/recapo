@@ -18,6 +18,7 @@ type (
 		GetUserByShopID(ctx context.Context, shopID int) (*model.User, error)
 		GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 		GetUsers(ctx context.Context) ([]model.User, error)
+		CountUsersByShopID(ctx context.Context, shopID int) (int, error)
 		CreateUser(ctx context.Context, tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
 		UpdateUser(ctx context.Context, id int, input UpdateUserInput) (*model.User, error)
 		SetSessionToken(ctx context.Context, userID int, sessionToken string) error
@@ -84,6 +85,16 @@ func (u *user) GetUserByShopID(ctx context.Context, shopID int) (*model.User, er
 	}
 
 	return &resp, nil
+}
+
+func (u *user) CountUsersByShopID(ctx context.Context, shopID int) (int, error) {
+	var count int
+	q := `SELECT COUNT(*) FROM users WHERE shop_id = $1`
+	err := u.db.QueryRowContext(ctx, q, shopID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (u *user) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {

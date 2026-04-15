@@ -52,6 +52,21 @@ func (mr *MockUserStoreMockRecorder) CreateUser(ctx, tx, name, email, hashPasswo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserStore)(nil).CreateUser), ctx, tx, name, email, hashPassword, role, shop_id)
 }
 
+// CountUsersByShopID mocks base method.
+func (m *MockUserStore) CountUsersByShopID(ctx context.Context, shopID int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountUsersByShopID", ctx, shopID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountUsersByShopID indicates an expected call of CountUsersByShopID.
+func (mr *MockUserStoreMockRecorder) CountUsersByShopID(ctx, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountUsersByShopID", reflect.TypeOf((*MockUserStore)(nil).CountUsersByShopID), ctx, shopID)
+}
+
 // GetUserByEmail mocks base method.
 func (m *MockUserStore) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	m.ctrl.T.Helper()

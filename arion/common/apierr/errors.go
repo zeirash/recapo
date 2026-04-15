@@ -73,4 +73,11 @@ const (
 	ErrFeedbackTitleRequired = "err_feedback_title_required"
 	ErrFeedbackTypeInvalid   = "err_feedback_type_invalid"
 	ErrFeedbackFailed        = "err_feedback_failed"
+
+	// Invitation
+	ErrInvitationAlreadySent     = "err_invitation_already_sent"
+	ErrInvitationNotFound        = "err_invitation_not_found"
+	ErrInvitationAlreadyAccepted = "err_invitation_already_accepted"
+	ErrNotOwner                  = "err_not_owner"
+	ErrMaxUsersReached           = "err_max_users_reached"
 )

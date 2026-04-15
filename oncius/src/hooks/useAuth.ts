@@ -39,10 +39,9 @@ export const useAuth = () => {
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       enabled: !!getAuthToken() && !_subscriptionRequired,
-      onError: (error: any) => {
-        if (error?.status === 402) {
+      onSuccess: (data: User) => {
+        if (data && !data.subscription_active && data.role !== 'system') {
           _subscriptionRequired = true
-          queryClient.cancelQueries('currentUser')
           if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/subscription')) {
             router.replace('/subscription')
           }
@@ -68,13 +67,13 @@ export const useAuth = () => {
           const userResponse = await api.getCurrentUser()
           if (userResponse.success && userResponse.data) {
             queryClient.setQueryData('currentUser', userResponse.data)
+            if (!userResponse.data.subscription_active && userResponse.data.role !== 'system') {
+              _subscriptionRequired = true
+              router.push('/subscription')
+              return
+            }
           }
         } catch (error: any) {
-          if (error?.status === 402) {
-            _subscriptionRequired = true
-            router.push('/subscription')
-            return
-          }
           console.error('Failed to fetch user data:', error)
         }
         router.push('/dashboard')

@@ -37,6 +37,7 @@ var (
 	subscriptionService service.SubscriptionService
 	feedbackService     service.FeedbackService
 	systemService       service.SystemService
+	invitationService   service.InvitationService
 )
 
 func Init() {
@@ -70,6 +71,10 @@ func Init() {
 
 	if systemService == nil {
 		systemService = service.NewSystemService()
+	}
+
+	if invitationService == nil {
+		invitationService = service.NewInvitationService()
 	}
 }
 
@@ -151,6 +156,16 @@ func GetOrderService() service.OrderService {
 // GetShopService returns the current shop service (for testing).
 func GetShopService() service.ShopService {
 	return shopService
+}
+
+// SetInvitationService sets the invitation service (for testing).
+func SetInvitationService(s service.InvitationService) {
+	invitationService = s
+}
+
+// GetInvitationService returns the current invitation service (for testing).
+func GetInvitationService() service.InvitationService {
+	return invitationService
 }
 
 func WriteJson(w http.ResponseWriter, status int, body interface{}) {

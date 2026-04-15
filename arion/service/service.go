@@ -19,6 +19,7 @@ var (
 	orderPaymentStore store.OrderPaymentStore
 	subscriptionStore store.SubscriptionStore
 	systemStore       store.SystemStore
+	invitationStore store.InvitationStore
 
 	subscriptionService SubscriptionService
 

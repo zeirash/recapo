@@ -66,6 +66,21 @@ func (mr *MockShopStoreMockRecorder) GetShareTokenByID(ctx, shopID interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShareTokenByID", reflect.TypeOf((*MockShopStore)(nil).GetShareTokenByID), ctx, shopID)
 }
 
+// GetShopByID mocks base method.
+func (m *MockShopStore) GetShopByID(ctx context.Context, shopID int) (*model.Shop, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetShopByID", ctx, shopID)
+	ret0, _ := ret[0].(*model.Shop)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetShopByID indicates an expected call of GetShopByID.
+func (mr *MockShopStoreMockRecorder) GetShopByID(ctx, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShopByID", reflect.TypeOf((*MockShopStore)(nil).GetShopByID), ctx, shopID)
+}
+
 // GetShopByShareToken mocks base method.
 func (m *MockShopStore) GetShopByShareToken(ctx context.Context, shareToken string) (*model.Shop, error) {
 	m.ctrl.T.Helper()

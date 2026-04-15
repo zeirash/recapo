@@ -339,6 +339,13 @@ func (u *uservice) GetUserByID(ctx context.Context, userID int) (*response.UserD
 		res.UpdatedAt = &user.UpdatedAt.Time
 	}
 
+	active, err := subscriptionService.IsSubscriptionActive(ctx, user.ShopID)
+	if err == nil {
+		res.SubscriptionActive = active
+	} else {
+		res.SubscriptionActive = user.Role == "system"
+	}
+
 	return &res, nil
 }
 

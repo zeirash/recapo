@@ -18,6 +18,13 @@ func SendOTP(to, code, lang string) error {
 	return sendEmail(to, subject, body)
 }
 
+// SendInvitation sends an admin invitation email with the accept link.
+func SendInvitation(to, inviterName, shopName, inviteURL, lang string) error {
+	subject := fmt.Sprintf(i18n.T(lang, "email_invitation_subject"), shopName)
+	body := fmt.Sprintf(i18n.T(lang, "email_invitation_body"), inviterName, shopName, inviteURL)
+	return sendEmail(to, subject, body)
+}
+
 // SendPasswordResetOTP sends a password reset OTP to the given email address.
 func SendPasswordResetOTP(to, code, lang string) error {
 	subject := i18n.T(lang, "email_reset_otp_subject")

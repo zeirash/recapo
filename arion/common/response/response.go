@@ -13,12 +13,13 @@ type (
 	}
 
 	UserData struct {
-		ID        int        `json:"id"`
-		Name      string     `json:"name"`
-		Email     string     `json:"email"`
-		Role      string     `json:"role"`
-		CreatedAt time.Time  `json:"created_at"`
-		UpdatedAt *time.Time `json:"updated_at"`
+		ID                 int        `json:"id"`
+		Name               string     `json:"name"`
+		Email              string     `json:"email"`
+		Role               string     `json:"role"`
+		SubscriptionActive bool       `json:"subscription_active"`
+		CreatedAt          time.Time  `json:"created_at"`
+		UpdatedAt          *time.Time `json:"updated_at"`
 	}
 
 	CustomerData struct {
@@ -154,6 +155,11 @@ type (
 		TrialEndsAt *time.Time `json:"trial_ends_at,omitempty"`
 		PeriodEnd   time.Time  `json:"period_end"`
 		JoinedAt    time.Time  `json:"joined_at"`
+	}
+
+	InvitationData struct {
+		Email    string `json:"email"`
+		ShopName string `json:"shop_name"`
 	}
 
 	SystemPaymentData struct {

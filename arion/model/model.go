@@ -160,6 +160,18 @@ type (
 		UpdatedAt sql.NullTime `db:"updated_at"`
 	}
 
+	/******************* Invitation *********************/
+	Invitation struct {
+		ID        int          `db:"id"`
+		ShopID    int          `db:"shop_id"`
+		Email     string       `db:"email"`
+		Token     string       `db:"token"`
+		Status    string       `db:"status"`
+		InvitedBy int          `db:"invited_by"`
+		CreatedAt time.Time    `db:"created_at"`
+		UpdatedAt sql.NullTime `db:"updated_at"`
+	}
+
 	/******************* Subscription *******************/
 	Plan struct {
 		ID            int          `db:"id"`

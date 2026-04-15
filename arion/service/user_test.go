@@ -1079,6 +1079,18 @@ func Test_uservice_UpdateUser(t *testing.T) {
 	}
 }
 
+type activeSubscriptionService struct{ noopSubscriptionService }
+
+func (a *activeSubscriptionService) IsSubscriptionActive(context.Context, int) (bool, error) {
+	return true, nil
+}
+
+type errSubscriptionCheckService struct{ noopSubscriptionService }
+
+func (e *errSubscriptionCheckService) IsSubscriptionActive(context.Context, int) (bool, error) {
+	return false, errors.New("subscription check error")
+}
+
 func Test_uservice_GetUserByID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 	updatedTime := time.Date(2024, 1, 16, 12, 0, 0, 0, time.UTC)
@@ -1086,19 +1098,22 @@ func Test_uservice_GetUserByID(t *testing.T) {
 	tests := []struct {
 		name       string
 		userID     int
+		subSvc     SubscriptionService
 		mockSetup  func(ctrl *gomock.Controller) *mock_store.MockUserStore
 		wantResult *response.UserData
 		wantErr    bool
 	}{
 		{
-			name:   "successfully get user by ID",
+			name:   "successfully get user by ID with active subscription",
 			userID: 1,
+			subSvc: &activeSubscriptionService{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
 					GetUserByID(gomock.Any(), 1).
 					Return(&model.User{
 						ID:        1,
+						ShopID:    10,
 						Name:      "John Doe",
 						Email:     "john@example.com",
 						CreatedAt: fixedTime,
@@ -1107,17 +1122,73 @@ func Test_uservice_GetUserByID(t *testing.T) {
 				return mock
 			},
 			wantResult: &response.UserData{
-				ID:        1,
-				Name:      "John Doe",
-				Email:     "john@example.com",
-				CreatedAt: fixedTime,
-				UpdatedAt: &updatedTime,
+				ID:                 1,
+				Name:               "John Doe",
+				Email:              "john@example.com",
+				SubscriptionActive: true,
+				CreatedAt:          fixedTime,
+				UpdatedAt:          &updatedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:   "successfully get user by ID with inactive subscription",
+			userID: 1,
+			subSvc: &noopSubscriptionService{},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByID(gomock.Any(), 1).
+					Return(&model.User{
+						ID:        1,
+						ShopID:    10,
+						Name:      "John Doe",
+						Email:     "john@example.com",
+						CreatedAt: fixedTime,
+						UpdatedAt: sql.NullTime{Time: updatedTime, Valid: true},
+					}, nil)
+				return mock
+			},
+			wantResult: &response.UserData{
+				ID:                 1,
+				Name:               "John Doe",
+				Email:              "john@example.com",
+				SubscriptionActive: false,
+				CreatedAt:          fixedTime,
+				UpdatedAt:          &updatedTime,
+			},
+			wantErr: false,
+		},
+		{
+			name:   "get user by ID with subscription check error falls back to false",
+			userID: 1,
+			subSvc: &errSubscriptionCheckService{},
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUserByID(gomock.Any(), 1).
+					Return(&model.User{
+						ID:        1,
+						ShopID:    10,
+						Name:      "John Doe",
+						Email:     "john@example.com",
+						CreatedAt: fixedTime,
+					}, nil)
+				return mock
+			},
+			wantResult: &response.UserData{
+				ID:                 1,
+				Name:               "John Doe",
+				Email:              "john@example.com",
+				SubscriptionActive: false,
+				CreatedAt:          fixedTime,
 			},
 			wantErr: false,
 		},
 		{
 			name:   "get user by ID not found returns error",
 			userID: 9999,
+			subSvc: &noopSubscriptionService{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
@@ -1131,6 +1202,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 		{
 			name:   "get user by ID returns error on database failure",
 			userID: 1,
+			subSvc: &noopSubscriptionService{},
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
 				mock := mock_store.NewMockUserStore(ctrl)
 				mock.EXPECT().
@@ -1139,7 +1211,7 @@ func Test_uservice_GetUserByID(t *testing.T) {
 				return mock
 			},
 			wantResult: &response.UserData{},
-			wantErr: true,
+			wantErr:    true,
 		},
 	}
 
@@ -1151,6 +1223,10 @@ func Test_uservice_GetUserByID(t *testing.T) {
 			oldStore := userStore
 			defer func() { userStore = oldStore }()
 			userStore = tt.mockSetup(ctrl)
+
+			oldSubSvc := subscriptionService
+			defer func() { subscriptionService = oldSubSvc }()
+			subscriptionService = tt.subSvc
 
 			var u uservice
 			got, gotErr := u.GetUserByID(context.Background(), tt.userID)
