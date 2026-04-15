@@ -39,7 +39,8 @@
     "profile": "Profil",
     "welcome": "Selamat datang, {name}",
     "subscription": "Tagihan",
-    "signedInAs": "Masuk sebagai"
+    "signedInAs": "Masuk sebagai",
+    "admin": "Admin"
   },
   "home": {
     "title": "Recapo",
@@ -398,5 +399,20 @@
     "cancelError": "Terjadi kesalahan",
     "keepPlan": "Pertahankan paket",
     "confirmCancel": "Ya, batalkan"
+  },
+  "invite": {
+    "title": "Terima Undangan",
+    "subtitle": "Anda diundang untuk bergabung dengan {shopName}",
+    "inviteAdmin": "Undang Admin",
+    "inviteDescription": "Kirim email undangan untuk menambahkan admin baru ke toko Anda.",
+    "sendInvite": "Kirim Undangan",
+    "sending": "Mengirim...",
+    "sentSuccess": "Undangan terkirim ke {email}",
+    "sendFailed": "Gagal mengirim undangan",
+    "accept": "Buat Akun",
+    "accepting": "Membuat akun...",
+    "acceptFailed": "Gagal menerima undangan",
+    "invalidLink": "Tautan undangan ini tidak valid atau sudah digunakan.",
+    "ownerOnly": "Hanya pemilik toko yang dapat mengundang admin."
   }
 }

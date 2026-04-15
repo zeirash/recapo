@@ -39,7 +39,8 @@
     "profile": "Profile",
     "welcome": "Welcome, {name}",
     "subscription": "Billing",
-    "signedInAs": "Signed in as"
+    "signedInAs": "Signed in as",
+    "admin": "Admin"
   },
   "home": {
     "title": "Recapo",
@@ -398,5 +399,20 @@
     "cancelError": "Something went wrong",
     "keepPlan": "Keep plan",
     "confirmCancel": "Yes, cancel"
+  },
+  "invite": {
+    "title": "Accept Invitation",
+    "subtitle": "You've been invited to join {shopName}",
+    "inviteAdmin": "Invite Admin",
+    "inviteDescription": "Send an invitation email to add a new admin to your shop.",
+    "sendInvite": "Send Invite",
+    "sending": "Sending...",
+    "sentSuccess": "Invitation sent to {email}",
+    "sendFailed": "Failed to send invitation",
+    "accept": "Create Account",
+    "accepting": "Creating account...",
+    "acceptFailed": "Failed to accept invitation",
+    "invalidLink": "This invitation link is invalid or has already been used.",
+    "ownerOnly": "Only the shop owner can invite admins."
   }
 }

@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useTheme } from '@mui/material/styles'
 import { alpha } from '@mui/material/styles'
-import { LayoutDashboard, Package, ClipboardList, ShoppingCart, ShoppingBag, Users, CreditCard, User, Moon, Sun, MessageSquare, LogOut, Settings, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, Package, ClipboardList, ShoppingCart, ShoppingBag, Users, CreditCard, User, Moon, Sun, MessageSquare, LogOut, Settings, UserCog, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { USER_ROLES } from '@/constants/roles'
 import { useThemeMode } from '@/providers/ThemeProvider'
 import FeedbackDialog from '@/components/ui/FeedbackDialog'
 
@@ -16,7 +17,7 @@ interface BottomNavProps {
   onMenuSelect: (menu: string) => void
 }
 
-const menuItems: { id: string; labelKey: string; icon: LucideIcon; path: string }[] = [
+const baseMenuItems: { id: string; labelKey: string; icon: LucideIcon; path: string; ownerOnly?: boolean }[] = [
   { id: 'dashboard',    labelKey: 'dashboard',   icon: LayoutDashboard, path: '/dashboard' },
   { id: 'products',     labelKey: 'products',    icon: Package,         path: '/products' },
   { id: 'orders',       labelKey: 'orders',      icon: ClipboardList,   path: '/orders' },
@@ -24,6 +25,7 @@ const menuItems: { id: string; labelKey: string; icon: LucideIcon; path: string 
   { id: 'purchase',     labelKey: 'purchase',    icon: ShoppingBag,     path: '/purchase' },
   { id: 'customers',    labelKey: 'customers',   icon: Users,           path: '/customers' },
   { id: 'subscription', labelKey: 'subscription',icon: CreditCard,      path: '/subscription' },
+  { id: 'admin',        labelKey: 'admin',       icon: UserCog,        path: '/admin', ownerOnly: true },
 ]
 
 export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps) {
@@ -31,6 +33,7 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
   const router = useRouter()
   const theme = useTheme()
   const { user, logout } = useAuth()
+  const menuItems = baseMenuItems.filter(item => !item.ownerOnly || user?.role === USER_ROLES.OWNER)
   const { mode, toggleTheme } = useThemeMode()
   const [profileOpen, setProfileOpen] = useState(false)
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)

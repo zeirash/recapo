@@ -7,13 +7,14 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useQuery } from 'react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useChangeLocale } from '@/hooks/useLocale'
-import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, MessageSquare, LogOut, User, Moon, Sun, Settings, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, ClipboardList, ShoppingCart, Users, CreditCard, MessageSquare, LogOut, User, Moon, Sun, Settings, UserCog, type LucideIcon } from 'lucide-react'
 import { alpha, useTheme } from '@mui/material/styles'
 import { useThemeMode } from '@/providers/ThemeProvider'
 import RecapoLogo from '@/components/ui/RecapoLogo'
 import FeedbackDialog from '@/components/ui/FeedbackDialog'
 import { api } from '@/utils/api'
 import type { Subscription } from '@/types'
+import { USER_ROLES } from '@/constants/roles'
 
 interface SideMenuProps {
   selectedMenu: string
@@ -42,6 +43,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
   const trialExpired = subscription?.status === 'trialing' && !!subscription.trial_ends_at && new Date(subscription.trial_ends_at) < new Date()
   const periodExpired = subscription?.status === 'active' && new Date(subscription.current_period_end) < new Date()
   const isLocked = !!subscription && (['expired', 'past_due', 'cancelled'].includes(subscription.status) || trialExpired || periodExpired)
+  const isOwner = user?.role === USER_ROLES.OWNER
   const allMenuItems: { id: string; label: string; icon: LucideIcon; path: string }[] = [
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard, path: '/dashboard' },
     { id: 'products', label: t('products'), icon: Package, path: '/products' },
@@ -50,6 +52,7 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     { id: 'purchase', label: t('purchase'), icon: ShoppingBag, path: '/purchase' },
     { id: 'customers', label: t('customers'), icon: Users, path: '/customers' },
     { id: 'subscription', label: t('subscription'), icon: CreditCard, path: '/subscription' },
+    ...(isOwner ? [{ id: 'admin', label: t('admin'), icon: UserCog, path: '/admin' }] : []),
   ]
   const menuItems = isSystem ? allMenuItems.filter(item => item.id !== 'subscription') : allMenuItems
 

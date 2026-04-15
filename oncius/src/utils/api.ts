@@ -581,6 +581,30 @@ export const api = {
     return apiRequest<ApiResponse<any[]>>('/system/payments')
   },
 
+  // Invitations
+  inviteAdmin: (email: string) => {
+    return apiRequest<ApiResponse>('/invite', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+  },
+
+  validateInvite: (token: string) => {
+    return apiRequest<ApiResponse<{ email: string; shop_name: string }>>(
+      `/invite/validate?token=${encodeURIComponent(token)}`,
+      {},
+      true
+    )
+  },
+
+  acceptInvite: (token: string, name: string, password: string) => {
+    return apiRequest<ApiResponse<{ access_token: string; refresh_token: string }>>(
+      '/invite/accept',
+      { method: 'POST', body: JSON.stringify({ token, name, password }) },
+      true
+    )
+  },
+
   // Health check
   health: () => {
     return apiRequest<ApiResponse>('/health')
