@@ -1614,3 +1614,89 @@ func Test_uservice_Logout(t *testing.T) {
 		})
 	}
 }
+
+func Test_uservice_GetUsersByShopID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name      string
+		shopID    int
+		mockSetup func(ctrl *gomock.Controller) *mock_store.MockUserStore
+		want      []response.UserData
+		wantErr   bool
+	}{
+		{
+			name:   "successfully returns all users for shop",
+			shopID: 10,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUsersByShopID(gomock.Any(), 10).
+					Return([]model.User{
+						{ID: 1, ShopID: 10, Name: "Alice", Email: "alice@example.com", Role: "owner", CreatedAt: fixedTime, UpdatedAt: sql.NullTime{Time: fixedTime, Valid: true}},
+						{ID: 2, ShopID: 10, Name: "Bob", Email: "bob@example.com", Role: "admin", CreatedAt: fixedTime},
+					}, nil)
+				return mock
+			},
+			want: []response.UserData{
+				{ID: 1, Name: "Alice", Email: "alice@example.com", Role: "owner", CreatedAt: fixedTime, UpdatedAt: &fixedTime},
+				{ID: 2, Name: "Bob", Email: "bob@example.com", Role: "admin", CreatedAt: fixedTime},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "returns empty slice when shop has no users",
+			shopID: 9999,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUsersByShopID(gomock.Any(), 9999).
+					Return([]model.User{}, nil)
+				return mock
+			},
+			want:    []response.UserData{},
+			wantErr: false,
+		},
+		{
+			name:   "returns error on database failure",
+			shopID: 10,
+			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockUserStore {
+				mock := mock_store.NewMockUserStore(ctrl)
+				mock.EXPECT().
+					GetUsersByShopID(gomock.Any(), 10).
+					Return(nil, errors.New("database error"))
+				return mock
+			},
+			want:    []response.UserData{},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			oldStore := userStore
+			defer func() { userStore = oldStore }()
+			userStore = tt.mockSetup(ctrl)
+
+			var u uservice
+			got, gotErr := u.GetUsersByShopID(context.Background(), tt.shopID)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetUsersByShopID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetUsersByShopID() succeeded unexpectedly")
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetUsersByShopID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

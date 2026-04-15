@@ -15,9 +15,10 @@ import (
 type (
 	UserStore interface {
 		GetUserByID(ctx context.Context, userID int) (*model.User, error)
-		GetUserByShopID(ctx context.Context, shopID int) (*model.User, error)
+		GetOwnerByShopID(ctx context.Context, shopID int) (*model.User, error)
 		GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 		GetUsers(ctx context.Context) ([]model.User, error)
+		GetUsersByShopID(ctx context.Context, shopID int) ([]model.User, error)
 		CountUsersByShopID(ctx context.Context, shopID int) (int, error)
 		CreateUser(ctx context.Context, tx database.Tx, name, email, hashPassword, role string, shop_id int) (*model.User, error)
 		UpdateUser(ctx context.Context, id int, input UpdateUserInput) (*model.User, error)
@@ -67,13 +68,13 @@ func (u *user) GetUserByID(ctx context.Context, userID int) (*model.User, error)
 	return &resp, nil
 }
 
-func (u *user) GetUserByShopID(ctx context.Context, shopID int) (*model.User, error) {
+func (u *user) GetOwnerByShopID(ctx context.Context, shopID int) (*model.User, error) {
 	resp := model.User{}
 
 	q := `
 		SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at
 		FROM users
-		WHERE shop_id = $1
+		WHERE shop_id = $1 AND role = 'owner'
 	`
 
 	err := u.db.QueryRowContext(ctx, q, shopID).Scan(&resp.ID, &resp.ShopID, &resp.Name, &resp.Email, &resp.Password, &resp.Role, &resp.SessionToken, &resp.CreatedAt, &resp.UpdatedAt)
@@ -135,6 +136,35 @@ func (u *user) GetUsers(ctx context.Context) ([]model.User, error) {
 	for rows.Next() {
 		var user model.User
 		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (u *user) GetUsersByShopID(ctx context.Context, shopID int) ([]model.User, error) {
+	q := `
+		SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at
+		FROM users
+		WHERE shop_id = $1
+	`
+
+	rows, err := u.db.QueryContext(ctx, q, shopID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []model.User{}
+	for rows.Next() {
+		var user model.User
+		err := rows.Scan(&user.ID, &user.ShopID, &user.Name, &user.Email, &user.Password, &user.Role, &user.SessionToken, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}

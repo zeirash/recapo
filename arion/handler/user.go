@@ -97,3 +97,30 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	WriteJson(w, http.StatusOK, res)
 }
+
+
+// GetUsersByShopHandler godoc
+//
+//	@Summary		List users in shop
+//	@Description	Get all users belonging to the authenticated user's shop.
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}	response.UserData
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/users [get]
+func GetUsersByShopHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+
+	res, err := userService.GetUsersByShopID(ctx, shopID)
+	if err != nil {
+		logger.WithError(err).Error("get_users_by_shop_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_users_by_shop")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}

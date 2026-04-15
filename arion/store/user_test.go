@@ -656,7 +656,7 @@ func Test_user_IsValidRole(t *testing.T) {
 	}
 }
 
-func Test_user_GetUserByShopID(t *testing.T) {
+func Test_user_GetOwnerByShopID(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
 
 	tests := []struct {
@@ -671,8 +671,8 @@ func Test_user_GetUserByShopID(t *testing.T) {
 			shopID: 10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "session_token", "created_at", "updated_at"}).
-					AddRow(1, 10, "John Doe", "john@example.com", "hashedpass", "admin", nil, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+					AddRow(1, 10, "John Doe", "john@example.com", "hashedpass", "owner", nil, fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1 AND role = 'owner'`).
 					WithArgs(10).
 					WillReturnRows(rows)
 			},
@@ -682,7 +682,7 @@ func Test_user_GetUserByShopID(t *testing.T) {
 				Name:      "John Doe",
 				Email:     "john@example.com",
 				Password:  "hashedpass",
-				Role:      "admin",
+				Role:      "owner",
 				CreatedAt: fixedTime,
 			},
 			wantErr: false,
@@ -691,7 +691,7 @@ func Test_user_GetUserByShopID(t *testing.T) {
 			name:   "get non-existent shop ID returns nil",
 			shopID: 9999,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1 AND role = 'owner'`).
 					WithArgs(9999).
 					WillReturnError(sql.ErrNoRows)
 			},
@@ -702,7 +702,7 @@ func Test_user_GetUserByShopID(t *testing.T) {
 			name:   "get user by shop ID returns error on database failure",
 			shopID: 10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1 AND role = 'owner'`).
 					WithArgs(10).
 					WillReturnError(errors.New("database error"))
 			},
@@ -722,20 +722,20 @@ func Test_user_GetUserByShopID(t *testing.T) {
 			tt.mockSetup(mock)
 			store := NewUserStoreWithDB(db)
 
-			got, gotErr := store.GetUserByShopID(context.Background(), tt.shopID)
+			got, gotErr := store.GetOwnerByShopID(context.Background(), tt.shopID)
 
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("GetUserByShopID() error = %v, wantErr %v", gotErr, tt.wantErr)
+					t.Errorf("GetOwnerByShopID() error = %v, wantErr %v", gotErr, tt.wantErr)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("GetUserByShopID() succeeded unexpectedly")
+				t.Fatal("GetOwnerByShopID() succeeded unexpectedly")
 			}
 
 			if !reflect.DeepEqual(got, tt.wantResult) {
-				t.Errorf("GetUserByShopID() = %v, want %v", got, tt.wantResult)
+				t.Errorf("GetOwnerByShopID() = %v, want %v", got, tt.wantResult)
 			}
 		})
 	}
@@ -805,6 +805,86 @@ func Test_user_CountUsersByShopID(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("CountUsersByShopID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_user_GetUsersByShopID(t *testing.T) {
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name      string
+		shopID    int
+		mockSetup func(mock sqlmock.Sqlmock)
+		want      []model.User
+		wantErr   bool
+	}{
+		{
+			name:   "returns all users for shop",
+			shopID: 10,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "session_token", "created_at", "updated_at"}).
+					AddRow(1, 10, "Alice", "alice@example.com", "hash1", "owner", nil, fixedTime, nil).
+					AddRow(2, 10, "Bob", "bob@example.com", "hash2", "admin", nil, fixedTime, nil)
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+					WithArgs(10).
+					WillReturnRows(rows)
+			},
+			want: []model.User{
+				{ID: 1, ShopID: 10, Name: "Alice", Email: "alice@example.com", Password: "hash1", Role: "owner", CreatedAt: fixedTime},
+				{ID: 2, ShopID: 10, Name: "Bob", Email: "bob@example.com", Password: "hash2", Role: "admin", CreatedAt: fixedTime},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "returns empty slice when no users found",
+			shopID: 9999,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "session_token", "created_at", "updated_at"})
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+					WithArgs(9999).
+					WillReturnRows(rows)
+			},
+			want:    []model.User{},
+			wantErr: false,
+		},
+		{
+			name:   "returns error on database failure",
+			shopID: 10,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+					WithArgs(10).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewUserStoreWithDB(db)
+
+			got, gotErr := store.GetUsersByShopID(context.Background(), tt.shopID)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetUsersByShopID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetUsersByShopID() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetUsersByShopID() = %v, want %v", got, tt.want)
 			}
 		})
 	}

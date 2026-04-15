@@ -66,6 +66,21 @@ func (mr *MockUserServiceMockRecorder) GetUsers(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockUserService)(nil).GetUsers), ctx)
 }
 
+// GetUsersByShopID mocks base method.
+func (m *MockUserService) GetUsersByShopID(ctx context.Context, shopID int) ([]response.UserData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersByShopID", ctx, shopID)
+	ret0, _ := ret[0].([]response.UserData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersByShopID indicates an expected call of GetUsersByShopID.
+func (mr *MockUserServiceMockRecorder) GetUsersByShopID(ctx, shopID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersByShopID", reflect.TypeOf((*MockUserService)(nil).GetUsersByShopID), ctx, shopID)
+}
+
 // RefreshToken mocks base method.
 func (m *MockUserService) RefreshToken(ctx context.Context, refreshToken string) (response.TokenResponse, error) {
 	m.ctrl.T.Helper()

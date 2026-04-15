@@ -293,3 +293,91 @@ func TestUpdateUserHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestGetUsersByShopHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	oldService := handler.GetUserService()
+	defer handler.SetUserService(oldService)
+
+	mockUserService := mock_service.NewMockUserService(ctrl)
+	handler.SetUserService(mockUserService)
+
+	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+
+	tests := []struct {
+		name        string
+		shopID      int
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+		wantCount   int
+	}{
+		{
+			name:   "successfully returns users in shop",
+			shopID: 10,
+			mockSetup: func() {
+				mockUserService.EXPECT().
+					GetUsersByShopID(gomock.Any(), 10).
+					Return([]response.UserData{
+						{ID: 1, Name: "Alice", Email: "alice@example.com", Role: "owner", CreatedAt: fixedTime},
+						{ID: 2, Name: "Bob", Email: "bob@example.com", Role: "admin", CreatedAt: fixedTime},
+					}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   2,
+		},
+		{
+			name:   "returns empty list when shop has no users",
+			shopID: 10,
+			mockSetup: func() {
+				mockUserService.EXPECT().
+					GetUsersByShopID(gomock.Any(), 10).
+					Return([]response.UserData{}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantCount:   0,
+		},
+		{
+			name:   "returns 500 on service error",
+			shopID: 10,
+			mockSetup: func() {
+				mockUserService.EXPECT().
+					GetUsersByShopID(gomock.Any(), 10).
+					Return(nil, errors.New("database error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := newRequestWithShopID("GET", "/users", nil, tt.shopID)
+			rec := httptest.NewRecorder()
+
+			handler.GetUsersByShopHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("GetUsersByShopHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("GetUsersByShopHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantCount > 0 {
+				users, ok := resp.Data.([]interface{})
+				if !ok || len(users) != tt.wantCount {
+					t.Errorf("GetUsersByShopHandler() data count = %v, want %v", len(users), tt.wantCount)
+				}
+			}
+		})
+	}
+}

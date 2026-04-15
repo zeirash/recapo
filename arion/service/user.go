@@ -29,6 +29,7 @@ type (
 		UpdateUser(ctx context.Context, input UpdateUserInput) (response.UserData, error)
 		GetUserByID(ctx context.Context, userID int) (*response.UserData, error)
 		GetUsers(ctx context.Context) ([]response.UserData, error)
+		GetUsersByShopID(ctx context.Context, shopID int) ([]response.UserData, error)
 		SendOTP(ctx context.Context, email, lang string) error
 		ForgotPassword(ctx context.Context, email, lang string) error
 		ResetPassword(ctx context.Context, email, otp, newPassword string) error
@@ -437,6 +438,33 @@ func (u *uservice) GetUsers(ctx context.Context) ([]response.UserData, error) {
 			ID:        user.ID,
 			Name:      user.Name,
 			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+		}
+
+		if user.UpdatedAt.Valid {
+			t := user.UpdatedAt.Time
+			res.UpdatedAt = &t
+		}
+
+		usersData = append(usersData, res)
+	}
+
+	return usersData, nil
+}
+
+func (u *uservice) GetUsersByShopID(ctx context.Context, shopID int) ([]response.UserData, error) {
+	users, err := userStore.GetUsersByShopID(ctx, shopID)
+	if err != nil {
+		return []response.UserData{}, err
+	}
+
+	usersData := []response.UserData{}
+	for _, user := range users {
+		res := response.UserData{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			Role:      user.Role,
 			CreatedAt: user.CreatedAt,
 		}
 

@@ -356,7 +356,7 @@ func callMidtransSnap(ctx context.Context, orderID string, grossAmount int, shop
 		},
 	}
 
-	user, err := userStore.GetUserByShopID(ctx, shopID)
+	user, err := userStore.GetOwnerByShopID(ctx, shopID)
 	if err != nil {
 		return nil, err
 	}

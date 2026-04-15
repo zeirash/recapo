@@ -99,6 +99,7 @@ func NewRouter() *mux.Router {
 	// User
 	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateUserHandler))).Methods("PATCH")
 	r.Handle("/user", middleware.ChainMiddleware(middleware.Authentication)(http.HandlerFunc(handler.GetUserHandler))).Methods("GET")
+	r.Handle("/users", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetUsersByShopHandler))).Methods("GET")
 
 	// Customer
 	r.Handle("/customer", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateCustomerHandler))).Methods("POST")

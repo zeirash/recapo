@@ -17,7 +17,7 @@ type (
 		Name               string     `json:"name"`
 		Email              string     `json:"email"`
 		Role               string     `json:"role"`
-		SubscriptionActive bool       `json:"subscription_active"`
+		SubscriptionActive bool       `json:"subscription_active,omitempty"`
 		CreatedAt          time.Time  `json:"created_at"`
 		UpdatedAt          *time.Time `json:"updated_at"`
 	}
