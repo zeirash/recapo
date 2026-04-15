@@ -19,12 +19,14 @@ const Layout = ({ children }: LayoutProps) => {
   const { user, isLoadingUser, userError, isSubscriptionRequired } = useAuth()
   const isSubscriptionError = isSubscriptionRequired || (userError as any)?.status === 402
 
-  // Redirect to login if unauthenticated (402 = billing issue, not auth — handled in useAuth)
+  // Redirect to login if unauthenticated, or to billing if subscription is required
   useEffect(() => {
     if (!getAuthToken() || (!isLoadingUser && userError && !isSubscriptionError)) {
       router.replace('/login')
+    } else if (isSubscriptionError && !pathname.startsWith('/subscription')) {
+      router.replace('/subscription')
     }
-  }, [isLoadingUser, userError, isSubscriptionError, router])
+  }, [isLoadingUser, userError, isSubscriptionError, pathname, router])
 
   // Sync selectedMenu with current pathname
   useEffect(() => {
