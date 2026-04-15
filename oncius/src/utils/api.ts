@@ -72,12 +72,6 @@ const clearTokensAndRedirect = (): void => {
   }
 }
 
-const redirectToSubscription = (): void => {
-  if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/subscription')) {
-    window.location.href = '/subscription'
-  }
-}
-
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false
 let refreshPromise: Promise<boolean> | null = null
@@ -173,8 +167,8 @@ const apiRequest = async <T>(
       }
 
       if (response.status === 402 && !skipAuth) {
-        redirectToSubscription()
-        throw new ApiError('Subscription required', 402)
+        const errorData = await response.json().catch(() => ({}))
+        throw new ApiError(errorData.message || 'Subscription required', 402, errorData)
       }
 
       const errorData = await response.json().catch(() => ({}))

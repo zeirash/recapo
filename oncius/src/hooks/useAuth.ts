@@ -5,6 +5,13 @@ import { useRouter } from 'next/navigation'
 
 export const REGISTER_DATA_KEY = 'registerPendingData'
 
+// Module-level flag: once we receive subscription_required, disable the query for the
+// lifetime of this tab session. react-query v3 re-fires queryFn on every new observer
+// subscription (component mount) when the query is in error state with no cached data —
+// refetchOnMount: false only prevents re-fetching stale *successful* data. This flag
+// makes enabled: false immediately, so no new observer can trigger a fetch.
+let _subscriptionRequired = false
+
 export const useAuth = () => {
   const queryClient = useQueryClient()
   const router = useRouter()
@@ -29,7 +36,18 @@ export const useAuth = () => {
     },
     {
       retry: false,
-      enabled: !!getAuthToken(),
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      enabled: !!getAuthToken() && !_subscriptionRequired,
+      onError: (error: any) => {
+        if (error?.status === 402) {
+          _subscriptionRequired = true
+          queryClient.cancelQueries('currentUser')
+          if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/subscription')) {
+            router.replace('/subscription')
+          }
+        }
+      },
     }
   )
 
@@ -44,13 +62,19 @@ export const useAuth = () => {
     },
     {
       onSuccess: async () => {
+        _subscriptionRequired = false
         // Fetch user data after successful login
         try {
           const userResponse = await api.getCurrentUser()
           if (userResponse.success && userResponse.data) {
             queryClient.setQueryData('currentUser', userResponse.data)
           }
-        } catch (error) {
+        } catch (error: any) {
+          if (error?.status === 402) {
+            _subscriptionRequired = true
+            router.push('/subscription')
+            return
+          }
           console.error('Failed to fetch user data:', error)
         }
         router.push('/dashboard')
@@ -157,6 +181,7 @@ export const useAuth = () => {
 
   // Logout function
   const logout = async () => {
+    _subscriptionRequired = false
     await api.logout()
     queryClient.clear()
     router.push('/login')
@@ -170,6 +195,7 @@ export const useAuth = () => {
     isLoadingUser,
     userError,
     isAuthenticated,
+    isSubscriptionRequired: _subscriptionRequired,
     login: loginMutation.mutate,
     loginLoading: loginMutation.isLoading,
     loginError: loginMutation.error as Error | null,

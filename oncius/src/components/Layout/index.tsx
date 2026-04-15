@@ -16,14 +16,15 @@ const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname()
   const router = useRouter()
   const [selectedMenu, setSelectedMenu] = useState('dashboard')
-  const { user, isLoadingUser, userError } = useAuth()
+  const { user, isLoadingUser, userError, isSubscriptionRequired } = useAuth()
+  const isSubscriptionError = isSubscriptionRequired || (userError as any)?.status === 402
 
-  // Redirect to login if unauthenticated
+  // Redirect to login if unauthenticated (402 = billing issue, not auth — handled in useAuth)
   useEffect(() => {
-    if (!getAuthToken() || (!isLoadingUser && userError)) {
+    if (!getAuthToken() || (!isLoadingUser && userError && !isSubscriptionError)) {
       router.replace('/login')
     }
-  }, [isLoadingUser, userError, router])
+  }, [isLoadingUser, userError, isSubscriptionError, router])
 
   // Sync selectedMenu with current pathname
   useEffect(() => {
@@ -43,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
     }
   }, [pathname])
 
-  if (!user) {
+  if (!user && !isSubscriptionError) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
