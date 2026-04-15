@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from 'react'
-import { Box, Typography, Button, Paper, OutlinedInput, Alert } from '@mui/material'
+import { Box, Typography, Button, Paper, OutlinedInput, Alert, Chip } from '@mui/material'
 import { useTranslations } from 'next-intl'
-import { UserCog, Send } from 'lucide-react'
+import { UserCog, Send, Users } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { api } from '@/utils/api'
 import { USER_ROLES } from '@/constants/roles'
+import { useQuery } from 'react-query'
 
 const AdminPage = () => {
   const t = useTranslations()
@@ -19,6 +20,13 @@ const AdminPage = () => {
   const [error, setError] = useState('')
 
   const isOwner = user?.role === USER_ROLES.OWNER
+
+  const { data: usersRes, refetch: refetchUsers } = useQuery(
+    'shopUsers',
+    () => api.getShopUsers(),
+    { enabled: isOwner },
+  )
+  const shopUsers: any[] = usersRes?.data ?? []
 
   const validate = () => {
     if (!email) {
@@ -44,6 +52,7 @@ const AdminPage = () => {
       if (res.success) {
         setSuccess(t('invite.sentSuccess', { email }))
         setEmail('')
+        refetchUsers()
       } else {
         setError(res.message || t('invite.sendFailed'))
       }
@@ -68,46 +77,92 @@ const AdminPage = () => {
           <Alert severity="error">{t('invite.ownerOnly')}</Alert>
         </Paper>
       ) : (
-        <Paper sx={{ p: '24px', borderRadius: '12px', border: '1px solid', borderColor: 'grey.200' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '20px' }}>
-            <UserCog size={18} />
-            <Typography sx={{ fontWeight: 600, fontSize: '16px' }}>
-              {t('invite.sendInvite')}
-            </Typography>
-          </Box>
-
-          {success && <Alert severity="success" sx={{ mb: '16px' }}>{success}</Alert>}
-          {error && <Alert severity="error" sx={{ mb: '16px' }}>{error}</Alert>}
-
-          <Box component="form" onSubmit={handleSubmit}>
-            <Box sx={{ mb: '16px' }}>
-              <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary', fontSize: '14px' }}>
-                {t('common.email')}
-              </Box>
-              <Box sx={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <OutlinedInput
-                  size="small"
-                  type="email"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setEmailError('') }}
-                  placeholder={t('auth.enterEmail')}
-                  sx={{ flex: 1, minWidth: '200px' }}
-                />
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disableElevation
-                  disabled={loading}
-                  startIcon={<Send size={15} />}
-                  sx={{ whiteSpace: 'nowrap' }}
-                >
-                  {loading ? t('invite.sending') : t('invite.sendInvite')}
-                </Button>
-              </Box>
-              {emailError && <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>{emailError}</Box>}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Invite form */}
+          <Paper sx={{ p: '24px', borderRadius: '12px', border: '1px solid', borderColor: 'grey.200' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '20px' }}>
+              <UserCog size={18} />
+              <Typography sx={{ fontWeight: 600, fontSize: '16px' }}>
+                {t('invite.sendInvite')}
+              </Typography>
             </Box>
-          </Box>
-        </Paper>
+
+            {success && <Alert severity="success" sx={{ mb: '16px' }}>{success}</Alert>}
+            {error && <Alert severity="error" sx={{ mb: '16px' }}>{error}</Alert>}
+
+            <Box component="form" onSubmit={handleSubmit}>
+              <Box sx={{ mb: '16px' }}>
+                <Box component="label" sx={{ display: 'block', mb: '4px', fontWeight: 600, color: 'text.primary', fontSize: '14px' }}>
+                  {t('common.email')}
+                </Box>
+                <Box sx={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <OutlinedInput
+                    size="small"
+                    type="email"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setEmailError('') }}
+                    placeholder={t('auth.enterEmail')}
+                    sx={{ flex: 1, minWidth: '200px' }}
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disableElevation
+                    disabled={loading}
+                    startIcon={<Send size={15} />}
+                    sx={{ whiteSpace: 'nowrap' }}
+                  >
+                    {loading ? t('invite.sending') : t('invite.sendInvite')}
+                  </Button>
+                </Box>
+                {emailError && <Box sx={{ color: 'error.main', fontSize: '12px', mt: '4px' }}>{emailError}</Box>}
+              </Box>
+            </Box>
+          </Paper>
+
+          {/* Users list */}
+          <Paper sx={{ p: '24px', borderRadius: '12px', border: '1px solid', borderColor: 'grey.200' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '20px' }}>
+              <Users size={18} />
+              <Typography sx={{ fontWeight: 600, fontSize: '16px' }}>
+                {t('invite.shopMembers')}
+              </Typography>
+            </Box>
+
+            {shopUsers.length === 0 ? (
+              <Box sx={{ fontSize: '14px', color: 'text.secondary' }}>{t('invite.noMembers')}</Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {shopUsers.map((u: any) => (
+                  <Box
+                    key={u.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      py: '10px',
+                      px: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid',
+                      borderColor: 'grey.100',
+                    }}
+                  >
+                    <Box>
+                      <Box sx={{ fontSize: '14px', fontWeight: 500 }}>{u.name}</Box>
+                      <Box sx={{ fontSize: '12px', color: 'text.secondary' }}>{u.email}</Box>
+                    </Box>
+                    <Chip
+                      label={u.role}
+                      size="small"
+                      color={u.role === USER_ROLES.OWNER ? 'primary' : 'default'}
+                      sx={{ textTransform: 'capitalize', fontSize: '11px' }}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Paper>
+        </Box>
       )}
     </Box>
   )

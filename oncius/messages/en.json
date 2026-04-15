@@ -413,6 +413,8 @@
     "accepting": "Creating account...",
     "acceptFailed": "Failed to accept invitation",
     "invalidLink": "This invitation link is invalid or has already been used.",
-    "ownerOnly": "Only the shop owner can invite admins."
+    "ownerOnly": "Only the shop owner can invite admins.",
+    "shopMembers": "Shop Members",
+    "noMembers": "No members found."
   }
 }

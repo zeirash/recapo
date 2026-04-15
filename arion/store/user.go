@@ -150,6 +150,7 @@ func (u *user) GetUsersByShopID(ctx context.Context, shopID int) ([]model.User, 
 		SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at
 		FROM users
 		WHERE shop_id = $1
+		ORDER BY created_at ASC
 	`
 
 	rows, err := u.db.QueryContext(ctx, q, shopID)

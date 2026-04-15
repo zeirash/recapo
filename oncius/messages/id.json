@@ -413,6 +413,8 @@
     "accepting": "Membuat akun...",
     "acceptFailed": "Gagal menerima undangan",
     "invalidLink": "Tautan undangan ini tidak valid atau sudah digunakan.",
-    "ownerOnly": "Hanya pemilik toko yang dapat mengundang admin."
+    "ownerOnly": "Hanya pemilik toko yang dapat mengundang admin.",
+    "shopMembers": "Anggota Toko",
+    "noMembers": "Tidak ada anggota ditemukan."
   }
 }

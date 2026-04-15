@@ -581,6 +581,10 @@ export const api = {
     return apiRequest<ApiResponse<any[]>>('/system/payments')
   },
 
+  getShopUsers: () => {
+    return apiRequest<ApiResponse<any[]>>('/users')
+  },
+
   // Invitations
   inviteAdmin: (email: string) => {
     return apiRequest<ApiResponse>('/invite', {

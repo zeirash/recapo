@@ -827,7 +827,7 @@ func Test_user_GetUsersByShopID(t *testing.T) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "session_token", "created_at", "updated_at"}).
 					AddRow(1, 10, "Alice", "alice@example.com", "hash1", "owner", nil, fixedTime, nil).
 					AddRow(2, 10, "Bob", "bob@example.com", "hash2", "admin", nil, fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1 ORDER BY created_at ASC`).
 					WithArgs(10).
 					WillReturnRows(rows)
 			},
@@ -842,7 +842,7 @@ func Test_user_GetUsersByShopID(t *testing.T) {
 			shopID: 9999,
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "name", "email", "password", "role", "session_token", "created_at", "updated_at"})
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1 ORDER BY created_at ASC`).
 					WithArgs(9999).
 					WillReturnRows(rows)
 			},
@@ -853,7 +853,7 @@ func Test_user_GetUsersByShopID(t *testing.T) {
 			name:   "returns error on database failure",
 			shopID: 10,
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1`).
+				mock.ExpectQuery(`SELECT id, shop_id, name, email, password, role, session_token, created_at, updated_at\s+FROM users\s+WHERE shop_id = \$1 ORDER BY created_at ASC`).
 					WithArgs(10).
 					WillReturnError(errors.New("database error"))
 			},
