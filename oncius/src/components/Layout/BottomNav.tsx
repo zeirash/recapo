@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Box, Button } from '@mui/material'
+import { Box, Button, Tooltip } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useTheme } from '@mui/material/styles'
@@ -11,6 +11,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { USER_ROLES } from '@/constants/roles'
 import { useThemeMode } from '@/providers/ThemeProvider'
 import FeedbackDialog from '@/components/ui/FeedbackDialog'
+import { useQuery } from 'react-query'
+import { api } from '@/utils/api'
+import type { Subscription } from '@/types'
 
 interface BottomNavProps {
   selectedMenu: string
@@ -24,8 +27,8 @@ const baseMenuItems: { id: string; labelKey: string; icon: LucideIcon; path: str
   { id: 'temp_orders',  labelKey: 'tempOrders',  icon: ShoppingCart,    path: '/temp-orders' },
   { id: 'purchase',     labelKey: 'purchase',    icon: ShoppingBag,     path: '/purchase' },
   { id: 'customers',    labelKey: 'customers',   icon: Users,           path: '/customers' },
+  { id: 'admin',        labelKey: 'admin',       icon: UserCog,         path: '/admin', ownerOnly: true },
   { id: 'subscription', labelKey: 'subscription',icon: CreditCard,      path: '/subscription' },
-  { id: 'admin',        labelKey: 'admin',       icon: UserCog,        path: '/admin', ownerOnly: true },
 ]
 
 export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps) {
@@ -35,6 +38,15 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
   const { user, logout } = useAuth()
   const menuItems = baseMenuItems.filter(item => !item.ownerOnly || user?.role === USER_ROLES.OWNER)
   const { mode, toggleTheme } = useThemeMode()
+  const isSystem = user?.role === 'system'
+  const { data: subRes } = useQuery('subscription', () => api.getSubscription(), {
+    staleTime: 5 * 60 * 1000,
+    enabled: !isSystem,
+  })
+  const subscription: Subscription | null = subRes?.data ?? null
+  const trialExpired = subscription?.status === 'trialing' && !!subscription.trial_ends_at && new Date(subscription.trial_ends_at) < new Date()
+  const periodExpired = subscription?.status === 'active' && new Date(subscription.current_period_end) < new Date()
+  const isLocked = !!subscription && (['expired', 'past_due', 'cancelled'].includes(subscription.status) || trialExpired || periodExpired)
   const [profileOpen, setProfileOpen] = useState(false)
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
@@ -60,10 +72,11 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
       >
         {menuItems.map((item) => {
           const isActive = selectedMenu === item.id
-          return (
+          const locked = isLocked && item.id !== 'subscription'
+          const itemBox = (
             <Box
               key={item.id}
-              onClick={() => { onMenuSelect(item.id); router.push(item.path) }}
+              onClick={locked ? undefined : () => { onMenuSelect(item.id); router.push(item.path) }}
               sx={{
                 flex: '0 0 auto',
                 display: 'flex',
@@ -73,13 +86,14 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
                 gap: '3px',
                 px: '14px',
                 py: '10px',
-                cursor: 'pointer',
+                cursor: locked ? 'not-allowed' : 'pointer',
                 color: isActive ? 'primary.main' : 'grey.500',
                 bgcolor: isActive ? alpha(theme.palette.primary.main, 0.07) : 'transparent',
                 borderTop: '2px solid',
                 borderColor: isActive ? 'primary.main' : 'transparent',
                 transition: 'color 0.15s, background-color 0.15s',
                 minWidth: '64px',
+                opacity: locked ? 0.4 : 1,
               }}
             >
               <item.icon size={20} />
@@ -88,6 +102,11 @@ export default function BottomNav({ selectedMenu, onMenuSelect }: BottomNavProps
               </Box>
             </Box>
           )
+          return locked ? (
+            <Tooltip key={item.id} title="Subscribe to access" placement="top" arrow>
+              {itemBox}
+            </Tooltip>
+          ) : itemBox
         })}
 
         {/* Profile tab */}

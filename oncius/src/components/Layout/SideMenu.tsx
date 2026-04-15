@@ -51,8 +51,8 @@ const SideMenu = ({ selectedMenu, onMenuSelect }: SideMenuProps) => {
     { id: 'temp_orders', label: t('tempOrders'), icon: ShoppingCart, path: '/temp-orders' },
     { id: 'purchase', label: t('purchase'), icon: ShoppingBag, path: '/purchase' },
     { id: 'customers', label: t('customers'), icon: Users, path: '/customers' },
-    { id: 'subscription', label: t('subscription'), icon: CreditCard, path: '/subscription' },
     ...(isOwner ? [{ id: 'admin', label: t('admin'), icon: UserCog, path: '/admin' }] : []),
+    { id: 'subscription', label: t('subscription'), icon: CreditCard, path: '/subscription' },
   ]
   const menuItems = isSystem ? allMenuItems.filter(item => item.id !== 'subscription') : allMenuItems
 
