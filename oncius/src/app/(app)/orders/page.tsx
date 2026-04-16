@@ -99,7 +99,7 @@ function normalizePaymentStatus(status: string): string {
 }
 
 export default function OrdersPage() {
-  const DEFAULT_STATUSES = ['created', 'in_progress'] as const
+  const DEFAULT_STATUSES = ['created', 'in_progress', 'in_delivery'] as const
   const theme = useTheme()
   const statusColors = theme.palette.mode === 'dark' ? darkStatusColors : lightStatusColors
   const paymentStatusColors = theme.palette.mode === 'dark' ? darkPaymentStatusColors : lightPaymentStatusColors
@@ -503,6 +503,7 @@ export default function OrdersPage() {
           <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Toolbar */}
             <Box sx={{ px: '24px', pt: '24px', pb: '16px', flexShrink: 0 }}>
+              <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
               {/* Action bar */}
               <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <Paper
@@ -582,7 +583,7 @@ export default function OrdersPage() {
                       sx={{ height: 34, fontSize: '13px', borderRadius: '6px', minWidth: 130 }}
                       MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
                     >
-                      <MenuItem value="created,in_progress" sx={{ fontSize: '13px' }}>{toStatus('active')}</MenuItem>
+                      <MenuItem value="created,in_progress,in_delivery" sx={{ fontSize: '13px' }}>{toStatus('active')}</MenuItem>
                       <MenuItem value="created" sx={{ fontSize: '13px' }}>{toStatus('created')}</MenuItem>
                       <MenuItem value="in_progress" sx={{ fontSize: '13px' }}>{toStatus('in_progress')}</MenuItem>
                       <MenuItem value="in_delivery" sx={{ fontSize: '13px' }}>{toStatus('in_delivery')}</MenuItem>
@@ -613,10 +614,12 @@ export default function OrdersPage() {
                   />
                 </Box>
               )}
+              </Box>
             </Box>
 
             {/* Table */}
             <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: '24px', pb: '24px' }}>
+              <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
               {sortedOrders.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: '64px', color: 'text.secondary', fontSize: '14px' }}>{to('noOrders')}</Box>
               ) : (
@@ -700,6 +703,7 @@ export default function OrdersPage() {
                   </Box>
                 </Paper>
               )}
+              </Box>
             </Box>
           </Box>
         )}

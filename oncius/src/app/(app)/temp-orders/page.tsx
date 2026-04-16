@@ -241,6 +241,7 @@ export default function TempOrdersPage() {
             <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {/* Toolbar */}
               <Box sx={{ px: '24px', pt: '24px', pb: '16px', flexShrink: 0 }}>
+                <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
                 <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <Paper
                     variant="outlined"
@@ -292,10 +293,12 @@ export default function TempOrdersPage() {
                     />
                   </Box>
                 )}
+                </Box>
               </Box>
 
               {/* Table */}
               <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: '24px', pb: '24px' }}>
+                <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
                 {(tempOrdersRes || []).length === 0 ? (
                   <Box sx={{ textAlign: 'center', py: '64px', color: 'text.secondary', fontSize: '14px' }}>{tTemp('noOrders')}</Box>
                 ) : (
@@ -369,6 +372,7 @@ export default function TempOrdersPage() {
                     </Box>
                   </Paper>
                 )}
+                </Box>
               </Box>
             </Box>
           )}
