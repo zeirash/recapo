@@ -950,10 +950,8 @@ func validateMergeTempOrder(inp MergeOrderRequest) (bool, error) {
 	return true, nil
 }
 
-// parseDate parses a date string. Accepts RFC3339 (with timezone) or YYYY-MM-DD (UTC fallback).
+// parseDate parses a YYYY-MM-DD date string (UTC).
 func parseDate(s string) (time.Time, error) {
-	if t, err := time.Parse(time.RFC3339, s); err == nil {
-		return t, nil
-	}
 	return time.ParseInLocation("2006-01-02", s, time.UTC)
 }
+

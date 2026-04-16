@@ -143,8 +143,8 @@ export default function OrdersPage() {
       if (debouncedSearch) opts.search = debouncedSearch
       if (statusFilter.length > 0) opts.status = statusFilter.join(',')
       if (paymentStatusFilter) opts.payment_status = paymentStatusFilter
-      if (dateFrom) opts.date_from = new Date(dateFrom + 'T00:00:00').toISOString()
-      if (dateTo) opts.date_to = new Date(dateTo + 'T23:59:59').toISOString()
+      if (dateFrom) opts.date_from = dateFrom
+      if (dateTo) opts.date_to = dateTo
       const res = await api.getOrders(opts)
       if (!res.success) throw new Error(res.message || to('fetchFailed'))
       return res.data as Order[]

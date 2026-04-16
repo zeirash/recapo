@@ -76,8 +76,8 @@ export default function TempOrdersPage() {
       const opts: { search?: string; status?: string; date_from?: string; date_to?: string } = {}
       if (debouncedSearch) opts.search = debouncedSearch
       if (statusFilter && statusFilter !== 'all') opts.status = statusFilter
-      if (dateFrom) opts.date_from = new Date(dateFrom + 'T00:00:00').toISOString()
-      if (dateTo) opts.date_to = new Date(dateTo + 'T23:59:59').toISOString()
+      if (dateFrom) opts.date_from = dateFrom
+      if (dateTo) opts.date_to = dateTo
       const res = await api.getTempOrders(opts)
       if (!res.success) throw new Error(res.message || tTemp('fetchFailed'))
       return res.data as TempOrder[]

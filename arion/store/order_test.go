@@ -243,13 +243,13 @@ func Test_order_GetOrdersByShopID(t *testing.T) {
 			shopID: 10,
 			opts: model.OrderFilterOptions{
 				DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
-				DateTo:   ptrTime(time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)), // exclusive: < Feb 1 = through Jan 31
+				DateTo:   ptrTime(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "is_customer_deleted", "total_price", "status", "payment_status", "notes", "created_at", "updated_at"}).
 					AddRow(1, 10, "John Doe", false, 5000, "in_progress", "", "", fixedTime, nil)
-				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, \(c.deleted_at IS NOT NULL\) as is_customer_deleted, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND o.created_at >= \$2\s+AND o.created_at <= \$3`).
-					WithArgs(10, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)).
+				mock.ExpectQuery(`SELECT o.id, o.shop_id, c.name as customer_name, \(c.deleted_at IS NOT NULL\) as is_customer_deleted, o.total_price, o.status, o.payment_status, o.notes, o.created_at, o.updated_at\s+FROM orders o\s+INNER JOIN customers c ON o.customer_id = c.id\s+WHERE o.shop_id = \$1\s+AND o.created_at::date >= \$2\s+AND o.created_at::date <= \$3`).
+					WithArgs(10, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)).
 					WillReturnRows(rows)
 			},
 			wantResult: []model.Order{
@@ -943,13 +943,13 @@ func Test_order_GetTempOrdersByShopID(t *testing.T) {
 			shopID: 5,
 			opts: model.OrderFilterOptions{
 				DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
-				DateTo:   ptrTime(time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)),
+				DateTo:   ptrTime(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)),
 			},
 			mockSetup: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "shop_id", "customer_name", "customer_phone", "total_price", "status", "created_at", "updated_at"}).
 					AddRow(1, 5, "Jane Doe", "+62812345678", 2500, "pending", fixedTime, nil)
-				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+AND created_at >= \$2\s+AND created_at <= \$3`).
-					WithArgs(5, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)).
+				mock.ExpectQuery(`SELECT id, shop_id, customer_name, customer_phone, total_price, status, created_at, updated_at\s+FROM temp_orders\s+WHERE shop_id = \$1\s+AND created_at::date >= \$2\s+AND created_at::date <= \$3`).
+					WithArgs(5, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)).
 					WillReturnRows(rows)
 			},
 			wantResult: []model.TempOrder{

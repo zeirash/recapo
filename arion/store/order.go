@@ -94,12 +94,12 @@ func (o *order) GetOrdersByShopID(ctx context.Context, shopID int, opts model.Or
 		argNum++
 	}
 	if opts.DateFrom != nil {
-		q += fmt.Sprintf(" AND o.created_at >= $%d", argNum)
+		q += fmt.Sprintf(" AND o.created_at::date >= $%d", argNum)
 		args = append(args, *opts.DateFrom)
 		argNum++
 	}
 	if opts.DateTo != nil {
-		q += fmt.Sprintf(" AND o.created_at <= $%d", argNum)
+		q += fmt.Sprintf(" AND o.created_at::date <= $%d", argNum)
 		args = append(args, *opts.DateTo)
 		argNum++
 	}
@@ -364,12 +364,12 @@ func (o *order) GetTempOrdersByShopID(ctx context.Context, shopID int, opts mode
 		argNum++
 	}
 	if opts.DateFrom != nil {
-		q += fmt.Sprintf(" AND created_at >= $%d", argNum)
+		q += fmt.Sprintf(" AND created_at::date >= $%d", argNum)
 		args = append(args, *opts.DateFrom)
 		argNum++
 	}
 	if opts.DateTo != nil {
-		q += fmt.Sprintf(" AND created_at <= $%d", argNum)
+		q += fmt.Sprintf(" AND created_at::date <= $%d", argNum)
 		args = append(args, *opts.DateTo)
 		argNum++
 	}
