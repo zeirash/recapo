@@ -3,10 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, IconButton, ListSubheader, MenuItem, Paper, Select, Typography } from '@mui/material'
-import { ArrowLeft, ClipboardList } from 'lucide-react'
+import { Box, Button, Container, Drawer, IconButton, InputBase, MenuItem, Paper, Select, Tooltip, Typography } from '@mui/material'
+import { ListFilter, Search, X } from 'lucide-react'
 import DateRangeFilter from '@/components/ui/DateRangeFilter'
-import SearchInput from '@/components/ui/SearchInput'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
 
@@ -45,9 +44,10 @@ export default function TempOrdersPage() {
   const [selectedTempOrderId, setSelectedTempOrderId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string[]>(['pending'])
+  const [statusFilter, setStatusFilter] = useState<string>('pending')
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
+  const [filtersVisible, setFiltersVisible] = useState(false)
   const [acceptLoading, setAcceptLoading] = useState(false)
   const [acceptError, setAcceptError] = useState<string | null>(null)
   const [acceptSuccess, setAcceptSuccess] = useState(false)
@@ -56,7 +56,6 @@ export default function TempOrdersPage() {
   const [rejectError, setRejectError] = useState<string | null>(null)
   const [showActiveOrderConflictDialog, setShowActiveOrderConflictDialog] = useState(false)
   const [conflictData, setConflictData] = useState<{ customerId: number; activeOrderId: number } | null>(null)
-  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
@@ -68,7 +67,7 @@ export default function TempOrdersPage() {
     async () => {
       const opts: { search?: string; status?: string; date_from?: string; date_to?: string } = {}
       if (debouncedSearch) opts.search = debouncedSearch
-      if (statusFilter.length > 0) opts.status = statusFilter.join(',')
+      if (statusFilter && statusFilter !== 'all') opts.status = statusFilter
       if (dateFrom) opts.date_from = new Date(dateFrom + 'T00:00:00').toISOString()
       if (dateTo) opts.date_to = new Date(dateTo + 'T23:59:59').toISOString()
       const res = await api.getTempOrders(opts)
@@ -88,16 +87,6 @@ export default function TempOrdersPage() {
     },
     { enabled: !!selectedTempOrderId }
   )
-
-  // When results change: if selected order is no longer in the list, reset to first
-  useEffect(() => {
-    if (!tempOrdersRes) return
-    if (selectedTempOrderId && !tempOrdersRes.some(o => o.id === selectedTempOrderId)) {
-      setSelectedTempOrderId(tempOrdersRes.length > 0 ? tempOrdersRes[0].id : null)
-    } else if (!selectedTempOrderId && tempOrdersRes.length > 0) {
-      setSelectedTempOrderId(tempOrdersRes[0].id)
-    }
-  }, [tempOrdersRes])
 
   useEffect(() => {
     setAcceptError(null)
@@ -150,18 +139,14 @@ export default function TempOrdersPage() {
       }
       const customerId = res.data!.customer_id
       const activeOrderId = res.data!.active_order_id ?? 0
-      const hasActiveOrders = activeOrderId > 0
 
-      if (hasActiveOrders) {
+      if (activeOrderId > 0) {
         setConflictData({ customerId, activeOrderId })
         setShowActiveOrderConflictDialog(true)
         return
       }
 
-      const mergeRes = await api.mergeTempOrder({
-        temp_order_id: selectedTempOrder.id,
-        customer_id: customerId,
-      })
+      const mergeRes = await api.mergeTempOrder({ temp_order_id: selectedTempOrder.id, customer_id: customerId })
       if (mergeRes.success) {
         setAcceptSuccess(true)
         await Promise.all([
@@ -231,57 +216,66 @@ export default function TempOrdersPage() {
     }
   }, [selectedTempOrder, tTemp, queryClient, debouncedSearch, statusFilter])
 
+  const drawerOpen = selectedTempOrderId !== null
+
   return (
     <>
-      <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ height: '100%', minHeight: 0, flex: 1, flexDirection: 'column', overflow: 'hidden', display: 'flex' }}>
+      <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {isLoading && <PageLoadingSkeleton />}
           {isError && (
-            <Box sx={{ color: 'error.main' }}>
+            <Box sx={{ p: '24px', color: 'error.main' }}>
               {(error as Error)?.message || tErrors('loadingError', { resource: tTemp('title') })}
             </Box>
           )}
 
           {!isLoading && !isError && (
-            <Box sx={{ overflow: 'hidden', bgcolor: 'transparent', flex: 1, minHeight: 0, display: 'flex' }}>
-              {/* Left list */}
-              <Box
-                sx={{
-                  width: { xs: '100%', sm: '300px' },
-                  minHeight: 0,
-                  flexShrink: 0,
-                  display: { xs: mobileView === 'list' ? 'flex' : 'none', sm: 'flex' },
-                  flexDirection: 'column',
-                  overflow: 'hidden',
-                  borderRight: { xs: 'none', sm: '1px solid' },
-                  borderColor: 'grey.200',
-                }}
-              >
-                <Box sx={{ p: '24px', flexShrink: 0 }}>
-                  <SearchInput
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    placeholder={tTemp('searchPlaceholder')}
-                  />
-                  <Box sx={{ mt: '16px' }}>
-                    <Select
-                      size="small"
-                      value={statusFilter.length === 1 ? statusFilter[0] : statusFilter.join(',')}
-                      onChange={(e) => {
-                        const val = e.target.value as string
-                        setStatusFilter(val === 'all' ? ['all'] : val.split(','))
-                      }}
-                      sx={{ height: 36, fontSize: '13px', borderRadius: '6px', minWidth: 110 }}
-                      MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
-                    >
-                      <ListSubheader sx={{ fontSize: '12px', lineHeight: '28px' }}>{toStatus('placeholder')}</ListSubheader>
-                      <MenuItem value="all" sx={{ fontSize: '13px' }}>{toStatus('all')}</MenuItem>
-                      <MenuItem value="pending" sx={{ fontSize: '13px' }}>{toStatus('pending')}</MenuItem>
-                      <MenuItem value="accepted" sx={{ fontSize: '13px' }}>{toStatus('accepted')}</MenuItem>
-                      <MenuItem value="rejected" sx={{ fontSize: '13px' }}>{toStatus('rejected')}</MenuItem>
-                    </Select>
-                  </Box>
-                  <Box sx={{ mt: '8px', display: 'flex', gap: '8px' }}>
+            <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              {/* Toolbar */}
+              <Box sx={{ px: '24px', pt: '24px', pb: '16px', flexShrink: 0 }}>
+                <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ flex: 1, display: 'flex', alignItems: 'center', px: '8px', py: '4px', borderRadius: '10px', boxShadow: 'none', gap: '2px' }}
+                  >
+                    <Tooltip title="Filters">
+                      <IconButton
+                        size="small"
+                        onClick={() => setFiltersVisible((v) => !v)}
+                        sx={{ color: filtersVisible ? 'primary.main' : 'text.secondary', '&:hover': { color: filtersVisible ? 'primary.dark' : 'text.primary' } }}
+                      >
+                        <ListFilter size={18} />
+                      </IconButton>
+                    </Tooltip>
+
+                    <InputBase
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      placeholder={tTemp('searchPlaceholder')}
+                      sx={{ flex: 1, mx: '8px', fontSize: '13px', color: 'text.primary' }}
+                      inputProps={{ 'aria-label': tTemp('searchPlaceholder') }}
+                    />
+
+                    <Search size={18} style={{ color: '#9e9e9e', flexShrink: 0, marginRight: '4px' }} />
+                  </Paper>
+                </Box>
+
+                {/* Filters row */}
+                {filtersVisible && (
+                  <Box sx={{ display: 'flex', gap: '12px', mt: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <Box sx={{ fontSize: '11px', color: 'text.secondary', px: '2px' }}>{t('status')}</Box>
+                      <Select
+                        size="small"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        sx={{ fontSize: '13px', minWidth: 130 }}
+                      >
+                        {(['all', 'pending', 'accepted', 'rejected'] as const).map((s) => (
+                          <MenuItem key={s} value={s} sx={{ fontSize: '13px' }}>{toStatus(s)}</MenuItem>
+                        ))}
+                      </Select>
+                    </Box>
                     <DateRangeFilter
                       dateFrom={dateFrom}
                       dateTo={dateTo}
@@ -289,429 +283,240 @@ export default function TempOrdersPage() {
                       onDateToChange={setDateTo}
                     />
                   </Box>
-                </Box>
-                <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                  {(tempOrdersRes || []).map((o) => {
-                    const isActive = o.id === selectedTempOrderId
-                    const statusStyle = getStatusStyle(o.status)
-                    return (
-                      <Box
-                        key={o.id}
-                        sx={{
-                          py: '16px',
-                          px: '24px',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          bgcolor: isActive ? 'action.selected' : 'transparent',
-                          borderRadius: '8px',
-                          '&:hover': {
-                            bgcolor: 'action.selected',
-                          },
-                        }}
-                        onClick={() => { setSelectedTempOrderId(o.id); setMobileView('detail') }}
-                      >
-                        <Box sx={{ flexDirection: 'column', gap: '4px', display: 'flex' }}>
-                          <Box sx={{ justifyContent: 'space-between', alignItems: 'center', display: 'flex' }}>
-                            <Box sx={{ fontWeight: 700, fontSize: '14px' }}>
-                              #{o.id}
-                            </Box>
-                            <Box
-                              sx={{
-                                px: '8px',
-                                py: '2px',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                fontWeight: 500,
-                                bgcolor: statusStyle.bg,
-                                color: statusStyle.color,
-                                textTransform: 'capitalize',
-                              }}
-                            >
-                              {toStatus(o.status) || o.status}
-                            </Box>
-                          </Box>
-                          <Box sx={{ fontSize: '12px', color: 'text.secondary' }}>
-                            {o.customer_name}
-                          </Box>
-                          <Box sx={{ fontSize: '12px', fontWeight: 500 }}>
-                            Rp {formatPrice(o.total_price)}
-                          </Box>
-                        </Box>
-                      </Box>
-                    )
-                  })}
-                  {(tempOrdersRes || []).length === 0 && (
-                    <Box sx={{ p: '16px', color: 'text.secondary', textAlign: 'center' }}>
-                      {tTemp('noOrders')}
-                    </Box>
-                  )}
-                </Box>
+                )}
               </Box>
 
-              {/* Right detail */}
-              <Box
-                sx={{
-                  flex: 1,
-                  minHeight: 0,
-                  overflowY: 'auto',
-                  bgcolor: 'background.default',
-                  display: { xs: mobileView === 'detail' ? 'block' : 'none', sm: 'block' },
-                }}
-              >
-                {selectedTempOrder ? (
-                  <Box sx={{ maxWidth: 880, mx: 'auto', p: { xs: '16px', sm: '32px' } }}>
-                    {/* Mobile back button */}
-                    <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: '8px', mb: '16px' }}>
-                      <IconButton size="small" onClick={() => setMobileView('list')} sx={{ ml: '-4px' }}>
-                        <ArrowLeft size={20} />
-                      </IconButton>
-                      <Typography sx={{ fontSize: '14px', color: 'text.secondary' }}>{tTemp('title')}</Typography>
-                    </Box>
-
-                    <Box sx={{ alignItems: 'center', gap: '8px', mb: '16px', flexWrap: 'wrap', display: 'flex' }}>
-                      <Typography component="h2" sx={{ fontSize: '18px' }}>
-                        {tTemp('orderNumber', { id: selectedTempOrder.id })}
-                      </Typography>
-                      <Box
-                        sx={{
-                          px: '8px',
-                          py: '4px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: 500,
-                          bgcolor: getStatusStyle(selectedTempOrder.status).bg,
-                          color: getStatusStyle(selectedTempOrder.status).color,
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {toStatus(selectedTempOrder.status) || selectedTempOrder.status}
-                      </Box>
-                      <Box sx={{ width: { xs: '100%', sm: 'auto' }, ml: { xs: 0, sm: 'auto' }, gap: '8px', display: 'flex' }}>
-                        <Button
-                          variant={selectedTempOrder.status === 'rejected' ? 'outlined' : 'contained'}
-                          disableElevation
-                          fullWidth
-                          onClick={handleAccept}
-                          disabled={acceptLoading || rejectLoading || selectedTempOrder.status !== 'pending'}
-                          sx={{
-                            ...(selectedTempOrder.status === 'rejected'
-                              ? { bgcolor: 'action.hover', color: 'text.primary', border: '1px solid', borderColor: 'grey.200' }
-                              : { bgcolor: 'primary.main', color: 'white' }),
-                            '&.Mui-disabled': selectedTempOrder.status === 'accepted'
-                              ? { bgcolor: 'success.main', color: 'white', borderColor: 'transparent' }
-                              : { bgcolor: 'action.disabledBackground', color: 'action.disabled', borderColor: 'transparent' },
-                          }}
-                        >
-                          {acceptLoading ? tTemp('accepting') : tTemp('accept')}
-                        </Button>
-                        <Button
-                          variant={selectedTempOrder.status === 'rejected' ? 'contained' : 'outlined'}
-                          disableElevation
-                          fullWidth
-                          onClick={handleReject}
-                          disabled={rejectLoading || selectedTempOrder.status !== 'pending'}
-                          sx={{
-                            ...(selectedTempOrder.status === 'rejected'
-                              ? { bgcolor: 'primary.main', color: 'white', border: 'none' }
-                              : { bgcolor: 'action.hover', color: 'text.primary', border: '1px solid', borderColor: 'grey.200' }),
-                            '&.Mui-disabled': selectedTempOrder.status === 'rejected'
-                              ? { bgcolor: 'error.main', color: 'white', borderColor: 'transparent' }
-                              : { bgcolor: 'action.disabledBackground', color: 'action.disabled', borderColor: 'transparent' },
-                          }}
-                        >
-                          {rejectLoading ? tTemp('rejecting') : tTemp('reject')}
-                        </Button>
-                      </Box>
-                    </Box>
-                    {(acceptError || acceptSuccess || rejectError || rejectSuccess) && (
-                      <Box
-                        sx={{
-                          mb: '16px',
-                          p: '8px',
-                          borderRadius: '8px',
-                          bgcolor: acceptError || rejectError ? '#FFEBEE' : '#E8F5E9',
-                          color: acceptError || rejectError ? '#C62828' : '#2E7D32',
-                          fontSize: '14px',
-                        }}
-                      >
-                        {acceptError || rejectError || (acceptSuccess ? tTemp('acceptSuccess') : '') || (rejectSuccess ? tTemp('rejectSuccess') : '')}
-                      </Box>
-                    )}
-
-                    {/* Temp order info card */}
-                    <Paper
-                      sx={{
-                        p: '24px',
-                        mb: '24px',
-                        borderRadius: '12px',
-                        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
-                        border: '1px solid',
-                        borderColor: 'grey.200',
-                        bgcolor: 'background.paper',
-                      }}
-                    >
-                      <Box sx={{ flexWrap: 'wrap', gap: { xs: '24px', sm: '32px' }, display: 'flex' }}>
-                        <Box sx={{ minWidth: 140 }}>
-                          <Box
-                            sx={{
-                              color: 'text.secondary',
-                              fontSize: '14px',
-                              fontWeight: 700,
-                              mb: '4px',
-                              display: 'block',
-                            }}
-                          >
-                            {t('customer')}
-                          </Box>
-                          <Box sx={{ fontSize: '14px', fontWeight: 500 }}>
-                            {selectedTempOrder.customer_name}
-                          </Box>
-                        </Box>
-                        <Box sx={{ minWidth: 140 }}>
-                          <Box
-                            sx={{
-                              color: 'text.secondary',
-                              fontSize: '14px',
-                              fontWeight: 700,
-                              mb: '4px',
-                              display: 'block',
-                            }}
-                          >
-                            {tTemp('phone')}
-                          </Box>
-                          <Box sx={{ fontSize: '14px' }}>{selectedTempOrder.customer_phone}</Box>
-                        </Box>
-                        <Box sx={{ minWidth: 140 }}>
-                          <Box
-                            sx={{
-                              color: 'text.secondary',
-                              fontSize: '14px',
-                              fontWeight: 700,
-                              mb: '4px',
-                              display: 'block',
-                            }}
-                          >
-                            {to('created')}
-                          </Box>
-                          <Box sx={{ fontSize: '14px' }}>
-                            {formatDate(selectedTempOrder.created_at)}
-                          </Box>
-                        </Box>
-                      </Box>
-                    </Paper>
-
-                    {/* Order items (read-only) */}
-                    <Paper
-                      sx={{
-                        borderRadius: '12px',
-                        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
-                        border: '1px solid',
-                        borderColor: 'grey.200',
-                        bgcolor: 'background.paper',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Box sx={{ p: '8px', borderBottom: '1px solid', borderColor: 'grey.200', bgcolor: 'action.hover' }}>
-                        <Typography component="h3" sx={{ fontSize: '16px', fontWeight: 600 }}>
-                          {t('items')}
-                        </Typography>
-                      </Box>
-                      {selectedTempOrder.order_items && selectedTempOrder.order_items.length > 0 ? (
-                        <Box sx={{ overflowX: 'auto' }}>
-                        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
-                          <Box component="thead">
-                            <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
-                              <Box
-                                component="th"
-                                sx={{
-                                  p: '16px',
-                                  textAlign: 'left',
-                                  fontSize: '12px',
-                                  fontWeight: 600,
-                                  color: 'text.secondary',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em',
-                                }}
-                              >
-                                {t('product')}
-                              </Box>
-                              <Box
-                                component="th"
-                                sx={{
-                                  p: '16px',
-                                  textAlign: 'right',
-                                  fontSize: '12px',
-                                  fontWeight: 600,
-                                  color: 'text.secondary',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em',
-                                }}
-                              >
-                                {t('price')}
-                              </Box>
-                              <Box
-                                component="th"
-                                sx={{
-                                  p: '16px',
-                                  textAlign: 'right',
-                                  fontSize: '12px',
-                                  fontWeight: 600,
-                                  color: 'text.secondary',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em',
-                                }}
-                              >
-                                {t('quantity')}
-                              </Box>
-                              <Box
-                                component="th"
-                                sx={{
-                                  p: '16px',
-                                  textAlign: 'right',
-                                  fontSize: '12px',
-                                  fontWeight: 600,
-                                  color: 'text.secondary',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em',
-                                }}
-                              >
-                                {to('subtotal')}
-                              </Box>
+              {/* Table */}
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: '24px', pb: '24px' }}>
+                {(tempOrdersRes || []).length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: '64px', color: 'text.secondary', fontSize: '14px' }}>{tTemp('noOrders')}</Box>
+                ) : (
+                  <Paper sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'grey.200', boxShadow: 'none', overflow: 'hidden' }}>
+                    <Box sx={{ overflowX: 'auto' }}>
+                      <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
+                        <Box component="thead">
+                          <Box component="tr" sx={{ bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'grey.200' }}>
+                            <Box component="th" sx={{ px: '16px', py: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', width: '80px' }}>
+                              #
+                            </Box>
+                            <Box component="th" sx={{ px: '16px', py: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              {t('customer')}
+                            </Box>
+                            <Box component="th" sx={{ px: '16px', py: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', display: { xs: 'none', sm: 'table-cell' } }}>
+                              {tTemp('phone')}
+                            </Box>
+                            <Box component="th" sx={{ px: '16px', py: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', display: { xs: 'none', md: 'table-cell' } }}>
+                              {t('status')}
+                            </Box>
+                            <Box component="th" sx={{ px: '16px', py: '12px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              {t('total')}
+                            </Box>
+                            <Box component="th" sx={{ px: '16px', py: '12px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', display: { xs: 'none', lg: 'table-cell' } }}>
+                              {to('created')}
                             </Box>
                           </Box>
-                          <Box component="tbody">
-                            {selectedTempOrder.order_items.map((item) => (
+                        </Box>
+                        <Box component="tbody">
+                          {(tempOrdersRes || []).map((o) => {
+                            const statusStyle = getStatusStyle(o.status)
+                            return (
                               <Box
                                 component="tr"
-                                key={item.id}
+                                key={o.id}
+                                onClick={() => setSelectedTempOrderId(o.id)}
                                 sx={{
                                   borderTop: '1px solid',
-                                  borderColor: 'grey.200',
+                                  borderColor: 'grey.100',
+                                  cursor: 'pointer',
+                                  transition: 'background 0.1s',
+                                  bgcolor: selectedTempOrderId === o.id ? 'action.selected' : 'transparent',
                                   '&:hover': { bgcolor: 'action.hover' },
                                 }}
                               >
-                                <Box component="td" sx={{ py: '8px', px: '16px', fontSize: '14px' }}>
-                                  {item.product_name}
+                                <Box component="td" sx={{ px: '16px', py: '14px', fontSize: '14px', fontWeight: 600, color: 'text.secondary', whiteSpace: 'nowrap' }}>
+                                  #{o.id}
                                 </Box>
-                                <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>
-                                  Rp {formatPrice(item.price)}
+                                <Box component="td" sx={{ px: '16px', py: '14px', fontSize: '14px', fontWeight: 500 }}>
+                                  {o.customer_name}
                                 </Box>
-                                <Box component="td" sx={{ py: '8px', px: '16px', textAlign: 'right', fontSize: '14px' }}>
-                                  {item.qty}
+                                <Box component="td" sx={{ px: '16px', py: '14px', fontSize: '13px', color: 'text.secondary', display: { xs: 'none', sm: 'table-cell' } }}>
+                                  {o.customer_phone}
                                 </Box>
-                                <Box
-                                  component="td"
-                                  sx={{
-                                    py: '8px',
-                                    px: '16px',
-                                    textAlign: 'right',
-                                    fontSize: '14px',
-                                    fontWeight: 500,
-                                  }}
-                                >
-                                  Rp {formatPrice(item.price * item.qty)}
+                                <Box component="td" sx={{ px: '16px', py: '14px', display: { xs: 'none', md: 'table-cell' } }}>
+                                  <Box sx={{ display: 'inline-block', px: '8px', py: '3px', borderRadius: '6px', fontSize: '12px', fontWeight: 500, bgcolor: statusStyle.bg, color: statusStyle.color }}>
+                                    {toStatus(o.status) || o.status}
+                                  </Box>
+                                </Box>
+                                <Box component="td" sx={{ px: '16px', py: '14px', textAlign: 'right', fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                  Rp {formatPrice(o.total_price)}
+                                </Box>
+                                <Box component="td" sx={{ px: '16px', py: '14px', textAlign: 'right', fontSize: '13px', color: 'text.secondary', whiteSpace: 'nowrap', display: { xs: 'none', lg: 'table-cell' } }}>
+                                  {formatDate(o.created_at)}
                                 </Box>
                               </Box>
-                            ))}
-                          </Box>
-                          <Box component="tfoot">
-                            <Box
-                              component="tr"
-                              sx={{
-                                borderTop: '2px solid',
-                                borderColor: 'grey.200',
-                                bgcolor: 'action.hover',
-                              }}
-                            >
-                              <Box
-                                component="td"
-                                sx={{
-                                  py: '8px',
-                                  px: '16px',
-                                  textAlign: 'right',
-                                  fontWeight: 700,
-                                  fontSize: '16px',
-                                }}
-                                {...({ colSpan: 3 } as object)}
-                              >
-                                {t('total')}
-                              </Box>
-                              <Box
-                                component="td"
-                                sx={{
-                                  py: '8px',
-                                  px: '16px',
-                                  textAlign: 'right',
-                                  fontWeight: 700,
-                                  fontSize: '16px',
-                                  color: 'primary.main',
-                                }}
-                              >
-                                Rp {formatPrice(selectedTempOrder.total_price)}
-                              </Box>
-                            </Box>
-                          </Box>
+                            )
+                          })}
                         </Box>
-                        </Box>
-                      ) : (
-                        <Box sx={{ p: '32px', textAlign: 'center', color: 'text.secondary' }}>
-                          <Box sx={{ fontSize: '16px' }}>{to('noItems')}</Box>
-                        </Box>
-                      )}
-                    </Paper>
-                  </Box>
-                ) : (
-                  <Box
-                    sx={{
-                      height: '100%',
-                      minHeight: 320,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexDirection: 'column',
-                      gap: '8px',
-                      color: 'text.secondary',
-                      display: 'flex',
-                    }}
-                  >
-                    <ClipboardList size={40} opacity={0.4} />
-                    <Box sx={{ fontSize: '16px' }}>{tTemp('selectOrder')}</Box>
-                    <Box sx={{ fontSize: '14px' }}>{to('chooseFromList')}</Box>
-                  </Box>
+                      </Box>
+                    </Box>
+                  </Paper>
                 )}
               </Box>
             </Box>
           )}
         </Box>
+
+        {/* Detail Drawer */}
+        <Drawer
+          anchor="right"
+          open={drawerOpen}
+          onClose={() => setSelectedTempOrderId(null)}
+          slotProps={{
+            paper: {
+              sx: {
+                width: { xs: '100%', sm: 560 },
+                maxWidth: '100%',
+              },
+            },
+          }}
+        >
+          {selectedTempOrder && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              {/* Drawer header */}
+              <Box sx={{ px: '24px', py: '16px', borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                <Box>
+                  <Typography sx={{ fontSize: '18px', fontWeight: 600 }}>{tTemp('orderNumber', { id: selectedTempOrder.id })}</Typography>
+                  <Box sx={{ fontSize: '12px', color: 'text.secondary', mt: '2px' }}>{formatDate(selectedTempOrder.created_at)}</Box>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Box sx={{ display: 'inline-block', px: '8px', py: '3px', borderRadius: '6px', fontSize: '12px', fontWeight: 500, bgcolor: getStatusStyle(selectedTempOrder.status).bg, color: getStatusStyle(selectedTempOrder.status).color }}>
+                    {toStatus(selectedTempOrder.status) || selectedTempOrder.status}
+                  </Box>
+                  <IconButton size="small" onClick={() => setSelectedTempOrderId(null)} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', p: '6px' }}>
+                    <X size={18} />
+                  </IconButton>
+                </Box>
+              </Box>
+
+              {/* Drawer body */}
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: '24px' }}>
+                {/* Accept / Reject */}
+                <Box sx={{ display: 'flex', gap: '8px', mb: '20px' }}>
+                  <Button
+                    variant={selectedTempOrder.status === 'rejected' ? 'outlined' : 'contained'}
+                    disableElevation
+                    fullWidth
+                    onClick={handleAccept}
+                    disabled={acceptLoading || rejectLoading || selectedTempOrder.status !== 'pending'}
+                    sx={{
+                      ...(selectedTempOrder.status === 'rejected'
+                        ? { bgcolor: 'action.hover', color: 'text.primary', border: '1px solid', borderColor: 'grey.200' }
+                        : { bgcolor: 'primary.main', color: 'white' }),
+                      '&.Mui-disabled': selectedTempOrder.status === 'accepted'
+                        ? { bgcolor: 'success.main', color: 'white', borderColor: 'transparent' }
+                        : { bgcolor: 'action.disabledBackground', color: 'action.disabled', borderColor: 'transparent' },
+                    }}
+                  >
+                    {acceptLoading ? tTemp('accepting') : tTemp('accept')}
+                  </Button>
+                  <Button
+                    variant={selectedTempOrder.status === 'rejected' ? 'contained' : 'outlined'}
+                    disableElevation
+                    fullWidth
+                    onClick={handleReject}
+                    disabled={rejectLoading || selectedTempOrder.status !== 'pending'}
+                    sx={{
+                      ...(selectedTempOrder.status === 'rejected'
+                        ? { bgcolor: 'primary.main', color: 'white', border: 'none' }
+                        : { bgcolor: 'action.hover', color: 'text.primary', border: '1px solid', borderColor: 'grey.200' }),
+                      '&.Mui-disabled': selectedTempOrder.status === 'rejected'
+                        ? { bgcolor: 'error.main', color: 'white', borderColor: 'transparent' }
+                        : { bgcolor: 'action.disabledBackground', color: 'action.disabled', borderColor: 'transparent' },
+                    }}
+                  >
+                    {rejectLoading ? tTemp('rejecting') : tTemp('reject')}
+                  </Button>
+                </Box>
+
+                {(acceptError || acceptSuccess || rejectError || rejectSuccess) && (
+                  <Box sx={{ mb: '20px', p: '10px 14px', borderRadius: '8px', bgcolor: acceptError || rejectError ? '#FFEBEE' : '#E8F5E9', color: acceptError || rejectError ? '#C62828' : '#2E7D32', fontSize: '14px' }}>
+                    {acceptError || rejectError || (acceptSuccess ? tTemp('acceptSuccess') : '') || (rejectSuccess ? tTemp('rejectSuccess') : '')}
+                  </Box>
+                )}
+
+                {/* Info card */}
+                <Paper sx={{ p: '20px', mb: '20px', borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'grey.200' }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                    <Box>
+                      <Box sx={{ fontSize: '12px', color: 'text.secondary', mb: '4px', px: '2px' }}>{t('customer')}</Box>
+                      <Box sx={{ fontSize: '14px', fontWeight: 500 }}>{selectedTempOrder.customer_name}</Box>
+                    </Box>
+                    <Box>
+                      <Box sx={{ fontSize: '12px', color: 'text.secondary', mb: '4px', px: '2px' }}>{tTemp('phone')}</Box>
+                      <Box sx={{ fontSize: '14px' }}>{selectedTempOrder.customer_phone}</Box>
+                    </Box>
+                    <Box>
+                      <Box sx={{ fontSize: '12px', color: 'text.secondary', mb: '4px', px: '2px' }}>{to('created')}</Box>
+                      <Box sx={{ fontSize: '14px' }}>{formatDate(selectedTempOrder.created_at)}</Box>
+                    </Box>
+                  </Box>
+                </Paper>
+
+                {/* Order items */}
+                <Paper sx={{ borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'grey.200', overflow: 'hidden' }}>
+                  <Box sx={{ px: '16px', py: '10px', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                    <Typography sx={{ fontSize: '14px', fontWeight: 600 }}>{t('items')}</Typography>
+                  </Box>
+                  {selectedTempOrder.order_items && selectedTempOrder.order_items.length > 0 ? (
+                    <Box sx={{ overflowX: 'auto' }}>
+                      <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 340 }}>
+                        <Box component="thead">
+                          <Box component="tr">
+                            <Box component="th" sx={{ px: '16px', py: '10px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('product')}</Box>
+                            <Box component="th" sx={{ px: '16px', py: '10px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('price')}</Box>
+                            <Box component="th" sx={{ px: '16px', py: '10px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('quantity')}</Box>
+                            <Box component="th" sx={{ px: '16px', py: '10px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{to('subtotal')}</Box>
+                          </Box>
+                        </Box>
+                        <Box component="tbody">
+                          {selectedTempOrder.order_items.map((item) => (
+                            <Box component="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'grey.100', '&:hover': { bgcolor: 'action.hover' } }}>
+                              <Box component="td" sx={{ px: '16px', py: '8px', fontSize: '14px' }}>{item.product_name}</Box>
+                              <Box component="td" sx={{ px: '16px', py: '8px', textAlign: 'right', fontSize: '14px' }}>Rp {formatPrice(item.price)}</Box>
+                              <Box component="td" sx={{ px: '16px', py: '8px', textAlign: 'right', fontSize: '14px' }}>{item.qty}</Box>
+                              <Box component="td" sx={{ px: '16px', py: '8px', textAlign: 'right', fontSize: '14px', fontWeight: 500 }}>Rp {formatPrice(item.price * item.qty)}</Box>
+                            </Box>
+                          ))}
+                        </Box>
+                        <Box component="tfoot">
+                          <Box component="tr" sx={{ borderTop: '2px solid', borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                            <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right', fontWeight: 700, fontSize: '14px' }} {...({ colSpan: 3 } as object)}>{t('total')}</Box>
+                            <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right', fontWeight: 700, fontSize: '14px', color: 'primary.main' }}>Rp {formatPrice(selectedTempOrder.total_price)}</Box>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Box sx={{ p: '24px', textAlign: 'center', color: 'text.secondary', fontSize: '14px' }}>{to('noItems')}</Box>
+                  )}
+                </Paper>
+              </Box>
+            </Box>
+          )}
+        </Drawer>
       </Container>
 
       {/* Active order conflict dialog */}
       {showActiveOrderConflictDialog && (
         <Box
-          sx={{
-            position: 'fixed',
-            inset: 0,
-            bgcolor: 'rgba(0,0,0,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            p: '16px',
-            zIndex: 1000,
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowActiveOrderConflictDialog(false)
-          }}
+          sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', p: '16px', zIndex: 1300 }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowActiveOrderConflictDialog(false) }}
         >
           <Paper sx={{ width: { xs: '100%', sm: '540px' }, p: '24px' }} onClick={(e) => e.stopPropagation()}>
-            <Typography component="h3" sx={{ mb: '8px' }}>
-              {to('duplicateOrderTitle')}
-            </Typography>
-            <Box sx={{ mb: '24px', color: 'text.secondary', display: 'block' }}>
-              {to('duplicateOrderMessageInline')}
-            </Box>
+            <Typography component="h3" sx={{ mb: '8px', fontWeight: 600 }}>{to('duplicateOrderTitle')}</Typography>
+            <Box sx={{ mb: '24px', color: 'text.secondary', fontSize: '14px' }}>{to('duplicateOrderMessageInline')}</Box>
             <Box sx={{ gap: '8px', justifyContent: 'flex-end', display: 'flex' }}>
-              <Button variant="contained" disableElevation type="button" onClick={() => setShowActiveOrderConflictDialog(false)}>
-                {t('cancel')}
-              </Button>
+              <Button variant="outlined" type="button" onClick={() => setShowActiveOrderConflictDialog(false)}>{t('cancel')}</Button>
               <Button variant="contained" disableElevation type="button" onClick={handleConfirmMergeIntoActiveOrder} disabled={acceptLoading}>
                 {acceptLoading ? tTemp('accepting') : tTemp('confirmMerge')}
               </Button>
