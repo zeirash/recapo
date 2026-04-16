@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, Drawer, IconButton, InputBase, ListSubheader, Menu, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogTitle, Drawer, IconButton, InputBase, ListSubheader, Menu, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography, useTheme } from '@mui/material'
 import DateRangeFilter from '@/components/ui/DateRangeFilter'
 import AddButton from '@/components/ui/AddButton'
 import CustomerSearchSelect from '@/components/ui/CustomerSearchSelect'
@@ -67,17 +67,30 @@ type AddItemForm = {
 const emptyCreateForm: CreateOrderForm = { customer_id: null, notes: '' }
 const emptyAddItemForm: AddItemForm = { product_id: null, product_price: 0, qty: 1 }
 
-const statusColors: Record<string, { bg: string; color: string }> = {
-  created: { bg: '#E3F2FD', color: '#1565C0' },
+const lightStatusColors: Record<string, { bg: string; color: string }> = {
+  created:     { bg: '#E3F2FD', color: '#1565C0' },
   in_progress: { bg: '#FFF3E0', color: '#E65100' },
   in_delivery: { bg: '#F3E5F5', color: '#7B1FA2' },
-  done: { bg: '#E8F5E9', color: '#2E7D32' },
-  cancelled: { bg: '#FFEBEE', color: '#C62828' },
+  done:        { bg: '#E8F5E9', color: '#2E7D32' },
+  cancelled:   { bg: '#FFEBEE', color: '#C62828' },
 }
 
-const paymentStatusColors: Record<string, { bg: string; color: string }> = {
+const darkStatusColors: Record<string, { bg: string; color: string }> = {
+  created:     { bg: '#1e3a5f', color: '#90caf9' },
+  in_progress: { bg: '#3e2000', color: '#ffb74d' },
+  in_delivery: { bg: '#2d1b4e', color: '#ce93d8' },
+  done:        { bg: '#1b3a2d', color: '#81c784' },
+  cancelled:   { bg: '#3e1a1a', color: '#ef9a9a' },
+}
+
+const lightPaymentStatusColors: Record<string, { bg: string; color: string }> = {
   outstanding: { bg: '#FFEBEE', color: '#C62828' },
   paid:        { bg: '#E8F5E9', color: '#2E7D32' },
+}
+
+const darkPaymentStatusColors: Record<string, { bg: string; color: string }> = {
+  outstanding: { bg: '#3e1a1a', color: '#ef9a9a' },
+  paid:        { bg: '#1b3a2d', color: '#81c784' },
 }
 
 function normalizePaymentStatus(status: string): string {
@@ -87,6 +100,9 @@ function normalizePaymentStatus(status: string): string {
 
 export default function OrdersPage() {
   const DEFAULT_STATUSES = ['created', 'in_progress'] as const
+  const theme = useTheme()
+  const statusColors = theme.palette.mode === 'dark' ? darkStatusColors : lightStatusColors
+  const paymentStatusColors = theme.palette.mode === 'dark' ? darkPaymentStatusColors : lightPaymentStatusColors
   const t = useTranslations('common')
   const to = useTranslations('orders')
   const toStatus = useTranslations('orderStatus')
@@ -466,11 +482,11 @@ export default function OrdersPage() {
   }
 
   function getStatusStyle(status: string) {
-    return statusColors[status] || { bg: '#F5F5F5', color: '#616161' }
+    return statusColors[status] || (theme.palette.mode === 'dark' ? { bg: '#2a2a2a', color: '#bdbdbd' } : { bg: '#F5F5F5', color: '#616161' })
   }
 
   function getPaymentStatusStyle(status: string) {
-    return paymentStatusColors[status] || { bg: '#F5F5F5', color: '#616161' }
+    return paymentStatusColors[status] || (theme.palette.mode === 'dark' ? { bg: '#2a2a2a', color: '#bdbdbd' } : { bg: '#F5F5F5', color: '#616161' })
   }
 
   const drawerOpen = selectedOrderId !== null
@@ -604,11 +620,11 @@ export default function OrdersPage() {
               {sortedOrders.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: '64px', color: 'text.secondary', fontSize: '14px' }}>{to('noOrders')}</Box>
               ) : (
-                <Paper sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'grey.200', boxShadow: 'none', overflow: 'hidden' }}>
+                <Paper sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}>
                   <Box sx={{ overflowX: 'auto' }}>
                   <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
                     <Box component="thead">
-                      <Box component="tr" sx={{ bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'grey.200' }}>
+                      <Box component="tr" sx={{ bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' }}>
                         <Box component="th" sx={{ px: '16px', py: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', width: '90px' }}>
                           {to('orderNumber', { id: '' }).trim()}
                         </Box>
@@ -640,7 +656,7 @@ export default function OrdersPage() {
                             onClick={() => setSelectedOrderId(o.id)}
                             sx={{
                               borderTop: '1px solid',
-                              borderColor: 'grey.100',
+                              borderColor: 'divider',
                               cursor: 'pointer',
                               transition: 'background 0.1s',
                               bgcolor: selectedOrderId === o.id ? 'action.selected' : 'transparent',
@@ -731,7 +747,7 @@ export default function OrdersPage() {
             {/* Drawer body */}
             <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: '24px' }}>
               {/* Order info card */}
-              <Paper sx={{ p: '20px', mb: '20px', borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'grey.200' }}>
+              <Paper sx={{ p: '20px', mb: '20px', borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                   <Box sx={{ minWidth: 130 }}>
                     <Box sx={{ fontSize: '12px', fontWeight: 600, color: 'text.secondary', mb: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('customer')}</Box>
@@ -807,8 +823,8 @@ export default function OrdersPage() {
               </Paper>
 
               {/* Order items */}
-              <Paper sx={{ borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'grey.200', overflow: 'hidden', mb: '20px' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '16px', py: '10px', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+              <Paper sx={{ borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'divider', overflow: 'hidden', mb: '20px' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '16px', py: '10px', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'action.hover' }}>
                   <Typography sx={{ fontSize: '14px', fontWeight: 600 }}>{t('items')}</Typography>
                   <Button variant="outlined" onClick={openAddItemForm} sx={{ fontSize: '12px', py: '3px', px: '10px', minWidth: 0 }}>
                     {to('addItem')}
@@ -828,7 +844,7 @@ export default function OrdersPage() {
                       </Box>
                       <Box component="tbody">
                         {selectedOrder.order_items.map((item) => (
-                          <Box component="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'grey.100', '&:hover': { bgcolor: 'action.hover' } }}>
+                          <Box component="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' } }}>
                             <Box component="td" sx={{ px: '16px', py: '8px', fontSize: '14px' }}>{item.product_name}</Box>
                             <Box component="td" sx={{ px: '16px', py: '8px', textAlign: 'right', fontSize: '14px' }}>{formatPrice(item.price)}</Box>
                             <Box component="td" sx={{ px: '16px', py: '8px' }}>
@@ -863,7 +879,7 @@ export default function OrdersPage() {
                         ))}
                       </Box>
                       <Box component="tfoot">
-                        <Box component="tr" sx={{ borderTop: '2px solid', borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                        <Box component="tr" sx={{ borderTop: '2px solid', borderColor: 'divider', bgcolor: 'action.hover' }}>
                           <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right', fontWeight: 700, fontSize: '14px' }} {...({ colSpan: 3 } as object)}>{t('total')}</Box>
                           <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right', fontWeight: 700, fontSize: '14px', color: 'primary.main' }}>{formatPrice(selectedOrder.total_price)}</Box>
                           <Box component="td"></Box>
@@ -873,12 +889,12 @@ export default function OrdersPage() {
                           const remaining = selectedOrder.total_price - totalPaid
                           return (
                             <>
-                              <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
+                              <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                                 <Box component="td" sx={{ px: '16px', py: '6px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: 'text.secondary' }} {...({ colSpan: 3 } as object)}>{to('totalPaid')}</Box>
                                 <Box component="td" sx={{ px: '16px', py: '6px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: 'success.main' }}>{formatPrice(totalPaid)}</Box>
                                 <Box component="td"></Box>
                               </Box>
-                              <Box component="tr" sx={{ bgcolor: 'grey.50' }}>
+                              <Box component="tr" sx={{ bgcolor: 'action.hover' }}>
                                 <Box component="td" sx={{ px: '16px', py: '6px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: 'text.secondary' }} {...({ colSpan: 3 } as object)}>{to('remaining')}</Box>
                                 <Box component="td" sx={{ px: '16px', py: '6px', textAlign: 'right', fontWeight: 700, fontSize: '13px', color: remaining > 0 ? 'error.main' : 'success.main' }}>{formatPrice(remaining)}</Box>
                                 <Box component="td"></Box>
@@ -898,8 +914,8 @@ export default function OrdersPage() {
               </Paper>
 
               {/* Order payments */}
-              <Paper sx={{ borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'grey.200', overflow: 'hidden' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '16px', py: '10px', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+              <Paper sx={{ borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '16px', py: '10px', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'action.hover' }}>
                   <Typography sx={{ fontSize: '14px', fontWeight: 600 }}>Payments</Typography>
                   <Button variant="outlined" onClick={() => { setAddPaymentAmount(0); setIsAddPaymentFormOpen(true) }} sx={{ fontSize: '12px', py: '3px', px: '10px', minWidth: 0 }}>
                     {to('addPayment')}
@@ -917,7 +933,7 @@ export default function OrdersPage() {
                       </Box>
                       <Box component="tbody">
                         {selectedOrder.order_payments.map((payment) => (
-                          <Box component="tr" key={payment.id} sx={{ borderTop: '1px solid', borderColor: 'grey.100', '&:hover': { bgcolor: 'action.hover' } }}>
+                          <Box component="tr" key={payment.id} sx={{ borderTop: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' } }}>
                             <Box component="td" sx={{ px: '16px', py: '8px', fontSize: '14px', fontWeight: 500 }}>{formatPrice(payment.amount)}</Box>
                             <Box component="td" sx={{ px: '16px', py: '8px', fontSize: '13px', color: 'text.secondary' }}>{formatDate(payment.created_at)}</Box>
                             <Box component="td" sx={{ px: '8px', py: '8px', textAlign: 'center' }}>
@@ -993,7 +1009,7 @@ export default function OrdersPage() {
                   multiline
                   rows={3}
                   size="small"
-                  sx={{ width: '100%', py: '8px', px: '16px', fontSize: '14px', borderRadius: '8px', border: '1px solid', borderColor: 'grey.200', resize: 'vertical' }}
+                  sx={{ width: '100%', py: '8px', px: '16px', fontSize: '14px', borderRadius: '8px', border: '1px solid', borderColor: 'divider', resize: 'vertical' }}
                 />
               </Box>
             </DialogContent>
@@ -1022,7 +1038,7 @@ export default function OrdersPage() {
                 multiline
                 rows={4}
                 size="small"
-                sx={{ width: '100%', py: '8px', px: '16px', fontSize: '14px', borderRadius: '8px', border: '1px solid', borderColor: 'grey.200' }}
+                sx={{ width: '100%', py: '8px', px: '16px', fontSize: '14px', borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}
               />
             </Box>
           </DialogContent>

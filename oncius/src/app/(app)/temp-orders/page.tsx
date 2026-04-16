@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Drawer, IconButton, InputBase, MenuItem, Paper, Select, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Container, Drawer, IconButton, InputBase, MenuItem, Paper, Select, Tooltip, Typography, useTheme } from '@mui/material'
 import { ListFilter, Search, X } from 'lucide-react'
 import DateRangeFilter from '@/components/ui/DateRangeFilter'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
@@ -28,10 +28,16 @@ type TempOrder = {
   updated_at?: string | null
 }
 
-const statusColors: Record<string, { bg: string; color: string }> = {
-  pending: { bg: '#FFF3E0', color: '#E65100' },
+const lightStatusColors: Record<string, { bg: string; color: string }> = {
+  pending:  { bg: '#FFF3E0', color: '#E65100' },
   accepted: { bg: '#E8F5E9', color: '#2E7D32' },
   rejected: { bg: '#FFEBEE', color: '#C62828' },
+}
+
+const darkStatusColors: Record<string, { bg: string; color: string }> = {
+  pending:  { bg: '#3e2000', color: '#ffb74d' },
+  accepted: { bg: '#1b3a2d', color: '#81c784' },
+  rejected: { bg: '#3e1a1a', color: '#ef9a9a' },
 }
 
 export default function TempOrdersPage() {
@@ -40,6 +46,8 @@ export default function TempOrdersPage() {
   const tTemp = useTranslations('tempOrders')
   const tErrors = useTranslations('errors')
   const toStatus = useTranslations('orderStatus')
+  const theme = useTheme()
+  const statusColors = theme.palette.mode === 'dark' ? darkStatusColors : lightStatusColors
   const queryClient = useQueryClient()
   const [selectedTempOrderId, setSelectedTempOrderId] = useState<number | null>(null)
   const [searchInput, setSearchInput] = useState('')
@@ -120,7 +128,7 @@ export default function TempOrdersPage() {
   }
 
   function getStatusStyle(status: string) {
-    return statusColors[status] || { bg: '#F5F5F5', color: '#616161' }
+    return statusColors[status] || (theme.palette.mode === 'dark' ? { bg: '#2a2a2a', color: '#bdbdbd' } : { bg: '#F5F5F5', color: '#616161' })
   }
 
   const handleAccept = useCallback(async () => {
@@ -291,11 +299,11 @@ export default function TempOrdersPage() {
                 {(tempOrdersRes || []).length === 0 ? (
                   <Box sx={{ textAlign: 'center', py: '64px', color: 'text.secondary', fontSize: '14px' }}>{tTemp('noOrders')}</Box>
                 ) : (
-                  <Paper sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'grey.200', boxShadow: 'none', overflow: 'hidden' }}>
+                  <Paper sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}>
                     <Box sx={{ overflowX: 'auto' }}>
                       <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
                         <Box component="thead">
-                          <Box component="tr" sx={{ bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'grey.200' }}>
+                          <Box component="tr" sx={{ bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' }}>
                             <Box component="th" sx={{ px: '16px', py: '12px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', width: '80px' }}>
                               #
                             </Box>
@@ -326,7 +334,7 @@ export default function TempOrdersPage() {
                                 onClick={() => setSelectedTempOrderId(o.id)}
                                 sx={{
                                   borderTop: '1px solid',
-                                  borderColor: 'grey.100',
+                                  borderColor: 'divider',
                                   cursor: 'pointer',
                                   transition: 'background 0.1s',
                                   bgcolor: selectedTempOrderId === o.id ? 'action.selected' : 'transparent',
@@ -439,13 +447,13 @@ export default function TempOrdersPage() {
                 </Box>
 
                 {(acceptError || acceptSuccess || rejectError || rejectSuccess) && (
-                  <Box sx={{ mb: '20px', p: '10px 14px', borderRadius: '8px', bgcolor: acceptError || rejectError ? '#FFEBEE' : '#E8F5E9', color: acceptError || rejectError ? '#C62828' : '#2E7D32', fontSize: '14px' }}>
+                  <Box sx={{ mb: '20px', p: '10px 14px', borderRadius: '8px', bgcolor: acceptError || rejectError ? 'error.light' : 'success.light', color: acceptError || rejectError ? 'error.dark' : 'success.dark', fontSize: '14px' }}>
                     {acceptError || rejectError || (acceptSuccess ? tTemp('acceptSuccess') : '') || (rejectSuccess ? tTemp('rejectSuccess') : '')}
                   </Box>
                 )}
 
                 {/* Info card */}
-                <Paper sx={{ p: '20px', mb: '20px', borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'grey.200' }}>
+                <Paper sx={{ p: '20px', mb: '20px', borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                     <Box>
                       <Box sx={{ fontSize: '12px', color: 'text.secondary', mb: '4px', px: '2px' }}>{t('customer')}</Box>
@@ -463,8 +471,8 @@ export default function TempOrdersPage() {
                 </Paper>
 
                 {/* Order items */}
-                <Paper sx={{ borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'grey.200', overflow: 'hidden' }}>
-                  <Box sx={{ px: '16px', py: '10px', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                <Paper sx={{ borderRadius: '12px', boxShadow: 'none', border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+                  <Box sx={{ px: '16px', py: '10px', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'action.hover' }}>
                     <Typography sx={{ fontSize: '14px', fontWeight: 600 }}>{t('items')}</Typography>
                   </Box>
                   {selectedTempOrder.order_items && selectedTempOrder.order_items.length > 0 ? (
@@ -480,7 +488,7 @@ export default function TempOrdersPage() {
                         </Box>
                         <Box component="tbody">
                           {selectedTempOrder.order_items.map((item) => (
-                            <Box component="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'grey.100', '&:hover': { bgcolor: 'action.hover' } }}>
+                            <Box component="tr" key={item.id} sx={{ borderTop: '1px solid', borderColor: 'divider', '&:hover': { bgcolor: 'action.hover' } }}>
                               <Box component="td" sx={{ px: '16px', py: '8px', fontSize: '14px' }}>{item.product_name}</Box>
                               <Box component="td" sx={{ px: '16px', py: '8px', textAlign: 'right', fontSize: '14px' }}>Rp {formatPrice(item.price)}</Box>
                               <Box component="td" sx={{ px: '16px', py: '8px', textAlign: 'right', fontSize: '14px' }}>{item.qty}</Box>
@@ -489,7 +497,7 @@ export default function TempOrdersPage() {
                           ))}
                         </Box>
                         <Box component="tfoot">
-                          <Box component="tr" sx={{ borderTop: '2px solid', borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                          <Box component="tr" sx={{ borderTop: '2px solid', borderColor: 'divider', bgcolor: 'action.hover' }}>
                             <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right', fontWeight: 700, fontSize: '14px' }} {...({ colSpan: 3 } as object)}>{t('total')}</Box>
                             <Box component="td" sx={{ px: '16px', py: '10px', textAlign: 'right', fontWeight: 700, fontSize: '14px', color: 'primary.main' }}>Rp {formatPrice(selectedTempOrder.total_price)}</Box>
                           </Box>

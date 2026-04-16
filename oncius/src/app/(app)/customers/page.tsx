@@ -235,14 +235,14 @@ export default function CustomersPage() {
                   elevation={0}
                   sx={{
                     border: '1px solid',
-                    borderColor: 'grey.200',
+                    borderColor: 'divider',
                     borderRadius: '10px',
                     bgcolor: 'background.paper',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '16px',
                     p: '12px 16px',
-                    '&:hover': { borderColor: 'grey.300', bgcolor: 'action.hover' },
+                    '&:hover': { borderColor: 'divider', bgcolor: 'action.hover' },
                   }}
                 >
                   {/* Avatar */}
