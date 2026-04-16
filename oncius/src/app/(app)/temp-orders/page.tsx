@@ -65,6 +65,14 @@ export default function TempOrdersPage() {
   const [showActiveOrderConflictDialog, setShowActiveOrderConflictDialog] = useState(false)
   const [conflictData, setConflictData] = useState<{ customerId: number; activeOrderId: number } | null>(null)
 
+  const handleResetFilters = () => {
+    setSearchInput('')
+    setDebouncedSearch('')
+    setStatusFilter('pending')
+    setDateFrom('')
+    setDateTo('')
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
     return () => clearTimeout(timer)
@@ -291,6 +299,14 @@ export default function TempOrdersPage() {
                       onDateFromChange={setDateFrom}
                       onDateToChange={setDateTo}
                     />
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={handleResetFilters}
+                      sx={{ height: 36, fontSize: '13px', borderRadius: '6px', textTransform: 'none', alignSelf: 'flex-end', flexShrink: 0 }}
+                    >
+                      {to('resetFilters')}
+                    </Button>
                   </Box>
                 )}
                 </Box>

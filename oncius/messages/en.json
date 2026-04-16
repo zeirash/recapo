@@ -265,6 +265,7 @@
     "customerDeleted": "Deleted",
     "dateFrom": "From",
     "dateTo": "To",
+    "resetFilters": "Reset Filters",
     "sortLabel": "Sort By",
     "sortDateDesc": "Newest First",
     "sortDateAsc": "Oldest First",

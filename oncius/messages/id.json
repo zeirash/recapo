@@ -265,6 +265,7 @@
     "customerDeleted": "Dihapus",
     "dateFrom": "Dari",
     "dateTo": "Sampai",
+    "resetFilters": "Reset Filter",
     "sortLabel": "Urutkan",
     "sortDateDesc": "Terbaru",
     "sortDateAsc": "Terlama",

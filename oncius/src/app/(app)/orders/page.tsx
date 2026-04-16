@@ -131,6 +131,15 @@ export default function OrdersPage() {
   const [filtersVisible, setFiltersVisible] = useState(false)
   const [sortMenuAnchor, setSortMenuAnchor] = useState<null | HTMLElement>(null)
 
+  const handleResetFilters = () => {
+    setSearchInput('')
+    setDebouncedSearch('')
+    setStatusFilter([...DEFAULT_STATUSES])
+    setPaymentStatusFilter('')
+    setDateFrom('')
+    setDateTo('')
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
     return () => clearTimeout(timer)
@@ -612,6 +621,14 @@ export default function OrdersPage() {
                     onDateFromChange={setDateFrom}
                     onDateToChange={setDateTo}
                   />
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={handleResetFilters}
+                    sx={{ height: 36, fontSize: '13px', borderRadius: '6px', textTransform: 'none', alignSelf: 'flex-end', flexShrink: 0 }}
+                  >
+                    {to('resetFilters')}
+                  </Button>
                 </Box>
               )}
               </Box>
