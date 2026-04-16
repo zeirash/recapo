@@ -20,8 +20,7 @@ export default function DateRangeFilter({ dateFrom, dateTo, onDateFromChange, on
     borderRadius: '6px',
     width: 130,
     flexShrink: 0,
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'grey.400' },
-    '& .MuiOutlinedInput-input': { padding: '6px 8px' },
+'& .MuiOutlinedInput-input': { padding: '6px 8px' },
     '& input::-webkit-calendar-picker-indicator': {
       filter: isDarkMode ? 'invert(1)' : 'none',
       cursor: 'pointer',
