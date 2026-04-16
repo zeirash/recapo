@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, MenuItem, OutlinedInput, Paper, Select, Tooltip, Typography } from '@mui/material'
-import SearchInput from '@/components/ui/SearchInput'
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputBase, Menu, MenuItem, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
 import AddButton from '@/components/ui/AddButton'
 import { api } from '@/utils/api'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
-import { Phone, MapPin, User, Pencil, Trash2 } from 'lucide-react'
+import { ArrowUpDown, MapPin, Pencil, Phone, Search, Trash2, User } from 'lucide-react'
 
 type Customer = {
   id: number
@@ -37,6 +36,7 @@ export default function CustomersPage() {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortValue, setSortValue] = useState<string>('updated_at,desc')
+  const [sortMenuAnchor, setSortMenuAnchor] = useState<null | HTMLElement>(null)
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [deleteActiveOrderId, setDeleteActiveOrderId] = useState<number | null>(null)
   const [checkingActiveOrder, setCheckingActiveOrder] = useState(false)
@@ -156,28 +156,58 @@ export default function CustomersPage() {
     <Container disableGutters maxWidth={false} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Top bar */}
         <Box sx={{ p: '24px', flexShrink: 0 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
+          <Box sx={{ maxWidth: 960, mx: 'auto' }}>
             <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <SearchInput
+            <Paper
+              variant="outlined"
+              sx={{ flex: 1, display: 'flex', alignItems: 'center', px: '8px', py: '4px', borderRadius: '10px', boxShadow: 'none', gap: '2px' }}
+            >
+              <Tooltip title={tc('sortLabel') || 'Sort'}>
+                <IconButton
+                  size="small"
+                  onClick={(e) => setSortMenuAnchor(e.currentTarget)}
+                  sx={{ color: sortValue !== 'updated_at,desc' ? 'primary.main' : 'text.secondary', '&:hover': { color: sortValue !== 'updated_at,desc' ? 'primary.dark' : 'text.primary' } }}
+                >
+                  <ArrowUpDown size={18} />
+                </IconButton>
+              </Tooltip>
+
+              <InputBase
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder={tc('searchPlaceholder')}
+                sx={{ flex: 1, mx: '8px', fontSize: '13px', color: 'text.primary' }}
+                inputProps={{ 'aria-label': tc('searchPlaceholder') }}
               />
-              <AddButton onClick={openCreateForm} title={tc('addCustomer')} />
+
+              <Search size={18} style={{ color: '#9e9e9e', flexShrink: 0, marginRight: '4px' }} />
+            </Paper>
+            <AddButton onClick={openCreateForm} title={tc('addCustomer')} />
             </Box>
-            <Select
-              size="small"
-              displayEmpty
-              value={sortValue}
-              onChange={(e) => setSortValue(e.target.value)}
-              sx={{ height: 36, fontSize: '14px', borderRadius: '8px', width: 'fit-content', minWidth: 160 }}
-              MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
+
+            <Menu
+              anchorEl={sortMenuAnchor}
+              open={!!sortMenuAnchor}
+              onClose={() => setSortMenuAnchor(null)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
             >
-              <MenuItem value="updated_at,desc">{tc('sortUpdatedAtDesc')}</MenuItem>
-              <MenuItem value="updated_at,asc">{tc('sortUpdatedAtAsc')}</MenuItem>
-              <MenuItem value="name,asc">{tc('sortNameAsc')}</MenuItem>
-              <MenuItem value="name,desc">{tc('sortNameDesc')}</MenuItem>
-            </Select>
+              {([
+                ['updated_at,desc', tc('sortUpdatedAtDesc')],
+                ['updated_at,asc', tc('sortUpdatedAtAsc')],
+                ['name,asc', tc('sortNameAsc')],
+                ['name,desc', tc('sortNameDesc')],
+              ] as const).map(([val, label]) => (
+                <MenuItem
+                  key={val}
+                  selected={sortValue === val}
+                  onClick={() => { setSortValue(val); setSortMenuAnchor(null) }}
+                  sx={{ fontSize: '13px' }}
+                >
+                  {label}
+                </MenuItem>
+              ))}
+            </Menu>
           </Box>
         </Box>
 

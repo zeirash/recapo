@@ -192,6 +192,7 @@
     "createFailed": "Gagal membuat pelanggan",
     "updateFailed": "Gagal memperbarui pelanggan",
     "deleteFailed": "Gagal menghapus pelanggan",
+    "sortLabel": "Urutkan",
     "sortUpdatedAtDesc": "Diperbarui: Terbaru",
     "sortUpdatedAtAsc": "Diperbarui: Terlama",
     "sortNameAsc": "Nama: A → Z",

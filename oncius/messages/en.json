@@ -192,6 +192,7 @@
     "createFailed": "Failed to create customer",
     "updateFailed": "Failed to update customer",
     "deleteFailed": "Failed to delete customer",
+    "sortLabel": "Sort By",
     "sortUpdatedAtDesc": "Updated: Newest First",
     "sortUpdatedAtAsc": "Updated: Oldest First",
     "sortNameAsc": "Name: A → Z",
