@@ -2367,3 +2367,151 @@ func TestDeleteOrderPaymentHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestGetOrderStatsHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	type queryOpts struct {
+		dateFrom string
+		dateTo   string
+	}
+
+	tests := []struct {
+		name           string
+		shopID         int
+		opts           queryOpts
+		mockSetup      func()
+		wantStatus     int
+		wantSuccess    bool
+		wantRevenue    float64
+		wantErrMessage string
+	}{
+		{
+			name:   "successfully returns total revenue with no filters",
+			shopID: 1,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{}).
+					Return(response.OrderStatsData{TotalRevenue: 150000}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantRevenue: 150000,
+		},
+		{
+			name:   "returns zero revenue when no payments exist",
+			shopID: 1,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{}).
+					Return(response.OrderStatsData{TotalRevenue: 0}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantRevenue: 0,
+		},
+		{
+			name:   "passes date_from filter to service",
+			shopID: 1,
+			opts:   queryOpts{dateFrom: "2024-01-01"},
+			mockSetup: func() {
+				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				mockOrderService.EXPECT().
+					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df}).
+					Return(response.OrderStatsData{TotalRevenue: 75000}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantRevenue: 75000,
+		},
+		{
+			name:   "passes date_to filter to service",
+			shopID: 1,
+			opts:   queryOpts{dateTo: "2024-01-31"},
+			mockSetup: func() {
+				dt := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
+				mockOrderService.EXPECT().
+					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{DateTo: &dt}).
+					Return(response.OrderStatsData{TotalRevenue: 50000}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantRevenue: 50000,
+		},
+		{
+			name:   "passes both date filters to service",
+			shopID: 1,
+			opts:   queryOpts{dateFrom: "2024-01-01", dateTo: "2024-01-31"},
+			mockSetup: func() {
+				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+				dt := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
+				mockOrderService.EXPECT().
+					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df, DateTo: &dt}).
+					Return(response.OrderStatsData{TotalRevenue: 120000}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+			wantRevenue: 120000,
+		},
+		{
+			name:   "returns 500 on service error",
+			shopID: 1,
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{}).
+					Return(response.OrderStatsData{}, errors.New("database error"))
+			},
+			wantStatus:     http.StatusInternalServerError,
+			wantSuccess:    false,
+			wantErrMessage: "database error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			path := "/orders/stats"
+			var params []string
+			if tt.opts.dateFrom != "" {
+				params = append(params, "date_from="+tt.opts.dateFrom)
+			}
+			if tt.opts.dateTo != "" {
+				params = append(params, "date_to="+tt.opts.dateTo)
+			}
+			if len(params) > 0 {
+				path += "?" + strings.Join(params, "&")
+			}
+			req := newRequestWithShopID("GET", path, nil, tt.shopID)
+			rec := httptest.NewRecorder()
+
+			handler.GetOrderStatsHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("GetOrderStatsHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("GetOrderStatsHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+			if tt.wantErrMessage != "" && resp.Message != tt.wantErrMessage {
+				t.Errorf("GetOrderStatsHandler() message = %v, want %v", resp.Message, tt.wantErrMessage)
+			}
+			if tt.wantSuccess {
+				data, ok := resp.Data.(map[string]interface{})
+				if !ok {
+					t.Fatalf("GetOrderStatsHandler() data is not a map: %v", resp.Data)
+				}
+				if got := data["total_revenue"]; got != tt.wantRevenue {
+					t.Errorf("GetOrderStatsHandler() total_revenue = %v, want %v", got, tt.wantRevenue)
+				}
+			}
+		})
+	}
+}

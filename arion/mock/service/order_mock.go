@@ -219,6 +219,21 @@ func (mr *MockOrderServiceMockRecorder) GetOrderPaymentsByOrderID(ctx, orderID i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderPaymentsByOrderID", reflect.TypeOf((*MockOrderService)(nil).GetOrderPaymentsByOrderID), ctx, orderID)
 }
 
+// GetOrdersStats mocks base method.
+func (m *MockOrderService) GetOrdersStats(ctx context.Context, shopID int, opts model.OrderFilterOptions) (response.OrderStatsData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrdersStats", ctx, shopID, opts)
+	ret0, _ := ret[0].(response.OrderStatsData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrdersStats indicates an expected call of GetOrdersStats.
+func (mr *MockOrderServiceMockRecorder) GetOrdersStats(ctx, shopID, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersStats", reflect.TypeOf((*MockOrderService)(nil).GetOrdersStats), ctx, shopID, opts)
+}
+
 // GetOrdersByShopID mocks base method.
 func (m *MockOrderService) GetOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error) {
 	m.ctrl.T.Helper()

@@ -125,6 +125,7 @@ func NewRouter() *mux.Router {
 	// Order
 	r.Handle("/order", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateOrderHandler))).Methods("POST")
 	r.Handle("/orders", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrdersHandler))).Methods("GET")
+	r.Handle("/orders/stats", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrderStatsHandler))).Methods("GET")
 	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateOrderHandler))).Methods("PATCH")
 	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteOrderHandler))).Methods("DELETE")
 	r.Handle("/orders/{order_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrderHandler))).Methods("GET")

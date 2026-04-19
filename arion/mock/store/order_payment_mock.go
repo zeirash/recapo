@@ -94,6 +94,21 @@ func (mr *MockOrderPaymentStoreMockRecorder) GetOrderPaymentsByOrderID(ctx, orde
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderPaymentsByOrderID", reflect.TypeOf((*MockOrderPaymentStore)(nil).GetOrderPaymentsByOrderID), ctx, orderID)
 }
 
+// GetPaymentsSumByShopID mocks base method.
+func (m *MockOrderPaymentStore) GetPaymentsSumByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPaymentsSumByShopID", ctx, shopID, opts)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPaymentsSumByShopID indicates an expected call of GetPaymentsSumByShopID.
+func (mr *MockOrderPaymentStoreMockRecorder) GetPaymentsSumByShopID(ctx, shopID, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPaymentsSumByShopID", reflect.TypeOf((*MockOrderPaymentStore)(nil).GetPaymentsSumByShopID), ctx, shopID, opts)
+}
+
 // UpdateOrderPaymentAmountByID mocks base method.
 func (m *MockOrderPaymentStore) UpdateOrderPaymentAmountByID(ctx context.Context, tx database.Tx, id, orderID, amount int) (*model.OrderPayment, error) {
 	m.ctrl.T.Helper()

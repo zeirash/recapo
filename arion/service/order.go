@@ -20,6 +20,7 @@ type (
 		CreateOrder(ctx context.Context, customerID int, shopID int, notes *string) (response.OrderData, error)
 		GetOrderByID(ctx context.Context, id int, shopID ...int) (*response.OrderData, error)
 		GetOrdersByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) ([]response.OrderData, error)
+		GetOrdersStats(ctx context.Context, shopID int, opts model.OrderFilterOptions) (response.OrderStatsData, error)
 		UpdateOrderByID(ctx context.Context, input UpdateOrderInput) (response.OrderData, error)
 		DeleteOrderByID(ctx context.Context, id int) error
 
@@ -209,6 +210,14 @@ func (o *oservice) GetOrdersByShopID(ctx context.Context, shopID int, opts model
 	}
 
 	return ordersData, nil
+}
+
+func (o *oservice) GetOrdersStats(ctx context.Context, shopID int, opts model.OrderFilterOptions) (response.OrderStatsData, error) {
+	total, err := orderPaymentStore.GetPaymentsSumByShopID(ctx, shopID, opts)
+	if err != nil {
+		return response.OrderStatsData{}, err
+	}
+	return response.OrderStatsData{TotalRevenue: total}, nil
 }
 
 func (o *oservice) UpdateOrderByID(ctx context.Context, input UpdateOrderInput) (response.OrderData, error) {

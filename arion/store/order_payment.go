@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/zeirash/recapo/arion/common/database"
@@ -13,6 +14,7 @@ type (
 	OrderPaymentStore interface {
 		CreateOrderPayment(ctx context.Context, tx database.Tx, orderID int, amount int) (*model.OrderPayment, error)
 		GetOrderPaymentsByOrderID(ctx context.Context, orderID int) ([]model.OrderPayment, error)
+		GetPaymentsSumByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) (int, error)
 		UpdateOrderPaymentAmountByID(ctx context.Context, tx database.Tx, id, orderID, amount int) (*model.OrderPayment, error)
 		DeleteOrderPaymentByID(ctx context.Context, id, orderID int) error
 		DeleteOrderPaymentsByOrderID(ctx context.Context, tx database.Tx, orderID int) error
@@ -137,4 +139,33 @@ func (o *orderpayment) DeleteOrderPaymentsByOrderID(ctx context.Context, tx data
 		return err
 	}
 	return nil
+}
+
+func (o *orderpayment) GetPaymentsSumByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) (int, error) {
+	args := []interface{}{shopID}
+	q := `
+		SELECT COALESCE(SUM(op.amount), 0)
+		FROM order_payments op
+		JOIN orders ord ON ord.id = op.order_id
+		WHERE ord.shop_id = $1
+	`
+
+	argIdx := 2
+	if opts.DateFrom != nil {
+		q += fmt.Sprintf(" AND op.created_at::date >= $%d", argIdx)
+		args = append(args, *opts.DateFrom)
+		argIdx++
+	}
+	if opts.DateTo != nil {
+		q += fmt.Sprintf(" AND op.created_at::date <= $%d", argIdx)
+		args = append(args, *opts.DateTo)
+		argIdx++
+	}
+
+	var total int
+	err := o.db.QueryRowContext(ctx, q, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
 }

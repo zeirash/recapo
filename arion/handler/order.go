@@ -52,6 +52,46 @@ type (
 	}
 )
 
+// GetOrderStatsHandler godoc
+//
+//	@Summary		Get order stats
+//	@Description	Get aggregated order stats for the shop. Returns total revenue (sum of all order payments).
+//	@Description	Success Response envelope: { success, data, code, message }. Schema below shows the data field (inner payload).
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			date_from	query		string	false	"Filter payments from date (YYYY-MM-DD)"
+//	@Param			date_to		query		string	false	"Filter payments to date (YYYY-MM-DD)"
+//	@Success		200			{object}	response.OrderStatsData
+//	@Failure		500			{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/stats [get]
+func GetOrderStatsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+
+	opts := model.OrderFilterOptions{}
+	if df := r.URL.Query().Get("date_from"); df != "" {
+		if t, err := parseDate(df); err == nil {
+			opts.DateFrom = &t
+		}
+	}
+	if dt := r.URL.Query().Get("date_to"); dt != "" {
+		if t, err := parseDate(dt); err == nil {
+			opts.DateTo = &t
+		}
+	}
+
+	res, err := orderService.GetOrdersStats(ctx, shopID, opts)
+	if err != nil {
+		logger.WithError(err).Error("get_order_stats_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "get_order_stats")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, res)
+}
+
 // CreateOrderHandler godoc
 //
 //	@Summary		Create order

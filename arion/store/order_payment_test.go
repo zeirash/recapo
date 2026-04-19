@@ -466,3 +466,125 @@ func Test_orderpayment_DeleteOrderPaymentsByOrderID(t *testing.T) {
 		})
 	}
 }
+
+func Test_orderpayment_GetPaymentsSumByShopID(t *testing.T) {
+	dateFrom := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	dateTo := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
+
+	baseQuery := `SELECT COALESCE\(SUM\(op\.amount\), 0\)\s+FROM order_payments op\s+JOIN orders ord ON ord\.id = op\.order_id\s+WHERE ord\.shop_id = \$1`
+
+	tests := []struct {
+		name      string
+		shopID    int
+		opts      model.OrderFilterOptions
+		mockSetup func(mock sqlmock.Sqlmock)
+		want      int
+		wantErr   bool
+	}{
+		{
+			name:   "returns sum of all payments for shop with no date filter",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"coalesce"}).AddRow(150000)
+				mock.ExpectQuery(baseQuery).
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			want:    150000,
+			wantErr: false,
+		},
+		{
+			name:   "returns zero when shop has no payments",
+			shopID: 99,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"coalesce"}).AddRow(0)
+				mock.ExpectQuery(baseQuery).
+					WithArgs(99).
+					WillReturnRows(rows)
+			},
+			want:    0,
+			wantErr: false,
+		},
+		{
+			name:   "applies date_from filter",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{DateFrom: &dateFrom},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"coalesce"}).AddRow(75000)
+				mock.ExpectQuery(baseQuery + ` AND op\.created_at::date >= \$2`).
+					WithArgs(1, dateFrom).
+					WillReturnRows(rows)
+			},
+			want:    75000,
+			wantErr: false,
+		},
+		{
+			name:   "applies date_to filter",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{DateTo: &dateTo},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"coalesce"}).AddRow(50000)
+				mock.ExpectQuery(baseQuery + ` AND op\.created_at::date <= \$2`).
+					WithArgs(1, dateTo).
+					WillReturnRows(rows)
+			},
+			want:    50000,
+			wantErr: false,
+		},
+		{
+			name:   "applies both date_from and date_to filters",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{DateFrom: &dateFrom, DateTo: &dateTo},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"coalesce"}).AddRow(120000)
+				mock.ExpectQuery(baseQuery + ` AND op\.created_at::date >= \$2 AND op\.created_at::date <= \$3`).
+					WithArgs(1, dateFrom, dateTo).
+					WillReturnRows(rows)
+			},
+			want:    120000,
+			wantErr: false,
+		},
+		{
+			name:   "returns error on database failure",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(baseQuery).
+					WithArgs(1).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    0,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewOrderPaymentStoreWithDB(db)
+
+			got, gotErr := store.GetPaymentsSumByShopID(context.Background(), tt.shopID, tt.opts)
+
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetPaymentsSumByShopID() error = %v, wantErr %v", gotErr, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetPaymentsSumByShopID() succeeded unexpectedly")
+			}
+			if got != tt.want {
+				t.Errorf("GetPaymentsSumByShopID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

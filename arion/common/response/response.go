@@ -136,6 +136,10 @@ type (
 		SnapToken   string `json:"snap_token"`
 	}
 
+	OrderStatsData struct {
+		TotalRevenue int `json:"total_revenue"`
+	}
+
 	SystemStatsData struct {
 		TotalShops    int `json:"total_shops"`
 		SubsTrialing  int `json:"subs_trialing"`
