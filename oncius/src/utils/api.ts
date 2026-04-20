@@ -391,6 +391,14 @@ export const api = {
     return apiRequest<ApiResponse<any>>(`/orders/${id}`)
   },
 
+  getOrderStats: (opts?: { date_from?: string; date_to?: string }) => {
+    const params = new URLSearchParams()
+    if (opts?.date_from) params.set('date_from', opts.date_from)
+    if (opts?.date_to) params.set('date_to', opts.date_to)
+    const qs = params.toString()
+    return apiRequest<ApiResponse<{ total_revenue: number }>>(`/orders/stats${qs ? `?${qs}` : ''}`)
+  },
+
   createOrder: (data: { customer_id: number; notes?: string }) => {
     return apiRequest<ApiResponse>('/order', {
       method: 'POST',

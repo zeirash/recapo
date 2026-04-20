@@ -160,6 +160,25 @@ const DashboardPage = () => {
     { enabled: preset !== 'all_time' }
   )
 
+  const { data: orderStatsRes } = useQuery(
+    ['orders', 'stats', preset],
+    async () => {
+      const res = await api.getOrderStats({ date_from: dateFrom, date_to: dateTo })
+      if (!res.success) throw new Error(res.message)
+      return res.data as { total_revenue: number }
+    }
+  )
+
+  const { data: prevOrderStatsRes } = useQuery(
+    ['orders', 'stats', 'prev', preset],
+    async () => {
+      const res = await api.getOrderStats({ date_from: prevFrom, date_to: prevTo })
+      if (!res.success) throw new Error(res.message)
+      return res.data as { total_revenue: number }
+    },
+    { enabled: preset !== 'all_time' }
+  )
+
   const { data: customersRes } = useQuery(
     ['customers'],
     async () => {
@@ -180,14 +199,13 @@ const DashboardPage = () => {
 
   const stats = useMemo(() => {
     const orders = ordersRes || []
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.total_price || 0), 0)
     return {
       totalOrders: orders.length,
-      revenue: totalRevenue,
+      revenue: orderStatsRes?.total_revenue ?? 0,
       customers: (customersRes || []).length,
       products: (productsRes || []).length,
     }
-  }, [ordersRes, customersRes, productsRes])
+  }, [ordersRes, orderStatsRes, customersRes, productsRes])
 
   const recentOrders = useMemo(() => {
     const orders = ordersRes || []
@@ -216,15 +234,15 @@ const DashboardPage = () => {
   }, [ordersRes])
 
   const deltas = useMemo(() => {
-    if (preset === 'all_time' || !prevOrdersRes) return null
-    const prevRevenue = prevOrdersRes.reduce((sum, o) => sum + (o.total_price || 0), 0)
+    if (preset === 'all_time' || !prevOrdersRes || !prevOrderStatsRes) return null
+    const prevRevenue = prevOrderStatsRes.total_revenue
     const ordersDiff = stats.totalOrders - prevOrdersRes.length
     const revenueDiff = stats.revenue - prevRevenue
     return {
       orders: { display: `${ordersDiff > 0 ? '+' : ''}${ordersDiff}`, positive: ordersDiff >= 0 },
       revenue: { display: `${revenueDiff > 0 ? '+' : ''}${revenueDiff.toLocaleString()}`, positive: revenueDiff >= 0 },
     }
-  }, [preset, prevOrdersRes, stats])
+  }, [preset, prevOrdersRes, prevOrderStatsRes, stats])
 
   const topCustomers = useMemo(() => {
     const orders = ordersRes || []
