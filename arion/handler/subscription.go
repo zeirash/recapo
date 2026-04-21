@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/zeirash/recapo/arion/common"
 	"github.com/zeirash/recapo/arion/common/apierr"
@@ -155,6 +156,11 @@ func MidtransWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	payload := service.MidtransWebhookPayload{}
 	if err := ParseJson(r.Body, &payload); err != nil {
 		WriteErrorJson(w, r, http.StatusBadRequest, err, "parse_json")
+		return
+	}
+
+	if strings.HasPrefix(payload.OrderID, "payment_notif_test_") {
+		WriteJson(w, http.StatusOK, struct{}{})
 		return
 	}
 
