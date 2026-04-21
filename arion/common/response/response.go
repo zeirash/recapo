@@ -138,6 +138,7 @@ type (
 
 	OrderStatsData struct {
 		TotalRevenue int `json:"total_revenue"`
+		NetSales     int `json:"net_sales"`
 	}
 
 	SystemStatsData struct {

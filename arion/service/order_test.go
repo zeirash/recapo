@@ -3561,66 +3561,84 @@ func Test_oservice_GetOrdersStats(t *testing.T) {
 	dateFrom := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	dateTo := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
 
+	type mocks struct {
+		payment  *mock_store.MockOrderPaymentStore
+		orderItem *mock_store.MockOrderItemStore
+	}
+
 	tests := []struct {
 		name      string
 		shopID    int
 		opts      model.OrderFilterOptions
-		mockSetup func(ctrl *gomock.Controller) *mock_store.MockOrderPaymentStore
+		mockSetup func(ctrl *gomock.Controller) mocks
 		want      response.OrderStatsData
 		wantErr   bool
 	}{
 		{
-			name:   "returns total revenue with no date filter",
+			name:   "returns total revenue and net sales with no date filter",
 			shopID: 1,
 			opts:   model.OrderFilterOptions{},
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderPaymentStore {
-				mock := mock_store.NewMockOrderPaymentStore(ctrl)
-				mock.EXPECT().
-					GetPaymentsSumByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).
-					Return(150000, nil)
-				return mock
+			mockSetup: func(ctrl *gomock.Controller) mocks {
+				p := mock_store.NewMockOrderPaymentStore(ctrl)
+				p.EXPECT().GetPaymentsSumByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).Return(150000, nil)
+				oi := mock_store.NewMockOrderItemStore(ctrl)
+				oi.EXPECT().GetNetSalesByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).Return(30000, nil)
+				return mocks{p, oi}
 			},
-			want:    response.OrderStatsData{TotalRevenue: 150000},
+			want:    response.OrderStatsData{TotalRevenue: 150000, NetSales: 30000},
 			wantErr: false,
 		},
 		{
-			name:   "returns zero revenue when no payments exist",
+			name:   "returns zero when no payments or net sales exist",
 			shopID: 99,
 			opts:   model.OrderFilterOptions{},
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderPaymentStore {
-				mock := mock_store.NewMockOrderPaymentStore(ctrl)
-				mock.EXPECT().
-					GetPaymentsSumByShopID(gomock.Any(), 99, model.OrderFilterOptions{}).
-					Return(0, nil)
-				return mock
+			mockSetup: func(ctrl *gomock.Controller) mocks {
+				p := mock_store.NewMockOrderPaymentStore(ctrl)
+				p.EXPECT().GetPaymentsSumByShopID(gomock.Any(), 99, model.OrderFilterOptions{}).Return(0, nil)
+				oi := mock_store.NewMockOrderItemStore(ctrl)
+				oi.EXPECT().GetNetSalesByShopID(gomock.Any(), 99, model.OrderFilterOptions{}).Return(0, nil)
+				return mocks{p, oi}
 			},
-			want:    response.OrderStatsData{TotalRevenue: 0},
+			want:    response.OrderStatsData{TotalRevenue: 0, NetSales: 0},
 			wantErr: false,
 		},
 		{
-			name:   "passes date filters to store",
+			name:   "passes date filters to both stores",
 			shopID: 1,
 			opts:   model.OrderFilterOptions{DateFrom: &dateFrom, DateTo: &dateTo},
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderPaymentStore {
-				mock := mock_store.NewMockOrderPaymentStore(ctrl)
-				mock.EXPECT().
-					GetPaymentsSumByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &dateFrom, DateTo: &dateTo}).
-					Return(75000, nil)
-				return mock
+			mockSetup: func(ctrl *gomock.Controller) mocks {
+				p := mock_store.NewMockOrderPaymentStore(ctrl)
+				p.EXPECT().GetPaymentsSumByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &dateFrom, DateTo: &dateTo}).Return(75000, nil)
+				oi := mock_store.NewMockOrderItemStore(ctrl)
+				oi.EXPECT().GetNetSalesByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &dateFrom, DateTo: &dateTo}).Return(15000, nil)
+				return mocks{p, oi}
 			},
-			want:    response.OrderStatsData{TotalRevenue: 75000},
+			want:    response.OrderStatsData{TotalRevenue: 75000, NetSales: 15000},
 			wantErr: false,
 		},
 		{
-			name:   "returns error on store failure",
+			name:   "returns error on payment store failure",
 			shopID: 1,
 			opts:   model.OrderFilterOptions{},
-			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockOrderPaymentStore {
-				mock := mock_store.NewMockOrderPaymentStore(ctrl)
-				mock.EXPECT().
-					GetPaymentsSumByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).
-					Return(0, errors.New("database error"))
-				return mock
+			mockSetup: func(ctrl *gomock.Controller) mocks {
+				p := mock_store.NewMockOrderPaymentStore(ctrl)
+				p.EXPECT().GetPaymentsSumByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).Return(0, errors.New("database error"))
+				oi := mock_store.NewMockOrderItemStore(ctrl)
+				return mocks{p, oi}
+			},
+			want:    response.OrderStatsData{},
+			wantErr: true,
+		},
+		{
+			name:   "returns error on order item store failure",
+			shopID: 1,
+			opts:   model.OrderFilterOptions{},
+			mockSetup: func(ctrl *gomock.Controller) mocks {
+				p := mock_store.NewMockOrderPaymentStore(ctrl)
+				p.EXPECT().GetPaymentsSumByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).Return(150000, nil)
+				oi := mock_store.NewMockOrderItemStore(ctrl)
+				oi.EXPECT().GetNetSalesByShopID(gomock.Any(), 1, model.OrderFilterOptions{}).Return(0, errors.New("database error"))
+				return mocks{p, oi}
 			},
 			want:    response.OrderStatsData{},
 			wantErr: true,
@@ -3632,9 +3650,15 @@ func Test_oservice_GetOrdersStats(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			old := orderPaymentStore
-			defer func() { orderPaymentStore = old }()
-			orderPaymentStore = tt.mockSetup(ctrl)
+			m := tt.mockSetup(ctrl)
+
+			oldPayment := orderPaymentStore
+			defer func() { orderPaymentStore = oldPayment }()
+			orderPaymentStore = m.payment
+
+			oldItem := orderItemStore
+			defer func() { orderItemStore = oldItem }()
+			orderItemStore = m.orderItem
 
 			var o oservice
 			got, gotErr := o.GetOrdersStats(context.Background(), tt.shopID, tt.opts)

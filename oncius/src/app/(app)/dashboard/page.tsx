@@ -3,13 +3,13 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from 'react-query'
 import Link from 'next/link'
-import { Box, Button, Paper, Typography } from '@mui/material'
+import { Box, Button, Paper, Tooltip, Typography } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/hooks/useAuth'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
 import { api } from '@/utils/api'
-import { Package, DollarSign, Users, ClipboardList, AlertTriangle, CreditCard, type LucideIcon } from 'lucide-react'
+import { Package, DollarSign, Users, ClipboardList, AlertTriangle, CreditCard, Info, type LucideIcon } from 'lucide-react'
 
 type Order = {
   id: number
@@ -42,12 +42,14 @@ const StatCard = ({
   icon: Icon,
   delta,
   sublabel,
+  tooltip,
 }: {
   label: string
   value: number | string
   icon: LucideIcon
   delta?: { display: string; positive: boolean }
   sublabel?: string
+  tooltip?: string
 }) => (
   <Paper
     sx={{
@@ -63,8 +65,17 @@ const StatCard = ({
   >
     <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
       <Box>
-        <Box sx={{ color: 'text.secondary', fontSize: '14px', fontWeight: 600, mb: '4px', display: 'block' }}>
-          {label}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mb: '4px' }}>
+          <Box sx={{ color: 'text.secondary', fontSize: '14px', fontWeight: 600 }}>
+            {label}
+          </Box>
+          {tooltip && (
+            <Tooltip title={tooltip} placement="top" arrow>
+              <Box sx={{ color: 'text.disabled', display: 'flex', cursor: 'help' }}>
+                <Info size={13} />
+              </Box>
+            </Tooltip>
+          )}
         </Box>
         <Box sx={{ fontSize: '20px', fontWeight: 700 }}>{value}</Box>
         {sublabel && (
@@ -165,7 +176,7 @@ const DashboardPage = () => {
     async () => {
       const res = await api.getOrderStats({ date_from: dateFrom, date_to: dateTo })
       if (!res.success) throw new Error(res.message)
-      return res.data as { total_revenue: number }
+      return res.data as { total_revenue: number; net_sales: number }
     }
   )
 
@@ -174,7 +185,7 @@ const DashboardPage = () => {
     async () => {
       const res = await api.getOrderStats({ date_from: prevFrom, date_to: prevTo })
       if (!res.success) throw new Error(res.message)
-      return res.data as { total_revenue: number }
+      return res.data as { total_revenue: number; net_sales: number }
     },
     { enabled: preset !== 'all_time' }
   )
@@ -201,11 +212,15 @@ const DashboardPage = () => {
     const orders = ordersRes || []
     return {
       totalOrders: orders.length,
-      revenue: orderStatsRes?.total_revenue ?? 0,
+      revenue: orders.reduce((sum, o) => sum + (o.total_price || 0), 0),
+      saldo: orderStatsRes?.total_revenue ?? 0,
+      netSales: orderStatsRes?.net_sales ?? 0,
       customers: (customersRes || []).length,
       products: (productsRes || []).length,
     }
   }, [ordersRes, orderStatsRes, customersRes, productsRes])
+
+  const netSalesSublabel = t('dashboard.netSalesSublabel', { amount: formatPrice(stats.netSales) })
 
   const recentOrders = useMemo(() => {
     const orders = ordersRes || []
@@ -223,24 +238,16 @@ const DashboardPage = () => {
     }))
   }, [ordersRes])
 
-  const outstanding = useMemo(() => {
-    const orders = (ordersRes || []).filter(
-      (o) => o.payment_status === 'outstanding' && o.status !== 'cancelled'
-    )
-    return {
-      count: orders.length,
-      amount: orders.reduce((sum, o) => sum + (o.total_price || 0), 0),
-    }
-  }, [ordersRes])
-
   const deltas = useMemo(() => {
     if (preset === 'all_time' || !prevOrdersRes || !prevOrderStatsRes) return null
-    const prevRevenue = prevOrderStatsRes.total_revenue
+    const prevRevenue = prevOrdersRes.reduce((sum, o) => sum + (o.total_price || 0), 0)
     const ordersDiff = stats.totalOrders - prevOrdersRes.length
     const revenueDiff = stats.revenue - prevRevenue
+    const saldoDiff = stats.saldo - prevOrderStatsRes.total_revenue
     return {
       orders: { display: `${ordersDiff > 0 ? '+' : ''}${ordersDiff}`, positive: ordersDiff >= 0 },
       revenue: { display: `${revenueDiff > 0 ? '+' : ''}${revenueDiff.toLocaleString()}`, positive: revenueDiff >= 0 },
+      saldo: { display: `${saldoDiff > 0 ? '+' : ''}${saldoDiff.toLocaleString()}`, positive: saldoDiff >= 0 },
     }
   }, [preset, prevOrdersRes, prevOrderStatsRes, stats])
 
@@ -332,15 +339,10 @@ const DashboardPage = () => {
               }}
             >
               <StatCard label={t('dashboard.totalOrders')} value={stats.totalOrders} icon={ClipboardList} delta={deltas?.orders} />
-              <StatCard label={t('dashboard.revenue')} value={formatPrice(stats.revenue)} icon={DollarSign} delta={deltas?.revenue} />
+              <StatCard label={t('dashboard.revenue')} value={formatPrice(stats.revenue)} icon={DollarSign} delta={deltas?.revenue} tooltip={t('dashboard.revenueTooltip')} sublabel={netSalesSublabel} />
               <StatCard label={t('dashboard.customers')} value={stats.customers} icon={Users} />
               <StatCard label={t('dashboard.products')} value={stats.products} icon={Package} />
-              <StatCard
-                label={t('dashboard.outstanding')}
-                value={formatPrice(outstanding.amount)}
-                icon={CreditCard}
-                sublabel={t('dashboard.outstandingOrders', { count: outstanding.count })}
-              />
+              <StatCard label={t('dashboard.saldo')} value={formatPrice(stats.saldo)} icon={CreditCard} delta={deltas?.saldo} tooltip={t('dashboard.saldoTooltip')} />
             </Box>
 
             {/* Status breakdown */}

@@ -396,7 +396,7 @@ export const api = {
     if (opts?.date_from) params.set('date_from', opts.date_from)
     if (opts?.date_to) params.set('date_to', opts.date_to)
     const qs = params.toString()
-    return apiRequest<ApiResponse<{ total_revenue: number }>>(`/orders/stats${qs ? `?${qs}` : ''}`)
+    return apiRequest<ApiResponse<{ total_revenue: number; net_sales: number }>>(`/orders/stats${qs ? `?${qs}` : ''}`)
   },
 
   createOrder: (data: { customer_id: number; notes?: string }) => {

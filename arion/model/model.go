@@ -121,13 +121,14 @@ type (
 	}
 
 	OrderItem struct {
-		ID          int          `db:"id"`
-		OrderID     int          `db:"order_id"`
-		ProductName string       `db:"product_name"`
-		Price       int          `db:"price"`
-		Qty         int          `db:"qty"`
-		CreatedAt   time.Time    `db:"created_at"`
-		UpdatedAt   sql.NullTime `db:"updated_at"`
+		ID            int          `db:"id"`
+		OrderID       int          `db:"order_id"`
+		ProductName   string       `db:"product_name"`
+		Price         int          `db:"price"`
+		OriginalPrice int          `db:"original_price"`
+		Qty           int          `db:"qty"`
+		CreatedAt     time.Time    `db:"created_at"`
+		UpdatedAt     sql.NullTime `db:"updated_at"`
 	}
 
 	TempOrder struct {

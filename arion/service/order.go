@@ -130,11 +130,11 @@ func (o *oservice) GetOrderByID(ctx context.Context, id int, shopID ...int) (*re
 	orderItemsData := make([]response.OrderItemData, 0, len(orderItems))
 	for _, orderItem := range orderItems {
 		orderItemsData = append(orderItemsData, response.OrderItemData{
-			ID:          orderItem.ID,
-			ProductName: orderItem.ProductName,
-			Price:       orderItem.Price,
-			Qty:         orderItem.Qty,
-			CreatedAt:   orderItem.CreatedAt,
+			ID:            orderItem.ID,
+			ProductName:   orderItem.ProductName,
+			Price:         orderItem.Price,
+			Qty:           orderItem.Qty,
+			CreatedAt:     orderItem.CreatedAt,
 		})
 		if orderItem.UpdatedAt.Valid {
 			t := orderItem.UpdatedAt.Time
@@ -217,7 +217,11 @@ func (o *oservice) GetOrdersStats(ctx context.Context, shopID int, opts model.Or
 	if err != nil {
 		return response.OrderStatsData{}, err
 	}
-	return response.OrderStatsData{TotalRevenue: total}, nil
+	netSales, err := orderItemStore.GetNetSalesByShopID(ctx, shopID, opts)
+	if err != nil {
+		return response.OrderStatsData{}, err
+	}
+	return response.OrderStatsData{TotalRevenue: total, NetSales: netSales}, nil
 }
 
 func (o *oservice) UpdateOrderByID(ctx context.Context, input UpdateOrderInput) (response.OrderData, error) {
@@ -302,12 +306,12 @@ func (o *oservice) CreateOrderItem(ctx context.Context, orderID, productID, qty 
 	}
 
 	res := response.OrderItemData{
-		ID:          orderItem.ID,
-		OrderID:     orderItem.OrderID,
-		ProductName: orderItem.ProductName,
-		Price:       orderItem.Price,
-		Qty:         orderItem.Qty,
-		CreatedAt:   orderItem.CreatedAt,
+		ID:            orderItem.ID,
+		OrderID:       orderItem.OrderID,
+		ProductName:   orderItem.ProductName,
+		Price:         orderItem.Price,
+		Qty:           orderItem.Qty,
+		CreatedAt:     orderItem.CreatedAt,
 	}
 
 	return res, nil
@@ -334,12 +338,12 @@ func (o *oservice) UpdateOrderItemByID(ctx context.Context, input UpdateOrderIte
 	}
 
 	res := response.OrderItemData{
-		ID:          orderItemData.ID,
-		OrderID:     orderItemData.OrderID,
-		ProductName: orderItemData.ProductName,
-		Price:       orderItemData.Price,
-		Qty:         orderItemData.Qty,
-		CreatedAt:   orderItemData.CreatedAt,
+		ID:            orderItemData.ID,
+		OrderID:       orderItemData.OrderID,
+		ProductName:   orderItemData.ProductName,
+		Price:         orderItemData.Price,
+		Qty:           orderItemData.Qty,
+		CreatedAt:     orderItemData.CreatedAt,
 	}
 
 	if orderItemData.UpdatedAt.Valid {
@@ -369,12 +373,12 @@ func (o *oservice) GetOrderItemByID(ctx context.Context, orderItemID, orderID in
 	}
 
 	res := response.OrderItemData{
-		ID:          orderItem.ID,
-		OrderID:     orderItem.OrderID,
-		ProductName: orderItem.ProductName,
-		Price:       orderItem.Price,
-		Qty:         orderItem.Qty,
-		CreatedAt:   orderItem.CreatedAt,
+		ID:            orderItem.ID,
+		OrderID:       orderItem.OrderID,
+		ProductName:   orderItem.ProductName,
+		Price:         orderItem.Price,
+		Qty:           orderItem.Qty,
+		CreatedAt:     orderItem.CreatedAt,
 	}
 
 	if orderItem.UpdatedAt.Valid {
@@ -474,11 +478,11 @@ func (o *oservice) GetOrderItemsByOrderID(ctx context.Context, orderID int) ([]r
 	orderItemsData := make([]response.OrderItemData, 0, len(orderItems))
 	for _, orderItem := range orderItems {
 		res := response.OrderItemData{
-			ID:          orderItem.ID,
-			ProductName: orderItem.ProductName,
-			Price:       orderItem.Price,
-			Qty:         orderItem.Qty,
-			CreatedAt:   orderItem.CreatedAt,
+			ID:            orderItem.ID,
+			ProductName:   orderItem.ProductName,
+			Price:         orderItem.Price,
+			Qty:           orderItem.Qty,
+			CreatedAt:     orderItem.CreatedAt,
 		}
 
 		if orderItem.UpdatedAt.Valid {
@@ -760,12 +764,12 @@ func (o *oservice) createOrderFromTempOrder(ctx context.Context, tempOrderID, cu
 			return nil, err
 		}
 		orderItems = append(orderItems, response.OrderItemData{
-			ID:          orderItem.ID,
-			OrderID:     orderItem.OrderID,
-			ProductName: orderItem.ProductName,
-			Price:       orderItem.Price,
-			Qty:         orderItem.Qty,
-			CreatedAt:   orderItem.CreatedAt,
+			ID:            orderItem.ID,
+			OrderID:       orderItem.OrderID,
+			ProductName:   orderItem.ProductName,
+			Price:         orderItem.Price,
+			Qty:           orderItem.Qty,
+			CreatedAt:     orderItem.CreatedAt,
 		})
 	}
 

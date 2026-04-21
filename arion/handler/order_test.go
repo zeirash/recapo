@@ -366,9 +366,9 @@ func TestGetOrdersHandler(t *testing.T) {
 		{
 			name:   "get orders with date_to passes filter to service",
 			shopID: 1,
-			opts:   queryOpts{dateTo: "2024-01-31T23:59:59Z"},
+			opts:   queryOpts{dateTo: "2024-01-31"},
 			mockSetup: func() {
-				dt := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
+				dt := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateTo: &dt}).
 					Return([]response.OrderData{
@@ -381,10 +381,10 @@ func TestGetOrdersHandler(t *testing.T) {
 		{
 			name:   "get orders with date_from and date_to passes filters to service",
 			shopID: 1,
-			opts:   queryOpts{dateFrom: "2024-01-01", dateTo: "2024-01-31T23:59:59Z"},
+			opts:   queryOpts{dateFrom: "2024-01-01", dateTo: "2024-01-31"},
 			mockSetup: func() {
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-				dt := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
+				dt := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df, DateTo: &dt}).
 					Return([]response.OrderData{
@@ -1893,9 +1893,9 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		{
 			name:   "get temp orders with date_to passes filter to service",
 			shopID: 1,
-			opts:   queryOpts{dateTo: "2024-01-31T23:59:59Z"},
+			opts:   queryOpts{dateTo: "2024-01-31"},
 			mockSetup: func() {
-				dt := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
+				dt := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{DateTo: &dt}).
 					Return([]response.TempOrderData{
@@ -1916,11 +1916,11 @@ func TestGetTempOrdersHandler(t *testing.T) {
 		{
 			name:   "get temp orders with rejected status filter passes to service",
 			shopID: 1,
-			opts:   queryOpts{status: "rejected", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31T23:59:59Z"},
+			opts:   queryOpts{status: "rejected", search: "john", dateFrom: "2024-01-01", dateTo: "2024-01-31"},
 			mockSetup: func() {
 				q := "john"
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-				dt := time.Date(2024, 1, 31, 23, 59, 59, 0, time.UTC)
+				dt := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetTempOrdersByShopID(gomock.Any(), 1, model.OrderFilterOptions{SearchQuery: &q, DateFrom: &df, DateTo: &dt, Status: []string{"rejected"}}).
 					Return([]response.TempOrderData{
@@ -2388,31 +2388,34 @@ func TestGetOrderStatsHandler(t *testing.T) {
 		wantStatus     int
 		wantSuccess    bool
 		wantRevenue    float64
+		wantNetSales   float64
 		wantErrMessage string
 	}{
 		{
-			name:   "successfully returns total revenue with no filters",
+			name:   "successfully returns total revenue and net sales with no filters",
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{}).
-					Return(response.OrderStatsData{TotalRevenue: 150000}, nil)
+					Return(response.OrderStatsData{TotalRevenue: 150000, NetSales: 30000}, nil)
 			},
-			wantStatus:  http.StatusOK,
-			wantSuccess: true,
-			wantRevenue: 150000,
+			wantStatus:   http.StatusOK,
+			wantSuccess:  true,
+			wantRevenue:  150000,
+			wantNetSales: 30000,
 		},
 		{
-			name:   "returns zero revenue when no payments exist",
+			name:   "returns zero when no payments or net sales exist",
 			shopID: 1,
 			mockSetup: func() {
 				mockOrderService.EXPECT().
 					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{}).
-					Return(response.OrderStatsData{TotalRevenue: 0}, nil)
+					Return(response.OrderStatsData{TotalRevenue: 0, NetSales: 0}, nil)
 			},
-			wantStatus:  http.StatusOK,
-			wantSuccess: true,
-			wantRevenue: 0,
+			wantStatus:   http.StatusOK,
+			wantSuccess:  true,
+			wantRevenue:  0,
+			wantNetSales: 0,
 		},
 		{
 			name:   "passes date_from filter to service",
@@ -2422,11 +2425,12 @@ func TestGetOrderStatsHandler(t *testing.T) {
 				df := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df}).
-					Return(response.OrderStatsData{TotalRevenue: 75000}, nil)
+					Return(response.OrderStatsData{TotalRevenue: 75000, NetSales: 15000}, nil)
 			},
-			wantStatus:  http.StatusOK,
-			wantSuccess: true,
-			wantRevenue: 75000,
+			wantStatus:   http.StatusOK,
+			wantSuccess:  true,
+			wantRevenue:  75000,
+			wantNetSales: 15000,
 		},
 		{
 			name:   "passes date_to filter to service",
@@ -2436,11 +2440,12 @@ func TestGetOrderStatsHandler(t *testing.T) {
 				dt := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{DateTo: &dt}).
-					Return(response.OrderStatsData{TotalRevenue: 50000}, nil)
+					Return(response.OrderStatsData{TotalRevenue: 50000, NetSales: 10000}, nil)
 			},
-			wantStatus:  http.StatusOK,
-			wantSuccess: true,
-			wantRevenue: 50000,
+			wantStatus:   http.StatusOK,
+			wantSuccess:  true,
+			wantRevenue:  50000,
+			wantNetSales: 10000,
 		},
 		{
 			name:   "passes both date filters to service",
@@ -2451,11 +2456,12 @@ func TestGetOrderStatsHandler(t *testing.T) {
 				dt := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
 				mockOrderService.EXPECT().
 					GetOrdersStats(gomock.Any(), 1, model.OrderFilterOptions{DateFrom: &df, DateTo: &dt}).
-					Return(response.OrderStatsData{TotalRevenue: 120000}, nil)
+					Return(response.OrderStatsData{TotalRevenue: 120000, NetSales: 24000}, nil)
 			},
-			wantStatus:  http.StatusOK,
-			wantSuccess: true,
-			wantRevenue: 120000,
+			wantStatus:   http.StatusOK,
+			wantSuccess:  true,
+			wantRevenue:  120000,
+			wantNetSales: 24000,
 		},
 		{
 			name:   "returns 500 on service error",
@@ -2510,6 +2516,9 @@ func TestGetOrderStatsHandler(t *testing.T) {
 				}
 				if got := data["total_revenue"]; got != tt.wantRevenue {
 					t.Errorf("GetOrderStatsHandler() total_revenue = %v, want %v", got, tt.wantRevenue)
+				}
+				if got := data["net_sales"]; got != tt.wantNetSales {
+					t.Errorf("GetOrderStatsHandler() net_sales = %v, want %v", got, tt.wantNetSales)
 				}
 			}
 		})

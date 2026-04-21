@@ -21,6 +21,30 @@ go run .
 
 Server runs on http://localhost:4000
 
+## Database Migrations
+
+Migration files live in `migrations/`. They must be applied manually in order.
+
+**Local:**
+```bash
+psql -U <user> -d recapo_master -f migrations/000_ddl_all_tables.sql
+psql -U <user> -d recapo_master -f migrations/001_subscription_tables.sql
+psql -U <user> -d recapo_master -f migrations/002_invitation_table.sql
+```
+
+**Railway (production):**
+
+Get the `DATABASE_URL` from the Railway dashboard → Postgres service → Connect tab, then:
+```bash
+psql $DATABASE_URL -f migrations/002_invitation_table.sql
+```
+
+Or use the Railway CLI:
+```bash
+railway connect postgres
+# then paste the SQL manually
+```
+
 ## Testing
 
 ```bash

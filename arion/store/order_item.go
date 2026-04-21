@@ -22,6 +22,7 @@ type (
 		DeleteOrderItemsByProductID(ctx context.Context, tx database.Tx, productID int) error
 		GetOrderItemByProductID(ctx context.Context, productID int, orderID int) (*model.OrderItem, error)
 		GetOrderTotalsExcludingProduct(ctx context.Context, productID int) (map[int]int, error)
+		GetNetSalesByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) (int, error)
 
 		CreateTempOrderItem(ctx context.Context, tx database.Tx, tempOrderID, productID, qty int) (*model.TempOrderItem, error)
 		GetTempOrderItemsByTempOrderID(ctx context.Context, tempOrderID int) ([]model.TempOrderItem, error)
@@ -48,14 +49,14 @@ func NewOrderItemStoreWithDB(db *sql.DB) OrderItemStore {
 
 func (o *orderitem) GetOrderItemByID(ctx context.Context, id int) (*model.OrderItem, error) {
 	q := `
-		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at
+		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, p.original_price, oi.qty, oi.created_at, oi.updated_at
 		FROM order_items oi
 		INNER JOIN products p ON oi.product_id = p.id
 		WHERE oi.id = $1
 	`
 
 	var orderItem model.OrderItem
-	err := o.db.QueryRowContext(ctx, q, id).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+	err := o.db.QueryRowContext(ctx, q, id).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.OriginalPrice, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -68,7 +69,7 @@ func (o *orderitem) GetOrderItemByID(ctx context.Context, id int) (*model.OrderI
 
 func (o *orderitem) GetOrderItemsByOrderID(ctx context.Context, orderID int) ([]model.OrderItem, error) {
 	q := `
-		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at
+		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, p.original_price, oi.qty, oi.created_at, oi.updated_at
 		FROM order_items oi
 		INNER JOIN products p ON oi.product_id = p.id
 		WHERE oi.order_id = $1
@@ -84,7 +85,7 @@ func (o *orderitem) GetOrderItemsByOrderID(ctx context.Context, orderID int) ([]
 	orderItems := []model.OrderItem{}
 	for rows.Next() {
 		var orderItem model.OrderItem
-		err := rows.Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+		err := rows.Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.OriginalPrice, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +105,7 @@ func (o *orderitem) CreateOrderItem(ctx context.Context, tx database.Tx, orderID
 			VALUES ($1, $2, $3, $4)
 			RETURNING id, order_id, product_id, qty, created_at
 		)
-		SELECT i.id, i.order_id, p.name as product_name, p.price as price, i.qty, i.created_at
+		SELECT i.id, i.order_id, p.name as product_name, p.price as price, p.original_price, i.qty, i.created_at
 		FROM inserted i
 		INNER JOIN products p ON i.product_id = p.id
 	`
@@ -113,11 +114,11 @@ func (o *orderitem) CreateOrderItem(ctx context.Context, tx database.Tx, orderID
 	var err error
 	if tx != nil {
 		err = tx.QueryRowContext(ctx, q, args...).Scan(
-			&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt,
+			&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.OriginalPrice, &orderItem.Qty, &orderItem.CreatedAt,
 		)
 	} else {
 		err = o.db.QueryRowContext(ctx, q, args...).Scan(
-			&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt,
+			&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.OriginalPrice, &orderItem.Qty, &orderItem.CreatedAt,
 		)
 	}
 	if err != nil {
@@ -154,16 +155,16 @@ func (o *orderitem) UpdateOrderItemByID(ctx context.Context, tx database.Tx, id,
 			WHERE id = $1 AND order_id = $2
 			RETURNING id, order_id, product_id, qty, created_at, updated_at
 		)
-		SELECT u.id, u.order_id, p.name as product_name, p.price as price, u.qty, u.created_at, u.updated_at
+		SELECT u.id, u.order_id, p.name as product_name, p.price as price, p.original_price, u.qty, u.created_at, u.updated_at
 		FROM updated u
 		INNER JOIN products p ON u.product_id = p.id
 	`, strings.Join(set, ","))
 
 	var err error
 	if tx != nil {
-		err = tx.QueryRowContext(ctx, q, args...).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+		err = tx.QueryRowContext(ctx, q, args...).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.OriginalPrice, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 	} else {
-		err = o.db.QueryRowContext(ctx, q, args...).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+		err = o.db.QueryRowContext(ctx, q, args...).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.OriginalPrice, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 	}
 	if err != nil {
 		return nil, err
@@ -291,14 +292,14 @@ func (o *orderitem) GetTempOrderItemsByTempOrderID(ctx context.Context, tempOrde
 
 func (o *orderitem) GetOrderItemByProductID(ctx context.Context, productID int, orderID int) (*model.OrderItem, error) {
 	q := `
-		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, oi.qty, oi.created_at, oi.updated_at
+		SELECT oi.id, oi.order_id, p.name as product_name, p.price as price, p.original_price, oi.qty, oi.created_at, oi.updated_at
 		FROM order_items oi
 		INNER JOIN products p ON oi.product_id = p.id
 		WHERE oi.product_id = $1 AND oi.order_id = $2
 	`
 
 	var orderItem model.OrderItem
-	err := o.db.QueryRowContext(ctx, q, productID, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
+	err := o.db.QueryRowContext(ctx, q, productID, orderID).Scan(&orderItem.ID, &orderItem.OrderID, &orderItem.ProductName, &orderItem.Price, &orderItem.OriginalPrice, &orderItem.Qty, &orderItem.CreatedAt, &orderItem.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -307,4 +308,34 @@ func (o *orderitem) GetOrderItemByProductID(ctx context.Context, productID int, 
 	}
 
 	return &orderItem, nil
+}
+
+func (o *orderitem) GetNetSalesByShopID(ctx context.Context, shopID int, opts model.OrderFilterOptions) (int, error) {
+	args := []interface{}{shopID}
+	q := `
+		SELECT COALESCE(SUM((p.price - p.original_price) * oi.qty), 0)
+		FROM order_items oi
+		JOIN orders ord ON ord.id = oi.order_id
+		JOIN products p ON p.id = oi.product_id
+		WHERE ord.shop_id = $1
+	`
+
+	argIdx := 2
+	if opts.DateFrom != nil {
+		q += fmt.Sprintf(" AND ord.created_at::date >= $%d", argIdx)
+		args = append(args, *opts.DateFrom)
+		argIdx++
+	}
+	if opts.DateTo != nil {
+		q += fmt.Sprintf(" AND ord.created_at::date <= $%d", argIdx)
+		args = append(args, *opts.DateTo)
+		argIdx++
+	}
+
+	var total int
+	err := o.db.QueryRowContext(ctx, q, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
 }
