@@ -26,6 +26,18 @@ type FormState = {
 
 const emptyForm: FormState = { name: '', phone: '', address: '' }
 
+const FILTER_SESSION_KEY = 'customers_filter_state'
+
+function getStoredFilterState() {
+  if (typeof window === 'undefined') return null
+  try {
+    const s = sessionStorage.getItem(FILTER_SESSION_KEY)
+    return s ? JSON.parse(s) : null
+  } catch {
+    return null
+  }
+}
+
 export default function CustomersPage() {
   const tc = useTranslations('customers')
   const t = useTranslations('common')
@@ -33,13 +45,17 @@ export default function CustomersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
-  const [searchInput, setSearchInput] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [sortValue, setSortValue] = useState<string>('updated_at,desc')
+  const [searchInput, setSearchInput] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
+  const [sortValue, setSortValue] = useState<string>(() => getStoredFilterState()?.sortValue ?? 'updated_at,desc')
   const [sortMenuAnchor, setSortMenuAnchor] = useState<null | HTMLElement>(null)
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [deleteActiveOrderId, setDeleteActiveOrderId] = useState<number | null>(null)
   const [checkingActiveOrder, setCheckingActiveOrder] = useState(false)
+
+  useEffect(() => {
+    sessionStorage.setItem(FILTER_SESSION_KEY, JSON.stringify({ searchInput, sortValue }))
+  }, [searchInput, sortValue])
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {

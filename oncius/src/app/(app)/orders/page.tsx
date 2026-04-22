@@ -98,8 +98,23 @@ function normalizePaymentStatus(status: string): string {
   return status
 }
 
+const DEFAULT_STATUSES = ['created', 'in_progress', 'in_delivery']
+const VALID_SORT_VALUES = ['date_desc', 'date_asc', 'total_asc', 'total_desc'] as const
+type SortBy = typeof VALID_SORT_VALUES[number]
+
+const FILTER_SESSION_KEY = 'orders_filter_state'
+
+function getStoredFilterState() {
+  if (typeof window === 'undefined') return null
+  try {
+    const s = sessionStorage.getItem(FILTER_SESSION_KEY)
+    return s ? JSON.parse(s) : null
+  } catch {
+    return null
+  }
+}
+
 export default function OrdersPage() {
-  const DEFAULT_STATUSES = ['created', 'in_progress', 'in_delivery'] as const
   const theme = useTheme()
   const statusColors = theme.palette.mode === 'dark' ? darkStatusColors : lightStatusColors
   const paymentStatusColors = theme.palette.mode === 'dark' ? darkPaymentStatusColors : lightPaymentStatusColors
@@ -117,19 +132,31 @@ export default function OrdersPage() {
   const [createForm, setCreateForm] = useState<CreateOrderForm>(emptyCreateForm)
   const [addItemForm, setAddItemForm] = useState<AddItemForm>(emptyAddItemForm)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
-  const [searchInput, setSearchInput] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string[]>([...DEFAULT_STATUSES])
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('')
-  const [dateFrom, setDateFrom] = useState<string>('')
-  const [dateTo, setDateTo] = useState<string>('')
+  const [searchInput, setSearchInput] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
+  const [statusFilter, setStatusFilter] = useState<string[]>(() => getStoredFilterState()?.statusFilter ?? [...DEFAULT_STATUSES])
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>(() => getStoredFilterState()?.paymentStatusFilter ?? '')
+  const [dateFrom, setDateFrom] = useState<string>(() => getStoredFilterState()?.dateFrom ?? '')
+  const [dateTo, setDateTo] = useState<string>(() => getStoredFilterState()?.dateTo ?? '')
   const [createFormConflict, setCreateFormConflict] = useState(false)
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [exportMessage, setExportMessage] = useState('')
-  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'total_asc' | 'total_desc'>('date_desc')
+  const [sortBy, setSortBy] = useState<SortBy>(() => getStoredFilterState()?.sortBy ?? 'date_desc')
   const [createCustomerDialog, setCreateCustomerDialog] = useState<{ open: boolean; name: string; phone: string }>({ open: false, name: '', phone: '' })
-  const [filtersVisible, setFiltersVisible] = useState(false)
+  const [filtersVisible, setFiltersVisible] = useState<boolean>(() => getStoredFilterState()?.filtersVisible ?? false)
   const [sortMenuAnchor, setSortMenuAnchor] = useState<null | HTMLElement>(null)
+
+  useEffect(() => {
+    sessionStorage.setItem(FILTER_SESSION_KEY, JSON.stringify({
+      searchInput,
+      statusFilter,
+      paymentStatusFilter,
+      dateFrom,
+      dateTo,
+      sortBy,
+      filtersVisible,
+    }))
+  }, [searchInput, statusFilter, paymentStatusFilter, dateFrom, dateTo, sortBy, filtersVisible])
 
   const handleResetFilters = () => {
     setSearchInput('')

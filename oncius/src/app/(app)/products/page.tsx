@@ -29,6 +29,18 @@ type FormState = {
 
 const emptyForm: FormState = { name: '', description: '', price: 0, originalPrice: '' }
 
+const FILTER_SESSION_KEY = 'products_filter_state'
+
+function getStoredFilterState() {
+  if (typeof window === 'undefined') return null
+  try {
+    const s = sessionStorage.getItem(FILTER_SESSION_KEY)
+    return s ? JSON.parse(s) : null
+  } catch {
+    return null
+  }
+}
+
 export default function ProductsPage() {
   const t = useTranslations('common')
   const tp = useTranslations('products')
@@ -37,9 +49,9 @@ export default function ProductsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
-  const [searchInput, setSearchInput] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [sortValue, setSortValue] = useState<string>('updated_at,desc')
+  const [searchInput, setSearchInput] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
+  const [sortValue, setSortValue] = useState<string>(() => getStoredFilterState()?.sortValue ?? 'updated_at,desc')
   const [shareCopied, setShareCopied] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreviewURL, setImagePreviewURL] = useState<string | null>(null)
@@ -51,6 +63,10 @@ export default function ProductsPage() {
   const justUploadedImageURL = useRef<string | null>(null)
   const pendingDeleteImageURL = useRef<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    sessionStorage.setItem(FILTER_SESSION_KEY, JSON.stringify({ searchInput, sortValue }))
+  }, [searchInput, sortValue])
 
   // Debounce search: only trigger API after user stops typing for 300ms
   useEffect(() => {

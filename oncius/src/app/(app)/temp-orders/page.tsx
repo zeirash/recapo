@@ -40,6 +40,18 @@ const darkStatusColors: Record<string, { bg: string; color: string }> = {
   rejected: { bg: '#3e1a1a', color: '#ef9a9a' },
 }
 
+const FILTER_SESSION_KEY = 'temp_orders_filter_state'
+
+function getStoredFilterState() {
+  if (typeof window === 'undefined') return null
+  try {
+    const s = sessionStorage.getItem(FILTER_SESSION_KEY)
+    return s ? JSON.parse(s) : null
+  } catch {
+    return null
+  }
+}
+
 export default function TempOrdersPage() {
   const t = useTranslations('common')
   const to = useTranslations('orders')
@@ -50,12 +62,12 @@ export default function TempOrdersPage() {
   const statusColors = theme.palette.mode === 'dark' ? darkStatusColors : lightStatusColors
   const queryClient = useQueryClient()
   const [selectedTempOrderId, setSelectedTempOrderId] = useState<number | null>(null)
-  const [searchInput, setSearchInput] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('pending')
-  const [dateFrom, setDateFrom] = useState<string>('')
-  const [dateTo, setDateTo] = useState<string>('')
-  const [filtersVisible, setFiltersVisible] = useState(false)
+  const [searchInput, setSearchInput] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
+  const [statusFilter, setStatusFilter] = useState<string>(() => getStoredFilterState()?.statusFilter ?? 'pending')
+  const [dateFrom, setDateFrom] = useState<string>(() => getStoredFilterState()?.dateFrom ?? '')
+  const [dateTo, setDateTo] = useState<string>(() => getStoredFilterState()?.dateTo ?? '')
+  const [filtersVisible, setFiltersVisible] = useState<boolean>(() => getStoredFilterState()?.filtersVisible ?? false)
   const [acceptLoading, setAcceptLoading] = useState(false)
   const [acceptError, setAcceptError] = useState<string | null>(null)
   const [acceptSuccess, setAcceptSuccess] = useState(false)
@@ -72,6 +84,10 @@ export default function TempOrdersPage() {
     setDateFrom('')
     setDateTo('')
   }
+
+  useEffect(() => {
+    sessionStorage.setItem(FILTER_SESSION_KEY, JSON.stringify({ searchInput, statusFilter, dateFrom, dateTo, filtersVisible }))
+  }, [searchInput, statusFilter, dateFrom, dateTo, filtersVisible])
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput), 300)
