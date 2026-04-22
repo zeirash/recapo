@@ -1,7 +1,7 @@
 {
   "layout": {
-    "trialExpiringSoon": "Your free trial expires in {days} day(s). Subscribe now to keep access.",
-    "subscribNow": "Subscribe Now"
+    "expiringSoon": "Your access expires in {days} day(s). Subscribe now to keep access.",
+    "subscribeNow": "Subscribe Now"
   },
   "common": {
     "loading": "Loading...",

@@ -1,7 +1,7 @@
 {
   "layout": {
-    "trialExpiringSoon": "Masa percobaan gratis Anda berakhir dalam {days} hari. Berlangganan sekarang untuk tetap bisa mengakses.",
-    "subscribNow": "Berlangganan Sekarang"
+    "expiringSoon": "Akses Anda berakhir dalam {days} hari. Berlangganan sekarang untuk tetap bisa mengakses.",
+    "subscribeNow": "Berlangganan Sekarang"
   },
   "common": {
     "loading": "Memuat...",
