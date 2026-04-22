@@ -45,10 +45,15 @@ type (
 		TransactionTime   string `json:"transaction_time"`
 	}
 
+	midtransCreditCard struct {
+		Authentication bool `json:"authentication"`
+	}
+
 	midtransSnapRequest struct {
 		TransactionDetails midtransTransactionDetails `json:"transaction_details"`
 		Callbacks          midtransCallbacks          `json:"callbacks"`
 		CustomerDetails    midtransCustomerDetails    `json:"customer_details"`
+		CreditCard         midtransCreditCard         `json:"credit_card"`
 	}
 
 	midtransTransactionDetails struct {
@@ -353,6 +358,9 @@ func callMidtransSnap(ctx context.Context, orderID string, grossAmount int, shop
 		},
 		Callbacks: midtransCallbacks{
 			Finish: cfg.FrontendURL + "/dashboard",
+		},
+		CreditCard: midtransCreditCard{
+			Authentication: true,
 		},
 	}
 
