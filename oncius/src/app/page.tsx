@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { useQuery } from 'react-query'
 import { useAuth } from '@/hooks/useAuth'
 import Header from '@/components/Layout/Header'
-import { Package, Tag, Users, BarChart2, Check, LayoutDashboard, ClipboardList, type LucideIcon } from 'lucide-react'
+import { Package, Tag, Users, BarChart2, Check, LayoutDashboard, ClipboardList, Instagram, type LucideIcon } from 'lucide-react'
 import { api } from '@/utils/api'
 import type { Plan } from '@/types'
 
@@ -663,6 +663,11 @@ export default function HomePage() {
         >
           <Box sx={{ fontSize: '14px', color: 'text.secondary' }}>{t('landing.footer')}</Box>
           <Box sx={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <Link href="https://instagram.com/recapoapp" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', textDecoration: 'none' }}>
+              <Instagram size={14} />
+              recapoapp
+            </Link>
+            <Box sx={{ color: 'text.disabled', fontSize: '14px' }}>·</Box>
             <Link href="mailto:tiff.wijaya@gmail.com" style={{ fontSize: '14px', color: 'inherit', textDecoration: 'none' }}>
               {t('landing.contactUs')}
             </Link>
