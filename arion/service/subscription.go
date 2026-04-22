@@ -46,7 +46,7 @@ type (
 	}
 
 	midtransCreditCard struct {
-		Authentication bool `json:"authentication"`
+		Secure bool `json:"secure"`
 	}
 
 	midtransSnapRequest struct {
@@ -360,7 +360,7 @@ func callMidtransSnap(ctx context.Context, orderID string, grossAmount int, shop
 			Finish: cfg.FrontendURL + "/dashboard",
 		},
 		CreditCard: midtransCreditCard{
-			Authentication: true,
+			Secure: true,
 		},
 	}
 
