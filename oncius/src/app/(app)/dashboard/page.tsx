@@ -77,7 +77,7 @@ const StatCard = ({
             </Tooltip>
           )}
         </Box>
-        <Box sx={{ fontSize: '20px', fontWeight: 700 }}>{value}</Box>
+        <Box sx={{ fontSize: '20px', fontWeight: 700, wordBreak: 'break-all' }}>{value}</Box>
         {sublabel && (
           <Box sx={{ fontSize: '12px', color: 'text.secondary', mt: '2px' }}>{sublabel}</Box>
         )}
