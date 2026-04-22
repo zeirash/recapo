@@ -662,9 +662,15 @@ export default function HomePage() {
           }}
         >
           <Box sx={{ fontSize: '14px', color: 'text.secondary' }}>{t('landing.footer')}</Box>
-          <Link href="mailto:tiff.wijaya@gmail.com" style={{ fontSize: '14px', color: 'inherit', textDecoration: 'none' }}>
-            {t('landing.contactUs')}
-          </Link>
+          <Box sx={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <Link href="mailto:tiff.wijaya@gmail.com" style={{ fontSize: '14px', color: 'inherit', textDecoration: 'none' }}>
+              {t('landing.contactUs')}
+            </Link>
+            <Box sx={{ color: 'text.disabled', fontSize: '14px' }}>·</Box>
+            <Link href="mailto:tiff.wijaya@gmail.com" style={{ fontSize: '14px', color: 'inherit', textDecoration: 'none' }}>
+              {t('landing.builtBy')}
+            </Link>
+          </Box>
         </Box>
       </Box>
     </Box>

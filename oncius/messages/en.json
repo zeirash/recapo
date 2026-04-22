@@ -96,7 +96,8 @@
     "ctaJoin": "Join sellers who use Recapo to manage their business.",
     "ctaButton": "Create Free Account",
     "footer": "© Recapo. Track orders, customers, and payments — all in one place.",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "builtBy": "Built by Tiffany · Available for freelance work"
   },
   "auth": {
     "login": "Login",

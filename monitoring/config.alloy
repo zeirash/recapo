@@ -3,6 +3,7 @@ prometheus.scrape "arion" {
   forward_to = [prometheus.remote_write.grafana_cloud.receiver]
   scrape_interval = "15s"
   metrics_path = "/metrics"
+  scheme = "https"
 }
 
 prometheus.remote_write "grafana_cloud" {
