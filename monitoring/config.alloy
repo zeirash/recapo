@@ -1,5 +1,5 @@
 prometheus.scrape "arion" {
-  targets = [{"__address__" = env("ARION_URL")}]
+  targets = [{"__address__" = sys.env("ARION_URL")}]
   forward_to = [prometheus.remote_write.grafana_cloud.receiver]
   scrape_interval = "15s"
   metrics_path = "/metrics"
@@ -8,10 +8,10 @@ prometheus.scrape "arion" {
 
 prometheus.remote_write "grafana_cloud" {
   endpoint {
-    url = env("GRAFANA_REMOTE_WRITE_URL")
+    url = sys.env("GRAFANA_REMOTE_WRITE_URL")
     basic_auth {
-      username = env("GRAFANA_USER_ID")
-      password = env("GRAFANA_API_KEY")
+      username = sys.env("GRAFANA_USER_ID")
+      password = sys.env("GRAFANA_API_KEY")
     }
   }
 }
