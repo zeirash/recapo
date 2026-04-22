@@ -1,4 +1,8 @@
 {
+  "layout": {
+    "trialExpiringSoon": "Masa percobaan gratis Anda berakhir dalam {days} hari. Berlangganan sekarang untuk tetap bisa mengakses.",
+    "subscribNow": "Berlangganan Sekarang"
+  },
   "common": {
     "loading": "Memuat...",
     "cancel": "Batal",
@@ -44,14 +48,14 @@
   },
   "home": {
     "title": "Recapo",
-    "subtitle": "Sistem Manajemen Pesanan untuk Jastiper",
+    "subtitle": "Lacak pesanan, pelanggan, dan pembayaran — semua dalam satu tempat",
     "description": "Sederhanakan bisnis jual beli media sosial lintas negara Anda dengan solusi manajemen pesanan komprehensif kami."
   },
   "landing": {
     "goToDashboard": "Ke Dasbor",
     "getStarted": "Mulai",
-    "heroTitle": "Manajemen Pesanan untuk",
-    "heroHighlight": "Jastiper",
+    "heroTitle": "Lacak pesanan, pelanggan, dan pembayaran —",
+    "heroHighlight": "semua dalam satu tempat",
     "heroDescription": "Sederhanakan bisnis jual beli media sosial lintas negara Anda. Lacak produk, kelola pesanan, dan layani pelanggan dengan efisien—semua dalam satu tempat.",
     "startForFree": "Mulai Gratis",
     "viewPricing": "Lihat Harga",
@@ -88,9 +92,10 @@
     "screenshotCustomersDesc": "Simpan basis data pelanggan lengkap dengan detail kontak dan alamat. Temukan pembeli dengan cepat saat melakukan pesanan berulang.",
     "ctaTitle": "Siap menyederhanakan pesanan Anda?",
     "ctaSignedIn": "Anda sudah masuk. Buka dasbor untuk mengelola pesanan Anda.",
-    "ctaJoin": "Bergabung dengan Jastiper yang menggunakan Recapo untuk mengelola bisnis lintas negara mereka.",
+    "ctaJoin": "Bergabung dengan para penjual yang menggunakan Recapo untuk mengelola bisnis mereka.",
     "ctaButton": "Buat Akun Gratis",
-    "footer": "© Recapo. Manajemen pesanan untuk Jastiper."
+    "footer": "© Recapo. Lacak pesanan, pelanggan, dan pembayaran — semua dalam satu tempat.",
+    "contactUs": "Hubungi Kami"
   },
   "auth": {
     "login": "Masuk",

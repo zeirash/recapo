@@ -597,7 +597,7 @@ export default function HomePage() {
             <Box sx={{ fontSize: { xs: '14px', sm: '16px' }, color: 'rgba(255,255,255,0.9)', mb: '24px', maxWidth: 560, mx: 'auto', display: 'block' }}>
               {isAuthenticated ? t('landing.ctaSignedIn') : t('landing.ctaJoin')}
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
               <Link href={isAuthenticated ? '/dashboard' : '/register'}>
                 <Button
                   sx={{
@@ -614,6 +614,24 @@ export default function HomePage() {
                   }}
                 >
                   {isAuthenticated ? t('landing.goToDashboard') : t('landing.ctaButton')}
+                </Button>
+              </Link>
+              <Link href="mailto:tiff.wijaya@gmail.com">
+                <Button
+                  sx={{
+                    bgcolor: 'transparent',
+                    color: 'white',
+                    px: '32px',
+                    py: '16px',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    border: '1px solid rgba(255,255,255,0.5)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+                  }}
+                >
+                  {t('landing.contactUs')}
                 </Button>
               </Link>
             </Box>
@@ -644,6 +662,9 @@ export default function HomePage() {
           }}
         >
           <Box sx={{ fontSize: '14px', color: 'text.secondary' }}>{t('landing.footer')}</Box>
+          <Link href="mailto:tiff.wijaya@gmail.com" style={{ fontSize: '14px', color: 'inherit', textDecoration: 'none' }}>
+            {t('landing.contactUs')}
+          </Link>
         </Box>
       </Box>
     </Box>

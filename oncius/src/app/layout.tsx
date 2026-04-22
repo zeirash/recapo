@@ -24,13 +24,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [locale, setLocale] = useState('en')
+  const [locale, setLocale] = useState('id')
   const [messages, setMessages] = useState<Record<string, unknown> | null>(null)
 
   useEffect(() => {
     // Get locale from localStorage or browser preference
     const savedLocale = localStorage.getItem('locale')
-    const browserLocale = navigator.language.startsWith('id') ? 'id' : 'en'
+    const browserLocale = navigator.language.startsWith('en') ? 'en' : 'id'
     const currentLocale = savedLocale || browserLocale
     setLocale(currentLocale)
 
@@ -38,8 +38,8 @@ export default function RootLayout({
     import(`../../messages/${currentLocale}.json`)
       .then((module) => setMessages(module.default))
       .catch(() => {
-        // Fallback to English
-        import('../../messages/en.json').then((module) => setMessages(module.default))
+        // Fallback to Indonesian
+        import('../../messages/id.json').then((module) => setMessages(module.default))
       })
   }, [])
 

@@ -1,4 +1,8 @@
 {
+  "layout": {
+    "trialExpiringSoon": "Your free trial expires in {days} day(s). Subscribe now to keep access.",
+    "subscribNow": "Subscribe Now"
+  },
   "common": {
     "loading": "Loading...",
     "cancel": "Cancel",
@@ -44,14 +48,14 @@
   },
   "home": {
     "title": "Recapo",
-    "subtitle": "Order Management System for Jastipers",
+    "subtitle": "Track orders, customers, and payments — all in one place",
     "description": "Streamline your cross-border social media selling business with our comprehensive order management solution."
   },
   "landing": {
     "goToDashboard": "Go to Dashboard",
     "getStarted": "Get Started",
-    "heroTitle": "Order Management for",
-    "heroHighlight": "Jastipers",
+    "heroTitle": "Track orders, customers, and payments —",
+    "heroHighlight": "all in one place",
     "heroDescription": "Streamline your cross-border social media selling business. Track products, manage orders, and serve customers efficiently—all in one place.",
     "startForFree": "Start for Free",
     "viewPricing": "View Pricing",
@@ -88,9 +92,10 @@
     "screenshotCustomersDesc": "Keep a complete customer database with contact details and addresses. Quickly look up any buyer when placing repeat orders.",
     "ctaTitle": "Ready to simplify your orders?",
     "ctaSignedIn": "You're already signed in. Head to your dashboard to manage your orders.",
-    "ctaJoin": "Join Jastipers who use Recapo to manage their cross-border business.",
+    "ctaJoin": "Join sellers who use Recapo to manage their business.",
     "ctaButton": "Create Free Account",
-    "footer": "© Recapo. Order management for Jastipers."
+    "footer": "© Recapo. Track orders, customers, and payments — all in one place.",
+    "contactUs": "Contact Us"
   },
   "auth": {
     "login": "Login",

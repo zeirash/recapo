@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useTheme } from '@mui/material/styles'
 import { alpha } from '@mui/material/styles'
-import { LayoutDashboard, Package, ClipboardList, ShoppingCart, ShoppingBag, Users, CreditCard, User, Moon, Sun, MessageSquare, LogOut, Settings, UserCog, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, Package, ClipboardList, ShoppingCart, ShoppingBag, Users, CreditCard, User, Moon, Sun, MessageSquare, LogOut, Settings, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { USER_ROLES } from '@/constants/roles'
 import { useThemeMode } from '@/providers/ThemeProvider'
@@ -27,7 +27,6 @@ const baseMenuItems: { id: string; labelKey: string; icon: LucideIcon; path: str
   { id: 'temp_orders',  labelKey: 'tempOrders',  icon: ShoppingCart,    path: '/temp-orders' },
   { id: 'purchase',     labelKey: 'purchase',    icon: ShoppingBag,     path: '/purchase' },
   { id: 'customers',    labelKey: 'customers',   icon: Users,           path: '/customers' },
-  { id: 'admin',        labelKey: 'admin',       icon: UserCog,         path: '/admin', ownerOnly: true },
   { id: 'subscription', labelKey: 'subscription',icon: CreditCard,      path: '/subscription' },
 ]
 
