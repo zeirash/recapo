@@ -5,6 +5,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "createItem": "Create \"{name}\"",
     "cancel": "Cancel",
     "save": "Save",
     "create": "Create",
@@ -224,6 +225,7 @@
     "removeItemConfirm": "Remove this item?",
     "selectProduct": "Select a product",
     "searchProduct": "Search product...",
+    "noCustomersFound": "No customers found",
     "noProductsFound": "No products found",
     "subtotal": "Subtotal",
     "notes": "Notes",

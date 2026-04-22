@@ -1014,6 +1014,7 @@ export default function OrdersPage() {
                   onChange={(id) => setCreateForm({ ...createForm, customer_id: id, customer_name: undefined })}
                   placeholder={to('selectCustomer')}
                   searchPlaceholder={to('searchCustomer')}
+                  noResultsText={to('noCustomersFound')}
                   selectedLabel={createForm.customer_name}
                   onCreateCustomer={(term) => {
                     const isPhone = /^\d+$/.test(term)

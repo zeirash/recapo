@@ -5,6 +5,7 @@
   },
   "common": {
     "loading": "Memuat...",
+    "createItem": "Buat \"{name}\"",
     "cancel": "Batal",
     "save": "Simpan",
     "create": "Buat",
@@ -224,6 +225,7 @@
     "removeItemConfirm": "Hapus item ini?",
     "selectProduct": "Pilih produk",
     "searchProduct": "Cari produk...",
+    "noCustomersFound": "Pelanggan tidak ditemukan",
     "noProductsFound": "Produk tidak ditemukan",
     "subtotal": "Subtotal",
     "notes": "Catatan",

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from 'react-query'
 import { Box, OutlinedInput } from '@mui/material'
 import { Search, UserPlus, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { api } from '@/utils/api'
 
 type Customer = {
@@ -41,6 +42,7 @@ export default function CustomerSearchSelect({
   onCreateCustomer,
   selectedLabel,
 }: Props) {
+  const t = useTranslations('common')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedName, setSelectedName] = useState('')
   const [isOpen, setIsOpen] = useState(false)
@@ -177,7 +179,7 @@ export default function CustomerSearchSelect({
         >
           {isLoading ? (
             <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
-              Loading...
+              {t('loading')}
             </Box>
           ) : !customers || customers.length === 0 ? (
             <Box>
@@ -206,7 +208,7 @@ export default function CustomerSearchSelect({
                   }}
                 >
                   <UserPlus size={14} />
-                  Create &quot;{debouncedSearch}&quot;
+                  {t('createItem', { name: debouncedSearch })}
                 </Box>
               )}
             </Box>

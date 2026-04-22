@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from 'react-query'
 import { Box, OutlinedInput } from '@mui/material'
 import { Search, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { api } from '@/utils/api'
 
 type Product = {
@@ -36,6 +37,7 @@ export default function ProductSearchSelect({
   searchPlaceholder,
   noResultsText = 'No products found',
 }: Props) {
+  const t = useTranslations('common')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedName, setSelectedName] = useState('')
   const [isOpen, setIsOpen] = useState(false)
@@ -170,7 +172,7 @@ export default function ProductSearchSelect({
         >
           {isLoading ? (
             <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
-              Loading...
+              {t('loading')}
             </Box>
           ) : !products || products.length === 0 ? (
             <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
