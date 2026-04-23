@@ -3,9 +3,12 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/zeirash/recapo/arion/common/database"
+	"github.com/zeirash/recapo/arion/model"
 )
 
 type (
@@ -43,7 +46,7 @@ type (
 	SystemStore interface {
 		GetSystemStats(ctx context.Context) (*SystemStats, error)
 		GetSystemShops(ctx context.Context) ([]SystemShop, error)
-		GetSystemPayments(ctx context.Context) ([]SystemPayment, error)
+		GetSystemPayments(ctx context.Context, opts model.SystemPaymentFilterOptions) ([]SystemPayment, error)
 	}
 
 	systemStore struct {
@@ -188,7 +191,14 @@ func (s *systemStore) GetSystemShops(ctx context.Context) ([]SystemShop, error) 
 	return shops, rows.Err()
 }
 
-func (s *systemStore) GetSystemPayments(ctx context.Context) ([]SystemPayment, error) {
+func (s *systemStore) GetSystemPayments(ctx context.Context, opts model.SystemPaymentFilterOptions) ([]SystemPayment, error) {
+	allowedColumns := map[string]string{
+		"created_at": "pay.created_at",
+		"paid_at":    "pay.paid_at",
+		"amount_idr": "pay.amount_idr",
+		"status":     "pay.status",
+	}
+
 	q := `
 		SELECT
 			sh.name,
@@ -201,10 +211,41 @@ func (s *systemStore) GetSystemPayments(ctx context.Context) ([]SystemPayment, e
 		FROM payments pay
 		INNER JOIN shops sh ON sh.id = pay.shop_id
 		INNER JOIN plans p ON p.id = pay.plan_id
-		WHERE pay.shop_id NOT IN (SELECT shop_id FROM users WHERE role = 'system')
-		ORDER BY pay.created_at DESC
-	`
-	rows, err := s.db.QueryContext(ctx, q)
+		WHERE pay.shop_id NOT IN (SELECT shop_id FROM users WHERE role = 'system')`
+
+	var args []interface{}
+	argIdx := 1
+
+	if opts.DateFrom != nil {
+		q += fmt.Sprintf(" AND pay.created_at::date >= $%d", argIdx)
+		args = append(args, *opts.DateFrom)
+		argIdx++
+	}
+	if opts.DateTo != nil {
+		q += fmt.Sprintf(" AND pay.created_at::date <= $%d", argIdx)
+		args = append(args, *opts.DateTo)
+		argIdx++
+	}
+	if opts.Status != nil {
+		q += fmt.Sprintf(" AND pay.status = $%d", argIdx)
+		args = append(args, *opts.Status)
+		argIdx++
+	}
+
+	orderBy := "pay.created_at DESC"
+	if opts.Sort != nil {
+		parts := strings.SplitN(*opts.Sort, ",", 2)
+		if len(parts) == 2 {
+			col := strings.TrimSpace(parts[0])
+			dir := strings.ToUpper(strings.TrimSpace(parts[1]))
+			if sqlCol, ok := allowedColumns[col]; ok && (dir == "ASC" || dir == "DESC") {
+				orderBy = sqlCol + " " + dir
+			}
+		}
+	}
+	q += " ORDER BY " + orderBy
+
+	rows, err := s.db.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}

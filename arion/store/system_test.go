@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/zeirash/recapo/arion/model"
 )
 
 func Test_systemStore_GetSystemStats(t *testing.T) {
@@ -187,9 +188,24 @@ func Test_systemStore_GetSystemShops(t *testing.T) {
 
 func Test_systemStore_GetSystemPayments(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC)
+	ptrTime := func(t time.Time) *time.Time { return &t }
+	strPtr := func(s string) *string { return &s }
+
+	emptyRows := func() *sqlmock.Rows {
+		return sqlmock.NewRows([]string{
+			"shop_name", "plan_name", "amount_idr", "status",
+			"midtrans_order_id", "paid_at", "created_at",
+		})
+	}
+	twoRows := func() *sqlmock.Rows {
+		return emptyRows().
+			AddRow("Toko Mawar", "Starter", 149000, "settlement", "recapo-1-001", fixedTime, fixedTime).
+			AddRow("Toko Melati", "Starter", 149000, "pending", "recapo-2-002", nil, fixedTime)
+	}
 
 	tests := []struct {
 		name      string
+		opts      model.SystemPaymentFilterOptions
 		mockSetup func(mock sqlmock.Sqlmock)
 		wantLen   int
 		wantErr   bool
@@ -197,13 +213,7 @@ func Test_systemStore_GetSystemPayments(t *testing.T) {
 		{
 			name: "returns payments list",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{
-					"shop_name", "plan_name", "amount_idr", "status",
-					"midtrans_order_id", "paid_at", "created_at",
-				}).
-					AddRow("Toko Mawar", "Starter", 149000, "settlement", "recapo-1-001", fixedTime, fixedTime).
-					AddRow("Toko Melati", "Starter", 149000, "pending", "recapo-2-002", nil, fixedTime)
-				mock.ExpectQuery(`SELECT\s+sh\.name`).WillReturnRows(rows)
+				mock.ExpectQuery(`SELECT\s+sh\.name`).WillReturnRows(twoRows())
 			},
 			wantLen: 2,
 			wantErr: false,
@@ -211,11 +221,7 @@ func Test_systemStore_GetSystemPayments(t *testing.T) {
 		{
 			name: "returns empty list when no payments",
 			mockSetup: func(mock sqlmock.Sqlmock) {
-				rows := sqlmock.NewRows([]string{
-					"shop_name", "plan_name", "amount_idr", "status",
-					"midtrans_order_id", "paid_at", "created_at",
-				})
-				mock.ExpectQuery(`SELECT\s+sh\.name`).WillReturnRows(rows)
+				mock.ExpectQuery(`SELECT\s+sh\.name`).WillReturnRows(emptyRows())
 			},
 			wantLen: 0,
 			wantErr: false,
@@ -227,6 +233,87 @@ func Test_systemStore_GetSystemPayments(t *testing.T) {
 			},
 			wantLen: 0,
 			wantErr: true,
+		},
+		{
+			name: "filters by date_from",
+			opts: model.SystemPaymentFilterOptions{
+				DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT\s+sh\.name`).
+					WithArgs(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)).
+					WillReturnRows(twoRows())
+			},
+			wantLen: 2,
+			wantErr: false,
+		},
+		{
+			name: "filters by date_to",
+			opts: model.SystemPaymentFilterOptions{
+				DateTo: ptrTime(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT\s+sh\.name`).
+					WithArgs(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)).
+					WillReturnRows(twoRows())
+			},
+			wantLen: 2,
+			wantErr: false,
+		},
+		{
+			name: "filters by status",
+			opts: model.SystemPaymentFilterOptions{
+				Status: strPtr("settlement"),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT\s+sh\.name`).
+					WithArgs("settlement").
+					WillReturnRows(emptyRows().AddRow("Toko Mawar", "Starter", 149000, "settlement", "recapo-1-001", fixedTime, fixedTime))
+			},
+			wantLen: 1,
+			wantErr: false,
+		},
+		{
+			name: "applies sort order",
+			opts: model.SystemPaymentFilterOptions{
+				Sort: strPtr("amount_idr,desc"),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT\s+sh\.name`).WillReturnRows(twoRows())
+			},
+			wantLen: 2,
+			wantErr: false,
+		},
+		{
+			name: "ignores invalid sort column",
+			opts: model.SystemPaymentFilterOptions{
+				Sort: strPtr("dropped_tables,desc"),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT\s+sh\.name`).WillReturnRows(twoRows())
+			},
+			wantLen: 2,
+			wantErr: false,
+		},
+		{
+			name: "all filters combined",
+			opts: model.SystemPaymentFilterOptions{
+				DateFrom: ptrTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+				DateTo:   ptrTime(time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)),
+				Status:   strPtr("settlement"),
+				Sort:     strPtr("amount_idr,asc"),
+			},
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT\s+sh\.name`).
+					WithArgs(
+						time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+						time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC),
+						"settlement",
+					).
+					WillReturnRows(emptyRows().AddRow("Toko Mawar", "Starter", 149000, "settlement", "recapo-1-001", fixedTime, fixedTime))
+			},
+			wantLen: 1,
+			wantErr: false,
 		},
 	}
 
@@ -241,7 +328,7 @@ func Test_systemStore_GetSystemPayments(t *testing.T) {
 			tt.mockSetup(mock)
 
 			s := &systemStore{db: db}
-			got, gotErr := s.GetSystemPayments(context.Background())
+			got, gotErr := s.GetSystemPayments(context.Background(), tt.opts)
 
 			if gotErr != nil {
 				if !tt.wantErr {

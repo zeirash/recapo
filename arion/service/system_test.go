@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	mock_store "github.com/zeirash/recapo/arion/mock/store"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
 )
 
@@ -143,7 +144,7 @@ func Test_sysservice_GetSystemPayments(t *testing.T) {
 			name: "returns payments list",
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSystemStore {
 				m := mock_store.NewMockSystemStore(ctrl)
-				m.EXPECT().GetSystemPayments(gomock.Any()).Return([]store.SystemPayment{
+				m.EXPECT().GetSystemPayments(gomock.Any(), gomock.Any()).Return([]store.SystemPayment{
 					{ShopName: "Toko Mawar", PlanName: "Starter", AmountIDR: 149000, Status: "settlement", MidtransOrderID: "recapo-1-001", PaidAt: &fixedTime, CreatedAt: fixedTime},
 					{ShopName: "Toko Melati", PlanName: "Starter", AmountIDR: 149000, Status: "pending", MidtransOrderID: "recapo-2-002", CreatedAt: fixedTime},
 				}, nil)
@@ -156,7 +157,7 @@ func Test_sysservice_GetSystemPayments(t *testing.T) {
 			name: "returns empty list",
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSystemStore {
 				m := mock_store.NewMockSystemStore(ctrl)
-				m.EXPECT().GetSystemPayments(gomock.Any()).Return([]store.SystemPayment{}, nil)
+				m.EXPECT().GetSystemPayments(gomock.Any(), gomock.Any()).Return([]store.SystemPayment{}, nil)
 				return m
 			},
 			wantLen: 0,
@@ -166,7 +167,7 @@ func Test_sysservice_GetSystemPayments(t *testing.T) {
 			name: "returns error on store failure",
 			mockSetup: func(ctrl *gomock.Controller) *mock_store.MockSystemStore {
 				m := mock_store.NewMockSystemStore(ctrl)
-				m.EXPECT().GetSystemPayments(gomock.Any()).Return(nil, errors.New("db error"))
+				m.EXPECT().GetSystemPayments(gomock.Any(), gomock.Any()).Return(nil, errors.New("db error"))
 				return m
 			},
 			wantErr: true,
@@ -180,7 +181,7 @@ func Test_sysservice_GetSystemPayments(t *testing.T) {
 
 			systemStore = tt.mockSetup(ctrl)
 			svc := &sysservice{}
-			got, err := svc.GetSystemPayments(context.Background())
+			got, err := svc.GetSystemPayments(context.Background(), model.SystemPaymentFilterOptions{})
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetSystemPayments() error = %v, wantErr %v", err, tt.wantErr)

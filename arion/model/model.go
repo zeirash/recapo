@@ -34,11 +34,30 @@ type (
 		SessionToken string `json:"session_token"`
 	}
 
-	/****************** Shared filter *****************/
-	// FilterOptions holds common list filters (search + sort). Reused across products, customers, etc.
+	/****************** Filter *****************/
+	// FilterOptions isholds common list filters (search + sort). Reused across products and customers.
 	FilterOptions struct {
 		SearchQuery *string
 		Sort        *string // value: column,order. E.g. created_at,desc
+	}
+
+	// OrderFilterOptions holds optional filters for listing orders.
+	// Used by handler and service; store consumes it. Add fields as needed (e.g. Status, CustomerID).
+	OrderFilterOptions struct {
+		SearchQuery   *string
+		DateFrom      *time.Time
+		DateTo        *time.Time
+		Status        []string
+		PaymentStatus *string
+		Sort          *string // value: column,order. E.g. created_at,desc
+	}
+
+	// SystemPaymentFilterOptions holds optional filters for listing payments in system mode.
+	SystemPaymentFilterOptions struct {
+		Status   *string
+		DateFrom *time.Time
+		DateTo   *time.Time
+		Sort     *string // value: column,order. E.g. created_at,desc
 	}
 
 	/********************* User ************************/
@@ -96,17 +115,6 @@ type (
 	}
 
 	/******************** Order **********************/
-	// OrderFilterOptions holds optional filters for listing orders.
-	// Used by handler and service; store consumes it. Add fields as needed (e.g. Status, CustomerID).
-	OrderFilterOptions struct {
-		SearchQuery   *string
-		DateFrom      *time.Time
-		DateTo        *time.Time
-		Status        []string
-		PaymentStatus *string
-		Sort          *string // value: column,order. E.g. created_at,desc
-	}
-
 	Order struct {
 		ID                int          `db:"id"`
 		ShopID            int          `db:"shop_id"`

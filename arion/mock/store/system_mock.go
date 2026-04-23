@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/zeirash/recapo/arion/model"
 	store "github.com/zeirash/recapo/arion/store"
 )
 
@@ -66,16 +67,16 @@ func (mr *MockSystemStoreMockRecorder) GetSystemShops(ctx interface{}) *gomock.C
 }
 
 // GetSystemPayments mocks base method.
-func (m *MockSystemStore) GetSystemPayments(ctx context.Context) ([]store.SystemPayment, error) {
+func (m *MockSystemStore) GetSystemPayments(ctx context.Context, opts model.SystemPaymentFilterOptions) ([]store.SystemPayment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSystemPayments", ctx)
+	ret := m.ctrl.Call(m, "GetSystemPayments", ctx, opts)
 	ret0, _ := ret[0].([]store.SystemPayment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSystemPayments indicates an expected call of GetSystemPayments.
-func (mr *MockSystemStoreMockRecorder) GetSystemPayments(ctx interface{}) *gomock.Call {
+func (mr *MockSystemStoreMockRecorder) GetSystemPayments(ctx, opts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSystemPayments", reflect.TypeOf((*MockSystemStore)(nil).GetSystemPayments), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSystemPayments", reflect.TypeOf((*MockSystemStore)(nil).GetSystemPayments), ctx, opts)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/zeirash/recapo/arion/common/response"
 	"github.com/zeirash/recapo/arion/handler"
 	mock_service "github.com/zeirash/recapo/arion/mock/service"
+	"github.com/zeirash/recapo/arion/model"
 )
 
 func TestGetSystemStatsHandler(t *testing.T) {
@@ -129,16 +130,23 @@ func TestGetSystemShopsHandler(t *testing.T) {
 func TestGetSystemPaymentsHandler(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC)
 
+	dateFrom := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	dateTo := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
+	statusSettlement := "settlement"
+	sortOpt := "amount_idr,desc"
+
 	tests := []struct {
 		name        string
+		query       string
 		mockSetup   func(m *mock_service.MockSystemService)
 		wantStatus  int
 		wantSuccess bool
 	}{
 		{
-			name: "returns payments list successfully",
+			name:  "returns payments list successfully",
+			query: "",
 			mockSetup: func(m *mock_service.MockSystemService) {
-				m.EXPECT().GetSystemPayments(gomock.Any()).Return([]response.SystemPaymentData{
+				m.EXPECT().GetSystemPayments(gomock.Any(), gomock.Any()).Return([]response.SystemPaymentData{
 					{ShopName: "Toko Mawar", PlanName: "Starter", AmountIDR: 149000, Status: "settlement", MidtransOrderID: "recapo-1-001", PaidAt: &fixedTime, CreatedAt: fixedTime},
 				}, nil)
 			},
@@ -146,20 +154,39 @@ func TestGetSystemPaymentsHandler(t *testing.T) {
 			wantSuccess: true,
 		},
 		{
-			name: "returns empty list",
+			name:  "returns empty list",
+			query: "",
 			mockSetup: func(m *mock_service.MockSystemService) {
-				m.EXPECT().GetSystemPayments(gomock.Any()).Return([]response.SystemPaymentData{}, nil)
+				m.EXPECT().GetSystemPayments(gomock.Any(), gomock.Any()).Return([]response.SystemPaymentData{}, nil)
 			},
 			wantStatus:  http.StatusOK,
 			wantSuccess: true,
 		},
 		{
-			name: "returns 500 on service error",
+			name:  "returns 500 on service error",
+			query: "",
 			mockSetup: func(m *mock_service.MockSystemService) {
-				m.EXPECT().GetSystemPayments(gomock.Any()).Return(nil, errors.New("db error"))
+				m.EXPECT().GetSystemPayments(gomock.Any(), gomock.Any()).Return(nil, errors.New("db error"))
 			},
 			wantStatus:  http.StatusInternalServerError,
 			wantSuccess: false,
+		},
+		{
+			name:  "passes parsed filters to service",
+			query: "?date_from=2024-01-01&date_to=2024-01-31&status=settlement&sort=amount_idr,desc",
+			mockSetup: func(m *mock_service.MockSystemService) {
+				expected := model.SystemPaymentFilterOptions{
+					DateFrom: &dateFrom,
+					DateTo:   &dateTo,
+					Status:   &statusSettlement,
+					Sort:     &sortOpt,
+				}
+				m.EXPECT().GetSystemPayments(gomock.Any(), gomock.Eq(expected)).Return([]response.SystemPaymentData{
+					{ShopName: "Toko Mawar", PlanName: "Starter", AmountIDR: 149000, Status: "settlement", MidtransOrderID: "recapo-1-001", PaidAt: &fixedTime, CreatedAt: fixedTime},
+				}, nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
 		},
 	}
 
@@ -175,7 +202,7 @@ func TestGetSystemPaymentsHandler(t *testing.T) {
 			handler.SetSystemService(mockSvc)
 			tt.mockSetup(mockSvc)
 
-			req := httptest.NewRequest(http.MethodGet, "/system/payments", nil)
+			req := httptest.NewRequest(http.MethodGet, "/system/payments"+tt.query, nil)
 			w := httptest.NewRecorder()
 			handler.GetSystemPaymentsHandler(w, req)
 

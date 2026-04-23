@@ -10,6 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	response "github.com/zeirash/recapo/arion/common/response"
+	model "github.com/zeirash/recapo/arion/model"
 )
 
 // MockSystemService is a mock of SystemService interface.
@@ -66,16 +67,16 @@ func (mr *MockSystemServiceMockRecorder) GetSystemShops(ctx interface{}) *gomock
 }
 
 // GetSystemPayments mocks base method.
-func (m *MockSystemService) GetSystemPayments(ctx context.Context) ([]response.SystemPaymentData, error) {
+func (m *MockSystemService) GetSystemPayments(ctx context.Context, opts model.SystemPaymentFilterOptions) ([]response.SystemPaymentData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSystemPayments", ctx)
+	ret := m.ctrl.Call(m, "GetSystemPayments", ctx, opts)
 	ret0, _ := ret[0].([]response.SystemPaymentData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSystemPayments indicates an expected call of GetSystemPayments.
-func (mr *MockSystemServiceMockRecorder) GetSystemPayments(ctx interface{}) *gomock.Call {
+func (mr *MockSystemServiceMockRecorder) GetSystemPayments(ctx, opts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSystemPayments", reflect.TypeOf((*MockSystemService)(nil).GetSystemPayments), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSystemPayments", reflect.TypeOf((*MockSystemService)(nil).GetSystemPayments), ctx, opts)
 }

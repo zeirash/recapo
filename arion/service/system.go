@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/zeirash/recapo/arion/common/response"
+	"github.com/zeirash/recapo/arion/model"
 	"github.com/zeirash/recapo/arion/store"
 )
 
@@ -11,7 +12,7 @@ type (
 	SystemService interface {
 		GetSystemStats(ctx context.Context) (*response.SystemStatsData, error)
 		GetSystemShops(ctx context.Context) ([]response.SystemShopData, error)
-		GetSystemPayments(ctx context.Context) ([]response.SystemPaymentData, error)
+		GetSystemPayments(ctx context.Context, opts model.SystemPaymentFilterOptions) ([]response.SystemPaymentData, error)
 	}
 
 	sysservice struct{}
@@ -62,8 +63,8 @@ func (s *sysservice) GetSystemShops(ctx context.Context) ([]response.SystemShopD
 	return results, nil
 }
 
-func (s *sysservice) GetSystemPayments(ctx context.Context) ([]response.SystemPaymentData, error) {
-	payments, err := systemStore.GetSystemPayments(ctx)
+func (s *sysservice) GetSystemPayments(ctx context.Context, opts model.SystemPaymentFilterOptions) ([]response.SystemPaymentData, error) {
+	payments, err := systemStore.GetSystemPayments(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
