@@ -1,9 +1,15 @@
 "use client"
 
+import { useState } from 'react'
 import { useQuery } from 'react-query'
-import { Box, Paper, Typography } from '@mui/material'
+import { Box, Button, MenuItem, Paper, Select, Typography } from '@mui/material'
+import DateRangeFilter from '@/components/ui/DateRangeFilter'
 import { api } from '@/utils/api'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
+
+const FILTER_SESSION_KEY = 'system_payments_filter_state'
+
+type SortBy = 'created_at,desc' | 'created_at,asc' | 'amount_idr,desc' | 'amount_idr,asc'
 
 const paymentStatusColors: Record<string, { bg: string; color: string }> = {
   settlement: { bg: '#E8F5E9', color: '#2E7D32' },
@@ -15,8 +21,54 @@ const paymentStatusColors: Record<string, { bg: string; color: string }> = {
   failure:    { bg: '#FFEBEE', color: '#C62828' },
 }
 
+function getStoredFilterState() {
+  if (typeof window === 'undefined') return null
+  try {
+    const s = sessionStorage.getItem(FILTER_SESSION_KEY)
+    return s ? JSON.parse(s) : null
+  } catch {
+    return null
+  }
+}
+
+function formatPrice(v: number) {
+  return `Rp ${v.toLocaleString('id-ID')}`
+}
+
+function formatDate(d: string | null) {
+  if (!d) return '—'
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 export default function SystemPaymentsPage() {
-  const { data: paymentsRes, isLoading } = useQuery('system-payments', () => api.getSystemPayments())
+  const stored = getStoredFilterState()
+
+  const [dateFrom, setDateFrom] = useState<string>(stored?.dateFrom ?? '')
+  const [dateTo, setDateTo] = useState<string>(stored?.dateTo ?? '')
+  const [statusFilter, setStatusFilter] = useState<string>(stored?.statusFilter ?? '')
+  const [sortBy, setSortBy] = useState<SortBy>(stored?.sortBy ?? 'created_at,desc')
+
+  function saveState(patch: object) {
+    try {
+      sessionStorage.setItem(FILTER_SESSION_KEY, JSON.stringify({
+        dateFrom, dateTo, statusFilter, sortBy, ...patch,
+      }))
+    } catch {}
+  }
+
+  function update<T>(setter: (v: T) => void, key: string) {
+    return (val: T) => { setter(val); saveState({ [key]: val }) }
+  }
+
+  const { data: paymentsRes, isLoading } = useQuery(
+    ['system-payments', dateFrom, dateTo, statusFilter, sortBy],
+    () => api.getSystemPayments({
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+      status: statusFilter || undefined,
+      sort: sortBy,
+    })
+  )
 
   const payments: any[] = paymentsRes?.data ?? []
 
@@ -24,14 +76,15 @@ export default function SystemPaymentsPage() {
     .filter(p => p.status === 'settlement' || p.status === 'capture')
     .reduce((sum, p) => sum + (p.amount_idr || 0), 0)
 
-  function formatPrice(v: number) {
-    return `Rp ${v.toLocaleString('id-ID')}`
+  function handleResetFilters() {
+    setDateFrom('')
+    setDateTo('')
+    setStatusFilter('')
+    setSortBy('created_at,desc')
+    saveState({ dateFrom: '', dateTo: '', statusFilter: '', sortBy: 'created_at,desc' })
   }
 
-  function formatDate(d: string | null) {
-    if (!d) return '—'
-    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  }
+  const isFiltered = dateFrom || dateTo || statusFilter || sortBy !== 'created_at,desc'
 
   if (isLoading) return <PageLoadingSkeleton />
 
@@ -42,6 +95,61 @@ export default function SystemPaymentsPage() {
       </Typography>
       <Box sx={{ fontSize: '14px', color: 'text.secondary', mb: '24px' }}>
         Total settled: <Box component="span" sx={{ fontWeight: 700, color: 'success.main' }}>{formatPrice(totalRevenue)}</Box>
+      </Box>
+
+      {/* Filters */}
+      <Box sx={{ display: 'flex', gap: '12px', mb: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <Box sx={{ fontSize: '11px', color: 'text.secondary', px: '2px' }}>Sort</Box>
+          <Select
+            size="small"
+            value={sortBy}
+            onChange={(e) => update<SortBy>(setSortBy, 'sortBy')(e.target.value as SortBy)}
+            sx={{ height: 34, fontSize: '13px', borderRadius: '6px', minWidth: 160 }}
+            MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
+          >
+            <MenuItem value="created_at,desc" sx={{ fontSize: '13px' }}>Newest first</MenuItem>
+            <MenuItem value="created_at,asc"  sx={{ fontSize: '13px' }}>Oldest first</MenuItem>
+            <MenuItem value="amount_idr,desc" sx={{ fontSize: '13px' }}>Amount: high to low</MenuItem>
+            <MenuItem value="amount_idr,asc"  sx={{ fontSize: '13px' }}>Amount: low to high</MenuItem>
+          </Select>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <Box sx={{ fontSize: '11px', color: 'text.secondary', px: '2px' }}>Status</Box>
+          <Select
+            size="small"
+            displayEmpty
+            value={statusFilter}
+            onChange={(e) => update<string>(setStatusFilter, 'statusFilter')(e.target.value)}
+            sx={{ height: 34, fontSize: '13px', borderRadius: '6px', minWidth: 130 }}
+            MenuProps={{ anchorOrigin: { vertical: 'bottom', horizontal: 'left' }, transformOrigin: { vertical: 'top', horizontal: 'left' } }}
+          >
+            <MenuItem value="" sx={{ fontSize: '13px' }}>All</MenuItem>
+            <MenuItem value="settlement" sx={{ fontSize: '13px' }}>Settlement</MenuItem>
+            <MenuItem value="capture" sx={{ fontSize: '13px' }}>Capture</MenuItem>
+            <MenuItem value="pending" sx={{ fontSize: '13px' }}>Pending</MenuItem>
+            <MenuItem value="deny" sx={{ fontSize: '13px' }}>Deny</MenuItem>
+            <MenuItem value="cancel" sx={{ fontSize: '13px' }}>Cancel</MenuItem>
+            <MenuItem value="expire" sx={{ fontSize: '13px' }}>Expire</MenuItem>
+            <MenuItem value="failure" sx={{ fontSize: '13px' }}>Failure</MenuItem>
+          </Select>
+        </Box>
+        <DateRangeFilter
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDateFromChange={update<string>(setDateFrom, 'dateFrom')}
+          onDateToChange={update<string>(setDateTo, 'dateTo')}
+        />
+        {isFiltered && (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={handleResetFilters}
+            sx={{ height: 34, fontSize: '13px', borderRadius: '6px', textTransform: 'none', alignSelf: 'flex-end', flexShrink: 0 }}
+          >
+            Reset
+          </Button>
+        )}
       </Box>
 
       <Paper sx={{ borderRadius: '12px', border: '1px solid', borderColor: 'grey.200', bgcolor: 'background.paper', overflow: 'hidden' }}>
@@ -77,7 +185,7 @@ export default function SystemPaymentsPage() {
               })}
               {payments.length === 0 && (
                 <Box component="tr">
-                  <Box component="td" colSpan={7} sx={{ p: '32px', textAlign: 'center', color: 'text.secondary', fontSize: '14px' }}>No payments yet</Box>
+                  <Box component="td" colSpan={7} sx={{ p: '32px', textAlign: 'center', color: 'text.secondary', fontSize: '14px' }}>No payments found</Box>
                 </Box>
               )}
             </Box>

@@ -585,8 +585,14 @@ export const api = {
     return apiRequest<ApiResponse<any[]>>('/system/shops')
   },
 
-  getSystemPayments: () => {
-    return apiRequest<ApiResponse<any[]>>('/system/payments')
+  getSystemPayments: (opts?: { date_from?: string; date_to?: string; status?: string; sort?: string }) => {
+    const params = new URLSearchParams()
+    if (opts?.date_from) params.set('date_from', opts.date_from)
+    if (opts?.date_to) params.set('date_to', opts.date_to)
+    if (opts?.status) params.set('status', opts.status)
+    if (opts?.sort) params.set('sort', opts.sort)
+    const qs = params.toString()
+    return apiRequest<ApiResponse<any[]>>(`/system/payments${qs ? `?${qs}` : ''}`)
   },
 
   getShopUsers: () => {
