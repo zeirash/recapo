@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from 'react-query'
 import { Box, OutlinedInput } from '@mui/material'
-import { Search, X } from 'lucide-react'
+import { PackagePlus, Search, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { api } from '@/utils/api'
 
@@ -15,10 +15,12 @@ type Product = {
 
 type Props = {
   value: number | null
-  onChange: (id: number | null, price?: number) => void
+  onChange: (id: number | null, price?: number, name?: string) => void
   placeholder: string
   searchPlaceholder: string
   noResultsText?: string
+  onCreateProduct?: (searchTerm: string) => void
+  selectedLabel?: string
 }
 
 function useDebounce(value: string, delay: number) {
@@ -36,6 +38,8 @@ export default function ProductSearchSelect({
   placeholder,
   searchPlaceholder,
   noResultsText = 'No products found',
+  onCreateProduct,
+  selectedLabel,
 }: Props) {
   const t = useTranslations('common')
   const [searchTerm, setSearchTerm] = useState('')
@@ -85,19 +89,19 @@ export default function ProductSearchSelect({
   function handleSelect(product: Product) {
     setSelectedName(product.name)
     setSearchTerm('')
-    onChange(product.id, product.price)
+    onChange(product.id, product.price, product.name)
     setIsOpen(false)
   }
 
   function handleClear() {
-    onChange(null, undefined)
+    onChange(null, undefined, undefined)
     setSelectedName('')
     setSearchTerm('')
     setIsOpen(false)
   }
 
-  const inputValue = value ? selectedName : searchTerm
-  const inputPlaceholder = value ? selectedName : (isOpen ? searchPlaceholder : placeholder)
+  const inputValue = value ? (selectedName || selectedLabel || '') : searchTerm
+  const inputPlaceholder = value ? (selectedName || selectedLabel || '') : (isOpen ? searchPlaceholder : placeholder)
 
   return (
     <Box ref={containerRef} sx={{ position: 'relative' }}>
@@ -175,8 +179,35 @@ export default function ProductSearchSelect({
               {t('loading')}
             </Box>
           ) : !products || products.length === 0 ? (
-            <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
-              {noResultsText}
+            <Box>
+              <Box sx={{ display: 'block', px: '16px', py: '8px', fontSize: '14px', color: 'text.secondary' }}>
+                {noResultsText}
+              </Box>
+              {onCreateProduct && debouncedSearch && (
+                <Box
+                  onClick={() => {
+                    onCreateProduct(debouncedSearch)
+                    setIsOpen(false)
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    px: '16px',
+                    py: '8px',
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
+                >
+                  <PackagePlus size={14} />
+                  {t('createItem', { name: debouncedSearch })}
+                </Box>
+              )}
             </Box>
           ) : (
             products.map((p) => (

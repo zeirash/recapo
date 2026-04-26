@@ -60,12 +60,13 @@ type CreateOrderForm = {
 
 type AddItemForm = {
   product_id: number | null
+  product_name: string
   product_price: number
   qty: number
 }
 
 const emptyCreateForm: CreateOrderForm = { customer_id: null, notes: '' }
-const emptyAddItemForm: AddItemForm = { product_id: null, product_price: 0, qty: 1 }
+const emptyAddItemForm: AddItemForm = { product_id: null, product_name: '', product_price: 0, qty: 1 }
 
 const lightStatusColors: Record<string, { bg: string; color: string }> = {
   created:     { bg: '#E3F2FD', color: '#1565C0' },
@@ -143,6 +144,7 @@ export default function OrdersPage() {
   const [exportMessage, setExportMessage] = useState('')
   const [sortBy, setSortBy] = useState<SortBy>(() => getStoredFilterState()?.sortBy ?? 'date_desc')
   const [createCustomerDialog, setCreateCustomerDialog] = useState<{ open: boolean; name: string; phone: string }>({ open: false, name: '', phone: '' })
+  const [createProductDialog, setCreateProductDialog] = useState<{ open: boolean; name: string; price: string }>({ open: false, name: '', price: '' })
   const [filtersVisible, setFiltersVisible] = useState<boolean>(() => getStoredFilterState()?.filtersVisible ?? false)
   const [sortMenuAnchor, setSortMenuAnchor] = useState<null | HTMLElement>(null)
 
@@ -436,6 +438,18 @@ export default function OrdersPage() {
         setCreateForm((f) => ({ ...f, customer_id: customer.id, customer_name: customer.name }))
         setCreateCustomerDialog({ open: false, name: '', phone: '' })
         queryClient.invalidateQueries(['customers'])
+      },
+    }
+  )
+
+  const createProductMutation = useMutation(
+    (data: { name: string; price: number }) => api.createProduct({ name: data.name, price: data.price }),
+    {
+      onSuccess: (res) => {
+        const product = res.data as { id: number; name: string; price: number }
+        setAddItemForm((f) => ({ ...f, product_id: product.id, product_name: product.name, product_price: product.price }))
+        setCreateProductDialog({ open: false, name: '', price: '' })
+        queryClient.invalidateQueries(['products'])
       },
     }
   )
@@ -1109,10 +1123,12 @@ export default function OrdersPage() {
               <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('product')}</Box>
               <ProductSearchSelect
                 value={addItemForm.product_id}
-                onChange={(id, price) => setAddItemForm({ ...addItemForm, product_id: id, product_price: price ?? 0 })}
+                onChange={(id, price, name) => setAddItemForm((f) => ({ ...f, product_id: id, product_name: name ?? '', product_price: price ?? 0 }))}
                 placeholder={to('selectProduct')}
                 searchPlaceholder={to('searchProduct')}
                 noResultsText={to('noProductsFound')}
+                onCreateProduct={(term) => setCreateProductDialog({ open: true, name: term, price: '' })}
+                selectedLabel={addItemForm.product_name}
               />
             </Box>
             <Box sx={{ mb: '8px' }}>
@@ -1212,6 +1228,27 @@ export default function OrdersPage() {
           <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
             <Button type="button" variant="outlined" onClick={() => setCreateCustomerDialog({ open: false, name: '', phone: '' })}>{t('cancel')}</Button>
             <Button type="submit" variant="contained" disableElevation disabled={createCustomerMutation.isLoading}>{t('create')}</Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
+      {/* Create Product Dialog */}
+      <Dialog open={createProductDialog.open} onClose={() => setCreateProductDialog({ open: false, name: '', price: '' })} fullWidth maxWidth="xs">
+        <Box component="form" onSubmit={(e: React.FormEvent) => { e.preventDefault(); const price = parseFloat(createProductDialog.price); if (createProductDialog.name && !isNaN(price) && price > 0) createProductMutation.mutate({ name: createProductDialog.name, price }) }}>
+          <DialogTitle sx={{ pb: '8px' }}>{t('create')} {t('product')}</DialogTitle>
+          <DialogContent sx={{ pt: '8px !important', pb: 0 }}>
+            <Box sx={{ mb: '16px' }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('name')}</Box>
+              <OutlinedInput value={createProductDialog.name} onChange={(e) => setCreateProductDialog((d) => ({ ...d, name: e.target.value }))} size="small" fullWidth required autoFocus />
+            </Box>
+            <Box sx={{ mb: '8px' }}>
+              <Box component="label" sx={{ display: 'block', mb: '4px', fontSize: '14px', fontWeight: 600 }}>{t('price')}</Box>
+              <OutlinedInput type="number" inputProps={{ min: '0', step: 'any' }} value={createProductDialog.price} onChange={(e) => setCreateProductDialog((d) => ({ ...d, price: e.target.value }))} size="small" fullWidth required />
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ px: '24px', pt: '16px', pb: '24px', gap: '8px' }}>
+            <Button type="button" variant="outlined" onClick={() => setCreateProductDialog({ open: false, name: '', price: '' })}>{t('cancel')}</Button>
+            <Button type="submit" variant="contained" disableElevation disabled={createProductMutation.isLoading}>{t('create')}</Button>
           </DialogActions>
         </Box>
       </Dialog>
