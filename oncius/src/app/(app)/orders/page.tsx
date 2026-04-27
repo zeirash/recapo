@@ -148,6 +148,7 @@ export default function OrdersPage() {
   const [filtersVisible, setFiltersVisible] = useState<boolean>(() => getStoredFilterState()?.filtersVisible ?? false)
   const [sortMenuAnchor, setSortMenuAnchor] = useState<null | HTMLElement>(null)
   const [markUnpaidDialogOpen, setMarkUnpaidDialogOpen] = useState(false)
+  const [markPaidDialogOpen, setMarkPaidDialogOpen] = useState(false)
 
   useEffect(() => {
     sessionStorage.setItem(FILTER_SESSION_KEY, JSON.stringify({
@@ -267,14 +268,22 @@ export default function OrdersPage() {
     }
   )
 
-  const updatePaymentStatusMutation = useMutation(
-    async ({ id, payment_status }: { id: number; payment_status: string }) => {
-      const res = await api.updateOrder(id, { payment_status })
+  const markPaidMutation = useMutation(
+    async (orderId: number) => {
+      const totalPrice = selectedOrder?.total_price || 0
+      const existingPayments = selectedOrder?.order_payments || []
+      const paidSoFar = existingPayments.reduce((sum: number, p: any) => sum + p.amount, 0)
+      const remaining = totalPrice - paidSoFar
+      if (remaining > 0) {
+        await api.createOrderPayment(orderId, { amount: remaining })
+      }
+      const res = await api.updateOrder(orderId, { payment_status: 'paid' })
       if (!res.success) throw new Error(res.message || to('updatePaymentStatusFailed'))
       return res
     },
     {
       onSuccess: () => {
+        setMarkPaidDialogOpen(false)
         queryClient.invalidateQueries(['orders'])
         queryClient.invalidateQueries(['order', selectedOrderId])
       },
@@ -854,12 +863,12 @@ export default function OrdersPage() {
                         size="small"
                         variant="outlined"
                         color={normalizePaymentStatus(selectedOrder.payment_status) === 'paid' ? 'error' : 'success'}
-                        disabled={updatePaymentStatusMutation.isLoading || markUnpaidMutation.isLoading}
+                        disabled={markPaidMutation.isLoading || markUnpaidMutation.isLoading}
                         onClick={() => {
                           if (normalizePaymentStatus(selectedOrder.payment_status) === 'paid') {
                             setMarkUnpaidDialogOpen(true)
                           } else {
-                            updatePaymentStatusMutation.mutate({ id: selectedOrder.id, payment_status: 'paid' })
+                            setMarkPaidDialogOpen(true)
                           }
                         }}
                         sx={{ fontSize: '12px', py: '2px', px: '8px', minWidth: 0, textTransform: 'none' }}
@@ -1273,6 +1282,28 @@ export default function OrdersPage() {
         </Box>
       </Dialog>
       {/* Mark Unpaid Confirmation Dialog */}
+      <Dialog open={markPaidDialogOpen} onClose={() => setMarkPaidDialogOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ pb: '8px' }}>{to('markPaidConfirmTitle')}</DialogTitle>
+        <DialogContent sx={{ pt: '8px !important' }}>
+          <Typography sx={{ fontSize: '14px', color: 'text.secondary' }}>
+            {to('markPaidConfirmMessage')}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: '24px', pt: '8px', pb: '24px', gap: '8px' }}>
+          <Button variant="outlined" onClick={() => setMarkPaidDialogOpen(false)} disabled={markPaidMutation.isLoading}>
+            {t('cancel')}
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            disableElevation
+            disabled={markPaidMutation.isLoading}
+            onClick={() => { if (selectedOrder) markPaidMutation.mutate(selectedOrder.id) }}
+          >
+            {to('markPaid')}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={markUnpaidDialogOpen} onClose={() => setMarkUnpaidDialogOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle sx={{ pb: '8px' }}>{to('markUnpaidConfirmTitle')}</DialogTitle>
         <DialogContent sx={{ pt: '8px !important' }}>

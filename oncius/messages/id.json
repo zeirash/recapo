@@ -255,6 +255,8 @@
     "paymentStatus": "Status Pembayaran",
     "paymentStatusTooltip": "Status diperbarui otomatis saat pembayaran ditambahkan: terutang → lunas. Kamu juga bisa menggantinya secara manual menggunakan Tandai Lunas atau Tandai Terutang.",
     "markPaid": "Tandai Lunas",
+    "markPaidConfirmTitle": "Tandai sebagai Lunas?",
+    "markPaidConfirmMessage": "Pembayaran akan ditambahkan secara otomatis untuk menutupi sisa tagihan.",
     "markUnpaid": "Tandai Terutang",
     "markUnpaidConfirmTitle": "Tandai sebagai Terutang?",
     "markUnpaidConfirmMessage": "Semua pembayaran yang ada untuk pesanan ini akan dihapus. Tindakan ini tidak dapat dibatalkan.",
