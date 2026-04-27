@@ -147,6 +147,7 @@ export default function OrdersPage() {
   const [createProductDialog, setCreateProductDialog] = useState<{ open: boolean; name: string; price: string }>({ open: false, name: '', price: '' })
   const [filtersVisible, setFiltersVisible] = useState<boolean>(() => getStoredFilterState()?.filtersVisible ?? false)
   const [sortMenuAnchor, setSortMenuAnchor] = useState<null | HTMLElement>(null)
+  const [markUnpaidDialogOpen, setMarkUnpaidDialogOpen] = useState(false)
 
   useEffect(() => {
     sessionStorage.setItem(FILTER_SESSION_KEY, JSON.stringify({
@@ -406,6 +407,22 @@ export default function OrdersPage() {
     },
     {
       onSuccess: () => {
+        queryClient.invalidateQueries(['order', selectedOrderId])
+        queryClient.invalidateQueries(['orders'])
+      },
+    }
+  )
+
+  const markUnpaidMutation = useMutation(
+    async (orderId: number) => {
+      await api.deleteOrderPayments(orderId)
+      const res = await api.updateOrder(orderId, { payment_status: 'outstanding' })
+      if (!res.success) throw new Error(res.message || to('updatePaymentStatusFailed'))
+      return res
+    },
+    {
+      onSuccess: () => {
+        setMarkUnpaidDialogOpen(false)
         queryClient.invalidateQueries(['order', selectedOrderId])
         queryClient.invalidateQueries(['orders'])
       },
@@ -837,11 +854,14 @@ export default function OrdersPage() {
                         size="small"
                         variant="outlined"
                         color={normalizePaymentStatus(selectedOrder.payment_status) === 'paid' ? 'error' : 'success'}
-                        disabled={updatePaymentStatusMutation.isLoading}
-                        onClick={() => updatePaymentStatusMutation.mutate({
-                          id: selectedOrder.id,
-                          payment_status: normalizePaymentStatus(selectedOrder.payment_status) === 'paid' ? 'outstanding' : 'paid',
-                        })}
+                        disabled={updatePaymentStatusMutation.isLoading || markUnpaidMutation.isLoading}
+                        onClick={() => {
+                          if (normalizePaymentStatus(selectedOrder.payment_status) === 'paid') {
+                            setMarkUnpaidDialogOpen(true)
+                          } else {
+                            updatePaymentStatusMutation.mutate({ id: selectedOrder.id, payment_status: 'paid' })
+                          }
+                        }}
                         sx={{ fontSize: '12px', py: '2px', px: '8px', minWidth: 0, textTransform: 'none' }}
                       >
                         {normalizePaymentStatus(selectedOrder.payment_status) === 'paid' ? to('markUnpaid') : to('markPaid')}
@@ -1251,6 +1271,29 @@ export default function OrdersPage() {
             <Button type="submit" variant="contained" disableElevation disabled={createProductMutation.isLoading}>{t('create')}</Button>
           </DialogActions>
         </Box>
+      </Dialog>
+      {/* Mark Unpaid Confirmation Dialog */}
+      <Dialog open={markUnpaidDialogOpen} onClose={() => setMarkUnpaidDialogOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ pb: '8px' }}>{to('markUnpaidConfirmTitle')}</DialogTitle>
+        <DialogContent sx={{ pt: '8px !important' }}>
+          <Typography sx={{ fontSize: '14px', color: 'text.secondary' }}>
+            {to('markUnpaidConfirmMessage')}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: '24px', pt: '8px', pb: '24px', gap: '8px' }}>
+          <Button variant="outlined" onClick={() => setMarkUnpaidDialogOpen(false)} disabled={markUnpaidMutation.isLoading}>
+            {t('cancel')}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            disableElevation
+            disabled={markUnpaidMutation.isLoading}
+            onClick={() => { if (selectedOrder) markUnpaidMutation.mutate(selectedOrder.id) }}
+          >
+            {to('markUnpaid')}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Container>
   )

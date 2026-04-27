@@ -851,6 +851,40 @@ func UpdateOrderPaymentAmountHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, http.StatusOK, res)
 }
 
+// DeleteOrderPaymentsHandler godoc
+//
+//	@Summary		Delete all order payments
+//	@Description	Delete all payments for a given order.
+//	@Description	Success Response envelope: { success, data, code, message }. data contains "OK" on success.
+//	@Tags			order
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			order_id	path	int	true	"Order ID"
+//	@Success		200		{string}	string	"Success. data contains \"OK\""
+//	@Failure		400	{object}	ErrorApiResponse	"Bad request (invalid order_id)"
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/orders/{order_id}/payments [delete]
+func DeleteOrderPaymentsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	params := mux.Vars(r)
+	if valid, err := validateOrderID(params); !valid {
+		WriteErrorJson(w, r, http.StatusBadRequest, err, "validation")
+		return
+	}
+
+	orderIDInt, _ := strconv.Atoi(params["order_id"])
+
+	err := orderService.DeleteOrderPaymentsByOrderID(ctx, orderIDInt)
+	if err != nil {
+		logger.WithError(err).Error("delete_order_payments_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_order_payments")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, "OK")
+}
+
 // GetOrderPaymentsHandler godoc
 //
 //	@Summary		List order payments

@@ -34,6 +34,7 @@ type (
 		UpdateOrderPaymentAmountByID(ctx context.Context, id, orderID, amount int) (response.OrderPaymentData, error)
 		GetOrderPaymentsByOrderID(ctx context.Context, orderID int) ([]response.OrderPaymentData, error)
 		DeleteOrderPaymentByID(ctx context.Context, orderPaymentID, orderID int) error
+		DeleteOrderPaymentsByOrderID(ctx context.Context, orderID int) error
 
 		GenerateOrderInvoice(ctx context.Context, orderID, shopID int, message string) ([]byte, error)
 
@@ -467,6 +468,10 @@ func (o *oservice) DeleteOrderPaymentByID(ctx context.Context, orderPaymentID, o
 	}
 
 	return nil
+}
+
+func (o *oservice) DeleteOrderPaymentsByOrderID(ctx context.Context, orderID int) error {
+	return orderPaymentStore.DeleteOrderPaymentsByOrderID(ctx, nil, orderID)
 }
 
 func (o *oservice) GetOrderItemsByOrderID(ctx context.Context, orderID int) ([]response.OrderItemData, error) {

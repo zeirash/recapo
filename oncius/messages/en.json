@@ -256,6 +256,8 @@
     "paymentStatusTooltip": "Status updates automatically when payments are added: outstanding → paid. You can also override it manually using Mark Paid or Mark Outstanding.",
     "markPaid": "Mark Paid",
     "markUnpaid": "Mark Outstanding",
+    "markUnpaidConfirmTitle": "Mark as Outstanding?",
+    "markUnpaidConfirmMessage": "All existing payments for this order will be deleted. This action cannot be undone.",
     "updatePaymentStatusFailed": "Failed to update payment status",
     "addPayment": "+ Add Payment",
     "addPaymentTitle": "Add Payment",

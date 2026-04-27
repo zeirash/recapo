@@ -137,6 +137,7 @@ func NewRouter() *mux.Router {
 	r.Handle("/orders/{order_id}/items/{item_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrderItemHandler))).Methods("GET")
 	r.Handle("/orders/{order_id}/payment", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateOrderPaymentHandler))).Methods("POST")
 	r.Handle("/orders/{order_id}/payments", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetOrderPaymentsHandler))).Methods("GET")
+	r.Handle("/orders/{order_id}/payments", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteOrderPaymentsHandler))).Methods("DELETE")
 	r.Handle("/orders/{order_id}/payments/{payment_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UpdateOrderPaymentAmountHandler))).Methods("PATCH")
 	r.Handle("/orders/{order_id}/payments/{payment_id}", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteOrderPaymentHandler))).Methods("DELETE")
 

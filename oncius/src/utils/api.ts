@@ -509,6 +509,12 @@ export const api = {
     })
   },
 
+  deleteOrderPayments: (orderId: number | string) => {
+    return apiRequest<ApiResponse>(`/orders/${orderId}/payments`, {
+      method: 'DELETE',
+    })
+  },
+
   // Temp orders (from public share page)
   getTempOrders: (opts?: { search?: string; status?: string; date_from?: string; date_to?: string }) => {
     const params = new URLSearchParams()

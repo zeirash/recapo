@@ -2368,6 +2368,75 @@ func TestDeleteOrderPaymentHandler(t *testing.T) {
 	}
 }
 
+func TestDeleteOrderPaymentsHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOrderService := mock_service.NewMockOrderService(ctrl)
+	handler.SetOrderService(mockOrderService)
+
+	tests := []struct {
+		name        string
+		pathVars    map[string]string
+		mockSetup   func()
+		wantStatus  int
+		wantSuccess bool
+	}{
+		{
+			name:     "successfully delete all order payments",
+			pathVars: map[string]string{"order_id": "10"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					DeleteOrderPaymentsByOrderID(gomock.Any(), 10).
+					Return(nil)
+			},
+			wantStatus:  http.StatusOK,
+			wantSuccess: true,
+		},
+		{
+			name:        "returns 400 on missing order_id",
+			pathVars:    map[string]string{},
+			mockSetup:   func() {},
+			wantStatus:  http.StatusBadRequest,
+			wantSuccess: false,
+		},
+		{
+			name:     "returns 500 on service failure",
+			pathVars: map[string]string{"order_id": "10"},
+			mockSetup: func() {
+				mockOrderService.EXPECT().
+					DeleteOrderPaymentsByOrderID(gomock.Any(), 10).
+					Return(errors.New("database error"))
+			},
+			wantStatus:  http.StatusInternalServerError,
+			wantSuccess: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			req := newRequestWithPathVars(
+				newRequestWithShopID("DELETE", "/orders/10/payments", nil, 1),
+				tt.pathVars,
+			)
+			rec := httptest.NewRecorder()
+
+			handler.DeleteOrderPaymentsHandler(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("DeleteOrderPaymentsHandler() status = %v, want %v", rec.Code, tt.wantStatus)
+			}
+			var resp handler.ApiResponse
+			json.NewDecoder(rec.Body).Decode(&resp)
+			if resp.Success != tt.wantSuccess {
+				t.Errorf("DeleteOrderPaymentsHandler() success = %v, want %v", resp.Success, tt.wantSuccess)
+			}
+		})
+	}
+}
+
 func TestGetOrderStatsHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

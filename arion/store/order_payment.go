@@ -134,7 +134,12 @@ func (o *orderpayment) DeleteOrderPaymentsByOrderID(ctx context.Context, tx data
 		WHERE order_id = $1
 	`
 
-	_, err := tx.ExecContext(ctx, q, orderID)
+	var err error
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, q, orderID)
+	} else {
+		_, err = o.db.ExecContext(ctx, q, orderID)
+	}
 	if err != nil {
 		return err
 	}
