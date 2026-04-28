@@ -44,6 +44,7 @@ type (
 		Price         int        `json:"price"`
 		OriginalPrice int        `json:"original_price"`
 		ImageURL      string     `json:"image_url"`
+		IsActive      bool       `json:"is_active"`
 		CreatedAt     time.Time  `json:"created_at"`
 		UpdatedAt     *time.Time `json:"updated_at"`
 	}

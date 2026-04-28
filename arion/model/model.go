@@ -39,6 +39,7 @@ type (
 	FilterOptions struct {
 		SearchQuery *string
 		Sort        *string // value: column,order. E.g. created_at,desc
+		IsActive    *bool
 	}
 
 	// OrderFilterOptions holds optional filters for listing orders.
@@ -103,6 +104,7 @@ type (
 		Price         int          `db:"price"`
 		OriginalPrice int          `db:"original_price"`
 		ImageURL      string       `db:"image_url"`
+		IsActive      bool         `db:"is_active"`
 		CreatedAt     time.Time    `db:"created_at"`
 		UpdatedAt     sql.NullTime `db:"updated_at"`
 		DeletedAt     sql.NullTime `db:"deleted_at"`

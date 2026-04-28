@@ -42,6 +42,7 @@ type (
 		Price         *int
 		OriginalPrice *int
 		ImageURL      *string
+		IsActive      *bool
 	}
 )
 
@@ -121,6 +122,7 @@ func (p *pservice) CreateProduct(ctx context.Context, shopID int, name string, d
 		Price:         product.Price,
 		OriginalPrice: product.OriginalPrice,
 		ImageURL:      product.ImageURL,
+		IsActive:      product.IsActive,
 		CreatedAt:     product.CreatedAt,
 	}
 
@@ -144,6 +146,7 @@ func (p *pservice) GetProductByID(ctx context.Context, productID int, shopID ...
 		Price:         product.Price,
 		OriginalPrice: product.OriginalPrice,
 		ImageURL:      product.ImageURL,
+		IsActive:      product.IsActive,
 		CreatedAt:     product.CreatedAt,
 	}
 
@@ -169,6 +172,7 @@ func (p *pservice) GetProductsByShopID(ctx context.Context, shopID int, filter m
 			Price:         product.Price,
 			OriginalPrice: product.OriginalPrice,
 			ImageURL:      product.ImageURL,
+			IsActive:      product.IsActive,
 			CreatedAt:     product.CreatedAt,
 		}
 
@@ -199,6 +203,7 @@ func (p *pservice) UpdateProduct(ctx context.Context, input UpdateProductInput) 
 		Price:         input.Price,
 		OriginalPrice: input.OriginalPrice,
 		ImageURL:      input.ImageURL,
+		IsActive:      input.IsActive,
 	}
 	productData, err := productStore.UpdateProduct(ctx, input.ID, updateData)
 	if err != nil {
@@ -219,6 +224,7 @@ func (p *pservice) UpdateProduct(ctx context.Context, input UpdateProductInput) 
 		Price:         productData.Price,
 		OriginalPrice: productData.OriginalPrice,
 		ImageURL:      productData.ImageURL,
+		IsActive:      productData.IsActive,
 		CreatedAt:     productData.CreatedAt,
 	}
 

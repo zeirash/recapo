@@ -37,6 +37,7 @@ type (
 		Price         *int
 		OriginalPrice *int
 		ImageURL      *string
+		IsActive      *bool
 	}
 )
 
@@ -53,7 +54,7 @@ func (p *product) GetProductByID(ctx context.Context, productID int, shopID ...i
 	criteria := []interface{}{productID}
 
 	q := `
-		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at, deleted_at
+		SELECT id, shop_id, name, description, price, original_price, image_url, is_active, created_at, updated_at, deleted_at
 		FROM products
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -64,7 +65,7 @@ func (p *product) GetProductByID(ctx context.Context, productID int, shopID ...i
 	}
 
 	var product model.Product
-	err := p.db.QueryRowContext(ctx, q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt)
+	err := p.db.QueryRowContext(ctx, q, criteria...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.IsActive, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -77,15 +78,22 @@ func (p *product) GetProductByID(ctx context.Context, productID int, shopID ...i
 
 func (p *product) GetProductsByShopID(ctx context.Context, shopID int, filter model.FilterOptions) ([]model.Product, error) {
 	q := `
-		SELECT id, shop_id, name, description, price, original_price, image_url, created_at, updated_at, deleted_at
+		SELECT id, shop_id, name, description, price, original_price, image_url, is_active, created_at, updated_at, deleted_at
 		FROM products
 		WHERE shop_id = $1 AND deleted_at IS NULL
 	`
 	args := []interface{}{shopID}
 
+	argNum := 2
 	if filter.SearchQuery != nil && strings.TrimSpace(*filter.SearchQuery) != "" {
-		q += ` AND name ILIKE $2`
+		q += fmt.Sprintf(` AND name ILIKE $%d`, argNum)
 		args = append(args, "%"+strings.TrimSpace(*filter.SearchQuery)+"%")
+		argNum++
+	}
+	if filter.IsActive != nil {
+		q += fmt.Sprintf(` AND is_active = $%d`, argNum)
+		args = append(args, *filter.IsActive)
+		argNum++
 	}
 	if filter.Sort != nil {
 		sort := strings.Split(*filter.Sort, ",")
@@ -122,7 +130,7 @@ func (p *product) GetProductsByShopID(ctx context.Context, shopID int, filter mo
 	products := []model.Product{}
 	for rows.Next() {
 		var product model.Product
-		err := rows.Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt)
+		err := rows.Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.IsActive, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -142,14 +150,15 @@ func (p *product) CreateProduct(ctx context.Context, name string, description *s
 	var id int
 	var desc string
 	var imgURL string
+	var isActive bool
 
 	q := `
 		INSERT INTO products (name, description, price, original_price, shop_id, image_url, created_at)
 		VALUES ($1, COALESCE($2, ''), $3, $4, $5, COALESCE($6, ''), $7)
-		RETURNING id, description, image_url
+		RETURNING id, description, image_url, is_active
 	`
 
-	err := p.db.QueryRowContext(ctx, q, name, description, price, origPrice, shopID, imageURL, now).Scan(&id, &desc, &imgURL)
+	err := p.db.QueryRowContext(ctx, q, name, description, price, origPrice, shopID, imageURL, now).Scan(&id, &desc, &imgURL, &isActive)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName
@@ -164,6 +173,7 @@ func (p *product) CreateProduct(ctx context.Context, name string, description *s
 		Price:         price,
 		OriginalPrice: origPrice,
 		ImageURL:      imgURL,
+		IsActive:      isActive,
 		ShopID:        shopID,
 		CreatedAt:     now,
 	}, nil
@@ -201,6 +211,11 @@ func (p *product) UpdateProduct(ctx context.Context, productID int, input Update
 		args = append(args, *input.ImageURL)
 		argNum++
 	}
+	if input.IsActive != nil {
+		set = append(set, fmt.Sprintf("is_active = $%d", argNum))
+		args = append(args, *input.IsActive)
+		argNum++
+	}
 
 	set = append(set, "updated_at = now()")
 
@@ -208,10 +223,10 @@ func (p *product) UpdateProduct(ctx context.Context, productID int, input Update
 		UPDATE products
 		SET %s
 		WHERE id = $1
-		RETURNING id, shop_id, name, description, price, original_price, image_url, created_at, updated_at
+		RETURNING id, shop_id, name, description, price, original_price, image_url, is_active, created_at, updated_at
 	`, strings.Join(set, ","))
 
-	err := p.db.QueryRowContext(ctx, q, args...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.CreatedAt, &product.UpdatedAt)
+	err := p.db.QueryRowContext(ctx, q, args...).Scan(&product.ID, &product.ShopID, &product.Name, &product.Description, &product.Price, &product.OriginalPrice, &product.ImageURL, &product.IsActive, &product.CreatedAt, &product.UpdatedAt)
 	if err != nil {
 		if isProductUniqueViolation(err) {
 			return nil, ErrDuplicateProductName

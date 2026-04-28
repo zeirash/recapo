@@ -30,6 +30,7 @@ type (
 		Description   *string `json:"description"`
 		OriginalPrice *int    `json:"original_price"`
 		ImageURL      *string `json:"image_url"`
+		IsActive      *bool   `json:"is_active"`
 	}
 
 	DeleteProductImageRequest struct {
@@ -143,6 +144,10 @@ func GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 	if sort := r.URL.Query().Get("sort"); sort != "" {
 		filter.Sort = &sort
 	}
+	if isActive := r.URL.Query().Get("is_active"); isActive != "" {
+		v := isActive == "true"
+		filter.IsActive = &v
+	}
 
 	res, err := productService.GetProductsByShopID(ctx, shopID, filter)
 	if err != nil {
@@ -193,6 +198,7 @@ func UpdateProductHandler(w http.ResponseWriter, r *http.Request) {
 		Price:         inp.Price,
 		OriginalPrice: inp.OriginalPrice,
 		ImageURL:      inp.ImageURL,
+		IsActive:      inp.IsActive,
 	})
 	if err != nil {
 		logger.WithError(err).Error("update_product_error")
