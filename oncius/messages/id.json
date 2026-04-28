@@ -183,7 +183,10 @@
     "image": "Gambar Produk",
     "chooseImage": "Pilih Gambar",
     "removeImage": "Hapus Gambar",
-    "imageUploadFailed": "Gagal mengunggah gambar"
+    "imageUploadFailed": "Gagal mengunggah gambar",
+    "activate": "Tampilkan di halaman share",
+    "deactivate": "Sembunyikan dari halaman share",
+    "toggleFailed": "Gagal memperbarui visibilitas produk"
   },
   "customers": {
     "title": "Pelanggan",

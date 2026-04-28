@@ -183,7 +183,10 @@
     "image": "Product Image",
     "chooseImage": "Choose Image",
     "removeImage": "Remove Image",
-    "imageUploadFailed": "Failed to upload image"
+    "imageUploadFailed": "Failed to upload image",
+    "activate": "Show on share page",
+    "deactivate": "Hide from share page",
+    "toggleFailed": "Failed to update product visibility"
   },
   "customers": {
     "title": "Customers",

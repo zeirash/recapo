@@ -293,7 +293,7 @@ export const api = {
   },
 
   updateProduct: (id: number | string,
-    data: Partial<{ name: string; description: string; price: number; original_price: number; image_url: string }>
+    data: Partial<{ name: string; description: string; price: number; original_price: number; image_url: string; is_active: boolean }>
   ) => {
     return apiRequest<ApiResponse>(`/products/${id}`, {
       method: 'PATCH',

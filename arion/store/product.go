@@ -110,12 +110,14 @@ func (p *product) GetProductsByShopID(ctx context.Context, shopID int, filter mo
 				}
 				textCols := map[string]bool{"name": true}
 				if textCols[col] {
-					q += fmt.Sprintf(" ORDER BY LOWER(%s) %s %s", col, dir, nullsOrder)
+					q += fmt.Sprintf(" ORDER BY LOWER(%s) %s %s, id ASC", col, dir, nullsOrder)
 				} else {
-					q += fmt.Sprintf(" ORDER BY %s %s %s", col, dir, nullsOrder)
+					q += fmt.Sprintf(" ORDER BY %s %s %s, id ASC", col, dir, nullsOrder)
 				}
 			}
 		}
+	} else {
+		q += " ORDER BY id ASC"
 	}
 
 	rows, err := p.db.QueryContext(ctx, q, args...)

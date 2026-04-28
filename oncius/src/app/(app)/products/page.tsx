@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputBase, Menu, MenuItem, OutlinedInput, Paper, Tooltip, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputBase, Menu, MenuItem, OutlinedInput, Paper, Switch, Tooltip, Typography } from '@mui/material'
 import AddButton from '@/components/ui/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
@@ -16,6 +16,7 @@ type Product = {
   price: number
   original_price?: number | null
   image_url?: string | null
+  is_active: boolean
   created_at?: string
   updated_at?: string | null
 }
@@ -51,7 +52,7 @@ export default function ProductsPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [searchInput, setSearchInput] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
   const [debouncedSearch, setDebouncedSearch] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
-  const [sortValue, setSortValue] = useState<string>(() => getStoredFilterState()?.sortValue ?? 'updated_at,desc')
+  const [sortValue, setSortValue] = useState<string>('')
   const [shareCopied, setShareCopied] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreviewURL, setImagePreviewURL] = useState<string | null>(null)
@@ -148,6 +149,19 @@ export default function ProductsPage() {
     async (id: number) => {
       const res = await api.deleteProduct(id)
       if (!res.success) throw new Error(res.message || tp('deleteFailed'))
+      return res
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['products'])
+      },
+    }
+  )
+
+  const toggleActiveMutation = useMutation(
+    async ({ id, is_active }: { id: number; is_active: boolean }) => {
+      const res = await api.updateProduct(id, { is_active })
+      if (!res.success) throw new Error(res.message || tp('toggleFailed'))
       return res
     },
     {
@@ -273,7 +287,7 @@ export default function ProductsPage() {
                   <IconButton
                     size="small"
                     onClick={(e) => setSortMenuAnchor(e.currentTarget)}
-                    sx={{ color: sortValue !== 'updated_at,desc' ? 'primary.main' : 'text.secondary', '&:hover': { color: sortValue !== 'updated_at,desc' ? 'primary.dark' : 'text.primary' } }}
+                    sx={{ color: sortValue ? 'primary.main' : 'text.secondary', '&:hover': { color: sortValue ? 'primary.dark' : 'text.primary' } }}
                   >
                     <ArrowUpDown size={18} />
                   </IconButton>
@@ -309,6 +323,7 @@ export default function ProductsPage() {
               transformOrigin={{ vertical: 'top', horizontal: 'left' }}
             >
               {([
+                ['', tp('sortDefault')],
                 ['updated_at,desc', tp('sortUpdatedAtDesc')],
                 ['updated_at,asc', tp('sortUpdatedAtAsc')],
                 ['name,asc', tp('sortNameAsc')],
@@ -408,6 +423,14 @@ export default function ProductsPage() {
 
                   {/* Actions */}
                   <Box sx={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    <Tooltip title={p.is_active ? tp('deactivate') : tp('activate')}>
+                      <Switch
+                        size="small"
+                        checked={p.is_active}
+                        disabled={toggleActiveMutation.isLoading}
+                        onChange={() => toggleActiveMutation.mutate({ id: p.id, is_active: !p.is_active })}
+                      />
+                    </Tooltip>
                     <Tooltip title={t('edit')}>
                       <IconButton size="small" onClick={() => openEditForm(p)}>
                         <Pencil size={16} />
