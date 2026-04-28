@@ -25,6 +25,7 @@ type (
 		UpdateProduct(ctx context.Context, productID int, input UpdateProductInput) (*model.Product, error)
 		DeleteProductByID(ctx context.Context, productID int) error
 		GetProductsListByActiveOrders(ctx context.Context, shopID int) ([]model.PurchaseProduct, error)
+		SetAllProductsStatusByShopID(ctx context.Context, shopID int, isActive bool) error
 	}
 
 	product struct {
@@ -282,6 +283,16 @@ func (p *product) GetProductsListByActiveOrders(ctx context.Context, shopID int)
 	}
 
 	return list, nil
+}
+
+func (p *product) SetAllProductsStatusByShopID(ctx context.Context, shopID int, isActive bool) error {
+	q := `
+		UPDATE products
+		SET is_active = $1
+		WHERE shop_id = $2 AND deleted_at IS NULL
+	`
+	_, err := p.db.ExecContext(ctx, q, isActive, shopID)
+	return err
 }
 
 // isProductUniqueViolation checks if the error is a PostgreSQL unique constraint violation

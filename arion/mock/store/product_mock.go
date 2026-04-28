@@ -115,6 +115,20 @@ func (mr *MockProductStoreMockRecorder) GetProductsListByActiveOrders(ctx, shopI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsListByActiveOrders", reflect.TypeOf((*MockProductStore)(nil).GetProductsListByActiveOrders), ctx, shopID)
 }
 
+// SetAllProductsStatusByShopID mocks base method.
+func (m *MockProductStore) SetAllProductsStatusByShopID(ctx context.Context, shopID int, isActive bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAllProductsStatusByShopID", ctx, shopID, isActive)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetAllProductsStatusByShopID indicates an expected call of SetAllProductsStatusByShopID.
+func (mr *MockProductStoreMockRecorder) SetAllProductsStatusByShopID(ctx, shopID, isActive interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAllProductsStatusByShopID", reflect.TypeOf((*MockProductStore)(nil).SetAllProductsStatusByShopID), ctx, shopID, isActive)
+}
+
 // UpdateProduct mocks base method.
 func (m *MockProductStore) UpdateProduct(ctx context.Context, productID int, input store.UpdateProductInput) (*model.Product, error) {
 	m.ctrl.T.Helper()

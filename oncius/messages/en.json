@@ -189,7 +189,11 @@
     "toggleFailed": "Failed to update product visibility",
     "filterAll": "All",
     "filterActive": "Visible",
-    "filterInactive": "Hidden"
+    "filterInactive": "Hidden",
+    "showAll": "Show All",
+    "hideAll": "Hide All",
+    "showAllFailed": "Failed to show all products",
+    "hideAllFailed": "Failed to hide all products"
   },
   "customers": {
     "title": "Customers",

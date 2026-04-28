@@ -115,6 +115,8 @@ func NewRouter() *mux.Router {
 	// For Product (register literal paths before /products/{product_id} so they match first)
 	r.Handle("/product", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.CreateProductHandler))).Methods("POST")
 	r.Handle("/products", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.GetProductsHandler))).Methods("GET")
+	r.Handle("/products/activate_all", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.ActivateAllProductsHandler))).Methods("PATCH")
+	r.Handle("/products/deactivate_all", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeactivateAllProductsHandler))).Methods("PATCH")
 	r.Handle("/products/purchase_list", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.PurchaseListProductHandler))).Methods("GET")
 	r.Handle("/products/image", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.UploadProductImageHandler))).Methods("POST")
 	r.Handle("/products/image", middleware.ChainMiddleware(middleware.Authentication, middleware.SubscriptionCheck)(http.HandlerFunc(handler.DeleteProductImageHandler))).Methods("DELETE")

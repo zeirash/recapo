@@ -189,7 +189,11 @@
     "toggleFailed": "Gagal memperbarui visibilitas produk",
     "filterAll": "Semua",
     "filterActive": "Tampil",
-    "filterInactive": "Tersembunyi"
+    "filterInactive": "Tersembunyi",
+    "showAll": "Tampilkan Semua",
+    "hideAll": "Sembunyikan Semua",
+    "showAllFailed": "Gagal menampilkan semua produk",
+    "hideAllFailed": "Gagal menyembunyikan semua produk"
   },
   "customers": {
     "title": "Pelanggan",

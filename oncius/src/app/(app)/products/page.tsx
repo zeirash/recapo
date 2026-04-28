@@ -159,6 +159,24 @@ export default function ProductsPage() {
     }
   )
 
+  const showAllMutation = useMutation(
+    async () => {
+      const res = await api.activateAllProducts()
+      if (!res.success) throw new Error(res.message || tp('showAllFailed'))
+      return res
+    },
+    { onSuccess: () => queryClient.invalidateQueries(['products']) }
+  )
+
+  const hideAllMutation = useMutation(
+    async () => {
+      const res = await api.deactivateAllProducts()
+      if (!res.success) throw new Error(res.message || tp('hideAllFailed'))
+      return res
+    },
+    { onSuccess: () => queryClient.invalidateQueries(['products']) }
+  )
+
   const toggleActiveMutation = useMutation(
     async ({ id, is_active }: { id: number; is_active: boolean }) => {
       const res = await api.updateProduct(id, { is_active })
@@ -316,7 +334,7 @@ export default function ProductsPage() {
               </Button>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: '6px', mt: '10px' }}>
+            <Box sx={{ display: 'flex', gap: '6px', mt: '10px', alignItems: 'center' }}>
               {([
                 [null, tp('filterAll')],
                 [true, tp('filterActive')],
@@ -364,7 +382,7 @@ export default function ProductsPage() {
         </Box>
 
         {/* Scrollable body */}
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: '24px' }}>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {isLoading && <PageLoadingSkeleton />}
           {isError && (
             <Box sx={{ color: 'error.main' }}>{(error as Error)?.message || tErrors('loadingError', { resource: tp('title') })}</Box>
@@ -381,6 +399,17 @@ export default function ProductsPage() {
           {/* Product list */}
           {!isLoading && !isError && products.length > 0 && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: 960, mx: 'auto' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', mb: '4px' }}>
+                <Typography sx={{ fontSize: '12px', color: 'text.secondary' }}>{tp('showAll')}</Typography>
+                <Tooltip title={products.every(p => p.is_active) ? tp('deactivate') : tp('activate')}>
+                  <Switch
+                    size="small"
+                    checked={products.every(p => p.is_active)}
+                    disabled={showAllMutation.isLoading || hideAllMutation.isLoading}
+                    onChange={(e) => e.target.checked ? showAllMutation.mutate() : hideAllMutation.mutate()}
+                  />
+                </Tooltip>
+              </Box>
               {products.map((p) => (
                 <Paper
                   key={p.id}

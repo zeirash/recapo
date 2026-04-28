@@ -308,6 +308,14 @@ export const api = {
     })
   },
 
+  activateAllProducts: () => {
+    return apiRequest<ApiResponse>('/products/activate_all', { method: 'PATCH' })
+  },
+
+  deactivateAllProducts: () => {
+    return apiRequest<ApiResponse>('/products/deactivate_all', { method: 'PATCH' })
+  },
+
   uploadProductImage: async (file: File) => {
     const formData = new FormData()
     formData.append('image', file)

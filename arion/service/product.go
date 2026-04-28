@@ -31,6 +31,8 @@ type (
 		GetPurchaseListProducts(ctx context.Context, shopID int) ([]response.PurchaseListProductData, error)
 		UploadProductImage(ctx context.Context, file io.Reader) (string, error)
 		DeleteProductImage(ctx context.Context, imageURL string) error
+		ActivateAllProductsByShopID(ctx context.Context, shopID int) error
+		DeactivateAllProductsByShopID(ctx context.Context, shopID int) error
 	}
 
 	pservice struct{}
@@ -330,4 +332,12 @@ func (p *pservice) DeleteProductImage(ctx context.Context, imageURL string) erro
 	}
 
 	return nil
+}
+
+func (p *pservice) ActivateAllProductsByShopID(ctx context.Context, shopID int) error {
+	return productStore.SetAllProductsStatusByShopID(ctx, shopID, true)
+}
+
+func (p *pservice) DeactivateAllProductsByShopID(ctx context.Context, shopID int) error {
+	return productStore.SetAllProductsStatusByShopID(ctx, shopID, false)
 }

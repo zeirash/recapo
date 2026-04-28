@@ -739,3 +739,70 @@ func Test_product_GetProductsListByActiveOrders(t *testing.T) {
 		})
 	}
 }
+
+func Test_product_SetAllProductsStatusByShopID(t *testing.T) {
+	tests := []struct {
+		name      string
+		shopID    int
+		isActive  bool
+		mockSetup func(mock sqlmock.Sqlmock)
+		wantErr   bool
+	}{
+		{
+			name:     "successfully activate all products for shop",
+			shopID:   10,
+			isActive: true,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE products\s+SET is_active = \$1\s+WHERE shop_id = \$2 AND deleted_at IS NULL`).
+					WithArgs(true, 10).
+					WillReturnResult(sqlmock.NewResult(0, 3))
+			},
+			wantErr: false,
+		},
+		{
+			name:     "successfully deactivate all products for shop",
+			shopID:   10,
+			isActive: false,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE products\s+SET is_active = \$1\s+WHERE shop_id = \$2 AND deleted_at IS NULL`).
+					WithArgs(false, 10).
+					WillReturnResult(sqlmock.NewResult(0, 3))
+			},
+			wantErr: false,
+		},
+		{
+			name:     "returns error on database failure",
+			shopID:   10,
+			isActive: true,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec(`UPDATE products\s+SET is_active = \$1\s+WHERE shop_id = \$2 AND deleted_at IS NULL`).
+					WithArgs(true, 10).
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("failed to create sqlmock: %v", err)
+			}
+			defer db.Close()
+
+			tt.mockSetup(mock)
+			store := NewProductStoreWithDB(db)
+
+			gotErr := store.SetAllProductsStatusByShopID(context.Background(), tt.shopID, tt.isActive)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("SetAllProductsStatusByShopID() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("SetAllProductsStatusByShopID() succeeded unexpectedly")
+			}
+		})
+	}
+}

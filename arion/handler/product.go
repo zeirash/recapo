@@ -128,8 +128,9 @@ func GetProductHandler(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			search	query		string	false	"Search query"
-//	@Param			sort  	query		string	false	"Sort by column and order (e.g. name,desc)"
+//	@Param			search	query	  	string	false	"Search query"
+//	@Param			sort  	query		  string	false	"Sort by column and order (e.g. name,desc)"
+//	@Param			is_active	query		string	false	"Filter by active status (true/false)"
 //	@Success		200		{array}		response.ProductData
 //	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
 //	@Router			/products [get]
@@ -351,6 +352,52 @@ func DeleteProductImageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		logger.WithError(err).Error("delete_product_image_error")
 		WriteErrorJson(w, r, http.StatusInternalServerError, err, "delete_product_image")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, "OK")
+}
+
+// ActivateAllProductsHandler godoc
+//
+//	@Summary		Activate all products
+//	@Description	Set is_active = true for all products in the shop.
+//	@Tags			product
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{string}	string	"Success. data contains \"OK\""
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/products/activate_all [patch]
+func ActivateAllProductsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+
+	if err := productService.ActivateAllProductsByShopID(ctx, shopID); err != nil {
+		logger.WithError(err).Error("activate_all_products_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "activate_all_products")
+		return
+	}
+
+	WriteJson(w, http.StatusOK, "OK")
+}
+
+// DeactivateAllProductsHandler godoc
+//
+//	@Summary		Deactivate all products
+//	@Description	Set is_active = false for all products in the shop.
+//	@Tags			product
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{string}	string	"Success. data contains \"OK\""
+//	@Failure		500	{object}	ErrorApiResponse	"Internal server error"
+//	@Router			/products/deactivate_all [patch]
+func DeactivateAllProductsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	shopID := ctx.Value(common.ShopIDKey).(int)
+
+	if err := productService.DeactivateAllProductsByShopID(ctx, shopID); err != nil {
+		logger.WithError(err).Error("deactivate_all_products_error")
+		WriteErrorJson(w, r, http.StatusInternalServerError, err, "deactivate_all_products")
 		return
 	}
 
