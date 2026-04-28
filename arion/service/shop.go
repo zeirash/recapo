@@ -54,7 +54,10 @@ func (s *shopService) GetPublicProducts(ctx context.Context, shareToken string) 
 		return nil, errors.New(apierr.ErrShopNotFound)
 	}
 
-	products, err := productStore.GetProductsByShopID(ctx, shop.ID, model.FilterOptions{})
+	active := true
+	products, err := productStore.GetProductsByShopID(ctx, shop.ID, model.FilterOptions{
+		IsActive: &active,
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -186,7 +186,10 @@
     "imageUploadFailed": "Failed to upload image",
     "activate": "Show on share page",
     "deactivate": "Hide from share page",
-    "toggleFailed": "Failed to update product visibility"
+    "toggleFailed": "Failed to update product visibility",
+    "filterAll": "All",
+    "filterActive": "Visible",
+    "filterInactive": "Hidden"
   },
   "customers": {
     "title": "Customers",

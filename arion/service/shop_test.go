@@ -16,7 +16,7 @@ import (
 
 func Test_shopService_GetPublicProducts(t *testing.T) {
 	fixedTime := time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
-
+	active := true
 	tests := []struct {
 		name      string
 		shareToken string
@@ -41,7 +41,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 					}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(gomock.Any(), 5, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 5, model.FilterOptions{IsActive: &active}).
 					Return([]model.Product{
 						{
 							ID:            1,
@@ -83,7 +83,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 					Return(&model.Shop{ID: 1, Name: "Shop", ShareToken: "empty123", CreatedAt: fixedTime}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{IsActive: &active}).
 					Return([]model.Product{}, nil)
 
 				return shopMock, productMock
@@ -133,7 +133,7 @@ func Test_shopService_GetPublicProducts(t *testing.T) {
 					Return(&model.Shop{ID: 1, ShareToken: "token", CreatedAt: fixedTime}, nil)
 
 				productMock.EXPECT().
-					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{}).
+					GetProductsByShopID(gomock.Any(), 1, model.FilterOptions{IsActive: &active}).
 					Return(nil, errors.New("query failed"))
 
 				return shopMock, productMock

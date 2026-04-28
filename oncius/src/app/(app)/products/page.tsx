@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useTranslations } from 'next-intl'
-import { Box, Button, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputBase, Menu, MenuItem, OutlinedInput, Paper, Switch, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputBase, Menu, MenuItem, OutlinedInput, Paper, Switch, Tooltip, Typography } from '@mui/material'
 import AddButton from '@/components/ui/AddButton'
 import { api, resolveImageURL } from '@/utils/api'
 import PageLoadingSkeleton from '@/components/ui/PageLoadingSkeleton'
@@ -53,6 +53,7 @@ export default function ProductsPage() {
   const [searchInput, setSearchInput] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
   const [debouncedSearch, setDebouncedSearch] = useState<string>(() => getStoredFilterState()?.searchInput ?? '')
   const [sortValue, setSortValue] = useState<string>('')
+  const [isActiveFilter, setIsActiveFilter] = useState<boolean | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreviewURL, setImagePreviewURL] = useState<string | null>(null)
@@ -83,9 +84,9 @@ export default function ProductsPage() {
   const sortParam = sortValue || undefined
 
   const { data: productsRes, isLoading, isError, error } = useQuery(
-    ['products', debouncedSearch, sortParam],
+    ['products', debouncedSearch, sortParam, isActiveFilter],
     async () => {
-      const res = await api.getProducts(debouncedSearch || undefined, sortParam)
+      const res = await api.getProducts(debouncedSearch || undefined, sortParam, isActiveFilter ?? undefined)
       if (!res.success) throw new Error(res.message || tp('fetchFailed'))
       return res.data as Product[]
     },
@@ -313,6 +314,24 @@ export default function ProductsPage() {
               >
                 {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
               </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: '6px', mt: '10px' }}>
+              {([
+                [null, tp('filterAll')],
+                [true, tp('filterActive')],
+                [false, tp('filterInactive')],
+              ] as const).map(([val, label]) => (
+                <Chip
+                  key={String(val)}
+                  label={label}
+                  size="small"
+                  onClick={() => setIsActiveFilter(val)}
+                  color={isActiveFilter === val ? 'primary' : 'default'}
+                  variant={isActiveFilter === val ? 'filled' : 'outlined'}
+                  sx={{ fontSize: '12px', cursor: 'pointer' }}
+                />
+              ))}
             </Box>
 
             <Menu

@@ -273,10 +273,11 @@ export const api = {
   },
 
   // Products
-  getProducts: (search?: string, sort?: string) => {
+  getProducts: (search?: string, sort?: string, isActive?: boolean) => {
     const params = new URLSearchParams()
     if (search) params.set('search', search)
     if (sort) params.set('sort', sort)
+    if (isActive !== undefined) params.set('is_active', String(isActive))
     const qs = params.toString()
     return apiRequest<ApiResponse<any[]>>(`/products${qs ? `?${qs}` : ''}`)
   },

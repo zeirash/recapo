@@ -186,7 +186,10 @@
     "imageUploadFailed": "Gagal mengunggah gambar",
     "activate": "Tampilkan di halaman share",
     "deactivate": "Sembunyikan dari halaman share",
-    "toggleFailed": "Gagal memperbarui visibilitas produk"
+    "toggleFailed": "Gagal memperbarui visibilitas produk",
+    "filterAll": "Semua",
+    "filterActive": "Tampil",
+    "filterInactive": "Tersembunyi"
   },
   "customers": {
     "title": "Pelanggan",
